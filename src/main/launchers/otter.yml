@@ -1,0 +1,20 @@
+
+name: "otter"
+
+domain: "co.fizzed.otter"
+
+display_name: "Otter by Fizzed"
+
+short_description: "Damn simple task files"
+
+type: CONSOLE
+
+main_class: "co.fizzed.otter.cli.OtterMain"
+
+platforms: [ WINDOWS, LINUX ]
+
+working_dir_mode: RETAIN
+  
+min_java_version: "1.8"
+
+symlink_java: false
