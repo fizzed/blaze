@@ -13,67 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.cli;
+package co.fizzed.blaze.cli;
 
-import co.fizzed.otter.core.Context;
-import co.fizzed.otter.core.Settings;
+import co.fizzed.blaze.core.Context;
+import co.fizzed.blaze.core.Settings;
+import co.fizzed.blaze.task.Task;
+import co.fizzed.blaze.task.TaskFactory;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.script.Bindings;
 import javax.script.Invocable;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import jdk.nashorn.internal.runtime.ScriptFunction;
 
 /**
  *
  * @author joelauer
  */
-public class OtterMain {
+public class BlazeMain {
+    
+    static public String DEFAULT_FILE = "blaze.js";
     
     static public void main(String[] args) throws Exception {
-        File tasksFile = new File("otter.js");
+        File tasksFile = new File(DEFAULT_FILE);
         if (!tasksFile.exists()) {
-            System.err.println("Unable to find tasks.js in current dir");
+            System.err.println("Unable to find " + DEFAULT_FILE + " in current dir");
             System.exit(1);
         }
         
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("nashorn");
         
         // export some objects as global to script
         Context context = new Context(engine);
         Settings.populateDefaults(context, context.getSettings());
 
-        // expose Functions object as a global variable to the engine
-        engine.put("$S", context.getSettings());
-        engine.put("$T", context.getTasks());
-        engine.put("$A", context.getActions());
-        engine.put("$U", context.getUtils());
+        // expose funcations as global variables to script
+        Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
+        bindings.put("$A", context.getActions());
+        bindings.put("$U", context.getUtils());
         
-        Invocable invocable = (Invocable) engine; 
+        Bindings engineBindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+        engineBindings.put("$S", context.getSettings());
+        //engineBindings.put("$T", context.getTasks());
+        Map<String,Task> tasks = new LinkedHashMap<>();
+        engineBindings.put("$T", tasks);
+        engineBindings.put("Task", new TaskFactory(context));
+        
         engine.eval(new FileReader(tasksFile));
-        
-        /**
-        // list all tasks
-        System.out.println("Getting list of all tasks...");
-        for (String s : context.getTasks().keySet()) {
-            System.out.println(s);
-        }
-        */
-        
-        /**
-        ScriptObjectMirror sobj = 
-        System.out.println(sobj);
-        for (Map.Entry<String,Object> entry : sobj.entrySet()) {
-            System.out.println("Field: " + entry.getKey() + " -> " + entry.getValue());
-        }
-        
-        // debug all functions on an object...
-        /**
-        for (Field f : context.getFunctions().getClass().getFields()) {
-            System.out.println("Field: " + f.getName());
-        }
-        */
-
+ 
         // does script define a default task?
         String taskToRun = null;
         if (args.length > 0) {
@@ -81,19 +73,17 @@ public class OtterMain {
         }
         
         if (taskToRun == null) {
-            System.err.println("No task specified (either as default in tasks.js or via command line)");
+            System.err.println("No task specified (either as default in " + tasksFile.getName() + " or via command line)");
             System.exit(1);
         }
-
-        //Arrays.copyOfRange(args, 1, args.length);
         
         try {
-            ScriptFunction o = (ScriptFunction)context.getTasks().getMember(taskToRun);
-            if (o == null) {
+            Task task = tasks.get(taskToRun);
+            if (task == null) {
                 System.err.println("Task [" + taskToRun + "] does not exist");
                 System.exit(1);
             }
-            engine.eval("$T."+taskToRun+"()");
+            task.call();
         } catch (RuntimeException e) {
             if (e.getCause() != null) {
                 e.getCause().printStackTrace(System.err);
@@ -103,5 +93,9 @@ public class OtterMain {
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
+        
+        // cleanup executor service (otherwise app won't exit)
+        System.out.println("Shutting down executor thread pool");
+        context.getActions().executors.shutdown();
     }
 }

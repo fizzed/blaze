@@ -23,15 +23,16 @@ allprojects {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
     compile("org.zeroturnaround:zt-exec:1.7")
     compile("org.apache.ivy:ivy:2.4.0-rc1")
+    //compile("org.apache.ivy:ivy:2.3.0")
     compile("ch.qos.logback:logback-classic:1.1.2")
-    //compile group: 'org.eclipse.aether', name: 'aether-impl', version: '1.0.0.v20140518'
-    //compile group: 'org.eclipse.aether', name: 'aether-transport-http', version: '1.0.0.v20140518'
+    compile("co.fizzed:fizzed-stork-launcher:1.2.0-SNAPSHOT")
     testCompile("junit:junit:4.+")
 }
 
@@ -53,13 +54,13 @@ task copyDependenciesToLib(type: Copy) {
     into "$buildDir/stork/lib"
 }
 
-task storkLauncherGenerate(type: Exec) {
+task storkify(type: Exec) {
    workingDir '../java-stork/cli/target/stork/bin' 
    executable 'stork-launcher-generate'
    args = ['-o', file("$buildDir/stork"), '-i', file('src/main/launchers')]  
 }
 
-task stage(dependsOn: ['jar','copyLibsToLib','copyDependenciesToLib','storkLauncherGenerate'])
+task stage(dependsOn: ['jar','copyLibsToLib','copyDependenciesToLib','storkify'])
 stage.mustRunAfter jar
 
 task runIt(type:JavaExec) {

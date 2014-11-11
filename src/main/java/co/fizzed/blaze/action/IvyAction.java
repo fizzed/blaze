@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.action;
+package co.fizzed.blaze.action;
 
-import co.fizzed.otter.core.Context;
+import co.fizzed.blaze.core.Context;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor;
 import org.apache.ivy.core.module.descriptor.DefaultModuleDescriptor;
-import org.apache.ivy.core.module.descriptor.MDArtifact;
 import org.apache.ivy.core.module.descriptor.ModuleDescriptor;
 import org.apache.ivy.core.module.id.ModuleRevisionId;
 import org.apache.ivy.core.report.ArtifactDownloadReport;
@@ -43,20 +42,125 @@ import org.apache.ivy.plugins.resolver.FileSystemResolver;
  */
 public class IvyAction extends Action<Boolean> {
 
-    private Dependencies dependencies;
+    private String projectGroup;
+    private String projectName;
+    private String projectVersion;
+    private String resolveScope;
+    private File outputDir;
+    private final Dependencies dependencies;
     private List<File> jars;
     
-    public IvyAction(Context context) {
+    private Ivy ivy;
+    private IvySettings settings;
+    private ChainResolver chainedResolver;
+    private final Resolvers resolvers;
+    private DependencyResolver ivyLocal;
+    private DependencyResolver mavenCentral;
+    private FileSystemResolver mavenLocal;
+    
+    public IvyAction(Context context) throws Exception {
         super(context);
+        createIvy();
         this.dependencies = new Dependencies();
+        this.resolvers = new Resolvers();
+    }
+
+    private void createIvy() throws Exception {
+        this.ivy = Ivy.newInstance();
+        this.settings = ivy.getSettings();
+        settings.setVariable("ivy.default.configuration.m2compatible", "true");
+        ivy.configureDefault();
+        
+        // setup better maven repos (extract out of defaults...)
+        this.ivyLocal = settings.getResolver("local");
+        ivyLocal.setName("ivyLocal");
+        
+        this.mavenCentral = settings.getResolver("public");
+        mavenCentral.setName("mavenCentral");
+
+        // create local .m2 repo
+        this.mavenLocal = new FileSystemResolver();
+        mavenLocal.setName("mavenLocal");
+        mavenLocal.setLocal(true);
+        File userHomeDir = new File(System.getProperty("user.home"));
+        mavenLocal.addArtifactPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]");
+        mavenLocal.addIvyPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision].pom");
+        mavenLocal.setM2compatible(true);
+
+        // chained resolver important for resolving
+        this.chainedResolver = new ChainResolver();
+        chainedResolver.setName("default");
+        settings.getResolvers().clear();
     }
     
-    public Dependencies dependencies() {
-        return this.dependencies;
+    public String getProjectGroup() {
+        return projectGroup;
+    }
+
+    public IvyAction projectGroup(String projectGroup) {
+        this.projectGroup = projectGroup;
+        return this;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public IvyAction projectName(String projectName) {
+        this.projectName = projectName;
+        return this;
+    }
+
+    public String getProjectVersion() {
+        return projectVersion;
+    }
+
+    public IvyAction projectVersion(String projectVersion) {
+        this.projectVersion = projectVersion;
+        return this;
+    }
+
+    public String getResolveScope() {
+        return resolveScope;
+    }
+
+    public IvyAction resolveScope(String resolveScope) {
+        this.resolveScope = resolveScope;
+        return this;
+    }
+
+    public File getOutputDir() {
+        return outputDir;
+    }
+
+    public IvyAction outputDir(File outputDir) {
+        this.outputDir = outputDir;
+        return this;
+    }
+    
+    public IvyAction outputDir(String outputDir) {
+        this.outputDir = new File(outputDir);
+        return this;
+    }
+
+    public List<File> getJars() {
+        return jars;
     }
     
     public List<File> jars() {
         return this.jars;
+    }
+
+    public void setJars(List<File> jars) {
+        this.jars = jars;
+    }
+    
+    public Resolvers getResolvers() {
+        return this.resolvers;
+    }
+    
+    public Dependencies getDependencies() {
+        return this.dependencies;
     }
     
     public String classpath() {
@@ -64,25 +168,21 @@ public class IvyAction extends Action<Boolean> {
     }
     
     @Override
-    public Result<Boolean> call() throws Exception {
-        
-        String groupId = "co.fizzed";
-        String artifactId = "fizzed-otter";
-        String version = "1.0.0-SNAPSHOT";
-        
-        File outputDir = new File("ivy");
-        if (outputDir.exists()) {
-            FileUtils.cleanDirectory(outputDir);
+    protected Result<Boolean> execute() throws Exception {
+        // make and/or clean dependency lib
+        File scopeOutputDir = new File(outputDir, resolveScope);
+        scopeOutputDir.mkdirs();
+        if (scopeOutputDir.exists()) {
+            FileUtils.cleanDirectory(scopeOutputDir);
         }
         
+        /**
         Ivy ivy = Ivy.newInstance();
         IvySettings settings = ivy.getSettings();
         settings.setVariable("ivy.default.configuration.m2compatible", "true");
         ivy.configureDefault();
         
-        // 
         // setup better maven repos
-        //
         DependencyResolver ivyLocal = settings.getResolver("local");
         ivyLocal.setName("ivyLocal");
         
@@ -108,6 +208,9 @@ public class IvyAction extends Action<Boolean> {
         chainedResolver.add(mavenCentral);
         settings.getResolvers().clear();
         settings.addResolver(chainedResolver);
+        */
+        
+        settings.addResolver(chainedResolver);
         
         // ivy cache makes stuff waaaaay faster
         File cache = new File(settings.getDefaultCache().getAbsolutePath());
@@ -119,12 +222,13 @@ public class IvyAction extends Action<Boolean> {
             throw new Exception(cache + " is not a directory");
         }
 
-        String[] confs = new String[] { "default", "compile", "runtime" };
+        // default is compile scope...
+        String[] confs = new String[] { "default", "master", "compile", "runtime" };
  
         DefaultModuleDescriptor dmd;
         if (true) {
             // this is the project artifact we are working on
-            dmd = DefaultModuleDescriptor.newDefaultInstance(ModuleRevisionId.newInstance(groupId, artifactId, version));
+            dmd = DefaultModuleDescriptor.newDefaultInstance(ModuleRevisionId.newInstance(projectGroup, projectName, projectVersion));
             
             for (Dependency artifact : this.dependencies) {
                 ModuleRevisionId mrid = ModuleRevisionId.newInstance(artifact.group, artifact.name, artifact.version);
@@ -155,6 +259,7 @@ public class IvyAction extends Action<Boolean> {
                 //.setArtifactFilter(
                 //    FilterHelper.getArtifactTypeFilter(line.getOptionValues("types")));
                 .setTransitive(true)
+                .setCheckIfChanged(false)
                 .setRefresh(true);
             
         ResolveReport resolveReport = ivy.resolve(dmd, resolveOptions);
@@ -188,7 +293,8 @@ public class IvyAction extends Action<Boolean> {
             confs = md.getConfigurationsNames();
         }
         
-        String retrievePattern = outputDir.getAbsolutePath()+"/lib/[conf]/[organization].[artifact]-[revision](-[classifier]).[ext]";
+        //String retrievePattern = scopeOutputDir.getAbsolutePath()+"/[conf]/[organization].[artifact]-[revision](-[classifier]).[ext]";
+        String retrievePattern = scopeOutputDir.getAbsolutePath()+"/[organization].[artifact]-[revision](-[classifier]).[ext]";
         RetrieveReport retrieveReport = ivy.retrieve(
             md.getModuleRevisionId(),
             new RetrieveOptions()
@@ -199,8 +305,26 @@ public class IvyAction extends Action<Boolean> {
         return new Result(Boolean.TRUE);
     }
     
+    public class Resolvers {
+        
+        public Resolvers addIvyLocal() {
+            chainedResolver.add(ivyLocal);
+            return this;
+        }
+        
+        public Resolvers addMavenLocal() {
+            chainedResolver.add(mavenLocal);
+            return this;
+        }
+        
+        public Resolvers addMavenCentral() {
+            chainedResolver.add(mavenCentral);
+            return this;
+        }
+        
+    }
 
-    static public class Dependencies extends ArrayList<Dependency> {
+    public class Dependencies extends ArrayList<Dependency> {
         
         public Dependencies add(String group, String name, String version) {
             Dependency d = new Dependency().group(group).name(name).version(version);

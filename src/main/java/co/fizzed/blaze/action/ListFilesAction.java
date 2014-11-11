@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.action;
+package co.fizzed.blaze.action;
 
-import co.fizzed.otter.core.Context;
+import co.fizzed.blaze.core.Context;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class ListFilesAction extends Action<List<File>> {
     private FileFilter filter;
     
     public ListFilesAction(Context context) {
-        super(context);
+        super(context, "ls");
         this.recursive = Boolean.FALSE;
     }
 
@@ -40,12 +40,12 @@ public class ListFilesAction extends Action<List<File>> {
         return path;
     }
     
-    public ListFilesAction setPath(File path) {
+    public ListFilesAction path(File path) {
         this.path = path;
         return this;
     }
     
-    public ListFilesAction setPath(String path) {
+    public ListFilesAction path(String path) {
         this.path = new File(path);
         return this;
     }
@@ -69,8 +69,8 @@ public class ListFilesAction extends Action<List<File>> {
     }
     
     @Override
-    public Result<List<File>> call() throws Exception {
-        List<File> results = new ArrayList<File>();
+    protected Result<List<File>> execute() throws Exception {
+        List<File> results = new ArrayList<>();
         doListFiles(this.path, results, this.recursive);
         return new Result(results);
     }

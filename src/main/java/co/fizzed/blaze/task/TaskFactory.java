@@ -13,22 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.action;
+
+package co.fizzed.blaze.task;
+
+import co.fizzed.blaze.core.Context;
+import java.util.function.Function;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
  *
  * @author joelauer
  */
-public class Result<T> {
+public class TaskFactory {
     
-    private final T value;
-
-    public Result(T value) {
-        this.value = value;
+    private final Context context;
+    
+    public TaskFactory(Context context) {
+        this.context = context;
     }
     
-    public T getValue() {
-        return value;
+    public Task create(ScriptObjectMirror o) {
+        //System.out.println("o -> " + o.getClassName());
+        return new FunctionTask(this.context, o.to(Function.class));
     }
     
 }

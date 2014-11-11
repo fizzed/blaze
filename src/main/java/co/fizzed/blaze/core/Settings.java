@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.core;
+package co.fizzed.blaze.core;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;

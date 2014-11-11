@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.core;
+package co.fizzed.blaze.core;
 
+import co.fizzed.blaze.task.Task;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.script.ScriptEngine;
 
 /**
@@ -25,13 +28,13 @@ public class Context {
     
     private final ScriptEngine engine;
     private final Settings settings;
-    private final Tasks tasks;
+    private final Map<String,Task> tasks;
     private final Actions actions;
     private final Utils utils;
     
     public Context(ScriptEngine engine) {
         this.engine = engine;
-        this.tasks = new Tasks(this);
+        this.tasks = new LinkedHashMap<>();
         this.settings = new Settings(this);
         this.actions = new Actions(this);
         this.utils = new Utils(this);
@@ -41,7 +44,7 @@ public class Context {
         return engine;
     }
 
-    public Tasks getTasks() {
+    public Map<String,Task> getTasks() {
         return tasks;
     }
 

@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.action;
+package co.fizzed.blaze.task;
 
-import co.fizzed.otter.core.Context;
-import java.util.concurrent.Callable;
+import co.fizzed.blaze.action.*;
+import co.fizzed.blaze.core.Context;
 
 /**
  *
  * @author joelauer
  */
-public abstract class Action<T> implements Callable<Result<T>> {
+public abstract class Task<T> extends Action<T> {
     
-    protected final Context context;
-    
-    public Action(Context context) {
-        this.context = context;
-    }
-    
-    public T run() throws Exception {
-        return this.call().getValue();
+    public Task(Context context) {
+        super(context);
     }
     
 }

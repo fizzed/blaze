@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.action;
+package co.fizzed.blaze.action;
 
-import co.fizzed.otter.core.Context;
+import co.fizzed.blaze.core.Context;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,36 +26,36 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WhichAction extends Action<File> {
     
-    static private Map<String,File> cachedFinds = new ConcurrentHashMap<String,File>();
+    private static final Map<String,File> cache = new ConcurrentHashMap<>();
     
     private String command;
     
     public WhichAction(Context context) {
-        super(context);
+        super(context, "which");
     }
 
     public String getCommand() {
         return command;
     }
     
-    public WhichAction setCommand(String command) {
+    public WhichAction command(String command) {
         this.command = command;
         return this;
     }
     
     @Override
-    public Result<File> call() throws Exception {
+    protected Result<File> execute() throws Exception {
         File exeFile;
         
         // is it cached?
-        if (cachedFinds.containsKey(command)) {
-            exeFile = cachedFinds.get(command);
+        if (cache.containsKey(command)) {
+            exeFile = cache.get(command);
         } else {
             // search path for executable...
             exeFile = findExecutable(context, command);
             if (exeFile != null) {
                 // cache result
-                cachedFinds.put(command, exeFile);
+                cache.put(command, exeFile);
             }
         }
         

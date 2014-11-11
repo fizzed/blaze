@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package co.fizzed.otter.action;
+package co.fizzed.blaze.action;
 
-import co.fizzed.otter.core.Context;
+import co.fizzed.blaze.core.Context;
 import java.io.File;
 import java.io.FileNotFoundException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -30,7 +30,7 @@ public class ExecAction extends Action<ProcessResult> {
     private final ProcessExecutor pe;
     
     public ExecAction(Context context) {
-        super(context);
+        super(context, "exec");
         this.pe = new ProcessExecutor()
             .redirectInput(System.in)
             .redirectOutput(System.out)
@@ -38,7 +38,7 @@ public class ExecAction extends Action<ProcessResult> {
             .exitValueNormal();
     }
     
-    public ExecAction setCommand(String... command) throws Exception {
+    public ExecAction command(String... command) throws Exception {
         // first argument is a command we need to search for
         String exeName = command[0];
         
@@ -54,7 +54,7 @@ public class ExecAction extends Action<ProcessResult> {
     }
     
     @Override
-    public Result<ProcessResult> call() throws Exception {
+    protected Result<ProcessResult> execute() throws Exception {
         ProcessResult pr = this.pe.execute();
         return new Result(pr);
     }
