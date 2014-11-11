@@ -5,6 +5,7 @@
     <artifactId>fizzed-blaze</artifactId>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
+    <version>1.0.0-SNAPSHOT</version>
  
     <parent>
         <groupId>co.fizzed</groupId>

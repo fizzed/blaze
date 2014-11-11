@@ -30,7 +30,6 @@ repositories {
 dependencies {
     compile("org.zeroturnaround:zt-exec:1.7")
     compile("org.apache.ivy:ivy:2.4.0-rc1")
-    //compile("org.apache.ivy:ivy:2.3.0")
     compile("ch.qos.logback:logback-classic:1.1.2")
     compile("co.fizzed:fizzed-stork-launcher:1.2.0-SNAPSHOT")
     testCompile("junit:junit:4.+")

@@ -11,6 +11,7 @@ var dependenciesDir = new java.io.File(targetDir, "dependencies");
 var ivyClasspath = undefined;
 var storkLauncherGenerateInputDir = new java.io.File("src/main/launchers");
 var stageDir = new java.io.File(targetDir, "stork");
+var compressJar = true;
 var jarFile = new java.io.File(targetDir, group + "." + name + "-" + version + ".jar");
 
 $T.dependencies = Task.create(function() {
@@ -69,11 +70,16 @@ $T.compile = Task.create(function() {
 $T.jar = Task.create(function() {
     print("JAR TASK");
     $T.compile();
+    var args = "cf";
+    if (!compressJar) {
+        args += "0";
+    }
     $A.exec("jar", "cf", jarFile, "-C", classesDir, ".").call();
 });
 
 $T.storkify = Task.create(function() {
     print("STORKIFY TASK");
+    // uses fizzed-stork to compile rock-solid launch scripts
     $A.storkLauncherGenerate().outputDir(stageDir).inputFile(storkLauncherGenerateInputDir).run();
 });
 
@@ -88,11 +94,13 @@ $T.stage = Task.create(function() {
     var copyProjectJar = $A.cp(jarFile).target(stageLibDir);
     var copyJarDependencies = $A.cp(dependLibDir).target(stageLibDir);
     
-    // wait for pipeline of asyncs to all complete
+    
+    // wait for pipeline of async action groups to all complete
     $A.pipeline(
         $A.async($T.jar, copyProjectJar, copyJarDependencies),
         $A.async($T.storkify)
     );
+    
    
     /**
     // serial

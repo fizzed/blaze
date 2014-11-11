@@ -2,3 +2,5 @@
 /target/
 /target-blaze/
 .gradle
+build
+project
