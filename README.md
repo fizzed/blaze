@@ -14,14 +14,8 @@ Java 8.  While most tools focus on being "expressive" -- why don't they ever
 focus on speed?  And they usually eat up an enormous amount of memory.
 
 Projects are defined in a blaze.js file and written in JavaScript (ECMA 5.0).
-High performance concepts such as asynchronous tasks & actions are included
-from the get-go.  Here's a sample:
-
-    // wait for pipeline of async action groups to all complete
-    $A.pipeline(
-        $A.async($T.jar, copyProjectJar, copyJarDependencies),
-        $A.async($T.storkify)
-    );
+High performance concepts such as asynchronous tasks & actions are included as
+a natural part of the build system.
 
 ## Usage
 
@@ -41,12 +35,12 @@ task defined below:
         print("Done");
     });
 
-The output of running this will simple be:
+The output will be:
 
     Hello World!
     Done
 
-There are many supplied "actions" that help do useful things like executing
+There are numerous "actions" included to perform functions like executing
 an external program, copying files, compiling code, etc.
 
     $T.gitStatus = Task.create(function() {
@@ -92,4 +86,10 @@ source jar, and a javadocs jar, you could easily do all 3 of those in parallel.
 The jar is just zipping up your compiled classes, the sources jar is zipping
 up your existing sources, and the javadocs jar requires compiling the javadocs
 and then zipping them up.
+
+    // wait for pipeline of async action groups to all complete
+    $A.pipeline(
+        $A.async($T.jar, copyProjectJar, copyJarDependencies),
+        $A.async($T.storkify)
+    );
 
