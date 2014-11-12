@@ -29,6 +29,6 @@ storkify := {
     case n => sys.error(s"Could not generate launchers, exit code: $n")
   }
   // copy dependencies
-  val jars = libraryDependencies.libraries
-  FileUtilities.copyFlat(jars.get, target(_ / "stork" / "lib"), log)
+//  val jars = libraryDependencies.libraries
+//  FileUtilities.copyFlat(jars.get, target(_ / "stork" / "lib"), log)
 }

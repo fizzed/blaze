@@ -68,6 +68,12 @@ task runIt(type:JavaExec) {
    args = ['test']  
 }
 
+task runCompiler(type:JavaExec) {
+   main = 'co.fizzed.blaze.cli.CompilerMain'
+   classpath = sourceSets.main.runtimeClasspath
+   args = ['test']
+}
+
 task runIvy(type:JavaExec) {
    main = 'co.fizzed.otter.cli.IvyMain'
    classpath = sourceSets.main.runtimeClasspath

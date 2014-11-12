@@ -64,7 +64,11 @@ $T.compile = Task.create(function() {
     }
     pw.close();
     
-    $A.exec("javac", "-sourcepath", sourceDir, "-d", classesDir, "-cp", ivyClasspath, "-encoding", sourceEncoding, "-source", sourceCompat, "@"+javaInputFilesFile.absolutePath).call();
+    // via forked external process
+    //$A.exec("javac", "-sourcepath", sourceDir, "-d", classesDir, "-cp", ivyClasspath, "-encoding", sourceEncoding, "-source", sourceCompat, "@"+javaInputFilesFile.absolutePath).call();
+    // via internal non-forked compiler instance
+    var compiler = javax.tools.ToolProvider.getSystemJavaCompiler();
+    compiler.run(java.lang.System.in, java.lang.System.out, java.lang.System.err, "-sourcepath", sourceDir, "-d", classesDir, "-cp", ivyClasspath, "-encoding", sourceEncoding, "-source", sourceCompat, "@"+javaInputFilesFile.absolutePath);
 });
 
 $T.jar = Task.create(function() {
