@@ -23,6 +23,39 @@ from the get-go.  Here's a sample:
         $A.async($T.storkify)
     );
 
+## Usage
+
+Similar to how Apache Ant and Make functions -- there are high level "tasks" that
+are made up of JavaScript code, actions, and other tasks.  Here is a sample
+blaze.js that can be run from the command line "blaze run" to execute the "run"
+task defined below:
+
+    var helloText = "Hello World";
+
+    $T.hello = Task.create(function() {
+        print(helloText);
+    });
+
+    $T.run = Task.create(function() {
+        $T.hello();
+        print("Done");
+    });
+
+The output of running this will simple be:
+
+    Hello World!
+    Done
+
+There are many supplied "actions" that help do useful things like executing
+an external program, copying files, compiling code, etc.
+
+    $T.gitStatus = Task.create(function() {
+        $A.exec("git", "--status").run();
+    });
+
+This sample task will run the external program "git" with a single argument of
+"--status".
+
 ## Performance
 
 Most "build times" logged by your build tool do not reflect reality. They never
