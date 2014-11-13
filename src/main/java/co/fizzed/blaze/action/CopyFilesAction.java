@@ -76,15 +76,16 @@ public class CopyFilesAction extends Action<Void> {
     
     @Override
     protected Result<Void> execute() throws Exception {
+        File resolvedSource = this.context.resolveWithBaseDir(source);
+        File resolvedTarget = this.context.resolveWithBaseDir(target);
         
-        
-        if (this.source.isDirectory()) {
-            if (this.target.isFile()) {
+        if (resolvedSource.isDirectory()) {
+            if (resolvedTarget.isFile()) {
                 throw new IllegalArgumentException("Source and target dirs are both dirs");
             }
-            FileUtils.copyDirectory(source, target, filter);
+            FileUtils.copyDirectory(resolvedSource, resolvedTarget, filter);
         } else {
-            FileUtils.copyFileToDirectory(source, target);
+            FileUtils.copyFileToDirectory(resolvedSource, resolvedTarget);
         }
         return new Result(Void.TYPE);
     }

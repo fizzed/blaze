@@ -77,7 +77,6 @@ $T.jar = Task.create(function() {
     $A.exec("jar", "cf", jarFile, "-C", classesDir, ".").call();
 });
 
-
 $T.storkify = Task.create(function() {
     // uses fizzed-stork to compile rock-solid launch scripts
     $A.storkGenerate().outputDir(stageDir).inputFile(storkLauncherGenerateInputDir).run();
