@@ -101,6 +101,9 @@ public class Blaze {
         engineBindings.put("Task", new TaskFactory(context));
         
         scriptEngine.eval(new FileReader(projectFile));
+        
+        // on success set the base dir of the context
+        context.setBaseDir(projectFile.getParentFile());
     }
     
     public void run(List<String> tasksToRun) throws UsageException, IOException, ScriptException, Exception, Throwable {

@@ -17,10 +17,11 @@ package co.fizzed.blaze.core;
 
 import co.fizzed.blaze.task.Task;
 import co.fizzed.blaze.task.TaskMap;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import javax.script.ScriptEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -34,12 +35,17 @@ public class Context {
     private final Actions actions;
     private final Utils utils;
     
+    // runtime stuff
+    private File baseDir;
+    
     public Context(ScriptEngine engine) {
         this.engine = engine;
         this.tasks = new TaskMap();
         this.settings = new Settings(this);
         this.actions = new Actions(this);
         this.utils = new Utils(this);
+        // defaults to current directory
+        this.baseDir = new File(".");
     }
 
     public ScriptEngine getEngine() {
@@ -62,4 +68,24 @@ public class Context {
         return utils;
     }
 
+    public File getBaseDir() {
+        return baseDir;
+    }
+
+    public void setBaseDir(File baseDir) {
+        this.baseDir = baseDir;
+    }
+    
+    public File resolveWithBaseDir(Path path) {
+        return this.baseDir.toPath().resolve(path).toFile();
+    }
+    
+    public File resolveWithBaseDir(File file) {
+        if (file.isAbsolute()) {
+            return file;
+        } else {
+            return new File(baseDir, file.getPath());
+        }
+    }
+    
 }

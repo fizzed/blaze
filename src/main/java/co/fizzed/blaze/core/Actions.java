@@ -43,8 +43,8 @@ public class Actions {
         this.context = context;
     }
     
-    public ExecAction exec(String... command) throws Exception {
-        return new ExecAction(context).command(command);
+    public ExecAction exec(String executable, String ... arguments) throws Exception {
+        return new ExecAction(context).command(executable, arguments);
     }
     
     public WhichAction which(String command) {

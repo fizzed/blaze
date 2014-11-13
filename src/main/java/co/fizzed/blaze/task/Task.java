@@ -39,7 +39,7 @@ public abstract class Task<T> extends Action<T> {
         String lastTaskName = MDC.get("task");
         MDC.put("task", this.getName());
         long started = System.currentTimeMillis();
-        logger.info("Task starting...");
+        logger.info("Task running...");
         Result<T> r = executeTask();
         long finished = System.currentTimeMillis();
         logger.info("Task finished (" + (finished-started) + " ms)");

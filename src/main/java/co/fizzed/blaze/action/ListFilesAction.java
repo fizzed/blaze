@@ -71,24 +71,22 @@ public class ListFilesAction extends Action<List<File>> {
     @Override
     protected Result<List<File>> execute() throws Exception {
         List<File> results = new ArrayList<>();
-        doListFiles(this.path, results, this.recursive);
+        File resolvedPath = this.context.resolveWithBaseDir(path);
+        doListFiles(resolvedPath, results, this.recursive);
         return new Result(results);
     }
     
     private void doListFiles(File f, List<File> results, boolean recursive) {
-        if (filter == null || filter.accept(f)) {
-            results.add(f);
-        }
-        
         if (f.isDirectory()) {
             File[] childFiles = f.listFiles();
             for (File childFile : childFiles) {
-                if (filter == null || filter.accept(f)) {
-                    results.add(f);
-                }
                 if (recursive) {
                     doListFiles(childFile, results, recursive);
                 }
+            }
+        } else {
+            if (filter == null || filter.accept(f)) {
+                results.add(f);
             }
         }
     }

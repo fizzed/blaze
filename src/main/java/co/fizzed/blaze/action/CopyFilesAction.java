@@ -76,6 +76,8 @@ public class CopyFilesAction extends Action<Void> {
     
     @Override
     protected Result<Void> execute() throws Exception {
+        
+        
         if (this.source.isDirectory()) {
             if (this.target.isFile()) {
                 throw new IllegalArgumentException("Source and target dirs are both dirs");
