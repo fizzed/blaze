@@ -25,15 +25,15 @@ import java.util.Set;
  */
 public class Settings {
     
-    static public final Set<String> EXE_EXT_WINDOWS = new LinkedHashSet<String>(Arrays.asList(".exe",".bat",".cmd"));
-    static public final Set<String> EXE_EXT_UNIX = new LinkedHashSet<String>(Arrays.asList("", ".sh"));
+    static public final Set<String> EXE_EXT_WINDOWS = new LinkedHashSet<>(Arrays.asList(".exe",".bat",".cmd"));
+    static public final Set<String> EXE_EXT_UNIX = new LinkedHashSet<>(Arrays.asList("", ".sh"));
     
     private final Context context;
     private final Set<String> executableExtensions;
     
     public Settings(Context context) {
         this.context = context;
-        this.executableExtensions = new LinkedHashSet<String>();
+        this.executableExtensions = new LinkedHashSet<>();
     }
     
     static public void populateDefaults(Context context, Settings s) {

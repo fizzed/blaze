@@ -6,18 +6,46 @@ Blaze by Fizzed
  - [Fizzed, Inc.](http://fizzed.co)
  - Joe Lauer (Twitter: [@jjlauer](http://twitter.com/jjlauer))
 
-
 ## Overview
 
-Speedy make/build tool tapping into the Nashorn JavaScript engine included with
-Java 8.  While most tools focus on being "expressive" -- why don't they ever
-focus on speed?  And they usually eat up an enormous amount of memory.
+Speedy, simple, and intuitive make/build tool.  Write your project files using
+JavaScript (ECMA 5.0) and run them blazingly fast using Java 8 (via its Nashorn
+JavaScript engine).
 
-Projects are defined in a blaze.js file and written in JavaScript (ECMA 5.0).
-High performance concepts such as asynchronous tasks & actions are included as
-a natural part of the build system.
+The aim is for your build files to look like simple code -- with some interesting
+concepts thrown in like logging (e.g. log.debug("wowza")) and asynchronous
+tasks (why not easily do things in parallel).
 
-## Usage
+Tasks can be defined once and run once.  Rather than relying on statements like
+"dependsOn" (that almost every other build tool uses), you can simply run tasks
+as functions and be assured they will only run once.  Not only does this make
+more intuitive sense (IMHO) -- it also means you can program whatever ordering
+you need your tasks to run in.  Let's take a look at a simple example of
+compiling some code:
+
+    var targetDir = "target";
+
+    $T.setup = Task.create(function() {
+        // code to make target dir
+    });
+
+    $T.compile = Task.create(function() {
+        $T.setup();
+        // code to compile project
+    });
+
+    $T.package = Task.create(function() {
+        $T.compile();
+        // code to package project
+    });
+
+Tasks are composed of JavaScript code, other tasks, or actions.  Actions are
+similar to tasks, but are immutable once built and can be run any number of
+times.  Actions are generally provided by Blaze and perform portable functions
+like making directories, executing shell commands, logging output, etc.
+
+
+## Examples
 
 Similar to how Apache Ant and Make functions -- there are high level "tasks" that
 are made up of JavaScript code, actions, and other tasks.  Here is a sample
@@ -27,12 +55,15 @@ task defined below:
     var helloText = "Hello World";
 
     $T.hello = Task.create(function() {
+        // print to stdout
         print(helloText);
+        // print via logging
+        log.info(helloText);
     });
 
     $T.run = Task.create(function() {
         $T.hello();
-        print("Done");
+        log.info("Done");
     });
 
 The output will be:

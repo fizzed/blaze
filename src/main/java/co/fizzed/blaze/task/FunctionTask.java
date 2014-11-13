@@ -38,7 +38,7 @@ public class FunctionTask extends Task<Object> {
     }
 
     @Override
-    protected Result<Object> execute() throws Exception {
+    protected Result<Object> executeTask() throws Exception {
         Object o = this.function.apply(null);
         return new Result(o);
     }

@@ -1,22 +1,20 @@
 
 var group = "co.fizzed";
-var name = "fizzed-blaze";
+var name = "java-single";
 var version = "1.0.0-SNAPSHOT";
 var flavor = "main";
-var targetDir = new java.io.File("target-blaze");
+var targetDir = new java.io.File("target");
 var classesDir = new java.io.File(targetDir, "classes/" + flavor);
 var sourceDirs = [ "src/main/java" ];
 var resourceDirs = [ "src/main/resources" ];
 var dependenciesDir = new java.io.File(targetDir, "dependencies");
 var ivyClasspath = undefined;
-var storkLauncherGenerateInputDir = new java.io.File("src/main/launchers");
-var stageDir = new java.io.File(targetDir, "stork");
+//var storkLauncherGenerateInputDir = new java.io.File("src/main/launchers");
+//var stageDir = new java.io.File(targetDir, "stork");
 var compressJar = true;
 var jarFile = new java.io.File(targetDir, group + "." + name + "-" + version + ".jar");
 
 $T.dependencies = Task.create(function() {
-    print("DEPENDENCIES TASK");
-    
     var ivy = $A.ivy()
         .projectGroup(group)
         .projectName(name)
@@ -30,10 +28,10 @@ $T.dependencies = Task.create(function() {
         .addMavenCentral();
     
     ivy.dependencies
-        .add("org.zeroturnaround", "zt-exec", "1.7")
-        .add("org.apache.ivy", "ivy", "2.4.0-rc1")
-        .add("co.fizzed", "fizzed-stork-launcher", "1.2.0-SNAPSHOT")
-        .add("ch.qos.logback", "logback-classic", "1.1.2");
+        .add("com.cloudhopper", "ch-commons-util", "6.0.1")
+        .add("com.cloudhopper", "ch-commons-charset", "3.0.2")
+        .add("org.slf4j", "slf4j-api", "1.7.7")
+        .add("io.netty", "netty", "3.9.0.Final");
     
     // any action can be directly called as a function or via run()
     //ivy.run();
@@ -43,7 +41,6 @@ $T.dependencies = Task.create(function() {
 });
 
 $T.compile = Task.create(function() {
-    print("COMPILE TASK");
     $T.dependencies();
     
     var sourceEncoding = "UTF-8";
@@ -72,7 +69,6 @@ $T.compile = Task.create(function() {
 });
 
 $T.jar = Task.create(function() {
-    print("JAR TASK");
     $T.compile();
     var args = "cf";
     if (!compressJar) {
@@ -81,10 +77,10 @@ $T.jar = Task.create(function() {
     $A.exec("jar", "cf", jarFile, "-C", classesDir, ".").call();
 });
 
+
 $T.storkify = Task.create(function() {
-    print("STORKIFY TASK");
     // uses fizzed-stork to compile rock-solid launch scripts
-    $A.storkLauncherGenerate().outputDir(stageDir).inputFile(storkLauncherGenerateInputDir).run();
+    $A.storkGenerate().outputDir(stageDir).inputFile(storkLauncherGenerateInputDir).run();
 });
 
 $T.stage = Task.create(function() {

@@ -17,15 +17,36 @@ package co.fizzed.blaze.task;
 
 import co.fizzed.blaze.action.*;
 import co.fizzed.blaze.core.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  *
  * @author joelauer
  */
 public abstract class Task<T> extends Action<T> {
+    private final static Logger logger = LoggerFactory.getLogger(Task.class);
     
     public Task(Context context) {
         super(context);
     }
+    
+    @Override
+    protected Result<T> execute() throws Exception {
+        // problem is that a task may call other tasks...
+        // we need to keep track of task we are replacing...
+        String lastTaskName = MDC.get("task");
+        MDC.put("task", this.getName());
+        long started = System.currentTimeMillis();
+        logger.info("Task starting...");
+        Result<T> r = executeTask();
+        long finished = System.currentTimeMillis();
+        logger.info("Task finished (" + (finished-started) + " ms)");
+        MDC.put("task", lastTaskName);
+        return r;
+    }
+    
+    abstract protected Result<T> executeTask() throws Exception;
     
 }

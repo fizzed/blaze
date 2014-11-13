@@ -9,7 +9,7 @@ short_description: "Blazingly fast tasks"
 
 type: CONSOLE
 
-main_class: "co.fizzed.blaze.cli.BlazeMain"
+main_class: "co.fizzed.blaze.cli.BlazeBootstrap"
 
 platforms: [ WINDOWS, LINUX ]
 
@@ -17,4 +17,4 @@ working_dir_mode: RETAIN
   
 min_java_version: "1.8"
 
-symlink_java: false
+symlink_java: true

@@ -20,7 +20,7 @@ import co.fizzed.blaze.action.CopyFilesAction;
 import co.fizzed.blaze.action.ExecAction;
 import co.fizzed.blaze.action.IvyAction;
 import co.fizzed.blaze.action.ListFilesAction;
-import co.fizzed.blaze.action.StorkLauncherGenerateAction;
+import co.fizzed.blaze.action.StorkGenerateAction;
 import co.fizzed.blaze.action.WhichAction;
 import java.io.File;
 import java.util.Arrays;
@@ -71,8 +71,8 @@ public class Actions {
         return new IvyAction(context);
     }
     
-    public StorkLauncherGenerateAction storkLauncherGenerate() {
-        return new StorkLauncherGenerateAction(context);
+    public StorkGenerateAction storkGenerate() {
+        return new StorkGenerateAction(context);
     }
     
     public <T> void pipeline(Future<T> ... futures) throws Exception {

@@ -26,12 +26,12 @@ import java.util.List;
  *
  * @author joelauer
  */
-public class StorkLauncherGenerateAction extends Action<Integer> {
+public class StorkGenerateAction extends Action<Integer> {
 
     private File outputDir;
     private File inputFile;
     
-    public StorkLauncherGenerateAction(Context context) {
+    public StorkGenerateAction(Context context) {
         super(context);
     }
 
@@ -39,7 +39,7 @@ public class StorkLauncherGenerateAction extends Action<Integer> {
         return outputDir;
     }
 
-    public StorkLauncherGenerateAction outputDir(File outputDir) {
+    public StorkGenerateAction outputDir(File outputDir) {
         this.outputDir = outputDir;
         return this;
     }
@@ -48,7 +48,7 @@ public class StorkLauncherGenerateAction extends Action<Integer> {
         return inputFile;
     }
 
-    public StorkLauncherGenerateAction inputFile(File inputFile) {
+    public StorkGenerateAction inputFile(File inputFile) {
         this.inputFile = inputFile;
         return this;
     }

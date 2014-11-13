@@ -33,7 +33,6 @@ public class TaskFactory {
     }
     
     public Task create(ScriptObjectMirror o) {
-        //System.out.println("o -> " + o.getClassName());
         return new FunctionTask(this.context, o.to(Function.class));
     }
     

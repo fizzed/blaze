@@ -16,9 +16,11 @@
 package co.fizzed.blaze.core;
 
 import co.fizzed.blaze.task.Task;
-import java.util.LinkedHashMap;
+import co.fizzed.blaze.task.TaskMap;
 import java.util.Map;
 import javax.script.ScriptEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -34,7 +36,7 @@ public class Context {
     
     public Context(ScriptEngine engine) {
         this.engine = engine;
-        this.tasks = new LinkedHashMap<>();
+        this.tasks = new TaskMap();
         this.settings = new Settings(this);
         this.actions = new Actions(this);
         this.utils = new Utils(this);
