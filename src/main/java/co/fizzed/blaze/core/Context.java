@@ -73,7 +73,12 @@ public class Context {
     }
 
     public void setBaseDir(File baseDir) {
-        this.baseDir = baseDir;
+        // a "null" basedir will merely set it to current dir
+        if (baseDir == null) {
+            this.baseDir = new File(".");
+        } else {
+            this.baseDir = baseDir;
+        }
     }
     
     public File resolveWithBaseDir(Path path) {

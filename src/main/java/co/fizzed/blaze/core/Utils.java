@@ -15,18 +15,41 @@
  */
 package co.fizzed.blaze.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.script.ScriptException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+
 /**
  *
  * @author joelauer
  */
 public class Utils {
-    
+    private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+
     private final Context context;
     private final OS os;
     
     public Utils(Context context) {
         this.context = context;
         this.os = new OS();
+    }
+
+    public void load(String path) throws IOException, ScriptException {
+        logger.info("Overridden load method... {}", path);
+        String pathLowerCase = path.toLowerCase();
+        if (pathLowerCase.startsWith("http://") || pathLowerCase.startsWith("https://")) {
+            // do nothing, original load() function will work
+        } else {
+            logger.debug("Resolving load path [" + path + "] against project baseDir [" + context.getBaseDir() + "]");
+            File resolvedPath = context.resolveWithBaseDir(Paths.get(path));
+            path = resolvedPath.getAbsolutePath();
+        }
+        // delegate to original load function
+        context.getEngine().eval("originalLoad('" + path + "')");
     }
 
     public OS os() {

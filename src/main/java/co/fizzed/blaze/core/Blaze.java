@@ -22,11 +22,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+
+import jdk.nashorn.internal.objects.ScriptFunctionImpl;
+import jdk.nashorn.internal.runtime.ScriptFunction;
+import jdk.nashorn.internal.runtime.ScriptFunctionData;
+import jdk.nashorn.internal.runtime.ScriptObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -87,6 +93,8 @@ public class Blaze {
         // export some objects as global to script
         context = new Context(scriptEngine);
         Settings.populateDefaults(context, context.getSettings());
+        // set basedir (parent of script)
+        context.setBaseDir(this.projectFile.getParentFile());
 
         // expose functions as global variables to script
         Bindings bindings = scriptEngine.getBindings(ScriptContext.GLOBAL_SCOPE);
@@ -99,11 +107,16 @@ public class Blaze {
         engineBindings.put("$S", context.getSettings());
         engineBindings.put("$T", context.getTasks());
         engineBindings.put("Task", new TaskFactory(context));
+
+        // hijack load() function to route thru Blaze load which will resolve path to basedir
+        // of the project file -- as well any other functionality we want to add
+        String initializerScript = new StringBuilder()
+                .append("originalLoad = load;")
+                .append("load = function(path) { $U.load(path); };")
+                .toString();
+        scriptEngine.eval(initializerScript);
         
         scriptEngine.eval(new FileReader(projectFile));
-        
-        // on success set the base dir of the context
-        context.setBaseDir(projectFile.getParentFile());
     }
     
     public void run(List<String> tasksToRun) throws UsageException, IOException, ScriptException, Exception, Throwable {
