@@ -1,0 +1,158 @@
+/*
+ * Copyright 2015 Fizzed, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.fizzed.blaze.cli;
+
+import com.fizzed.blaze.Version;
+import com.fizzed.blaze.Blaze;
+import com.fizzed.blaze.NoSuchTaskException;
+import com.fizzed.blaze.util.DependencyResolveException;
+import com.fizzed.blaze.util.Timer;
+import java.io.File;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Bootstrap {
+
+    static public void main(String[] args) {
+        Thread.currentThread().setName("blaze");
+        
+        // process command line args
+        ArrayDeque<String> argString = new ArrayDeque(Arrays.asList(args));
+
+        File blazeFile = null;
+        File blazeDir = null;
+        List<String> tasks = new ArrayList<>();
+
+        boolean listTasks = false;
+
+        while (!argString.isEmpty()) {
+            String arg = argString.remove();
+            if (arg.equals("-V") || arg.equals("--version")) {
+                System.out.println("blaze: v" + Version.getLongVersion());
+                System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
+                System.exit(0);
+            } else if (arg.equals("-q") || arg.equals("-v") || arg.equals("-vv") || arg.equals("-vvv")) {
+                String level = "info";
+                
+                if (arg.equals("-q")) {
+                    level = "warn";
+                } else if (arg.equals("-v")) {
+                    level = "debug";
+                } else if (arg.equals("-vv")) {
+                    level = "trace";
+                } else if (arg.equals("-vvv")) {
+                    level = "trace";
+                    // but also set another system property which really turns on even MORE debugging
+                    System.setProperty("blaze.superdebug", "true");
+                }
+                
+                System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
+
+                // if using logback
+                //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+                /**
+                Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+                if (arg.length() == 2) {
+                root.setLevel(Level.DEBUG);
+                } else {
+                root.setLevel(Level.INFO);
+                }
+                 */
+            } else if (arg.equals("-h") || arg.equals("--help")) {
+                System.out.println("blaze: [options] <task> [<task> ...]");
+                System.out.println("-f|--file <file>  Use this blaze file instead of default");
+                System.out.println("-d|--dir <dir>    Search this dir for blaze file instead of default (-f supercedes)");
+                System.out.println("-l|--list         Display list of available tasks");
+                System.out.println("-q                Only log warnings to stdout");
+                System.out.println("-v[v...]          Increases verbosity of logging to stdout");
+                System.out.println("-V|--version      Display version and then exit");
+                System.exit(0);
+            } else if (arg.equals("-f") || arg.equals("--file")) {
+                if (argString.isEmpty()) {
+                    System.err.println("[ERROR] -f|--file parameter requires next arg to be file");
+                    System.exit(1);
+                }
+                blazeFile = new File(argString.remove());
+            } else if (arg.equals("-d") || arg.equals("--dir")) {
+                if (argString.isEmpty()) {
+                    System.err.println("[ERROR] -d|--dir parameter requires next arg to be directory");
+                    System.exit(1);
+                }
+                blazeDir = new File(argString.remove());
+            } else if (arg.equals("-l") || arg.equals("--list")) {
+                listTasks = true;
+            } else if (arg.startsWith("-")) {
+                System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; blaze -h for more info");
+                System.exit(1);
+            } else {
+                // assume this arg is a task to run
+                tasks.add(arg);
+                break;
+            }
+        }
+        
+        // trigger logger to be bound!
+        Logger log = LoggerFactory.getLogger(Bootstrap.class);
+        
+        // create but do not build yet
+        Blaze.Builder blazeBuilder = Blaze.builder()
+            .file(blazeFile)
+            .directory(blazeDir);
+        
+        Timer timer = new Timer();
+        try {
+            // build blaze
+            Blaze blaze = blazeBuilder.build();
+
+            if (listTasks) {
+                logTasks(log, blaze);
+                System.exit(0);
+            } else {
+                try {
+                    blaze.executeAll(tasks);
+                } catch (NoSuchTaskException e) {
+                    // do not log stack trace
+                    log.error(e.getMessage());
+                    logTasks(log, blaze);
+                    System.exit(1);
+                }
+            }
+        } catch (DependencyResolveException e) {
+            // do not log stack trace
+            log.error(e.getMessage());
+            System.exit(1);
+        } catch (Exception e) {
+            // hmmm... definitely something unexpected so log stack trace
+            log.error(e.getMessage(), e);
+            System.exit(1);
+        }
+        
+        // only log time if no exception
+        log.info("Blazed in {} ms", timer.stop().millis());
+    }
+    
+    static private void logTasks(Logger log, Blaze blaze) {
+        System.out.println(blaze.context().file() + " tasks =>");
+        List<String> ts = blaze.script().tasks();
+        ts.stream().forEach((t) -> {
+            System.out.println("  " + t);
+        });
+    }
+}

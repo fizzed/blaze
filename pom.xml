@@ -1,81 +1,134 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>co.fizzed</groupId>
-    <artifactId>fizzed-blaze</artifactId>
-    <packaging>jar</packaging>
+    <groupId>com.fizzed</groupId>
+    <artifactId>blaze</artifactId>
+    <packaging>pom</packaging>
     <name>${project.artifactId}</name>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
  
     <parent>
-        <groupId>co.fizzed</groupId>
+        <groupId>com.fizzed</groupId>
         <artifactId>fizzed-maven-parent</artifactId>
-        <version>1.11</version>
+        <version>1.14</version>
     </parent>
     
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>co.fizzed</groupId>
-                <artifactId>fizzed-stork-maven-plugin</artifactId>
-                <version>1.2.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-stork-launchers</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>generate-stork-assembly</id>
-                        <goals>
-                            <goal>assembly</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    
-    <dependencies>
-        <!-- compile -->
-        <dependency>
-            <groupId>org.zeroturnaround</groupId>
-            <artifactId>zt-exec</artifactId>
-            <version>1.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ivy</groupId>
-            <artifactId>ivy</artifactId>
-            <version>2.4.0-rc1</version>
-        </dependency>
-        <dependency>
-            <groupId>co.fizzed</groupId>
-            <artifactId>fizzed-stork-launcher</artifactId>
-            <version>1.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.7</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.1.2</version>
-        </dependency>
-    </dependencies>
-
     <properties>
-        <main.java.package>co.fizzed.blaze</main.java.package>
+        <java.version>1.8</java.version>
     </properties>
+    
+    <modules>
+        <module>core</module>
+        <module>groovy</module>
+        <module>nodep</module>
+    </modules>
+    
+    <dependencyManagement>
+        <dependencies>
+            <!-- logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.7.12</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>1.7.12</version>
+            </dependency>
+            
+            <!-- configuration -->
+            <dependency>
+                <groupId>com.typesafe</groupId>
+                <artifactId>config</artifactId>
+                <version>1.3.0</version>
+            </dependency>
+                                    
+            <!-- process handling -->
+            <dependency>
+                <groupId>org.zeroturnaround</groupId>
+                <artifactId>zt-exec</artifactId>
+                <version>1.8</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-io</groupId>
+                        <artifactId>commons-io</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.4</version>
+            </dependency>
+            
+            <!-- helper to create META-INF/services -->
+            <dependency>
+                <groupId>org.kohsuke.metainf-services</groupId>
+                <artifactId>metainf-services</artifactId>
+                <version>1.6</version>
+                <scope>provided</scope>
+            </dependency>
+            
+            <!-- dependency management -->
+            <dependency>
+                <groupId>org.apache.ivy</groupId>
+                <artifactId>ivy</artifactId>
+                <version>2.4.0</version>
+            </dependency>
+
+            <!-- ssh support -->
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>0.1.53</version>
+            </dependency>
+
+            <!-- groovy engine support -->
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>2.4.5</version>
+            </dependency>
+            
+            <!-- testing (hamcrest BEFORE junit important) -->
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>java-hamcrest</artifactId>
+                <version>2.0.0.0</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>2.0.31-beta</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.github.stefanbirkner</groupId>
+                <artifactId>system-rules</artifactId>
+                <version>1.12.1</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.1.3</version>
+                <scope>test</scope>
+            </dependency>
+            
+        </dependencies>
+    </dependencyManagement>
 </project>

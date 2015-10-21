@@ -1,8 +1,6 @@
 Blaze by Fizzed
 =======================================
 
-## By
-
  - [Fizzed, Inc.](http://fizzed.co)
  - Joe Lauer (Twitter: [@jjlauer](http://twitter.com/jjlauer))
 
@@ -24,6 +22,16 @@ you need your tasks to run in.  Let's take a look at a simple example of
 compiling some code:
 
     var targetDir = "target";
+
+    Blaze.actions.
+    Blaze.tasks.
+    Blaze.createTask
+    Blaze.createAction
+
+    T
+    
+
+    T.setup = 
 
     $T.setup = Task.create(function() {
         // code to make target dir

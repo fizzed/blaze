@@ -1,0 +1,20 @@
+
+name: "blaze"
+
+domain: "com.fizzed"
+
+display_name: "Blaze by Fizzed"
+
+short_description: "Blazingly fast tasks"
+
+type: CONSOLE
+
+main_class: "com.fizzed.blaze.cli.BlazeBootstrap"
+
+platforms: [ WINDOWS, LINUX ]
+
+working_dir_mode: RETAIN
+  
+min_java_version: "1.8"
+
+symlink_java: true

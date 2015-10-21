@@ -1,0 +1,3 @@
+def blaze() {
+  println 'Hello'
+}
