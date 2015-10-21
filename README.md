@@ -13,8 +13,8 @@ existing JVM skills to help automate tasks.
 
  - Pluggable scripting engine with built-in support for Javascript (Nashorn)
    and Groovy
- - Automatic dependency management (e.g. download dependencies from Maven central)
- - Simple method to check-in a `blaze.jar` to your repo
+ - Automatic dependency management at runtime (e.g. download dependencies from Maven central)
+ - Zero-install - simply check-in a `blaze.jar` to your repo
  - Scripts are compiled and run on-the-fly
 
 ## Examples
