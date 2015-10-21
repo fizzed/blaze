@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -157,7 +158,7 @@ public class BlazeNashornEngineTest {
         
         systemOutRule.clearLog();
         
-        blaze.executeAll("main", "blaze");
+        blaze.executeAll(Arrays.asList("main", "blaze"));
         
         assertThat(systemOutRule.getLog(), containsString("Hello World!"));
         assertThat(systemOutRule.getLog(), containsString("In Blaze!"));

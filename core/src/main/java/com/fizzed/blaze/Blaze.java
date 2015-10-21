@@ -293,19 +293,10 @@ public class Blaze {
         
         log.info("Executing {}:{}...", context.file(), task);
         Timer executeTimer = new Timer();
-        try {
-            this.script.execute(task);
-        } finally {
-            log.info("Executed {}:{} in {} ms", context.file(), task, executeTimer.stop().millis());
-        }
-    }
-    
-    public void executeAll(String ... tasks) throws BlazeException {
-        if (tasks == null || tasks.length == 0) {
-            execute(null);
-        } else {
-            executeAll(Arrays.asList(tasks));
-        }
+        
+        this.script.execute(task);
+        
+        log.info("Executed {}:{} in {} ms", context.file(), task, executeTimer.stop().millis());
     }
     
     public void executeAll(List<String> tasks) throws BlazeException {

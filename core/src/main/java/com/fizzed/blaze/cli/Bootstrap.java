@@ -44,20 +44,20 @@ public class Bootstrap {
 
         while (!argString.isEmpty()) {
             String arg = argString.remove();
-            if (arg.equals("-V") || arg.equals("--version")) {
+            if (arg.equals("-v") || arg.equals("--version")) {
                 System.out.println("blaze: v" + Version.getLongVersion());
                 System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
                 System.exit(0);
-            } else if (arg.equals("-q") || arg.equals("-v") || arg.equals("-vv") || arg.equals("-vvv")) {
+            } else if (arg.equals("-q") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
                 String level = "info";
                 
                 if (arg.equals("-q")) {
                     level = "warn";
-                } else if (arg.equals("-v")) {
+                } else if (arg.equals("-x")) {
                     level = "debug";
-                } else if (arg.equals("-vv")) {
+                } else if (arg.equals("-xx")) {
                     level = "trace";
-                } else if (arg.equals("-vvv")) {
+                } else if (arg.equals("-xxx")) {
                     level = "trace";
                     // but also set another system property which really turns on even MORE debugging
                     System.setProperty("blaze.superdebug", "true");
@@ -81,8 +81,8 @@ public class Bootstrap {
                 System.out.println("-d|--dir <dir>    Search this dir for blaze file instead of default (-f supercedes)");
                 System.out.println("-l|--list         Display list of available tasks");
                 System.out.println("-q                Only log warnings to stdout");
-                System.out.println("-v[v...]          Increases verbosity of logging to stdout");
-                System.out.println("-V|--version      Display version and then exit");
+                System.out.println("-x[x...]          Increases verbosity of logging to stdout");
+                System.out.println("-v|--version      Display version and then exit");
                 System.exit(0);
             } else if (arg.equals("-f") || arg.equals("--file")) {
                 if (argString.isEmpty()) {
@@ -102,9 +102,8 @@ public class Bootstrap {
                 System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; blaze -h for more info");
                 System.exit(1);
             } else {
-                // assume this arg is a task to run
+                // this arg must be a task to run
                 tasks.add(arg);
-                break;
             }
         }
         
@@ -126,6 +125,7 @@ public class Bootstrap {
                 System.exit(0);
             } else {
                 try {
+                    log.debug("tasks to execute: {}", tasks);
                     blaze.executeAll(tasks);
                 } catch (NoSuchTaskException e) {
                     // do not log stack trace

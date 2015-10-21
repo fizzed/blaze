@@ -74,6 +74,22 @@ public class BlazeGroovyEngineTest {
     }
     
     @Test
+    public void taskNotFound() throws Exception {
+        Blaze blaze
+            = Blaze.builder()
+                .dependencyResolver(new NoopDependencyResolver())
+                .file(resourceAsFile("/groovy/hello.groovy"))
+                .build();
+        
+        try {
+            blaze.execute("doesnotexist");
+            fail();
+        } catch (NoSuchTaskException e) {
+            assertThat(e.getTask(), is("doesnotexist"));
+        }
+    }
+    
+    @Test
     public void tasks() throws Exception {
         Blaze blaze
             = Blaze.builder()

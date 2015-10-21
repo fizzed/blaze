@@ -20,7 +20,7 @@
     <modules>
         <module>core</module>
         <module>groovy</module>
-        <module>nodep</module>
+        <module>lite</module>
     </modules>
     
     <dependencyManagement>

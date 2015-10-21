@@ -49,7 +49,7 @@ public class BlazeGroovyScript implements Script {
             
             for (Method m : methods) {
                 
-                log.debug("method: {}", m);
+                //log.debug("method: {}", m);
                 
                 // groovy defines run() and a static main() method
                 if (!Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())) {
@@ -63,7 +63,7 @@ public class BlazeGroovyScript implements Script {
             throw new BlazeException("Unable to groovy script class", e);
         }
         
-        log.debug("tasks {}", tasks);
+        //log.debug("tasks {}", tasks);
         
         return tasks;
     }
