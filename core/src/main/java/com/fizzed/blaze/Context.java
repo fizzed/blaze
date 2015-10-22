@@ -17,6 +17,7 @@ package com.fizzed.blaze;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,12 +83,16 @@ public class Context {
         }
     }
     
-    public File withBaseDir(File file) {
+    public File withBaseDir(File path) {
         if (file.isAbsolute()) {
             return file;
         } else {
-            return new File(baseDir(), file.getPath());
+            return new File(baseDir(), path.getPath());
         }
+    }
+    
+    public File withBaseDir(String path) {
+        return withBaseDir(Paths.get(path));
     }
 
     public File file() {

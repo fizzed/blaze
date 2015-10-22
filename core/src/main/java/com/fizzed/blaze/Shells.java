@@ -42,12 +42,12 @@ public class Shells {
             .message(message);
     }
     
-    static public Exec exec(String command, String ... arguments) {
+    static public Exec exec(String command, Object ... arguments) {
         return new Exec(Context.currentContext())
             .command(command, arguments);
     }
     
-    static public Exec exec(File command, String ... arguments) {
+    static public Exec exec(File command, Object ... arguments) {
         return exec(command.toString(), arguments);
     }
     

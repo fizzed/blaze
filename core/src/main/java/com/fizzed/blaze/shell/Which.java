@@ -70,7 +70,7 @@ public class Which extends Action<File> implements PathSupport<Which> {
                 File commandFile = new File(path.toFile(), commandWithExt);
                 
                 //logger.trace("commandFile: {}", commandFile);
-                File f = context.withBaseDir(commandFile);
+                File f = commandFile;
                 
                 log.trace("Trying file: {}", f);
                 if (f.exists() && f.isFile()) {

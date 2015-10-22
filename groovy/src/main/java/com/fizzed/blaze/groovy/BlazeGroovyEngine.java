@@ -62,7 +62,8 @@ public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
             
             Binding binding = new Binding();
             
-            // add a few context variables
+            // add small number of useful bindings
+            binding.setVariable("context", context);
             binding.setVariable("log", context.logger());
             binding.setVariable("config", context.config());
  

@@ -18,12 +18,12 @@ package com.fizzed.blaze.shell;
 import com.fizzed.blaze.Action;
 import com.fizzed.blaze.BlazeException;
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.util.ObjectHelper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -54,21 +54,34 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
             .exitValueNormal();
     }
     
-    public Exec command(String command, String ... arguments) {
+    public Exec command(String command, Object... arguments) {
         this.which.command(command);
         this.arguments.clear();
-        this.arguments.addAll(Arrays.asList(arguments));
+        this.arguments.addAll(ObjectHelper.toStringList(arguments));
         return this;
     }
     
-    public Exec arg(String ... arguments) {
-        this.arguments.addAll(Arrays.asList(arguments));
+    /**
+     * Adds one or more arguments by appending to existing list.
+     * @param arguments
+     * @return 
+     * @see #args(java.lang.Object...) For replacing existing arguments
+     */
+    public Exec arg(Object... arguments) {
+        this.arguments.addAll(ObjectHelper.toStringList(arguments));
         return this;
     }
     
-    public Exec args(String ... arguments) {
+    /**
+     * Replaces existing arguments with one or more new arguments.
+     * @param arguments
+     * @return 
+     * @see #arg(java.lang.Object...) For adding to existing arguments rather
+     *      than replacing
+     */
+    public Exec args(Object... arguments) {
         this.arguments.clear();
-        this.arguments.addAll(Arrays.asList(arguments));
+        this.arguments.addAll(ObjectHelper.toStringList(arguments));
         return this;
     }
     
