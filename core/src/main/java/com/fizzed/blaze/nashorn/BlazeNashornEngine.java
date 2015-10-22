@@ -18,15 +18,11 @@ package com.fizzed.blaze.nashorn;
 import com.fizzed.blaze.BlazeException;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.Engine;
-import com.fizzed.blaze.NoSuchTaskException;
 import com.fizzed.blaze.util.AbstractEngine;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.script.Bindings;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
@@ -77,7 +73,8 @@ public class BlazeNashornEngine extends AbstractEngine<BlazeNashornScript> {
             scriptEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             
             // expose functions as global variables to script
-            //Bindings bindings = scriptEngine.getBindings(ScriptContext.GLOBAL_SCOPE);
+            bindings.put("context", context);
+            bindings.put("log", context.logger());
             //bindings.put("console", new Console());
 
             scriptEngine.eval(new FileReader(context.file()), bindings);

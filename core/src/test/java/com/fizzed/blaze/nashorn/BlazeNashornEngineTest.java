@@ -201,6 +201,22 @@ public class BlazeNashornEngineTest {
     }
     
     @Test
+    public void logInBindings() throws Exception {
+        systemOutRule.clearLog();
+
+        Blaze blaze
+            = Blaze.builder()
+                .file(resourceAsFile("/nashorn/log.js"))
+                .build();
+        
+        systemOutRule.clearLog();
+        
+        blaze.execute("main");
+        
+        assertThat(systemOutRule.getLog(), containsString("Did this work?"));
+    }
+    
+    @Test
     public void readOutputDisablesLoggingToStdout() throws Exception {
         systemOutRule.clearLog();
 
