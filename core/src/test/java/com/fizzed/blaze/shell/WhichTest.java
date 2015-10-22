@@ -21,6 +21,7 @@ import static com.fizzed.blaze.shell.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
 import com.fizzed.blaze.util.FileHelper;
 import java.io.File;
+import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -62,7 +63,7 @@ public class WhichTest {
         assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
 
         File f = new Which(context)
-            .command("dir")
+            .command("ipconfig")
             .run();
         
         log.debug("which: {}", f);
@@ -107,7 +108,7 @@ public class WhichTest {
         assertThat(f, is(not(nullValue())));
         assertThat(f.isFile(), is(true));
         assertThat(f.canExecute(), is(true));
-        assertThat(f.getName(), is("hello-world-test"));
+        assertThat(f.getName(), either(is("hello-world-test")).or(is("hello-world-test.bat")));
     }
     
 }
