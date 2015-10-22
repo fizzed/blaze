@@ -16,6 +16,7 @@
 package com.fizzed.blaze;
 
 import com.fizzed.blaze.shell.Exec;
+import com.fizzed.blaze.shell.RequireExec;
 import com.fizzed.blaze.shell.Which;
 import java.io.File;
 
@@ -28,6 +29,17 @@ public class Shells {
     static public Which which(String command) {
         return new Which(Context.currentContext())
             .command(command);
+    }
+    
+    static public RequireExec requireExec(String command) {
+        return new RequireExec(Context.currentContext())
+            .command(command);
+    }
+    
+    static public RequireExec requireExec(String command, String message) {
+        return new RequireExec(Context.currentContext())
+            .command(command)
+            .message(message);
     }
     
     static public Exec exec(String command, String ... arguments) {

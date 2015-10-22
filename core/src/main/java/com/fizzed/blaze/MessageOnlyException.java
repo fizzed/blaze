@@ -15,9 +15,19 @@
  */
 package com.fizzed.blaze;
 
-import java.util.NoSuchElementException;
-
 /**
  *
  * @author joelauer
  */
+public class MessageOnlyException extends BlazeException {
+
+    /**
+     * Constructs an instance of <code>MessageOnlyException</code> with the
+     * specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public MessageOnlyException(String msg) {
+        super(msg);
+    }
+}

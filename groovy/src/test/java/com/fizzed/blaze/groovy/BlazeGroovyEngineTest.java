@@ -16,13 +16,16 @@
 package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.Blaze;
+import com.fizzed.blaze.MessageOnlyException;
 import com.fizzed.blaze.NoSuchTaskException;
 import static com.fizzed.blaze.util.FileHelper.resourceAsFile;
 import com.fizzed.blaze.util.NoopDependencyResolver;
 import java.util.List;
+import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -94,7 +97,7 @@ public class BlazeGroovyEngineTest {
         Blaze blaze
             = Blaze.builder()
                 .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/groovy/twotasks.groovy"))
+                .file(resourceAsFile("/groovy/two_tasks.groovy"))
                 .build();
         
         systemOutRule.clearLog();
@@ -106,6 +109,62 @@ public class BlazeGroovyEngineTest {
         assertThat(tasks, hasSize(2));
         assertThat(tasks, hasItem("main"));
         assertThat(tasks, hasItem("blaze"));
+    }
+    
+    @Test
+    public void scriptInitiliazed() throws Exception {
+        systemOutRule.clearLog();
+        
+        Blaze blaze
+            = Blaze.builder()
+                .dependencyResolver(new NoopDependencyResolver())
+                .file(resourceAsFile("/groovy/script_initialized.groovy"))
+                .build();
+        
+        // script should have been initialized
+        assertThat(systemOutRule.getLog(), containsString("Groovy run() called"));
+        
+        // main should not have been called yet
+        assertThat(systemOutRule.getLog(), not(containsString("1.0")));
+        
+        blaze.execute();
+        
+        // main should have been called
+        assertThat(systemOutRule.getLog(), containsString("1.0"));
+    }
+    
+    @Test
+    public void exceptionsNotWrappedDuringExecution() throws Exception {
+        try {
+            Blaze blaze
+                = Blaze.builder()
+                    .dependencyResolver(new NoopDependencyResolver())
+                    .file(resourceAsFile("/groovy/message_only_exception.groovy"))
+                    .build();
+
+            blaze.execute();
+            
+            fail();
+        } catch (MessageOnlyException e) {
+            assertThat(e.getMessage(), containsString("This message should be displayed"));
+        }
+    }
+    
+    @Test
+    public void compileFailNotWrappedExecution() throws Exception {
+        try {
+            Blaze blaze
+                = Blaze.builder()
+                    .dependencyResolver(new NoopDependencyResolver())
+                    .file(resourceAsFile("/groovy/compile_fail.groovy"))
+                    .build();
+
+            blaze.execute();
+            
+            fail();
+        } catch (MultipleCompilationErrorsException e) {
+            assertThat(e.getMessage(), containsString("expecting '}'"));
+        }
     }
     
 }

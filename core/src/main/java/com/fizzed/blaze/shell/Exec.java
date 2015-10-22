@@ -34,7 +34,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
  *
  * @author joelauer
  */
-public class Exec extends Action<ExecResult> {
+public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
 
     final private Which which;
     final private ProcessExecutor executor;
@@ -72,24 +72,9 @@ public class Exec extends Action<ExecResult> {
         return this;
     }
     
-    public Exec path(Path path) {
-        this.which.path(path);
-        return this;
-    }
-    
-    public Exec path(File path) {
-        this.which.path(path);
-        return this;
-    }
-    
-    public Exec path(String path) {
-        this.which.path(path);
-        return this;
-    }
-    
-    public Exec path(String first, String ... more) {
-        this.which.path(first, more);
-        return this;
+    @Override
+    public List<Path> getPaths() {
+        return this.which.getPaths();
     }
 
     public Exec env(String name, String value) {
@@ -150,4 +135,5 @@ public class Exec extends Action<ExecResult> {
             throw new BlazeException("Unable to cleanly execute", e);
         }
     }
+
 }

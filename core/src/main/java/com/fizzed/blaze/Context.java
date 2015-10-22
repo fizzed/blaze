@@ -53,11 +53,17 @@ public class Context {
     final private File baseDir;
     final private File file;
     final private Config config;
+    final private Logger logger;
     
     public Context(File baseDir, File file, Config config) {
         this.baseDir = baseDir;
         this.file = file;
         this.config = config;
+        this.logger = LoggerFactory.getLogger("script");
+    }
+    
+    public Logger logger() {
+        return this.logger;
     }
 
     public File baseDir() {

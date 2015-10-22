@@ -25,6 +25,10 @@ import java.io.File;
 public class ShellTestHelper {
     
     static public File getBinDirAsResource() throws Exception {
+        // fix permissions from maven copy (otherwise test fails)
+        FileHelper.resourceAsFile("/bin/hello-world-test").setExecutable(true);
+        FileHelper.resourceAsFile("/bin/hello-world-test.bat").setExecutable(true);
+        
         // must use a resource that exists to then get its parent
         return FileHelper.resourceAsFile("/bin/hello-world-test").getParentFile();
     }

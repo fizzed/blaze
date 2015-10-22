@@ -17,6 +17,7 @@ package com.fizzed.blaze.cli;
 
 import com.fizzed.blaze.Version;
 import com.fizzed.blaze.Blaze;
+import com.fizzed.blaze.MessageOnlyException;
 import com.fizzed.blaze.NoSuchTaskException;
 import com.fizzed.blaze.util.DependencyResolveException;
 import com.fizzed.blaze.util.Timer;
@@ -64,6 +65,7 @@ public class Bootstrap {
                 }
                 
                 System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
+                System.setProperty("org.slf4j.simpleLogger.log.script", level);
 
                 // if using logback
                 //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
@@ -134,7 +136,7 @@ public class Bootstrap {
                     System.exit(1);
                 }
             }
-        } catch (DependencyResolveException e) {
+        } catch (MessageOnlyException | DependencyResolveException e) {
             // do not log stack trace
             log.error(e.getMessage());
             System.exit(1);

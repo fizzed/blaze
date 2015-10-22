@@ -19,6 +19,8 @@ import com.fizzed.blaze.BlazeException;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.Engine;
 import com.fizzed.blaze.util.AbstractEngine;
+import groovy.lang.Binding;
+import groovy.lang.Script;
 import groovy.util.GroovyScriptEngine;
 import groovy.util.ResourceException;
 import groovy.util.ScriptException;
@@ -54,20 +56,23 @@ public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
 
     @Override
     public BlazeGroovyScript compile(Context context) throws BlazeException {
-        Class scriptClass;
         try {
             // must be valid url...
             String path = context.file().toURI().toURL().toString();
-            scriptClass = this.groovy.loadScriptByName(path);
-        } catch (ResourceException | IOException | ScriptException e) {
-            throw new BlazeException("Unable to load groovy script", e);
-        }
-        
-        try {
-            Object script = scriptClass.newInstance();
+            
+            Binding binding = new Binding();
+            
+            // add a few context variables
+            binding.setVariable("log", context.logger());
+            binding.setVariable("config", context.config());
+ 
+            Script script = script = this.groovy.createScript(path, binding);
+            
+            script.run();
+            
             return new BlazeGroovyScript(this, script);
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new BlazeException("Unable to create groovy script instance", e);
+        } catch (ResourceException | IOException | ScriptException e) {
+            throw new BlazeException("Unable to compile groovy script", e);
         }
     }
 }

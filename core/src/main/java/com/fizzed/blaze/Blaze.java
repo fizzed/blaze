@@ -113,7 +113,9 @@ public class Blaze {
                 }
                 
                 // search for file named "blaze.<ext>"
-                File[] blazeFiles = this.directory.listFiles((File f) -> f.getName().startsWith("blaze.") && !f.getName().endsWith(".conf"));
+                File[] blazeFiles = this.directory.listFiles(
+                    (File f) -> f.getName().startsWith("blaze.")
+                        && !f.getName().endsWith(".conf") && !f.getName().endsWith(".jar"));
                 
                 if (blazeFiles.length == 0) {
                     throw new BlazeException("Unable to find a blaze file (e.g. blaze.js). Perhaps this is not a Blaze project?");

@@ -15,25 +15,35 @@
  */
 package com.fizzed.blaze;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.slf4j.Logger;
+
 /**
  *
  * @author joelauer
  */
-public class NoSuchTaskException extends MessageOnlyException {
-
-    final private String task;
+public class Contexts {
     
-    public NoSuchTaskException(String task) {
-        this(task, "Task '" + task + "' not found");
+    static public File baseDir() {
+        return Context.currentContext().baseDir();
     }
     
-    public NoSuchTaskException(String task, String msg) {
-        super(msg);
-        this.task = task;
+    static public File baseDir(Path path) {
+        return Context.currentContext().withBaseDir(path);
     }
-
-    public String getTask() {
-        return task;
+    
+    static public File baseDir(File path) {
+        return Context.currentContext().withBaseDir(path);
     }
-
+    
+    static public File baseDir(String path) {
+        return Context.currentContext().withBaseDir(Paths.get(path));
+    }
+    
+    static public Logger logger() {
+        return Context.currentContext().logger();
+    }
+    
 }

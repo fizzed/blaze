@@ -18,7 +18,7 @@ package com.fizzed.blaze.groovy;
 import com.fizzed.blaze.BlazeException;
 import com.fizzed.blaze.Engine;
 import com.fizzed.blaze.NoSuchTaskException;
-import com.fizzed.blaze.Script;
+import groovy.lang.Script;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -29,13 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @MetaInfServices(Engine.class)
-public class BlazeGroovyScript implements Script {
+public class BlazeGroovyScript implements com.fizzed.blaze.Script {
     static final private Logger log = LoggerFactory.getLogger(BlazeGroovyScript.class);
     
     final private BlazeGroovyEngine engine;
-    final private Object script;
+    final private Script script;
 
-    public BlazeGroovyScript(BlazeGroovyEngine engine, Object script) {
+    public BlazeGroovyScript(BlazeGroovyEngine engine, Script script) {
         this.engine = engine;
         this.script = script;
     }
@@ -70,6 +70,7 @@ public class BlazeGroovyScript implements Script {
 
     @Override
     public void execute(String task) throws BlazeException {
+        // verify the method (task) exists first
         Method method;
         try {
             method = this.script.getClass().getDeclaredMethod(task, new Class[]{});
@@ -80,9 +81,35 @@ public class BlazeGroovyScript implements Script {
         }
         
         try {
-            method.invoke(this.script, new Object[]{});
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new BlazeException("unable to execute task '" + task + "'", e);
+            script.invokeMethod(task, new Object[]{});
+            //method.invoke(this.script, new Object[]{});
+        } catch (Exception e) {
+            //Throwable t = e.getCause();
+            
+            logFirstScriptSource(e);
+            
+            if (e instanceof BlazeException) {
+                throw (BlazeException)e;
+            } else if (e instanceof RuntimeException) {
+                throw (RuntimeException)e;
+            } else {
+                throw new BlazeException("Unable to execute task '" + task + "'", e);
+            }
+        }
+        //} catch (IllegalAccessException | IllegalArgumentException e) {
+        //    throw new BlazeException("Unable to execute task '" + task + "'", e);
+        //}
+    }
+    
+    public void logFirstScriptSource(Throwable t) {
+        StackTraceElement[] stes = t.getStackTrace();
+        if (stes != null) {
+            for (StackTraceElement ste : stes) {
+                if (ste.getFileName() != null && ste.getFileName().endsWith(".groovy")) {
+                    log.error("Problem with script likey @ " + ste.getFileName() + ":" + ste.getLineNumber());
+                    return;
+                }
+            }
         }
     }
     

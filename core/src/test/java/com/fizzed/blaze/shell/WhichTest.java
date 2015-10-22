@@ -90,10 +90,6 @@ public class WhichTest {
     
     @Test
     public void worksWithPath() throws Exception {
-        // fix permissions from maven copy (otherwise test fails)
-        FileHelper.resourceAsFile("/bin/hello-world-test").setExecutable(true);
-        FileHelper.resourceAsFile("/bin/hello-world-test.bat").setExecutable(true);
-        
         File f = new Which(context)
             .command("hello-world-test")
             .run();
