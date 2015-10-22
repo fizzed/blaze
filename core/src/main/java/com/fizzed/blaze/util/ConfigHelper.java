@@ -50,7 +50,7 @@ public class ConfigHelper {
         com.typesafe.config.Config typesafeConfig = null;
 
         // build a typesafe config that we'll wrap w/ our interface (just in case we swap out down the road)
-        if (file.exists()) {
+        if (file != null && file.exists()) {
             log.debug("Configuring with {}", file);
             typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(file);
         } else {

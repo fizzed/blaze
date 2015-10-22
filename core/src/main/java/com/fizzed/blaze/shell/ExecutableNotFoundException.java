@@ -13,39 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.shell;
+
+import com.fizzed.blaze.BlazeException;
 
 /**
  *
  * @author joelauer
- * @param <T>
  */
-public abstract class Action<T> {
-    
-    final protected Context context;
-    protected volatile boolean ran;
-    
-    public Action(Context context) {
-        this.context = context;
-    }
-    
-    public T run() throws BlazeException {
-        if (ran) {
-            throw new BlazeException("Cannot run more than once");
-        }
-        T value = doRun();
-        ran = true;
-        return value;
-    }
-    
-    abstract public T doRun() throws BlazeException;
-    
+public class ExecutableNotFoundException extends BlazeException {
+
     /**
-    public T get() throws BlazeException, NoSuchElementException {
-        if (!ran) {
-            run();
-        }
+     * Constructs an instance of <code>ExecutableNotFoundException</code> with
+     * the specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public ExecutableNotFoundException(String msg) {
+        super(msg);
     }
-    */
     
 }

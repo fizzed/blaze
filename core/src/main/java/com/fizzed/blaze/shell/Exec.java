@@ -24,18 +24,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 
 /**
  *
  * @author joelauer
  */
-public class Exec extends Action<ProcessResult> {
+public class Exec extends Action<ExecResult> {
 
     final private Which which;
     final private ProcessExecutor executor;
@@ -113,56 +112,27 @@ public class Exec extends Action<ProcessResult> {
         return this;
     }
 
-    /**
-    public List<Path> getPaths() {
-        return paths;
-    }
-    
-    public ExecAction insertPath(Path path) {
-        this.paths.add(0, path);
-        return this;
-    }
-    
-    public ExecAction insertPath(String first, String ... more) {
-        this.paths.add(0, Paths.get(first, more));
-        return this;
-    }
-    
-    public ExecAction addPath(Path path) {
-        this.paths.add(path);
-        return this;
-    }
-    
-    public ExecAction addPath(String first, String ... more) {
-        this.paths.add(Paths.get(first, more));
-        return this;
-    }
-
-    public ExecAction timeoutMillis(long timeout) {
-        this.executor.timeout(timeout, TimeUnit.MILLISECONDS);
-        return this;
-    }
-    
-    public ExecAction timeout(long timeout, TimeUnit units) {
-        this.executor.timeout(timeout, units);
-        return this;
-    }
-    */
-    
-    /**
-    public ExecAction readOutput() {
+    public Exec readOutput() {
         this.executor.readOutput(true);
         return this;
     }
-    */
+
+    public Exec timeout(long timeoutInMillis) {
+        this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
+        return this;
+    }
     
+    public Exec timeout(long timeout, TimeUnit units) {
+        this.executor.timeout(timeout, units);
+        return this;
+    }
 
     @Override
-    public ProcessResult run() throws BlazeException {
+    public ExecResult doRun() throws BlazeException {
         File exeFile = this.which.run();
         
         if (exeFile == null) {
-            throw new BlazeException("Unable to find executable [" + this.which.getCommand() + "]");
+            throw new ExecutableNotFoundException("Executable '" + this.which.getCommand() + "' not found");
         }
         
         // build final list of command to execute (executable first then args)
@@ -175,10 +145,9 @@ public class Exec extends Action<ProcessResult> {
         this.executor.command(command);
         
         try {
-            return this.executor.execute();
-            //return new Result(pr);
+            return new ExecResult(this.executor.execute());
         } catch (IOException | InterruptedException | TimeoutException | InvalidExitValueException e) {
-            throw new BlazeException("Unable to execute", e);
+            throw new BlazeException("Unable to cleanly execute", e);
         }
     }
 }

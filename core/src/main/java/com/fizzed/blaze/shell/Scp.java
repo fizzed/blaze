@@ -56,7 +56,7 @@ public class Scp extends Action<Void> {
     }
     
     @Override
-    public Void run() throws BlazeException {
+    public Void doRun() throws BlazeException {
         JSch jsch = new JSch();
         Session session = null;
         ChannelExec channel = null;

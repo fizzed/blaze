@@ -81,7 +81,7 @@ public class Which extends Action<File> {
     }
     
     @Override
-    public File run() throws BlazeException {
+    public File doRun() throws BlazeException {
         return findExecutable(context, paths, command);
     }
     
@@ -90,15 +90,18 @@ public class Which extends Action<File> {
             List<String> commandExtensions = ConfigHelper.commandExtensions(context.config());
             for (String ext : commandExtensions) {
                 String commandWithExt = command + ext;
+                
                 File commandFile = new File(path.toFile(), commandWithExt);
+                
                 //logger.trace("commandFile: {}", commandFile);
                 File f = context.withBaseDir(commandFile);
+                
                 logger.trace("Trying file: {}", f);
                 if (f.exists() && f.isFile()) {
                     if (f.canExecute()) {
                         return f;
                     } else {
-                        logger.trace("Found executable [" + f + "] but it is not executable! (continuing search...)");
+                        logger.warn("Found executable [" + f + "] but it is not executable! (continuing search...)");
                     }
                 }
             }

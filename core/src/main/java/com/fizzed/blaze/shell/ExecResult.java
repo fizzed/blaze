@@ -13,39 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.shell;
+
+import org.zeroturnaround.exec.ProcessResult;
 
 /**
  *
  * @author joelauer
- * @param <T>
  */
-public abstract class Action<T> {
+public class ExecResult {
     
-    final protected Context context;
-    protected volatile boolean ran;
-    
-    public Action(Context context) {
-        this.context = context;
+    final private ProcessResult result;
+
+    public ExecResult(ProcessResult result) {
+        this.result = result;
     }
     
-    public T run() throws BlazeException {
-        if (ran) {
-            throw new BlazeException("Cannot run more than once");
-        }
-        T value = doRun();
-        ran = true;
-        return value;
+    public int exitValue() {
+        return this.result.getExitValue();
     }
     
-    abstract public T doRun() throws BlazeException;
-    
-    /**
-    public T get() throws BlazeException, NoSuchElementException {
-        if (!ran) {
-            run();
-        }
+    public String output() {
+        return this.result.getOutput().getUTF8();
     }
-    */
+    
+    public String output(String charset) {
+        return this.result.getOutput().getString(charset);
+    }
+    
+    public byte[] outputBytes() {
+        return this.result.getOutput().getBytes();
+    }
     
 }

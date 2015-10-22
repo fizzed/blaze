@@ -15,37 +15,9 @@
  */
 package com.fizzed.blaze;
 
+import java.util.NoSuchElementException;
+
 /**
  *
  * @author joelauer
- * @param <T>
  */
-public abstract class Action<T> {
-    
-    final protected Context context;
-    protected volatile boolean ran;
-    
-    public Action(Context context) {
-        this.context = context;
-    }
-    
-    public T run() throws BlazeException {
-        if (ran) {
-            throw new BlazeException("Cannot run more than once");
-        }
-        T value = doRun();
-        ran = true;
-        return value;
-    }
-    
-    abstract public T doRun() throws BlazeException;
-    
-    /**
-    public T get() throws BlazeException, NoSuchElementException {
-        if (!ran) {
-            run();
-        }
-    }
-    */
-    
-}
