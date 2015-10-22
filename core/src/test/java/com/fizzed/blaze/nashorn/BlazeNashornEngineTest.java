@@ -22,15 +22,12 @@ import com.fizzed.blaze.NoSuchTaskException;
 import com.fizzed.blaze.util.Dependency;
 import static com.fizzed.blaze.util.FileHelper.resourceAsFile;
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -201,6 +198,26 @@ public class BlazeNashornEngineTest {
         blaze.execute("main");
         
         assertThat(systemOutRule.getLog(), containsString("Harry; Ron; Hermione"));
+    }
+    
+    @Test
+    public void readOutputDisablesLoggingToStdout() throws Exception {
+        systemOutRule.clearLog();
+
+        Blaze blaze
+            = Blaze.builder()
+                .file(resourceAsFile("/nashorn/read_output.js"))
+                .build();
+        
+        blaze.execute("main");
+        
+        assertThat(systemOutRule.getLog(), not(containsString("Hello World")));
+        
+        systemOutRule.clearLog();
+        
+        blaze.execute("output");
+        
+        assertThat(systemOutRule.getLog(), containsString("Hello World"));
     }
     
 }

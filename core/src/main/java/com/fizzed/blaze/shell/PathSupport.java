@@ -21,7 +21,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * Support for path() in an action.
+ * Support for path() in an action by simply providing a getPaths() method.
+ * 
+ * Sort of a 'mixin for Java.
  * 
  * @author joelauer
  */

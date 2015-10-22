@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.apache.commons.io.output.NullOutputStream;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 
@@ -111,6 +112,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
     }
 
     public Exec readOutput() {
+        this.executor.redirectOutput(new NullOutputStream());
         this.executor.readOutput(true);
         return this;
     }
