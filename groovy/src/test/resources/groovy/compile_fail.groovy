@@ -1,3 +1,3 @@
-import static com.fizzed.blaze.Shells.*
+import static com.fizzed.blaze.Systems.*
 
 def main() {

@@ -19,6 +19,7 @@ import com.fizzed.blaze.Blaze;
 import com.fizzed.blaze.BlazeException;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.NoSuchTaskException;
+import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.Dependency;
 import static com.fizzed.blaze.util.FileHelper.resourceAsFile;
 import java.io.File;
@@ -31,6 +32,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
@@ -46,6 +48,12 @@ public class BlazeNashornEngineTest {
     
     @Rule
     public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
+    
+    @BeforeClass
+    static public void forceBinResourceExecutable() throws Exception {
+        // this makes the files in the "bin" sample directory executable
+        getBinDirAsResource();
+    }
     
     @Test
     public void noDefaultBlazeFile() throws Exception {
@@ -133,7 +141,7 @@ public class BlazeNashornEngineTest {
         // this should find the corrosponding conf file and change the default task
         Blaze blaze
             = Blaze.builder()
-                .file(resourceAsFile("/nashorn/new.default.task.js"))
+                .file(resourceAsFile("/nashorn/new_default_task.js"))
                 .build();
         
         assertThat(blaze.context().config().getString(Config.KEY_DEFAULT_TASK), is("blaze"));
@@ -150,7 +158,7 @@ public class BlazeNashornEngineTest {
         // this should find the corrosponding conf file and change the default task
         Blaze blaze
             = Blaze.builder()
-                .file(resourceAsFile("/nashorn/twotasks.js"))
+                .file(resourceAsFile("/nashorn/two_tasks.js"))
                 .build();
         
         systemOutRule.clearLog();
@@ -165,7 +173,7 @@ public class BlazeNashornEngineTest {
     public void tasks() throws Exception {
         Blaze blaze
             = Blaze.builder()
-                .file(resourceAsFile("/nashorn/twotasks.js"))
+                .file(resourceAsFile("/nashorn/two_tasks.js"))
                 .build();
         
         systemOutRule.clearLog();
@@ -217,12 +225,12 @@ public class BlazeNashornEngineTest {
     }
     
     @Test
-    public void readOutputDisablesLoggingToStdout() throws Exception {
+    public void captureOutputDisablesLoggingToStdout() throws Exception {
         systemOutRule.clearLog();
 
         Blaze blaze
             = Blaze.builder()
-                .file(resourceAsFile("/nashorn/read_output.js"))
+                .file(resourceAsFile("/nashorn/capture_output.js"))
                 .build();
         
         blaze.execute("main");

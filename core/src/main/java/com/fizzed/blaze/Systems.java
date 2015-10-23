@@ -15,16 +15,16 @@
  */
 package com.fizzed.blaze;
 
-import com.fizzed.blaze.shell.Exec;
-import com.fizzed.blaze.shell.RequireExec;
-import com.fizzed.blaze.shell.Which;
+import com.fizzed.blaze.system.Exec;
+import com.fizzed.blaze.system.RequireExec;
+import com.fizzed.blaze.system.Which;
 import java.io.File;
 
 /**
  *
  * @author joelauer
  */
-public class Shells {
+public class Systems {
     
     static public Which which(String command) {
         return new Which(Context.currentContext())
@@ -50,6 +50,8 @@ public class Shells {
     static public Exec exec(File command, Object ... arguments) {
         return exec(command.toString(), arguments);
     }
+    
+    
     
     /**
     static public Scp scp(String user, String host) {

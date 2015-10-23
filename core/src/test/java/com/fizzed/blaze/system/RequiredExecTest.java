@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.shell;
+package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
-import static com.fizzed.blaze.shell.ShellTestHelper.getBinDirAsResource;
+import com.fizzed.blaze.MessageOnlyException;
+import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
 import java.io.File;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import org.junit.Before;
@@ -34,8 +37,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author joelauer
  */
-public class ExecTest {
-    private static final Logger log = LoggerFactory.getLogger(ExecTest.class);
+public class RequiredExecTest {
+    private static final Logger log = LoggerFactory.getLogger(RequiredExecTest.class);
     
     Config config;
     Context context;
@@ -46,50 +49,35 @@ public class ExecTest {
         context = spy(new Context(null, new File("blaze.js"), config));
     }
     
-    @Test(expected=ExecutableNotFoundException.class)
+    @Test(expected=MessageOnlyException.class)
     public void notFind() throws Exception {
-        ExecResult r = new Exec(context)
+        File f = new RequireExec(context)
             .command("thisdoesnotexist")
             .run();
     }
     
     @Test
     public void works() throws Exception {
-        ExecResult r = new Exec(context)
+        File f = new RequireExec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
             .run();
         
-        assertThat(r.exitValue(), is(0));
+        assertThat(f, is(not(nullValue())));
     }
     
     @Test
-    public void outputSetupBad() throws Exception {
+    public void notFindWithMessage() throws Exception {
         try {
-            ExecResult r = new Exec(context)
-                .command("hello-world-test")
-                .path(getBinDirAsResource())
+            File f = new RequireExec(context)
+                .command("thisdoesnotexist")
+                .message("Download from http://blah...")
                 .run();
             
-            r.output();
-            
             fail();
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), containsString("readOutput"));
+        } catch (MessageOnlyException e) {
+            assertThat(e.getMessage(), containsString("Download from http://blah..."));
         }
-    }
-    
-    @Test
-    public void output() throws Exception {
-        ExecResult r = new Exec(context)
-            .command("hello-world-test")
-            .path(getBinDirAsResource())
-            .readOutput()
-            .run();
-            
-        String output = r.output();
-        
-        assertThat(output.trim(), is("Hello World"));
     }
     
 }

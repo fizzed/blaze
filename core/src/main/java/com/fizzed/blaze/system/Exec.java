@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.shell;
+package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Action;
 import com.fizzed.blaze.BlazeException;
@@ -50,6 +50,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
             .redirectInput(System.in)
             .redirectOutput(System.out)
             .redirectErrorStream(true)
+            // TODO: is this really the right default?
             // initialize executable to context of current project basedir
             .directory(context.baseDir())
             .exitValueNormal();
@@ -111,7 +112,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
         return this;
     }
 
-    public Exec readOutput() {
+    public Exec captureOutput() {
         this.executor.redirectOutput(new NullOutputStream());
         this.executor.readOutput(true);
         return this;
@@ -128,7 +129,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
     }
 
     @Override
-    public ExecResult doRun() throws BlazeException {
+    protected ExecResult doRun() throws BlazeException {
         File exeFile = this.which.run();
         
         if (exeFile == null) {

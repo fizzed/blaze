@@ -22,16 +22,20 @@ import com.fizzed.blaze.NoSuchTaskException;
 import com.fizzed.blaze.util.DependencyResolveException;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Bootstrap {
 
-    static public void main(String[] args) {
+    static public void main(String[] args) throws IOException {
+        JdkLoggerHelper.configure();
+        
         Thread.currentThread().setName("blaze");
         
         // process command line args
@@ -48,24 +52,31 @@ public class Bootstrap {
             if (arg.equals("-v") || arg.equals("--version")) {
                 System.out.println("blaze: v" + Version.getLongVersion());
                 System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
+                System.out.println(" at https://github.com/fizzed/blaze");
                 System.exit(0);
-            } else if (arg.equals("-q") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
+            } else if (arg.equals("-q") || arg.equals("-qq") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
                 String level = "info";
+                String scriptLevel = "info";
                 
                 if (arg.equals("-q")) {
                     level = "warn";
+                } else if (arg.equals("-qq")) {
+                    level = scriptLevel = "warn";
                 } else if (arg.equals("-x")) {
-                    level = "debug";
+                    level = scriptLevel = "debug";
                 } else if (arg.equals("-xx")) {
-                    level = "trace";
+                    level = scriptLevel = "trace";
                 } else if (arg.equals("-xxx")) {
-                    level = "trace";
+                    level = scriptLevel = "trace";
                     // but also set another system property which really turns on even MORE debugging
                     System.setProperty("blaze.superdebug", "true");
                 }
                 
+                JdkLoggerHelper.setRootLevel(level);
+                JdkLoggerHelper.setLevel("script", scriptLevel);
+                
                 System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
-                System.setProperty("org.slf4j.simpleLogger.log.script", level);
+                System.setProperty("org.slf4j.simpleLogger.log.script", scriptLevel);
 
                 // if using logback
                 //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
@@ -82,7 +93,8 @@ public class Bootstrap {
                 System.out.println("-f|--file <file>  Use this blaze file instead of default");
                 System.out.println("-d|--dir <dir>    Search this dir for blaze file instead of default (-f supercedes)");
                 System.out.println("-l|--list         Display list of available tasks");
-                System.out.println("-q                Only log warnings to stdout");
+                System.out.println("-q                Only log blaze warnings to stdout (script logging is still info level)");
+                System.out.println("-qq               Only log warnings to stdout (including script logging)");
                 System.out.println("-x[x...]          Increases verbosity of logging to stdout");
                 System.out.println("-v|--version      Display version and then exit");
                 System.exit(0);

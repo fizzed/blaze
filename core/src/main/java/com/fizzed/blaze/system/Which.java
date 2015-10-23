@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.shell;
+package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Action;
 import com.fizzed.blaze.BlazeException;
@@ -57,7 +57,7 @@ public class Which extends Action<File> implements PathSupport<Which> {
     }
     
     @Override
-    public File doRun() throws BlazeException {
+    protected File doRun() throws BlazeException {
         return find(context, paths, command);
     }
     

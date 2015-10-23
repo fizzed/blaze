@@ -58,7 +58,9 @@ public class ClassLoaderHelper {
         try {
             // does the jar already exist on claspath?
             URLClassLoader urlClassLoader = (URLClassLoader)classLoader;
+            
             String jarName = Paths.get(uri).getFileName().toString();
+            
             for (URL u : urlClassLoader.getURLs()) {
                 String loadedJarName = Paths.get(u.toURI()).getFileName().toString();
                 if (jarName.equals(loadedJarName)) {

@@ -39,5 +39,13 @@ public class Contexts {
     static public File withBaseDir(String path) {
         return Context.currentContext().withBaseDir(path);
     }
+
+    static public File userDir() {
+        return new File(System.getProperty("user.home"));
+    }
+    
+    static public void fail(String message) {
+        throw new MessageOnlyException(message);
+    }
     
 }

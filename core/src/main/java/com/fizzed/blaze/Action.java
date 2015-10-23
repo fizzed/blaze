@@ -38,14 +38,6 @@ public abstract class Action<T> {
         return value;
     }
     
-    abstract public T doRun() throws BlazeException;
-    
-    /**
-    public T get() throws BlazeException, NoSuchElementException {
-        if (!ran) {
-            run();
-        }
-    }
-    */
+    abstract protected T doRun() throws BlazeException;
     
 }

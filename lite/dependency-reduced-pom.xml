@@ -50,6 +50,19 @@
                   <artifact>org.apache.ivy</artifact>
                   <excludes>
                     <exclude>fr/jayasoft/**</exclude>
+                    <exclude>org/apache/ivy/util/url/HttpClientHandler**</exclude>
+                    <exclude>org/apache/ivy/plugins/signer/bouncycastle/OpenPGPSignatureGenerator.class</exclude>
+                    <exclude>org/apache/ivy/plugins/repository/vfs/**</exclude>
+                    <exclude>org/apache/ivy/plugins/matcher/GlobPatternMatcher**</exclude>
+                    <exclude>org/apache/ivy/plugins/repository/ssh/SshCache**</exclude>
+                    <exclude>org/apache/ivy/plugins/repository/sftp/**</exclude>
+                    <exclude>org/apache/ivy/plugins/repository/ssh/**</exclude>
+                    <exclude>org/apache/ivy/plugins/resolver/packager/PackagerResolver**</exclude>
+                    <exclude>org/apache/ivy/plugins/resolver/VfsResolver**</exclude>
+                    <exclude>org/apache/ivy/plugins/resolver/packager/PackagerCacheEntry**</exclude>
+                    <exclude>org/apache/ivy/plugins/resolver/AbstractSshBasedResolver.class</exclude>
+                    <exclude>org/apache/ivy/plugins/resolver/SFTPResolver.class</exclude>
+                    <exclude>org/apache/ivy/plugins/resolver/SshResolver.class</exclude>
                     <exclude>org/apache/ivy/*.png</exclude>
                     <exclude>org/apache/ivy/Main.class</exclude>
                     <exclude>org/apache/ivy/ant/**</exclude>

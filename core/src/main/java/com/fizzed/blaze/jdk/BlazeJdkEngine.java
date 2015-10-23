@@ -20,6 +20,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.Engine;
 import com.fizzed.blaze.Script;
 import com.fizzed.blaze.util.AbstractEngine;
+import com.fizzed.blaze.util.ClassLoaderHelper;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -53,6 +54,43 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
 
     @Override
     public Script compile(Context context) throws BlazeException {
+        // what class would we be producing?
+        String className = context.file().getName().replace(".java", "");
+        
+        // directory to output to
+        //File outputDir = this.initialContext.withBaseDir(Paths.get("target", "blaze", "classes"));
+        File classesDir = Paths.get("target", "blaze", "classes").toFile();
+        classesDir.mkdirs();
+        
+        // do we need to recompile?
+        File expectedClassFile = new File(classesDir, className + ".class");
+        if (expectedClassFile.exists() && expectedClassFile.lastModified() >= context.file().lastModified()) {
+            log.info("No need to recompile!");
+        } else {
+            javac(context, classesDir);
+        }
+        
+        // add directory it was compiled to classpath
+        int changes = ClassLoaderHelper.addFileToClassPath(classesDir, Thread.currentThread().getContextClassLoader());
+        if (changes > 0) {
+            log.info("Adding {} to classpath", classesDir);
+        }
+        
+        // create new instance of this class
+        try {
+            Class<?> type = Class.forName(className);
+            
+            Object object = type.newInstance();
+            
+            log.debug("class {}", object.getClass());
+            
+            return new BlazeJdkScript(this, object);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new BlazeException("Unable to load " + className, e);
+        }
+    }
+    
+    public void javac(Context context, File classesDir) throws BlazeException {
         // classpath may have been adjusted at runtime, build a new one
         StringBuilder classpath = new StringBuilder();
         
@@ -68,10 +106,6 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
                 throw new BlazeException("Unable to build javac classpath", e);
             }
         }
-        
-        // directory to output to
-        File outputDir = this.initialContext.withBaseDir(Paths.get("target", "blaze", "classes"));
-        outputDir.mkdirs();
 
         List<String> javacOptions = new ArrayList<>();
 
@@ -81,7 +115,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
 
         // directory to output compiles classes
         javacOptions.add("-d");
-        javacOptions.add(outputDir.getPath());
+        javacOptions.add(classesDir.getPath());
 
         javacOptions.add("-Xlint:unchecked");
         
@@ -95,7 +129,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
         
         Iterable<? extends JavaFileObject> compilationUnits =
-                fileManager.getJavaFileObjectsFromFiles(Arrays.asList(this.initialContext.file()));
+                fileManager.getJavaFileObjectsFromFiles(Arrays.asList(context.file()));
 
         JavaCompiler.CompilationTask task
                 = compiler.getTask(null, null, diagnostics, javacOptions, null, compilationUnits);
@@ -104,18 +138,20 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         
         for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
             //log.deb1ug("java file: {}", jfo.toUri());
-            log.debug("source: {}", diagnostic.getSource());
-            log.debug("line num: {}", diagnostic.getLineNumber());
-            log.debug("col num: {}", diagnostic.getColumnNumber());
-            log.debug("code: {}", diagnostic.getCode());
-            log.debug("kind: {}", diagnostic.getKind());
-            log.debug("pos: {}", diagnostic.getPosition());
-            log.debug("start pos: {}", diagnostic.getStartPosition());
-            log.debug("end pos: {}", diagnostic.getEndPosition());
-            log.debug("message: {}", diagnostic.getMessage(null));
+            log.error("source: {}", diagnostic.getSource());
+            log.error("line num: {}", diagnostic.getLineNumber());
+            log.error("col num: {}", diagnostic.getColumnNumber());
+            log.error("code: {}", diagnostic.getCode());
+            log.error("kind: {}", diagnostic.getKind());
+            log.error("pos: {}", diagnostic.getPosition());
+            log.error("start pos: {}", diagnostic.getStartPosition());
+            log.error("end pos: {}", diagnostic.getEndPosition());
+            log.error("message: {}", diagnostic.getMessage(null));
         }
         
-        return null;
+        if (!success) {
+            throw new BlazeException("Unable to compile " + context.file());
+        }
     }
     
 }

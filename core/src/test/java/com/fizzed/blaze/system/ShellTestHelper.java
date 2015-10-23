@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.shell;
+package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.util.FileHelper;
+import java.io.File;
 
 /**
  *
  * @author joelauer
  */
-public class ExecutableNotFoundException extends BlazeException {
-
-    /**
-     * Constructs an instance of <code>ExecutableNotFoundException</code> with
-     * the specified detail message.
-     *
-     * @param msg the detail message.
-     */
-    public ExecutableNotFoundException(String msg) {
-        super(msg);
+public class ShellTestHelper {
+    
+    static public File getBinDirAsResource() throws Exception {
+        // fix permissions from maven copy (otherwise test fails)
+        FileHelper.resourceAsFile("/bin/hello-world-test").setExecutable(true);
+        FileHelper.resourceAsFile("/bin/hello-world-test.bat").setExecutable(true);
+        
+        // must use a resource that exists to then get its parent
+        return FileHelper.resourceAsFile("/bin/hello-world-test").getParentFile();
     }
     
 }

@@ -1,9 +1,9 @@
-import static com.fizzed.blaze.Shells.*
+import static com.fizzed.blaze.Systems.*
 
 def main() {
-    println("Finding javac...")
+    log.info("Finding javac...")
     def javac = which("javac").run()
 
-    println("Using javac " + javac)
+    log.info("Using javac " + javac)
     exec("javac").arg("-version").run()
 }

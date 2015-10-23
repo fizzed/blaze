@@ -1,9 +1,9 @@
-var sh = Packages.com.fizzed.blaze.Shells;
+var sys = Packages.com.fizzed.blaze.Systems;
 
 var main = function() {
     print("Finding javac...");
-    var javac = sh.which("javac").run();
+    var javac = sys.which("javac").run();
 
     print("Using javac " + javac);
-    sh.exec("javac").arg("-version").run();
+    sys.exec("javac").arg("-version").run();
 }

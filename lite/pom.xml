@@ -52,10 +52,23 @@
                             </transformers>
                             <filters>
                                 <filter>
-                                    <!-- cleanup ivy of useless stuff we don't use -->
                                     <artifact>org.apache.ivy</artifact>
                                     <excludes>
                                         <exclude>fr/jayasoft/**</exclude>
+                                        <exclude>org/apache/ivy/util/url/HttpClientHandler**</exclude>
+                                        <exclude>org/apache/ivy/plugins/signer/bouncycastle/OpenPGPSignatureGenerator.class</exclude>
+                                        <exclude>org/apache/ivy/plugins/repository/vfs/**</exclude>
+                                        <exclude>org/apache/ivy/plugins/matcher/GlobPatternMatcher**</exclude>
+                                        <exclude>org/apache/ivy/plugins/repository/ssh/SshCache**</exclude>
+                                        <exclude>org/apache/ivy/plugins/repository/sftp/**</exclude>
+                                        <exclude>org/apache/ivy/plugins/repository/ssh/**</exclude>
+                                        <exclude>org/apache/ivy/plugins/resolver/packager/PackagerResolver**</exclude>
+                                        <exclude>org/apache/ivy/plugins/resolver/VfsResolver**</exclude>
+                                        <exclude>org/apache/ivy/plugins/resolver/packager/PackagerCacheEntry**</exclude>
+                                        <exclude>org/apache/ivy/plugins/resolver/AbstractSshBasedResolver.class</exclude>
+                                        <exclude>org/apache/ivy/plugins/resolver/SFTPResolver.class</exclude>
+                                        <exclude>org/apache/ivy/plugins/resolver/SshResolver.class</exclude>
+                                        
                                         <exclude>org/apache/ivy/*.png</exclude>
                                         <exclude>org/apache/ivy/Main.class</exclude>
                                         <exclude>org/apache/ivy/ant/**</exclude>
@@ -67,6 +80,45 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.0.11</version>
+                <executions>
+                    <execution>
+                        <id>process-classes-with-proguard</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                        <configuration>
+                            <maxMemory>256m</maxMemory>
+                            <injar>${project.build.finalName}.jar</injar>
+                            <outjar>${project.build.finalName}-proguard.jar</outjar>
+                            <obfuscate>false</obfuscate>
+                            <includeDependency>false</includeDependency>
+                            <options>
+                                <option>-allowaccessmodification</option>
+                                <option>-keepattributes Signature</option>
+                                <option>-repackageclasses ''</option>
+                                <option>-keep public class org.apache.**</option>
+                                <option>-keep public class com.jcraft.jsch.jcraft.**</option>
+                                <option>-keep public class com.fizzed.**</option>
+                                <option>-keep public class com.fizzed.blaze.cli.Bootstrap { public static void main(java.lang.String[]); }</option>
+                            </options>
+                            <attach>true</attach>
+                            <addMavenDescriptor>false</addMavenDescriptor>
+                            <libs>
+                                <lib>${java.home}/lib/rt.jar</lib>
+                                <lib>${java.home}/lib/jsse.jar</lib>
+                                <lib>${java.home}/lib/jce.jar</lib>
+                            </libs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
         </plugins>
     </build>
     
@@ -87,13 +139,21 @@
                 </exclusion>
             </exclusions>
         </dependency>
+                
+        <!-- logback is suprisingly huge -->
         
-        <!-- logback is huge -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
         </dependency>
         
+        <!--
+        <dependency> 
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>1.7.12</version>
+        </dependency>
+        -->
     </dependencies>
     <name>blaze-lite</name>
 </project>

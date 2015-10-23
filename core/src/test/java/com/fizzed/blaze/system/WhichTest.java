@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.shell;
+package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.system.Which;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
-import static com.fizzed.blaze.shell.ShellTestHelper.getBinDirAsResource;
+import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
 import com.fizzed.blaze.util.FileHelper;
 import java.io.File;
@@ -63,7 +64,7 @@ public class WhichTest {
         assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
 
         File f = new Which(context)
-            .command("ipconfig")
+            .command("cmd")
             .run();
         
         log.debug("which: {}", f);
