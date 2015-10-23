@@ -11,19 +11,23 @@ def status() {
         .readEnvironment()  // scan environment GIT_* variables
         .findGitDir()       // scan up the file system tree
         .build();
-        
-    g = new Git(repo);
+      
+    def g = Git.wrap(repo)
+    try {
+        status = g.status().call();
+        log.info("Added: " + status.getAdded());
+        log.info("Changed: " + status.getChanged());
+        log.info("Conflicting: " + status.getConflicting());
+        log.info("ConflictingStageState: " + status.getConflictingStageState());
+        log.info("IgnoredNotInIndex: " + status.getIgnoredNotInIndex());
+        log.info("Missing: " + status.getMissing());
+        log.info("Modified: " + status.getModified());
+        log.info("Removed: " + status.getRemoved());
+        log.info("Untracked: " + status.getUntracked());
+        log.info("UntrackedFolders: " + status.getUntrackedFolders())  
+    } finally {
+        g.close()
+    }
 
-    status = g.status().call();
-    log.info("Added: " + status.getAdded());
-    log.info("Changed: " + status.getChanged());
-    log.info("Conflicting: " + status.getConflicting());
-    log.info("ConflictingStageState: " + status.getConflictingStageState());
-    log.info("IgnoredNotInIndex: " + status.getIgnoredNotInIndex());
-    log.info("Missing: " + status.getMissing());
-    log.info("Modified: " + status.getModified());
-    log.info("Removed: " + status.getRemoved());
-    log.info("Untracked: " + status.getUntracked());
-    log.info("UntrackedFolders: " + status.getUntrackedFolders())
 }
 

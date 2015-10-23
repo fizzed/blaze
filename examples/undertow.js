@@ -1,3 +1,5 @@
+/* global java, Packages, Contexts, Undertow, Handlers, undertow, log */
+
 // nashorn recommended method of importing classes
 var Imports = new JavaImporter(
     java.nio.file.Paths,
@@ -24,6 +26,6 @@ with (Imports) {
         undertow.start();
 
         log.info("Open browser to http://localhost:8080");
-    }
+    };
     
 }

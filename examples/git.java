@@ -13,7 +13,7 @@ public class git {
             .readEnvironment()  // scan environment GIT_* variables
             .findGitDir()       // scan up the file system tree
             .build();
-
+        
         try (Git g = new Git(repo)) {
             Status status = g.status().call();
             log.info("Added: " + status.getAdded());

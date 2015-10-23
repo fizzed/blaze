@@ -1,4 +1,4 @@
-/* global Packages */
+/* global Packages, log */
 
 var Imports = JavaImporter(
     Packages.org.eclipse.jgit.lib.Repository,
@@ -29,7 +29,7 @@ with (Imports) {
         log.info("Modified: {}", status.getModified());
         log.info("Removed: {}", status.getRemoved());
         log.info("Untracked: {}", status.getUntracked());
-        log.info("UntrackedFolders: {}", status.getUntrackedFolders())
-    }
+        log.info("UntrackedFolders: {}", status.getUntrackedFolders());
+    };
     
 }

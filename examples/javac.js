@@ -1,3 +1,5 @@
+/* global Packages */
+
 var sys = Packages.com.fizzed.blaze.Systems;
 
 var main = function() {
@@ -6,4 +8,4 @@ var main = function() {
 
     print("Using javac " + javac);
     sys.exec("javac").arg("-version").run();
-}
+};
