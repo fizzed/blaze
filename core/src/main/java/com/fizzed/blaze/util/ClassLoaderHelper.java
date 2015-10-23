@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,10 @@ public class ClassLoaderHelper {
      */
     public static int addFileToClassPath(File file, ClassLoader classLoader) {
         return addUrlToClassPath(file.toURI(), classLoader);
+    }
+    
+    public static int addFileToClassPath(Path path, ClassLoader classLoader) {
+        return addUrlToClassPath(path.toUri(), classLoader);
     }
 
     /**

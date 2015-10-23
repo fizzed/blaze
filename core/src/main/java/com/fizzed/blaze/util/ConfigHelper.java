@@ -16,10 +16,17 @@
 package com.fizzed.blaze.util;
 
 import com.fizzed.blaze.Config;
+import com.fizzed.blaze.Context;
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -106,6 +113,58 @@ public class ConfigHelper {
 
         static public boolean solaris() {
             return (OS.contains("sunos"));
+        }
+    }
+    
+    static public Path contextSemiPersistentTempPath(Context context) throws IOException {
+        String tmpDirStr = System.getProperty("java.io.tmpdir");
+        
+        if (tmpDirStr == null) {
+            log.warn("Java system property java.io.tmpdir not set");
+            return null;
+        }
+        
+        Path systemTempPath = Paths.get(tmpDirStr);
+        
+        if (!Files.exists(systemTempPath)) {
+            log.warn("Java java.io.tmpdir of {} does not exist", systemTempPath);
+            return null;
+        }
+        
+        // md5 of the canonical path of this application's base directory
+        // should be a consistent hash very usable for generating classes in
+        String md5 = md5(context.baseDir().getCanonicalPath());
+        
+        // /tmp/blaze/<md5hash>
+        Path contextTempPath = systemTempPath.resolve("blaze").resolve(md5);
+        
+        Files.createDirectories(contextTempPath);
+        
+        return contextTempPath;
+    }
+    
+    static public Path semiPersistentClassesPath(Context context) throws IOException {
+        Path path = contextSemiPersistentTempPath(context);
+        
+        if (path == null) {
+            return null;
+        }
+        
+        Path classesPath = path.resolve("classes");
+        
+        Files.createDirectories(classesPath);
+        
+        return classesPath;
+    }
+    
+    static public String md5(String value) {
+        try {
+            byte[] bytes = value.getBytes("UTF-8");
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(bytes);
+            return Base64.getUrlEncoder().encodeToString(digest);
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+            throw new IllegalStateException("MD5 hash failed", e);
         }
     }
     
