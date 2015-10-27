@@ -51,12 +51,12 @@ public class Context {
         return context;
     }
     
-    final private File baseDir;
-    final private File file;
+    final private Path baseDir;
+    final private Path file;
     final private Config config;
     final private Logger logger;
     
-    public Context(File baseDir, File file, Config config) {
+    public Context(Path baseDir, Path file, Config config) {
         this.baseDir = baseDir;
         this.file = file;
         this.config = config;
@@ -67,35 +67,35 @@ public class Context {
         return this.logger;
     }
 
-    public File baseDir() {
+    public Path baseDir() {
         if (this.baseDir == null) {
-            return new File(".");
+            return Paths.get(".");
         } else {
             return this.baseDir;
         }
     }
     
-    public File withBaseDir(Path path) {
+    public Path withBaseDir(Path path) {
         if (this.baseDir() == null) {
-            return path.toFile();
+            return path;
         } else {
-            return baseDir().toPath().resolve(path).toFile();
+            return baseDir.resolve(path);
         }
     }
     
-    public File withBaseDir(File path) {
+    public Path withBaseDir(File file) {
         if (file.isAbsolute()) {
-            return file;
+            return file.toPath();
         } else {
-            return new File(baseDir(), path.getPath());
+            return baseDir.resolve(file.toPath());
         }
     }
     
-    public File withBaseDir(String path) {
+    public Path withBaseDir(String path) {
         return withBaseDir(Paths.get(path));
     }
 
-    public File file() {
+    public Path scriptFile() {
         return this.file;
     }
     

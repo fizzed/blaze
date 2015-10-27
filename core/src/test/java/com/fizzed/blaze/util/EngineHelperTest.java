@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.Engine;
+import com.fizzed.blaze.core.Engine;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;

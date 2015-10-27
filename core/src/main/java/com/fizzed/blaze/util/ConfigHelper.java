@@ -133,7 +133,7 @@ public class ConfigHelper {
         
         // md5 of the canonical path of this application's base directory
         // should be a consistent hash very usable for generating classes in
-        String md5 = md5(context.baseDir().getCanonicalPath());
+        String md5 = md5(context.baseDir().toFile().getCanonicalPath());
         
         // /tmp/blaze/<md5hash>
         Path contextTempPath = systemTempPath.resolve("blaze").resolve(md5);

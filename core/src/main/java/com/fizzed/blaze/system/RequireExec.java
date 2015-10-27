@@ -15,10 +15,10 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.Action;
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.Action;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.MessageOnlyException;
+import com.fizzed.blaze.core.MessageOnlyException;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;

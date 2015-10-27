@@ -13,27 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
 
 /**
  *
  * @author joelauer
  */
-public class NoSuchTaskException extends MessageOnlyException {
+public class MessageOnlyException extends BlazeException {
 
-    final private String task;
-    
-    public NoSuchTaskException(String task) {
-        this(task, "Task '" + task + "' not found");
-    }
-    
-    public NoSuchTaskException(String task, String msg) {
+    /**
+     * Constructs an instance of <code>MessageOnlyException</code> with the
+     * specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public MessageOnlyException(String msg) {
         super(msg);
-        this.task = task;
     }
-
-    public String getTask() {
-        return task;
-    }
-
 }

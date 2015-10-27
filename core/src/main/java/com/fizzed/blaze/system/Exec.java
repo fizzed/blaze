@@ -15,8 +15,8 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.Action;
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.Action;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.util.ObjectHelper;
 import java.io.File;
@@ -52,7 +52,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
             .redirectErrorStream(true)
             // TODO: is this really the right default?
             // initialize executable to context of current project basedir
-            .directory(context.baseDir())
+            //.directory(context.baseDir())
             .exitValueNormal();
     }
     
@@ -98,17 +98,17 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
     }
     
     public Exec workingDir(Path path) {
-        this.executor.directory(context.withBaseDir(path));
+        this.executor.directory(context.withBaseDir(path).toFile());
         return this;
     }
     
     public Exec workingDir(File path) {
-        this.executor.directory(context.withBaseDir(path));
+        this.executor.directory(context.withBaseDir(path).toFile());
         return this;
     }
     
     public Exec workingDir(String dir) {
-        this.executor.directory(context.withBaseDir(Paths.get(dir)));
+        this.executor.directory(context.withBaseDir(Paths.get(dir)).toFile());
         return this;
     }
 

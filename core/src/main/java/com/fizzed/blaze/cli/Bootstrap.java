@@ -16,9 +16,9 @@
 package com.fizzed.blaze.cli;
 
 import com.fizzed.blaze.Version;
-import com.fizzed.blaze.Blaze;
-import com.fizzed.blaze.MessageOnlyException;
-import com.fizzed.blaze.NoSuchTaskException;
+import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.MessageOnlyException;
+import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.util.DependencyResolveException;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
@@ -27,7 +27,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,7 +162,7 @@ public class Bootstrap {
     }
     
     static private void logTasks(Logger log, Blaze blaze) {
-        System.out.println(blaze.context().file() + " tasks =>");
+        System.out.println(blaze.context().scriptFile() + " tasks =>");
         List<String> ts = blaze.script().tasks();
         ts.stream().forEach((t) -> {
             System.out.println("  " + t);

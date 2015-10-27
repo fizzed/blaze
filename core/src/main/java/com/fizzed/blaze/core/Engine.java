@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
 
-import java.util.List;
+import com.fizzed.blaze.Context;
 
 /**
  *
  * @author joelauer
  */
-public interface Script {
+public interface Engine<S extends Script> {
     
-    List<String> tasks() throws BlazeException;
+    String getFileExtension();
     
-    void execute(String task) throws BlazeException;
+    boolean isInitialized();
+    
+    void init(Context initialContext) throws BlazeException;
+    
+    S compile(Context context) throws BlazeException;
     
 }

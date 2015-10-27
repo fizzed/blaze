@@ -13,25 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
+
+import com.fizzed.blaze.Context;
 
 /**
  *
  * @author joelauer
+ * @param <T>
  */
-public class BlazeException extends RuntimeException {
-
-    /**
-     * Constructs an instance of <code>BlazeException</code> with the specified
-     * detail message.
-     *
-     * @param msg the detail message.
-     */
-    public BlazeException(String msg) {
-        super(msg);
+public abstract class Action<T> {
+    
+    final protected Context context;
+    protected volatile boolean ran;
+    
+    public Action(Context context) {
+        this.context = context;
     }
     
-    public BlazeException(String msg, Throwable cause) {
-        super(msg, cause);
+    public T run() throws BlazeException {
+        if (ran) {
+            throw new BlazeException("Cannot run more than once");
+        }
+        T value = doRun();
+        ran = true;
+        return value;
     }
+    
+    abstract protected T doRun() throws BlazeException;
+    
 }

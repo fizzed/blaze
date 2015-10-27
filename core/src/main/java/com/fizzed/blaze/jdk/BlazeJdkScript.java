@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.jdk;
 
-import com.fizzed.blaze.BlazeException;
-import com.fizzed.blaze.NoSuchTaskException;
-import com.fizzed.blaze.Script;
+import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.NoSuchTaskException;
+import com.fizzed.blaze.core.Script;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;

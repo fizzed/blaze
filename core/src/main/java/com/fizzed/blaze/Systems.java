@@ -16,9 +16,11 @@
 package com.fizzed.blaze;
 
 import com.fizzed.blaze.system.Exec;
+import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
 import com.fizzed.blaze.system.Which;
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  *
@@ -51,7 +53,15 @@ public class Systems {
         return exec(command.toString(), arguments);
     }
     
+    static public Remove remove(Path... paths) {
+        return new Remove(Context.currentContext())
+            .paths(paths);
+    }
     
+    static public Remove remove(File... files) {
+        return new Remove(Context.currentContext())
+            .paths(files);
+    }
     
     /**
     static public Scp scp(String user, String host) {

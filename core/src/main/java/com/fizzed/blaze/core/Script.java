@@ -13,31 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
+
+import java.util.List;
 
 /**
  *
  * @author joelauer
- * @param <T>
  */
-public abstract class Action<T> {
+public interface Script {
     
-    final protected Context context;
-    protected volatile boolean ran;
+    List<String> tasks() throws BlazeException;
     
-    public Action(Context context) {
-        this.context = context;
-    }
-    
-    public T run() throws BlazeException {
-        if (ran) {
-            throw new BlazeException("Cannot run more than once");
-        }
-        T value = doRun();
-        ran = true;
-        return value;
-    }
-    
-    abstract protected T doRun() throws BlazeException;
+    void execute(String task) throws BlazeException;
     
 }

@@ -15,10 +15,10 @@
  */
 package com.fizzed.blaze.nashorn;
 
-import com.fizzed.blaze.Blaze;
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Config;
-import com.fizzed.blaze.NoSuchTaskException;
+import com.fizzed.blaze.core.NoSuchTaskException;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.Dependency;
 import static com.fizzed.blaze.util.FileHelper.resourceAsFile;

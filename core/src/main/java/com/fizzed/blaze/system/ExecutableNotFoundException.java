@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.BlazeException;
 
 /**
  *

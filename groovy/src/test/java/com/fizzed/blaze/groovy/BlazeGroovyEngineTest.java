@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.groovy;
 
-import com.fizzed.blaze.Blaze;
-import com.fizzed.blaze.MessageOnlyException;
-import com.fizzed.blaze.NoSuchTaskException;
+import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.MessageOnlyException;
+import com.fizzed.blaze.core.NoSuchTaskException;
 import static com.fizzed.blaze.util.FileHelper.resourceAsFile;
 import com.fizzed.blaze.util.NoopDependencyResolver;
 import java.util.List;

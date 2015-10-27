@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
 
 /**
  *
  * @author joelauer
  */
-public class MessageOnlyException extends BlazeException {
+public class BlazeException extends RuntimeException {
 
     /**
-     * Constructs an instance of <code>MessageOnlyException</code> with the
-     * specified detail message.
+     * Constructs an instance of <code>BlazeException</code> with the specified
+     * detail message.
      *
      * @param msg the detail message.
      */
-    public MessageOnlyException(String msg) {
+    public BlazeException(String msg) {
         super(msg);
+    }
+    
+    public BlazeException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

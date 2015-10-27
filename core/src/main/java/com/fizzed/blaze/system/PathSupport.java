@@ -18,6 +18,7 @@ package com.fizzed.blaze.system;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,6 +31,22 @@ import java.util.List;
 public interface PathSupport<T> {
 
     public List<Path> getPaths();
+    
+    default public T paths(Path... paths) {
+        // insert onto front since user would likely want this searched first
+        getPaths().clear();
+        getPaths().addAll(Arrays.asList(paths));
+        return (T)this;
+    }
+    
+    default public T paths(File... files) {
+        // insert onto front since user would likely want this searched first
+        getPaths().clear();
+        for (File file : files) {
+            getPaths().add(file.toPath());
+        }
+        return (T)this;
+    }
     
     default public T path(Path path) {
         // insert onto front since user would likely want this searched first
@@ -49,10 +66,12 @@ public interface PathSupport<T> {
         return (T)this;
     }
     
+    /**
     default public T path(String first, String ... more) {
         // insert onto front since user would likely want this searched first
         getPaths().add(0, Paths.get(first, more));
         return (T)this;
     }
+    */
     
 }

@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.groovy;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.Engine;
+import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.util.AbstractEngine;
 import groovy.lang.Binding;
 import groovy.lang.Script;
@@ -47,7 +47,7 @@ public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
         
         try {
             // initialize engine with the base directory
-            URL root = initialContext.baseDir().toURI().toURL();
+            URL root = initialContext.baseDir().toUri().toURL();
             this.groovy = new GroovyScriptEngine(new URL[] { root });
         } catch (IOException e) {
             throw new BlazeException("Unable to create groovy", e);
@@ -58,14 +58,15 @@ public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
     public BlazeGroovyScript compile(Context context) throws BlazeException {
         try {
             // must be valid url...
-            String path = context.file().toURI().toURL().toString();
+            String path = context.scriptFile().toUri().toURL().toString();
             
             Binding binding = new Binding();
             
             // add small number of useful bindings
-            binding.setVariable("context", context);
-            binding.setVariable("log", context.logger());
-            binding.setVariable("config", context.config());
+            // not sure its best practice to polute namespace at all
+            //binding.setVariable("context", context);
+            //binding.setVariable("log", context.logger());
+            //binding.setVariable("config", context.config());
  
             Script script = script = this.groovy.createScript(path, binding);
             

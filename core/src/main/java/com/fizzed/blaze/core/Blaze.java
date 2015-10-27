@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.Config;
+import com.fizzed.blaze.Context;
 import com.fizzed.blaze.util.DependencyHelper;
 import com.fizzed.blaze.util.ClassLoaderHelper;
 import com.fizzed.blaze.util.ConfigHelper;
@@ -158,7 +160,7 @@ public class Blaze {
             //
             // context (and bind to current thread)
             //
-            Context context = new Context(blazeDir, blazeFile, config);
+            Context context = new Context(blazeDir.toPath(), blazeFile.toPath(), config);
             Context.bindContext(context);
             
             
@@ -171,7 +173,6 @@ public class Blaze {
             log.info("Resolving dependencies...");
             Timer dependencyTimer = new Timer();
             
-            
             // save which dependencies are already resolved
             List<Dependency> resolvedDependencies
                     = (collectedDependencies != null ? collectedDependencies : DependencyHelper.alreadyBundled());
@@ -183,15 +184,14 @@ public class Blaze {
             List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(config);
             
             // build dependencies to resolve (need collected so correct versions are picked)
-            List<Dependency> dependencies = new ArrayList<>(resolvedDependencies);
-            
+            List<Dependency> dependencies = new ArrayList<>();
+            DependencyHelper.collect(dependencies, resolvedDependencies);
             DependencyHelper.collect(dependencies, wellKnownEngineDependencies);
             DependencyHelper.collect(dependencies, applicationDependencies);
             
-
             int classPathChanges = 0;
             
-            if (dependencies != null && !dependencies.isEmpty()) {
+            if (!dependencies.isEmpty()) {
                 try {
                     // resolve dependencies against collected dependencies
                     List<File> jarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
@@ -249,8 +249,6 @@ public class Blaze {
         return new Builder();
     }
     
-    
-    
     final private Context context;
     final private List<Dependency> dependencies;
     final private Engine engine;
@@ -292,12 +290,12 @@ public class Blaze {
             task = context.config().getString(Config.KEY_DEFAULT_TASK, Config.DEFAULT_TASK);
         }
         
-        log.info("Executing {}:{}...", context.file(), task);
+        log.info("Executing {}:{}...", context.scriptFile(), task);
         Timer executeTimer = new Timer();
         
         this.script.execute(task);
         
-        log.info("Executed {}:{} in {} ms", context.file(), task, executeTimer.stop().millis());
+        log.info("Executed {}:{} in {} ms", context.scriptFile(), task, executeTimer.stop().millis());
     }
     
     public void executeAll(List<String> tasks) throws BlazeException {

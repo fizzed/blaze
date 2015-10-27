@@ -15,10 +15,10 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.Engine;
-import com.fizzed.blaze.Script;
+import com.fizzed.blaze.core.Engine;
+import com.fizzed.blaze.core.Script;
 
 abstract public class AbstractEngine<S extends Script> implements Engine<S> {
 

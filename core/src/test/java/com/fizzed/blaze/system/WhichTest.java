@@ -22,6 +22,7 @@ import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
 import com.fizzed.blaze.util.FileHelper;
 import java.io.File;
+import java.nio.file.Paths;
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -47,7 +48,7 @@ public class WhichTest {
     @Before
     public void setup() {
         config = ConfigHelper.create(null);
-        context = spy(new Context(null, new File("blaze.js"), config));
+        context = spy(new Context(null, Paths.get("blaze.js"), config));
     }
     
     @Test

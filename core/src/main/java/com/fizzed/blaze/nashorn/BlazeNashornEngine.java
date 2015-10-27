@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.nashorn;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.Engine;
+import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.util.AbstractEngine;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -77,7 +77,7 @@ public class BlazeNashornEngine extends AbstractEngine<BlazeNashornScript> {
             bindings.put("log", context.logger());
             //bindings.put("console", new Console());
 
-            scriptEngine.eval(new FileReader(context.file()), bindings);
+            scriptEngine.eval(new FileReader(context.scriptFile().toFile()), bindings);
 
             //log.debug("script class: {}", this.script.getClass().getCanonicalName());
      

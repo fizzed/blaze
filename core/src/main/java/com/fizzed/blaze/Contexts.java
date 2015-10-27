@@ -15,8 +15,10 @@
  */
 package com.fizzed.blaze;
 
+import com.fizzed.blaze.core.MessageOnlyException;
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  *
@@ -24,24 +26,24 @@ import java.nio.file.Path;
  */
 public class Contexts {
 
-    static public File baseDir() {
+    static public Path baseDir() {
         return Context.currentContext().baseDir();
     }
     
-    static public File withBaseDir(Path path) {
+    static public Path withBaseDir(Path path) {
         return Context.currentContext().withBaseDir(path);
     }
     
-    static public File withBaseDir(File path) {
+    static public Path withBaseDir(File path) {
         return Context.currentContext().withBaseDir(path);
     }
     
-    static public File withBaseDir(String path) {
+    static public Path withBaseDir(String path) {
         return Context.currentContext().withBaseDir(path);
     }
 
-    static public File userDir() {
-        return new File(System.getProperty("user.home"));
+    static public Path userDir() {
+        return Paths.get(System.getProperty("user.home"));
     }
     
     static public void fail(String message) {

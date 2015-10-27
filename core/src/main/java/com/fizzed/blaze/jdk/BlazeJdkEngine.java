@@ -15,11 +15,11 @@
  */
 package com.fizzed.blaze.jdk;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.Engine;
-import com.fizzed.blaze.MessageOnlyException;
-import com.fizzed.blaze.Script;
+import com.fizzed.blaze.core.Engine;
+import com.fizzed.blaze.core.MessageOnlyException;
+import com.fizzed.blaze.core.Script;
 import com.fizzed.blaze.util.AbstractEngine;
 import com.fizzed.blaze.util.ClassLoaderHelper;
 import com.fizzed.blaze.util.ConfigHelper;
@@ -59,7 +59,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
     @Override
     public Script compile(Context context) throws BlazeException {
         // what class would we be producing?
-        String className = context.file().getName().replace(".java", "");
+        String className = context.scriptFile().toFile().getName().replace(".java", "");
         
         Path classesPath = null;
         Path expectedClassFile = null;
@@ -70,7 +70,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
             // directory to output classs to semi-permanently
             classesPath = ConfigHelper.semiPersistentClassesPath(context);
             
-            sourceLastModified = Files.getLastModifiedTime(context.file().toPath()).toMillis();
+            sourceLastModified = Files.getLastModifiedTime(context.scriptFile()).toMillis();
             
             // do we need to recompile?
             expectedClassFile = classesPath.resolve(className + ".class");
@@ -152,7 +152,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
         
         Iterable<? extends JavaFileObject> compilationUnits =
-                fileManager.getJavaFileObjectsFromFiles(Arrays.asList(context.file()));
+                fileManager.getJavaFileObjectsFromFiles(Arrays.asList(context.scriptFile().toFile()));
 
         JavaCompiler.CompilationTask task
                 = compiler.getTask(null, null, diagnostics, javacOptions, null, compilationUnits);
@@ -196,7 +196,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         }
         
         if (!success) {
-            throw new MessageOnlyException("Unable to compile " + context.file());
+            throw new MessageOnlyException("Unable to compile " + context.scriptFile());
         }
     }
     
@@ -216,7 +216,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         }
         
         if (compiler == null) {
-            throw new MessageOnlyException("Unable to compile " + context.file() + " to a class file.\n"
+            throw new MessageOnlyException("Unable to compile " + context.scriptFile() + " to a class file.\n"
                 + " The system java compiler is missing (are you running a JRE rather than a JDK?)\n"
                 + " Either run this with a JDK or add \"org.eclipse.jdt.core.compiler:ecj:<version>\" to blaze.dependencies.");
         }

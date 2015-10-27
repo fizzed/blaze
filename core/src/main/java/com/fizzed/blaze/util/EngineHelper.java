@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.Engine;
+import com.fizzed.blaze.core.Engine;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;

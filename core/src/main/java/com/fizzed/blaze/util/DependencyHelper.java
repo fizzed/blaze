@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Version;
 import java.io.IOException;

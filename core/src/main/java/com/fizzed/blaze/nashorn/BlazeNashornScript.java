@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.nashorn;
 
-import com.fizzed.blaze.BlazeException;
-import com.fizzed.blaze.NoSuchTaskException;
-import com.fizzed.blaze.Script;
+import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.NoSuchTaskException;
+import com.fizzed.blaze.core.Script;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;

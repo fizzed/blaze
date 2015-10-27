@@ -13,20 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.core;
+
+import com.fizzed.blaze.core.MessageOnlyException;
 
 /**
  *
  * @author joelauer
  */
-public interface Engine<S extends Script> {
+public class NoSuchTaskException extends MessageOnlyException {
+
+    final private String task;
     
-    String getFileExtension();
+    public NoSuchTaskException(String task) {
+        this(task, "Task '" + task + "' not found");
+    }
     
-    boolean isInitialized();
-    
-    void init(Context initialContext) throws BlazeException;
-    
-    S compile(Context context) throws BlazeException;
-    
+    public NoSuchTaskException(String task, String msg) {
+        super(msg);
+        this.task = task;
+    }
+
+    public String getTask() {
+        return task;
+    }
+
 }

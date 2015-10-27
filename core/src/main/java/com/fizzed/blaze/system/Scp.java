@@ -15,8 +15,8 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.Action;
-import com.fizzed.blaze.BlazeException;
+import com.fizzed.blaze.core.Action;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
