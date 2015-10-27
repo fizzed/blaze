@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze;
 
+import com.fizzed.blaze.core.ContextImpl;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
@@ -29,23 +30,23 @@ import java.nio.file.Path;
 public class Systems {
     
     static public Which which(String command) {
-        return new Which(Context.currentContext())
+        return new Which(Contexts.current())
             .command(command);
     }
     
     static public RequireExec requireExec(String command) {
-        return new RequireExec(Context.currentContext())
+        return new RequireExec(Contexts.current())
             .command(command);
     }
     
     static public RequireExec requireExec(String command, String message) {
-        return new RequireExec(Context.currentContext())
+        return new RequireExec(Contexts.current())
             .command(command)
             .message(message);
     }
     
     static public Exec exec(String command, Object ... arguments) {
-        return new Exec(Context.currentContext())
+        return new Exec(Contexts.current())
             .command(command, arguments);
     }
     
@@ -54,12 +55,12 @@ public class Systems {
     }
     
     static public Remove remove(Path... paths) {
-        return new Remove(Context.currentContext())
+        return new Remove(Contexts.current())
             .paths(paths);
     }
     
     static public Remove remove(File... files) {
-        return new Remove(Context.currentContext())
+        return new Remove(Contexts.current())
             .paths(files);
     }
     

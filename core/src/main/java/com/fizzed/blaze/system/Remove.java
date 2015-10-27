@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.Context;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;

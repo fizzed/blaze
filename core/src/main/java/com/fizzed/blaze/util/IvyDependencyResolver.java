@@ -17,6 +17,7 @@ package com.fizzed.blaze.util;
 
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.ContextImpl;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;

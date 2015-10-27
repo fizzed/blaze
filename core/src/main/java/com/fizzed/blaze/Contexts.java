@@ -15,31 +15,40 @@
  */
 package com.fizzed.blaze;
 
+import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.core.MessageOnlyException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Helpful static access to get context methods.
+ * 
  * @author joelauer
  */
 public class Contexts {
+    private static final Logger log = LoggerFactory.getLogger(Contexts.class);
 
+    static public Context current() {
+        return ContextHolder.get();
+    }
+    
     static public Path baseDir() {
-        return Context.currentContext().baseDir();
+        return ContextHolder.get().baseDir();
     }
     
     static public Path withBaseDir(Path path) {
-        return Context.currentContext().withBaseDir(path);
+        return ContextHolder.get().withBaseDir(path);
     }
     
     static public Path withBaseDir(File path) {
-        return Context.currentContext().withBaseDir(path);
+        return ContextHolder.get().withBaseDir(path);
     }
     
     static public Path withBaseDir(String path) {
-        return Context.currentContext().withBaseDir(path);
+        return ContextHolder.get().withBaseDir(path);
     }
 
     static public Path userDir() {

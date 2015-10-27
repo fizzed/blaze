@@ -16,7 +16,7 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Config;
-import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.ContextImpl;
 import com.fizzed.blaze.core.MessageOnlyException;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
@@ -42,12 +42,12 @@ public class RequiredExecTest {
     private static final Logger log = LoggerFactory.getLogger(RequiredExecTest.class);
     
     Config config;
-    Context context;
+    ContextImpl context;
     
     @Before
     public void setup() {
         config = ConfigHelper.create(null);
-        context = spy(new Context(null, Paths.get("blaze.js"), config));
+        context = spy(new ContextImpl(null, Paths.get("blaze.js"), config));
     }
     
     @Test(expected=MessageOnlyException.class)

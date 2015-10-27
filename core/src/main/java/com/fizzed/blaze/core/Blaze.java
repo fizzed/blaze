@@ -158,10 +158,10 @@ public class Blaze {
 
             
             //
-            // context (and bind to current thread)
+            // context (and set to get thread)
             //
-            Context context = new Context(blazeDir.toPath(), blazeFile.toPath(), config);
-            Context.bindContext(context);
+            Context context = new ContextImpl((blazeDir != null ? blazeDir.toPath() : null), blazeFile.toPath(), config);
+            ContextHolder.set(context);
             
             
             String fileExtension = FileHelper.fileExtension(blazeFile);

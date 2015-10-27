@@ -15,8 +15,8 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.core.Script;
 
