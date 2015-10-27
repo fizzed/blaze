@@ -287,7 +287,7 @@ public class Blaze {
     
     public void execute(String task) throws BlazeException {
         if (task == null || task.equals("")) {
-            task = context.config().getString(Config.KEY_DEFAULT_TASK, Config.DEFAULT_TASK);
+            task = context.config().find(Config.KEY_DEFAULT_TASK).or(Config.DEFAULT_TASK);
         }
         
         log.info("Executing {}:{}...", context.scriptFile(), task);

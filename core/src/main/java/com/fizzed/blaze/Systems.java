@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze;
 
-import com.fizzed.blaze.core.ContextImpl;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
@@ -30,23 +29,23 @@ import java.nio.file.Path;
 public class Systems {
     
     static public Which which(String command) {
-        return new Which(Contexts.current())
+        return new Which(Contexts.currentContext())
             .command(command);
     }
     
     static public RequireExec requireExec(String command) {
-        return new RequireExec(Contexts.current())
+        return new RequireExec(Contexts.currentContext())
             .command(command);
     }
     
     static public RequireExec requireExec(String command, String message) {
-        return new RequireExec(Contexts.current())
+        return new RequireExec(Contexts.currentContext())
             .command(command)
             .message(message);
     }
     
     static public Exec exec(String command, Object ... arguments) {
-        return new Exec(Contexts.current())
+        return new Exec(Contexts.currentContext())
             .command(command, arguments);
     }
     
@@ -55,21 +54,13 @@ public class Systems {
     }
     
     static public Remove remove(Path... paths) {
-        return new Remove(Contexts.current())
+        return new Remove(Contexts.currentContext())
             .paths(paths);
     }
     
     static public Remove remove(File... files) {
-        return new Remove(Contexts.current())
+        return new Remove(Contexts.currentContext())
             .paths(files);
     }
-    
-    /**
-    static public Scp scp(String user, String host) {
-        return new Scp(Context.currentContext())
-            .user(user)
-            .host(host);
-    }
-    */
     
 }

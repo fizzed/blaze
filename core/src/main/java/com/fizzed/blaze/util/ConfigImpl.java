@@ -17,6 +17,7 @@ package com.fizzed.blaze.util;
 
 import com.fizzed.blaze.Config;
 import com.typesafe.config.ConfigException.Missing;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,6 +32,61 @@ public class ConfigImpl implements Config {
         this.config = config;
     }
 
+    
+    @Override
+    public Value<String> find(String key) {
+        try {
+            return Value.of(key, this.config.getString(key));
+        } catch (Missing e) {
+            return Value.empty(key);
+        }
+    }
+    
+    @Override
+    public <T> Value<T> find(String key, Class<T> type) {
+        try {
+            String value = this.config.getString(key);
+            return Value.of(key, convert(value, type));
+        } catch (Missing e) {
+            return Value.empty(key);
+        }
+    }
+    
+    private <T> T convert(String value, Class<T> type) {
+        if (type.equals(Integer.class)) {
+            return (T)Integer.valueOf(value);
+        } else if (type.equals(Boolean.class)) {
+            return (T)Boolean.valueOf(value);
+        } else {
+            throw new IllegalArgumentException("We do not support converting values to type " + type.getCanonicalName());
+        }
+    }
+    
+    @Override
+    public Value<List<String>> findList(String key) {
+        try {
+            return Value.of(key, this.config.getStringList(key));
+        } catch (Missing e) {
+            return Value.empty(key);
+        }
+    }
+    
+    @Override
+    public <T> Value<List<T>> findList(String key, Class<T> type) {
+        try {
+            List<String> values = this.config.getStringList(key);
+            List<T> convertedValues = new ArrayList<>(values.size());
+            for (String value : values) {
+                convertedValues.add(convert(value, type));
+            }
+            return Value.of(key, convertedValues);
+        } catch (Missing e) {
+            return Value.empty(key);
+        }
+    }
+    
+    
+    /**
     @Override
     public String getString(String key) {
         try {
@@ -84,7 +140,9 @@ public class ConfigImpl implements Config {
             return defaultValue;
         }
     }
+    */
     
+    /**
     @Override
     public List<String> getStringList(String key) {
         try {
@@ -102,5 +160,6 @@ public class ConfigImpl implements Config {
             return defaultValue;
         }
     }
+    */
     
 }

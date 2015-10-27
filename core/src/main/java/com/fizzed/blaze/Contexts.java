@@ -20,8 +20,6 @@ import com.fizzed.blaze.core.MessageOnlyException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Helpful static access to get context methods.
@@ -29,9 +27,8 @@ import org.slf4j.LoggerFactory;
  * @author joelauer
  */
 public class Contexts {
-    private static final Logger log = LoggerFactory.getLogger(Contexts.class);
 
-    static public Context current() {
+    static public Context currentContext() {
         return ContextHolder.get();
     }
     

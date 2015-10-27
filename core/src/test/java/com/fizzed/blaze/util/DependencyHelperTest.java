@@ -42,14 +42,14 @@ public class DependencyHelperTest {
     public void applicationDependencies() {
         Config config = mock(Config.class);
         
-        when(config.getStringList(Config.KEY_DEPENDENCIES)).thenReturn(null);
+        when(config.findList(Config.KEY_DEPENDENCIES)).thenReturn(Config.Value.empty(Config.KEY_DEPENDENCIES));
         
         List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(config);
         
         assertThat(applicationDependencies, is(nullValue()));
         
         
-        when(config.getStringList(Config.KEY_DEPENDENCIES)).thenReturn(Arrays.asList("com.example:hello:1.0.0"));
+        when(config.findList(Config.KEY_DEPENDENCIES)).thenReturn(Config.Value.of(Config.KEY_DEPENDENCIES, Arrays.asList("com.example:hello:1.0.0")));
         
         applicationDependencies = DependencyHelper.applicationDependencies(config);
         

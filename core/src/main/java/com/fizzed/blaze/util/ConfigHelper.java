@@ -77,9 +77,11 @@ public class ConfigHelper {
 
     static public List<String> commandExtensions(Config config) {
         if (OperatingSystem.windows()) {
-            return config.getStringList(Config.KEY_COMMAND_EXTS, Config.DEFAULT_COMMAND_EXTS_WINDOWS);
+            return config.find(Config.KEY_COMMAND_EXTS, List.class).or(Config.DEFAULT_COMMAND_EXTS_WINDOWS);
+            //return config.getStringList(Config.KEY_COMMAND_EXTS, Config.DEFAULT_COMMAND_EXTS_WINDOWS);
         } else {
-            return config.getStringList(Config.KEY_COMMAND_EXTS, Config.DEFAULT_COMMAND_EXTS_UNIX);
+            return config.find(Config.KEY_COMMAND_EXTS, List.class).or(Config.DEFAULT_COMMAND_EXTS_UNIX);
+            //return config.getStringList(Config.KEY_COMMAND_EXTS, Config.DEFAULT_COMMAND_EXTS_UNIX);
         }
     }
     

@@ -144,7 +144,7 @@ public class BlazeNashornEngineTest {
                 .file(resourceAsFile("/nashorn/new_default_task.js"))
                 .build();
         
-        assertThat(blaze.context().config().getString(Config.KEY_DEFAULT_TASK), is("blaze"));
+        assertThat(blaze.context().config().find(Config.KEY_DEFAULT_TASK).get(), is("blaze"));
         
         systemOutRule.clearLog();
         
