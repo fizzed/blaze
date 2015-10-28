@@ -18,6 +18,12 @@
         <netbeans.compile.on.save>none</netbeans.compile.on.save>
     </properties>
     
+    <scm>
+        <url>https://github.com/fizzed/blaze</url>
+        <connection>scm:git:git@github.com:fizzed/blaze.git</connection>
+      <tag>HEAD</tag>
+  </scm>
+    
     <modules>
         <module>core</module>
         <module>http</module>
