@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.util;
 
+import com.fizzed.blaze.Version;
 import java.util.Objects;
 
 /**
@@ -48,11 +49,24 @@ public class Dependency {
     static public Dependency parse(String dependency) {
         String[] tokens = dependency.split(":");
         
-        if (tokens.length != 3) {
+        if (tokens.length < 2) {
             throw new IllegalArgumentException("Invalid dependency (not in format groupId:artifactId:version)");
         }
         
-        return new Dependency(tokens[0], tokens[1], tokens[2]);
+        String groupId = tokens[0].trim();
+        String artifactId = tokens[1].trim();
+        String version = (tokens.length != 3 ? "" : tokens[2].trim());
+        
+        // special case for blaze dependencies
+        if (groupId.equals("com.fizzed") && artifactId.startsWith("blaze-") && version.equals("")) {
+            version = Version.getVersion();
+        }
+        
+        if (version.equals("")) {
+            throw new IllegalArgumentException("Invalid dependency (not in format groupId:artifactId:version)");
+        }
+        
+        return new Dependency(groupId, artifactId, version);
     }
 
     @Override

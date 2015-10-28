@@ -13,33 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.http;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.Action;
+import com.fizzed.blaze.core.BlazeException;
 
 /**
  *
  * @author joelauer
- * @param <T>
  */
-public abstract class Action<T> {
+public class HttpRequest extends Action<Void> {
     
-    final protected Context context;
-    protected volatile boolean ran;
-    
-    public Action(Context context) {
-        this.context = context;
+    private UriBuilder uriBuilder;
+    private String method;
+
+    public HttpRequest(Context context) {
+        super(context);
     }
     
-    public T run() throws BlazeException {
-        if (ran) {
-            throw new BlazeException("Can only run once");
-        }
-        T value = doRun();
-        ran = true;
-        return value;
+    @Override
+    protected Void doRun() throws BlazeException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    abstract protected T doRun() throws BlazeException;
     
 }

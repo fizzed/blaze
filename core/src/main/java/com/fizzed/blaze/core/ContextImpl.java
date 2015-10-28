@@ -58,10 +58,10 @@ public class ContextImpl implements Context {
     
     @Override
     public Path withBaseDir(Path path) {
-        if (this.baseDir() == null) {
+        if (this.baseDir == null) {
             return path;
         } else {
-            return baseDir.resolve(path);
+            return this.baseDir().resolve(path);
         }
     }
     
@@ -70,7 +70,7 @@ public class ContextImpl implements Context {
         if (file.isAbsolute()) {
             return file.toPath();
         } else {
-            return baseDir.resolve(file.toPath());
+            return this.baseDir().resolve(file.toPath());
         }
     }
     

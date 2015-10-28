@@ -20,6 +20,8 @@ import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.Script;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,7 +40,22 @@ public class BlazeJdkScript implements Script {
 
     @Override
     public List<String> tasks() throws BlazeException {
-        throw new UnsupportedOperationException();
+        List<String> tasks = new ArrayList<>();
+        
+        try {
+            Method[] methods = this.object.getClass().getDeclaredMethods();
+            
+            for (Method m : methods) {
+                
+                if (!Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())) {
+                    tasks.add(m.getName());
+                }
+            }
+        } catch (SecurityException e) {
+            throw new BlazeException("Unable to groovy script class", e);
+        }
+        
+        return tasks;
     }
 
     @Override

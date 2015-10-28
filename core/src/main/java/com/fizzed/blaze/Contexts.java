@@ -20,6 +20,7 @@ import com.fizzed.blaze.core.MessageOnlyException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.slf4j.Logger;
 
 /**
  * Helpful static access to get context methods.
@@ -30,6 +31,14 @@ public class Contexts {
 
     static public Context currentContext() {
         return ContextHolder.get();
+    }
+    
+    static public Logger logger() {
+        return ContextHolder.get().logger();
+    }
+    
+    static public Config config() {
+        return ContextHolder.get().config();
     }
     
     static public Path baseDir() {

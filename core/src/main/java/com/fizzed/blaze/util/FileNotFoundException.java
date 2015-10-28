@@ -13,33 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.BlazeException;
 
 /**
  *
  * @author joelauer
- * @param <T>
  */
-public abstract class Action<T> {
+public class FileNotFoundException extends BlazeException {
     
-    final protected Context context;
-    protected volatile boolean ran;
-    
-    public Action(Context context) {
-        this.context = context;
+    public FileNotFoundException(String msg) {
+        super(msg);
     }
     
-    public T run() throws BlazeException {
-        if (ran) {
-            throw new BlazeException("Can only run once");
-        }
-        T value = doRun();
-        ran = true;
-        return value;
+    public FileNotFoundException(String msg, Throwable cause) {
+        super(msg, cause);
     }
-    
-    abstract protected T doRun() throws BlazeException;
     
 }

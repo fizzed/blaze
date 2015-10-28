@@ -18,9 +18,12 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.util.DelayedFileInputStream;
 import com.fizzed.blaze.util.ObjectHelper;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -128,6 +131,21 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
         return this;
     }
 
+    public Exec pipeInput(InputStream is) {
+        this.executor.redirectInput(is);
+        return this;
+    }
+    
+    public Exec pipeInput(File file) {
+        // delays opening stream until read
+        return this.pipeInput(new DelayedFileInputStream(file));
+    }
+    
+    public Exec pipeInput(Path file) {
+        // delays opening stream until read
+        return this.pipeInput(new DelayedFileInputStream(file));
+    }
+    
     @Override
     protected ExecResult doRun() throws BlazeException {
         File exeFile = this.which.run();

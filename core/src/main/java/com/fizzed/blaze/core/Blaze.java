@@ -29,6 +29,7 @@ import com.fizzed.blaze.util.FileHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,14 +100,29 @@ public class Blaze {
             return this;
         }
         
-        public Blaze build() {
-            File blazeDir = null;
-            File blazeFile = null;
-            
-            // if file was set it supercedes all
+        // set during build process (maybe refactor how this is done eventually...)
+        private File detectedBaseDir;
+        private File detectedScriptFile;
+        private Config config;
+        private String scriptExtension;
+        private Context context;
+        private List<Dependency> dependencies;
+        private List<File> dependencyJarFiles;
+        private Engine engine;
+        private Script script;
+
+        public List<Dependency> getDependencies() {
+            return dependencies;
+        }
+
+        public List<File> getDependencyJarFiles() {
+            return dependencyJarFiles;
+        }
+        
+        public void locate() {
             if (this.file != null) {
-                blazeDir = this.file.getParentFile();
-                blazeFile = this.file;
+                detectedBaseDir = this.file.getParentFile();
+                detectedScriptFile = this.file;
             } else {
                 // otherwise fallback to trying to figure it out ourselves
                 if (this.directory == null) {
@@ -126,46 +142,49 @@ public class Blaze {
                     throw new BlazeException("More than one blaze file found. Either delete the extra files use -f parameter");
                 }
                 
-                blazeDir = this.directory;
-                blazeFile = blazeFiles[0];
+                detectedBaseDir = this.directory;
+                detectedScriptFile = blazeFiles[0];
             }
             
             // at this point we should have a file - verify it exists and works
-            if (!blazeFile.exists()) {
-                throw new BlazeException("Blaze file " + blazeFile + " not found. Perhaps this is not a Blaze project?");
+            if (!detectedScriptFile.exists()) {
+                throw new BlazeException("Blaze file " + detectedScriptFile + " not found. Perhaps this is not a Blaze project?");
             }
             
-            if (!blazeFile.isFile()) {
-                throw new BlazeException("Blaze file " + blazeFile + " is not a file. Perhaps this is not a Blaze project?");
+            if (!detectedScriptFile.isFile()) {
+                throw new BlazeException("Blaze file " + detectedScriptFile + " is not a file. Perhaps this is not a Blaze project?");
             }
             
             
-            if (blazeDir != null && blazeDir.getPath().equals(".")) {
-                blazeDir = null;
+            if (detectedBaseDir != null && detectedBaseDir.getPath().equals(".")) {
+                detectedBaseDir = null;
             }
             
-            blazeFile = FileHelper.relativizeToJavaWorkingDir(blazeFile);
+            detectedScriptFile = FileHelper.relativizeToJavaWorkingDir(detectedScriptFile);
             
-            log.trace("Using blaze dir {} and file {}", blazeDir, blazeFile);
+            log.trace("Using blaze dir {} and file {}", detectedBaseDir, detectedScriptFile);
+        }
+        
+        public void configure() {
+            if (detectedScriptFile == null) {
+                locate();
+            }
             
+            File configFile = ConfigHelper.file(detectedBaseDir, detectedScriptFile);
             
-            //
-            // configuration
-            //
-            File configFile = ConfigHelper.file(blazeDir, blazeFile);
+            config = ConfigHelper.create(configFile);
             
-            Config config = ConfigHelper.create(configFile);
-
+            scriptExtension = FileHelper.fileExtension(detectedScriptFile);
             
-            //
-            // context (and set to get thread)
-            //
-            Context context = new ContextImpl((blazeDir != null ? blazeDir.toPath() : null), blazeFile.toPath(), config);
+            context = new ContextImpl((detectedBaseDir != null ? detectedBaseDir.toPath() : null), detectedScriptFile.toPath(), config);
+            
             ContextHolder.set(context);
-            
-            
-            String fileExtension = FileHelper.fileExtension(blazeFile);
-            
+        }
+        
+        public void resolveDependencies() {
+            if (context == null) {
+                configure();
+            }
             
             //
             // any dependencies that need to be resolved (in case engine itself is a dependency)
@@ -178,37 +197,22 @@ public class Blaze {
                     = (collectedDependencies != null ? collectedDependencies : DependencyHelper.alreadyBundled());
             
             // any well known engines to include?
-            List<Dependency> wellKnownEngineDependencies = DependencyHelper.wellKnownEngineDependencies(fileExtension);
+            List<Dependency> wellKnownEngineDependencies = DependencyHelper.wellKnownEngineDependencies(scriptExtension);
             
             // did script declare any dependencies we need to include?
             List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(config);
             
             // build dependencies to resolve (need collected so correct versions are picked)
-            List<Dependency> dependencies = new ArrayList<>();
+            dependencies = new ArrayList<>();
+            
             DependencyHelper.collect(dependencies, resolvedDependencies);
             DependencyHelper.collect(dependencies, wellKnownEngineDependencies);
             DependencyHelper.collect(dependencies, applicationDependencies);
             
-            int classPathChanges = 0;
-            
             if (!dependencies.isEmpty()) {
                 try {
                     // resolve dependencies against collected dependencies
-                    List<File> jarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
-                    
-                    if (jarFiles != null) {
-                        for (File jarFile : jarFiles) {
-                            int changed 
-                                    = ClassLoaderHelper.addFileToClassPath(jarFile, Thread.currentThread().getContextClassLoader());
-
-                            if (changed > 0) {
-                                log.info("Adding {} to classpath", jarFile.getName());
-                                log.debug(" => {}", jarFile);
-                            }
-
-                            classPathChanges += changed;
-                        }
-                    }
+                    dependencyJarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
                 } catch (DependencyResolveException e) {
                     throw e;
                 } catch (IOException | ParseException e) {
@@ -217,18 +221,36 @@ public class Blaze {
             }
             
             log.info("Resolved dependencies in {} ms", dependencyTimer.stop().millis());
+        }
+        
+        public void loadDependencies() {
+            if (dependencies == null) {
+                resolveDependencies();
+            }
             
-            
+            if (dependencyJarFiles != null) {
+                dependencyJarFiles.stream().forEach((jarFile) -> {
+                    int changed
+                            = ClassLoaderHelper.addFileToClassPath(jarFile, Thread.currentThread().getContextClassLoader());
+                    if (changed > 0) {
+                        log.info("Adding {} to classpath", jarFile.getName());
+                        log.debug(" => {}", jarFile);
+                    }
+                });
+            }
+        }
+        
+        public void compileScript() {
             //
             // find and prepare by extension
             //
             log.info("Compiling script...");
             Timer engineTimer = new Timer();
             
-            Engine engine = EngineHelper.findByFileExtension(fileExtension, (classPathChanges > 0));
+            engine = EngineHelper.findByFileExtension(scriptExtension, dependencyJarFiles != null && !dependencyJarFiles.isEmpty());
             
             if (engine == null) {
-                throw new BlazeException("Unable to find script engine for file extension " + fileExtension + ". Maybe bad file extension or missing dependency?");
+                throw new BlazeException("Unable to find script engine for file extension " + scriptExtension + ". Maybe bad file extension or missing dependency?");
             }
 
             log.debug("Using script engine {}", engine.getClass().getCanonicalName());
@@ -237,9 +259,15 @@ public class Blaze {
                 engine.init(context);
             }
             
-            Script script = engine.compile(context);
+            script = engine.compile(context);
             
             log.info("Compiled script in {} ms", engineTimer.stop().millis());
+        }
+        
+        public Blaze build() {
+            loadDependencies();     // also calls locate(), configure(), and resolveDependencies()
+            
+            compileScript();
             
             return new Blaze(context, dependencies, engine, script);
         }

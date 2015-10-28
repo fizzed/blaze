@@ -21,6 +21,7 @@
     <modules>
         <module>core</module>
         <module>groovy</module>
+        <module>http</module>
         <module>lite</module>
     </modules>
     
@@ -30,6 +31,12 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
+                <version>1.7.12</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
                 <version>1.7.12</version>
             </dependency>
 
@@ -94,6 +101,20 @@
                 <version>2.4.5</version>
                 <classifier>indy</classifier>
             </dependency>
+            
+            <!-- http support -->
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>fluent-hc</artifactId>
+                <version>4.5.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            
             
             <!-- testing (hamcrest BEFORE junit important) -->
             <dependency>
