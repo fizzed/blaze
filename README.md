@@ -36,8 +36,7 @@ invoke blaze, it does the following:
  - Heavy use of statically accessible methods for simple cross-language access
    to Blaze-supplied utilities.
  - Fluent-style method calls for elegant looking scripts
- - Encourages use of modern Java APIs such as `java.nio.file.Path` rather than
-   `java.io.File` objects.
+ - APIs encourage use of modern Java APIs (e.g. `java.nio.file.Path` instead of `java.io.File`)
 
 ## Install
 
@@ -67,7 +66,7 @@ import static com.fizzed.blaze.Systems.exec;
 import com.fizzed.blaze.Contexts;
 import java.io.File;
 
-public class javac {
+public class blaze {
 
     public void main() {
         Logger log = Contexts.logger();
