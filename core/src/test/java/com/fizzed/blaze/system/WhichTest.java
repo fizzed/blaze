@@ -22,6 +22,8 @@ import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
 import com.fizzed.blaze.util.FileHelper;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
@@ -53,7 +55,7 @@ public class WhichTest {
     
     @Test
     public void notFind() throws Exception {
-        File f = new Which(context)
+        Path f = new Which(context)
             .command("thisdoesnotexist")
             .run();
 
@@ -64,35 +66,35 @@ public class WhichTest {
     public void worksOnWindows() throws Exception {
         assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
 
-        File f = new Which(context)
+        Path f = new Which(context)
             .command("cmd")
             .run();
         
         log.debug("which: {}", f);
 
         assertThat(f, is(not(nullValue())));
-        assertThat(f.isFile(), is(true));
-        assertThat(f.canExecute(), is(true));
+        assertThat(Files.isRegularFile(f), is(true));
+        assertThat(Files.isExecutable(f), is(true));
     }
     
     @Test
     public void worksOnUnix() throws Exception {
         assumeTrue("Test only valid on unix or mac", ConfigHelper.OperatingSystem.unix() || ConfigHelper.OperatingSystem.mac());
 
-        File f = new Which(context)
+        Path f = new Which(context)
             .command("ls")
             .run();
         
         log.debug("which: {}", f);
 
         assertThat(f, is(not(nullValue())));
-        assertThat(f.isFile(), is(true));
-        assertThat(f.canExecute(), is(true));
+        assertThat(Files.isRegularFile(f), is(true));
+        assertThat(Files.isExecutable(f), is(true));
     }
     
     @Test
     public void worksWithPath() throws Exception {
-        File f = new Which(context)
+        Path f = new Which(context)
             .command("hello-world-test")
             .run();
         
@@ -104,9 +106,9 @@ public class WhichTest {
             .run();
 
         assertThat(f, is(not(nullValue())));
-        assertThat(f.isFile(), is(true));
-        assertThat(f.canExecute(), is(true));
-        assertThat(f.getName(), either(is("hello-world-test")).or(is("hello-world-test.bat")));
+        assertThat(Files.isRegularFile(f), is(true));
+        assertThat(Files.isExecutable(f), is(true));
+        assertThat(f.getFileName().toString(), either(is("hello-world-test")).or(is("hello-world-test.bat")));
     }
     
 }

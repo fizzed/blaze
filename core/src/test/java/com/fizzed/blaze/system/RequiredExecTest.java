@@ -21,6 +21,7 @@ import com.fizzed.blaze.core.MessageOnlyException;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.ConfigHelper;
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -52,14 +53,14 @@ public class RequiredExecTest {
     
     @Test(expected=MessageOnlyException.class)
     public void notFind() throws Exception {
-        File f = new RequireExec(context)
+        Path f = new RequireExec(context)
             .command("thisdoesnotexist")
             .run();
     }
     
     @Test
     public void works() throws Exception {
-        File f = new RequireExec(context)
+        Path f = new RequireExec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
             .run();
@@ -70,7 +71,7 @@ public class RequiredExecTest {
     @Test
     public void notFindWithMessage() throws Exception {
         try {
-            File f = new RequireExec(context)
+            Path f = new RequireExec(context)
                 .command("thisdoesnotexist")
                 .message("Download from http://blah...")
                 .run();

@@ -18,9 +18,7 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.ContextImpl;
 import com.fizzed.blaze.core.MessageOnlyException;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -28,7 +26,7 @@ import java.util.List;
  * 
  * @author joelauer
  */
-public class RequireExec extends Action<File> implements PathSupport<RequireExec> {
+public class RequireExec extends Action<Path> implements PathSupport<RequireExec> {
     
     private final Which which;
     private String message;
@@ -55,8 +53,8 @@ public class RequireExec extends Action<File> implements PathSupport<RequireExec
     }
 
     @Override
-    protected File doRun() throws BlazeException {
-        File exeFile = this.which.run();
+    protected Path doRun() throws BlazeException {
+        Path exeFile = this.which.run();
         
         if (exeFile == null) {
             throw new MessageOnlyException("Unable to find the required executable '" + this.which.getCommand() + "'."

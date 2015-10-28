@@ -36,6 +36,8 @@ invoke blaze, it does the following:
  - Heavy use of statically accessible methods for simple cross-language access
    to Blaze-supplied utilities.
  - Fluent-style method calls for elegant looking scripts
+ - Encourages use of modern Java APIs such as `java.nio.file.Path` rather than
+   `java.io.File` objects.
 
 ## Install
 

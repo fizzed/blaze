@@ -29,40 +29,101 @@ import org.slf4j.Logger;
  */
 public class Contexts {
 
+    /**
+     * Current context of execution. Usually bound to a thread local.
+     * @return The current context
+     */
     static public Context currentContext() {
         return ContextHolder.get();
     }
     
+    /**
+     * A logger for the current context.
+     * @return A logger for the current context. Guaranteed to be present.
+     */
     static public Logger logger() {
         return ContextHolder.get().logger();
     }
     
+    /**
+     * The application configuration
+     * @return The application configuration instance. Guaranteed to be present.
+     */
     static public Config config() {
         return ContextHolder.get().config();
     }
     
+    /**
+     * Fails a script with a supplied message to be logged.  Does not trigger
+     * a stacktrace to be logged!
+     * @param message The message
+     */
+    static public void fail(String message) {
+        throw new MessageOnlyException(message);
+    }
+    
+    /**
+     * The application base directory.  The base directory is the directory
+     * of the script that is executing. So if your script is located at
+     * "/home/joelauer/project/blaze.java" then this baes directory would be
+     * "/home/joelauer/project"
+     * @return The application base directory
+     */
     static public Path baseDir() {
         return ContextHolder.get().baseDir();
     }
     
+    /**
+     * Resolves a path relative to the base directory. If the path is absolute
+     * it will be returned intact, otherwise it will be appended to the
+     * current base directory. So if your base directory is "/home/joelauer/project"
+     * and you provide a path of "images/my.png" then a path of "/home/joelauer/project/images/my.png"
+     * will be returned
+     * @param path The path to resolve
+     * @return The resolved path
+     * @see #withBaseDir(java.io.File) 
+     * @see #withBaseDir(java.lang.String) 
+     */
     static public Path withBaseDir(Path path) {
         return ContextHolder.get().withBaseDir(path);
     }
     
+    /**
+     * Resolves a path relative to the base directory. If the path is absolute
+     * it will be returned intact, otherwise it will be appended to the
+     * current base directory. So if your base directory is "/home/joelauer/project"
+     * and you provide a path of "images/my.png" then a path of "/home/joelauer/project/images/my.png"
+     * will be returned
+     * @param path The path to resolve
+     * @return The resolved path
+     * @see #withBaseDir(java.io.File) 
+     * @see #withBaseDir(java.lang.String) 
+     */
     static public Path withBaseDir(File path) {
         return ContextHolder.get().withBaseDir(path);
     }
     
+    /**
+     * Resolves a path relative to the base directory. If the path is absolute
+     * it will be returned intact, otherwise it will be appended to the
+     * current base directory. So if your base directory is "/home/joelauer/project"
+     * and you provide a path of "images/my.png" then a path of "/home/joelauer/project/images/my.png"
+     * will be returned
+     * @param path The path to resolve
+     * @return The resolved path
+     * @see #withBaseDir(java.io.File) 
+     * @see #withBaseDir(java.lang.String) 
+     */
     static public Path withBaseDir(String path) {
         return ContextHolder.get().withBaseDir(path);
     }
 
+    /**
+     * The current user's home directory such as "/home/joelauer" or "C:\Users\Joe Lauer"
+     * @return The current user's home directory
+     */
     static public Path userDir() {
         return Paths.get(System.getProperty("user.home"));
-    }
-    
-    static public void fail(String message) {
-        throw new MessageOnlyException(message);
     }
     
 }

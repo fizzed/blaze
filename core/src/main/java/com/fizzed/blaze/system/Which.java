@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author joelauer
  */
-public class Which extends Action<File> implements PathSupport<Which> {
+public class Which extends Action<Path> implements PathSupport<Which> {
     private static final Logger log = LoggerFactory.getLogger(Which.class);
     
     private final List<Path> paths;
@@ -58,11 +58,11 @@ public class Which extends Action<File> implements PathSupport<Which> {
     }
     
     @Override
-    protected File doRun() throws BlazeException {
+    protected Path doRun() throws BlazeException {
         return find(context, paths, command);
     }
     
-    static public File find(Context context, List<Path> paths, String command) throws BlazeException {
+    static public Path find(Context context, List<Path> paths, String command) throws BlazeException {
         for (Path path : paths) {
             List<String> commandExtensions = ConfigHelper.commandExtensions(context.config());
             for (String ext : commandExtensions) {
@@ -76,7 +76,7 @@ public class Which extends Action<File> implements PathSupport<Which> {
                 log.trace("Trying file: {}", f);
                 if (f.exists() && f.isFile()) {
                     if (f.canExecute()) {
-                        return f;
+                        return f.toPath();
                     } else {
                         log.warn("Command '" + f + "' found but it isn't executable! (continuing search...)");
                     }

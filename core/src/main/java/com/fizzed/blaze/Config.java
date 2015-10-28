@@ -21,7 +21,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
- *
+ * Configuration utility for Blaze.
+ * 
  * @author joelauer
  */
 public interface Config {
@@ -37,12 +38,42 @@ public interface Config {
     static List<String> DEFAULT_COMMAND_EXTS_UNIX = Arrays.asList("", ".sh");
     static List<String> DEFAULT_COMMAND_EXTS_WINDOWS = Arrays.asList(".exe", ".bat", ".cmd");
     
+    /**
+     * Finds a configuration value by its key.
+     * @param key The configuration key (e.g. "undertow.port")
+     * @return The value as a String
+     * @see #find(java.lang.String, java.lang.Class) To get a value that will
+     *      be converted to a type other than a String.
+     */
     Value<String> find(String key);
     
+    /**
+     * Finds a configuration value by its key.
+     * @param key The configuration key (e.g. "undertow.port")
+     * @param type The type to convert to
+     * @return The value as the supplied type
+     * @see #find(java.lang.String) To get a value that will
+     *      be returned as a String.
+     */
     <T> Value<T> find(String key, Class<T> type);
     
+    /**
+     * Finds a configuration List of values by its key.
+     * @param key The configuration key (e.g. "undertow.port")
+     * @return A List of String values
+     * @see #findList(java.lang.String, java.lang.Class) To get a value that will
+     *      be converted to a type other than a String.
+     */
     Value<List<String>> findList(String key);
     
+    /**
+     * Finds a configuration List of values by its key.
+     * @param key The configuration key (e.g. "undertow.port")
+     * @param type The type to convert to
+     * @return A List of values in supplied type
+     * @see #findList(java.lang.String) To get a value that will
+     *      be a String.
+     */
     <T> Value<List<T>> findList(String key, Class<T> type);
     
     /**
@@ -71,6 +102,13 @@ public interface Config {
             return this.value != null;
         }
         
+        /**
+         * Gets the value or throws an exception if its missing.
+         * @return The non-null value
+         * @throws NoSuchElementException Thrown if the value is missing
+         * @see #or(java.lang.Object) If you'd like a default value returned
+         *      instead of an exception thrown.
+         */
         public T get() throws NoSuchElementException {
             if (value == null) {
                 throw new NoSuchElementException("Value for key '" + key + "' is missing");
@@ -79,7 +117,12 @@ public interface Config {
             }
         }
         
-        public T or(T defaultValue) throws NoSuchElementException {
+        /**
+         * Gets the value if its present or will return the supplied default.
+         * @param defaultValue The default if the value is missing
+         * @return The value or the default
+         */
+        public T or(T defaultValue) {
             if (value == null) {
                 return defaultValue;
             } else {
@@ -87,6 +130,10 @@ public interface Config {
             }
         }
 
+        /**
+         * If the value is present (not null) this will return the value.toString()
+         * @return The value's toString() or null
+         */
         @Override
         public String toString() {
             if (value == null) {

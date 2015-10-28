@@ -148,7 +148,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
     
     @Override
     protected ExecResult doRun() throws BlazeException {
-        File exeFile = this.which.run();
+        Path exeFile = this.which.run();
         
         if (exeFile == null) {
             throw new ExecutableNotFoundException("Executable '" + this.which.getCommand() + "' not found");
@@ -157,7 +157,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
         // build final list of command to execute (executable first then args)
         List<String> command = new ArrayList<>();
         
-        command.add(exeFile.getAbsolutePath());
+        command.add(exeFile.toAbsolutePath().toString());
         
         command.addAll(arguments);
         
