@@ -20,8 +20,9 @@
     
     <modules>
         <module>core</module>
-        <module>groovy</module>
         <module>http</module>
+        <module>ssh</module>
+        <module>groovy</module>
         <module>lite</module>
     </modules>
     
@@ -114,7 +115,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            
             
             <!-- testing (hamcrest BEFORE junit important) -->
             <dependency>

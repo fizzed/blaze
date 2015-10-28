@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
+package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;

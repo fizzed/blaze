@@ -75,11 +75,6 @@
             <artifactId>zt-exec</artifactId>
         </dependency>
         
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-        </dependency>
-        
         <!-- testing (hamcrest BEFORE junit is important) -->
         
         <dependency>

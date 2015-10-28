@@ -9,7 +9,7 @@ short_description: "Blazingly fast tasks"
 
 type: CONSOLE
 
-main_class: "com.fizzed.blaze.cli.BlazeBootstrap"
+main_class: "com.fizzed.blaze.cli.Bootstrap"
 
 platforms: [ WINDOWS, LINUX ]
 

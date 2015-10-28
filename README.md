@@ -5,9 +5,9 @@ Blaze by Fizzed
 
 ## Overview
 
-A speedy, flexible, mildly-opinionated general purpose JVM script-like environment
+A speedy, flexible, mildly-opinionated general purpose JVM script-like stack
 built on top of Java 8.  Can replace shell scripts and plays nicely with other
-build tools.  Only requires adding `blaze.jar` into your project directory.
+tools.  Only requires adding `blaze.jar` to your project directory.
 
 Blaze pulls together stable, mature libraries from the Java ecosystem into a
 light-weight package that lets you focus on getting things done.  When you 
@@ -17,7 +17,7 @@ invoke blaze, it does the following:
  - Loads your optional configuration file(s)
  - Downloads other dependencies (e.g. from Maven central)
  - Adds dependencies to the runtime classpath
- - Loads your script(s)
+ - Loads and compiles your script(s)
  - Executes "tasks" (basically methods your script defines)
 
 ## Features
@@ -27,7 +27,7 @@ invoke blaze, it does the following:
     - Java (.java)
     - JavaScript (.js)
     - Groovy (.groovy)
-    - [Or write your own](core/src/main/java/com/fizzed/blaze/nashorn)
+    - Or write your own (examples [here](core/src/main/java/com/fizzed/blaze/jdk), [here](core/src/main/java/com/fizzed/blaze/nashorn), and [here](groovy/src/main/java/com/fizzed/blaze/groovy))
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
  - Small size so you can commit `blaze.jar` to your repository
@@ -35,6 +35,7 @@ invoke blaze, it does the following:
    run your scripts.
  - Heavy use of statically accessible methods for simple cross-language access
    to Blaze-supplied utilities.
+ - Fluent-style method calls for elegant looking scripts
 
 ## Install
 
@@ -262,8 +263,67 @@ is executed.  For example, to add Google Guava as a dependency:
 
 ```
 blaze.dependencies = [
-  "com.google.guava:guava:18.0"
+    "com.google.guava:guava:18.0"
 ]
 ```
 
 Try `examples/guava.js` or `examples/guava.groovy` to see it in action!
+
+## What's included?
+
+The best way to discover what's available out-of-the-box is to dive into the
+source code and checkout the javadocs.  Here are the key classes
+
+### Core (com.fizzed.blaze)
+
+ - [Contexts](core/src/main/java/com/fizzed/blaze/Contexts.java)
+ - [Systems](core/src/main/java/com/fizzed/blaze/Systems.java)
+ - Contexts.config() => returns a [Config](core/src/main/java/com/fizzed/blaze/Config.java)
+ - Contexts.logger() => returns a org.slf4j.Logger
+
+### Command-line
+
+```
+blaze: [options] <task> [<task> ...]
+-f|--file <file>  Use this blaze file instead of default
+-d|--dir <dir>    Search this dir for blaze file instead of default (-f supercedes)
+-l|--list         Display list of available tasks
+-q                Only log blaze warnings to stdout (script logging is still info level)
+-qq               Only log warnings to stdout (including script logging)
+-x[x...]          Increases verbosity of logging to stdout
+-v|--version      Display version and then exit
+```
+
+### Http
+
+Add the following to your `blaze.conf` file to include the Blaze HTTP plugin.
+You do not want to specify a version so Blaze will resolve the identical version
+to whatever `blaze-core` you're running with.
+
+```
+blaze.dependencies = [
+    "com.fizzed:blaze-http"
+]
+```
+
+For now this is mostly a "virtual" dependency that will trigger the transitive
+dependency of Apache Fluent HttpClient to be downloaded and added to the classpath.
+Apache's own transitive dependencies will be correctly excluded to pickup the
+right SLF4J bindings.  Down the road we also plan on providing wrappers to make
+working with HTTP via Apache HttpClient even easier.
+
+### Ssh
+
+Add the following to your `blaze.conf` file to include the Blaze SSH plugin.
+You do not want to specify a version so Blaze will resolve the identical version
+to whatever `blaze-core` you're running with.
+
+```
+blaze.dependencies = [
+    "com.fizzed:blaze-ssh"
+]
+```
+
+For now this is mostly a "virtual" dependency that will trigger the transitive
+dependency of `jsch` to be downloaded and added to the classpath.  Down the road
+we plan on providing wrappers to make working with SSH via jsch even easier.
