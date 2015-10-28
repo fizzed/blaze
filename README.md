@@ -127,7 +127,7 @@ import com.fizzed.blaze.Contexts;
 
 
 def main() {
-    def log = Contexts.currentContext().logger()
+    def log = Contexts.logger()
     
     log.info("Finding javac...")
     def javac = which("javac").run()
@@ -172,7 +172,7 @@ named `blaze.js`
 /* global Packages */
 
 var sys = Packages.com.fizzed.blaze.Systems;
-var log = Packages.com.fizzed.blaze.Contexts.currentContext().logger();
+var log = Packages.com.fizzed.blaze.Contexts.logger();
 
 var main = function() {
     log.info("Finding javac...");
