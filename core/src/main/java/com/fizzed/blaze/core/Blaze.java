@@ -135,11 +135,11 @@ public class Blaze {
                         && !f.getName().endsWith(".conf") && !f.getName().endsWith(".jar"));
                 
                 if (blazeFiles.length == 0) {
-                    throw new BlazeException("Unable to find a blaze file (e.g. blaze.js). Perhaps this is not a Blaze project?");
+                    throw new MessageOnlyException("Unable to find a blaze file (e.g. blaze.js). Perhaps this is not a Blaze project?");
                 }
                 
                 if (blazeFiles.length > 1) {
-                    throw new BlazeException("More than one blaze file found. Either delete the extra files use -f parameter");
+                    throw new MessageOnlyException("More than one blaze file found. Either delete the extra files use -f parameter");
                 }
                 
                 detectedBaseDir = this.directory;
@@ -148,11 +148,11 @@ public class Blaze {
             
             // at this point we should have a file - verify it exists and works
             if (!detectedScriptFile.exists()) {
-                throw new BlazeException("Blaze file " + detectedScriptFile + " not found. Perhaps this is not a Blaze project?");
+                throw new MessageOnlyException("Blaze file " + detectedScriptFile + " not found. Perhaps this is not a Blaze project?");
             }
             
             if (!detectedScriptFile.isFile()) {
-                throw new BlazeException("Blaze file " + detectedScriptFile + " is not a file. Perhaps this is not a Blaze project?");
+                throw new MessageOnlyException("Blaze file " + detectedScriptFile + " is not a file. Perhaps this is not a Blaze project?");
             }
             
             

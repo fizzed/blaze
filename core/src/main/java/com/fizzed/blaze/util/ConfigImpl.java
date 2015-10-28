@@ -32,7 +32,6 @@ public class ConfigImpl implements Config {
         this.config = config;
     }
 
-    
     @Override
     public Value<String> find(String key) {
         try {
@@ -46,19 +45,9 @@ public class ConfigImpl implements Config {
     public <T> Value<T> find(String key, Class<T> type) {
         try {
             String value = this.config.getString(key);
-            return Value.of(key, convert(value, type));
+            return Value.of(key, Converter.convert(value, type));
         } catch (Missing e) {
             return Value.empty(key);
-        }
-    }
-    
-    private <T> T convert(String value, Class<T> type) {
-        if (type.equals(Integer.class)) {
-            return (T)Integer.valueOf(value);
-        } else if (type.equals(Boolean.class)) {
-            return (T)Boolean.valueOf(value);
-        } else {
-            throw new IllegalArgumentException("We do not support converting values to type " + type.getCanonicalName());
         }
     }
     
@@ -77,89 +66,12 @@ public class ConfigImpl implements Config {
             List<String> values = this.config.getStringList(key);
             List<T> convertedValues = new ArrayList<>(values.size());
             for (String value : values) {
-                convertedValues.add(convert(value, type));
+                convertedValues.add(Converter.convert(value, type));
             }
             return Value.of(key, convertedValues);
         } catch (Missing e) {
             return Value.empty(key);
         }
     }
-    
-    
-    /**
-    @Override
-    public String getString(String key) {
-        try {
-            return this.config.getString(key);
-        } catch (Missing e) {
-            return null;
-        }
-    }
-    
-    @Override
-    public String getStringOrDie(String key) {
-        try {
-            return this.config.getString(key);
-        } catch (Missing e) {
-            throw new MissingConfigurationException("Configuration missing " + key);
-        }
-    }
-    
-    @Override
-    public String getString(String key, String defaultValue) {
-        try {
-            return this.config.getString(key);
-        } catch (Missing e) {
-            return defaultValue;
-        }
-    }
-    
-    @Override
-    public Boolean getBoolean(String key) {
-        try {
-            return this.config.getBoolean(key);
-        } catch (Missing e) {
-            return null;
-        }
-    }
-
-    @Override
-    public Boolean getBooleanOrDie(String key) {
-        try {
-            return this.config.getBoolean(key);
-        } catch (Missing e) {
-            throw new MissingConfigurationException("Configuration missing " + key);
-        }
-    }
-
-    @Override
-    public Boolean getBoolean(String key, Boolean defaultValue) {
-        try {
-            return this.config.getBoolean(key);
-        } catch (Missing e) {
-            return defaultValue;
-        }
-    }
-    */
-    
-    /**
-    @Override
-    public List<String> getStringList(String key) {
-        try {
-            return this.config.getStringList(key);
-        } catch (Missing e) {
-            return null;
-        }
-    }
-    
-    @Override
-    public List<String> getStringList(String key, List<String> defaultValue) {
-        try {
-            return this.config.getStringList(key);
-        } catch (Missing e) {
-            return defaultValue;
-        }
-    }
-    */
     
 }

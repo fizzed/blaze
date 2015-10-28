@@ -14,18 +14,22 @@ def main() {
     
     def host = config.find("undertow.host").get()
     def port = config.find("undertow.port", Integer.class).get()
+    def nowait = config.find("undertow.nowait", Boolean.class).or(false)
     
     def undertow = Undertow.builder()
         .addHttpListener(port, host)
-        .setHandler(resource(new PathResourceManager(dir, 100))
-            .setDirectoryListingEnabled(true))
+        .setHandler(resource(new PathResourceManager(dir, 100)).setDirectoryListingEnabled(true))
         .build()
        
     undertow.start()
     
     log.info("Open browser to http://{}:{}", host, port)
     
-    synchronized (undertow) {
-        undertow.wait();
+    if (nowait) {
+        undertow.stop();
+    } else {
+        synchronized (undertow) {
+            undertow.wait();
+        }
     }
 }

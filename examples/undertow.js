@@ -1,8 +1,11 @@
-/* global java, Packages, Contexts, Undertow, Handlers, undertow, log */
+/* global java, Packages, Contexts, Undertow, Handlers, undertow, int */
 
 // nashorn recommended method of importing classes
 var Imports = new JavaImporter(
-    java.nio.file.Paths,
+    java.nio.file.Path,
+    java.lang.Integer,
+    java.lang.Boolean,
+    java.lang.Thread,
     Packages.com.fizzed.blaze.Contexts,
     Packages.io.undertow.Undertow,
     Packages.io.undertow.server.HttpHandler,
@@ -14,18 +17,29 @@ var Imports = new JavaImporter(
 with (Imports) {
 
     var main = function() {
-        //def dir = Paths.get(System.getProperty("user.home"))
-        var dir = Contexts.baseDir().toPath();
+        var dir = Contexts.baseDir();
+        var log = Contexts.logger();
+        var config = Contexts.config();
 
+        var host = config.find("undertow.host").get();
+        var port = config.find("undertow.port", Integer.class).get();
+        var nowait = config.find("undertow.nowait").or("false");
+        
         var undertow = Undertow.builder()
-            .addHttpListener(8080, "localhost")
-            .setHandler(Handlers.resource(new PathResourceManager(dir, 100))
-                .setDirectoryListingEnabled(true))
+            .addHttpListener(port, host)
+            .setHandler(Handlers.resource(new PathResourceManager(dir, 100)).setDirectoryListingEnabled(true))
             .build();
 
         undertow.start();
 
-        log.info("Open browser to http://localhost:8080");
+        log.info("Open browser to http://{}:{}", host, port);
+        
+        if (nowait.equals("true")) {
+            undertow.stop();
+        } else {
+            // hack to wait
+            Thread.sleep(10000000);
+        }
     };
     
 }
