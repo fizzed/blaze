@@ -41,11 +41,11 @@ invoke blaze, it does the following:
 
 Download `blaze.jar` to your project directory.  If you have `wget` available
 
-    wget -O blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/rocker-runtime/0.10.3/rocker-runtime-0.10.3.jar'
+    wget -O blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.1.0/blaze-lite-0.1.0.jar'
 
 If you have `curl` available
 
-    curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/rocker-runtime/0.10.3/rocker-runtime-0.10.3.jar'
+    curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.1.0/blaze-lite-0.1.0.jar'
 
 Or simply download the file in your web browser and name it `blaze.jar`
     
@@ -125,7 +125,6 @@ named `blaze.groovy`
 import static com.fizzed.blaze.Systems.which
 import static com.fizzed.blaze.Systems.exec
 import com.fizzed.blaze.Contexts;
-
 
 def main() {
     def log = Contexts.logger()
@@ -283,6 +282,8 @@ source code and checkout the javadocs.  Here are the key classes
 
 ### Command-line
 
+When you execute `java -jar blaze.jar` these are the command-line options
+
 ```
 blaze: [options] <task> [<task> ...]
 -f|--file <file>  Use this blaze file instead of default
@@ -309,8 +310,11 @@ blaze.dependencies = [
 For now this is mostly a "virtual" dependency that will trigger the transitive
 dependency of Apache Fluent HttpClient to be downloaded and added to the classpath.
 Apache's own transitive dependencies will be correctly excluded to pickup the
-right SLF4J bindings.  Down the road we also plan on providing wrappers to make
-working with HTTP via Apache HttpClient even easier.
+right SLF4J bindings.  Down the road we may provide additional wrappers to make
+working with HTTP via Apache HttpClient even easier -- although it's [own
+fluent client](https://hc.apache.org/httpcomponents-client-ga/tutorial/html/fluent.html) isn't awful.
+
+Checkout [this](examples/http.java) for an example API get request
 
 ### Ssh
 
