@@ -1,6 +1,1 @@
-/target-new/
-target/
-/target-blaze/
-.gradle
-build
-project
+target
