@@ -182,10 +182,10 @@ var main = function() {
     sys.exec("javac").arg("-version").run();
 };
 ```
-If you still have the `blaze.java` file in the example above then blaze will
-complain you have multiple `blaze.[ext]` files present.  You could either delete
-`blaze.java` to automatically pickup `blaze.groovy` or you can tell blaze what
-file to run
+If you still have the `blaze.java` or `blaze.groovy` files in the examples above
+then blaze will complain you have multiple `blaze.[ext]` files present.  You
+could either delete `blaze.java` or `blaze.groovy` to automatically pickup
+`blaze.js` or you can tell blaze what file to run
 
     java -jar blaze.jar -f blaze.js
 
