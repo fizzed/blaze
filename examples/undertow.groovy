@@ -1,4 +1,4 @@
-import static com.fizzed.blaze.Contexts.*
+import com.fizzed.blaze.Contexts
 import io.undertow.Undertow
 import io.undertow.server.HttpHandler
 import io.undertow.server.HttpServerExchange
@@ -8,18 +8,22 @@ import java.nio.file.Paths
 import static io.undertow.Handlers.resource
 
 def main() {
-    //def dir = Paths.get(System.getProperty("user.home"))
-    def dir = baseDir().toPath()
+    def dir = Contexts.baseDir()
+    def log = Contexts.logger()
+    def config = Contexts.config()
+    
+    def host = config.find("undertow.host").get()
+    def port = config.find("undertow.port", Integer.class).get()
     
     def undertow = Undertow.builder()
-        .addHttpListener(8080, "localhost")
+        .addHttpListener(port, host)
         .setHandler(resource(new PathResourceManager(dir, 100))
             .setDirectoryListingEnabled(true))
         .build()
        
     undertow.start()
     
-    log.info("Open browser to http://localhost:8080")
+    log.info("Open browser to http://{}:{}", host, port)
     
     synchronized (undertow) {
         undertow.wait();

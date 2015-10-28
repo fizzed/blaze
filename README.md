@@ -24,10 +24,10 @@ invoke blaze, it does the following:
 
  - Write your applications (e.g. scripts) in whatever JVM language you prefer.
    Out-of-the-box support for:
-    - Java (yes, Blaze will compile if needed and execute a .java file)
-    - JavaScript (uses Java 8 Nashorn engine)
-    - Groovy (downloads dependencies on-demand if .groovy file detected)
-    - Or simply write your own engine (pull requests to this project welcome)
+    - Java (.java)
+    - JavaScript (.js)
+    - Groovy (.groovy)
+    - [Or write your own](core/src/main/java/com/fizzed/blaze/nashorn)
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
  - Small size so you can commit `blaze.jar` to your repository
@@ -67,7 +67,7 @@ import java.io.File;
 public class javac {
 
     public void main() {
-        Logger log = Contexts.currentContext().logger();
+        Logger log = Contexts.logger();
         
         log.info("Finding javac...");
         File javacFile = which("javac").run();

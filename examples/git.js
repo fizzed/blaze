@@ -1,6 +1,7 @@
-/* global Packages, log */
+/* global Packages, Contexts */
 
 var Imports = JavaImporter(
+    Packages.com.fizzed.blaze.Contexts,
     Packages.org.eclipse.jgit.lib.Repository,
     Packages.org.eclipse.jgit.storage.file.FileRepositoryBuilder,
     Packages.org.eclipse.jgit.api.Git,
@@ -10,6 +11,8 @@ var Imports = JavaImporter(
     Packages.org.eclipse.jgit.revwalk.RevCommit);
 
 with (Imports) {
+
+    var log = Contexts.logger();
 
     var status = function() {
         repo = new FileRepositoryBuilder()
