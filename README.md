@@ -206,6 +206,13 @@ javac 1.8.0_66
 [INFO] Executed examples/javac.js:main in 254 ms
 [INFO] Blazed in 1181 ms
 ```
+## More advanced example
+
+The [try_all](examples/try_all.java) example is a more interesting demo of why
+you should start using a real programming language for your scripts.  The demo
+uses Java 8 lambdas to find all the other example scripts and spawns a new 
+java process to try them all out.  The script is used to verify if all the
+examples work (so we can test across platforms, between versions, etc.)
 
 ## Configuration and dependency management
 
