@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.http;
 
+import com.fizzed.blaze.core.MutableUri;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
@@ -25,7 +26,7 @@ import com.fizzed.blaze.core.BlazeException;
  */
 public class HttpRequest extends Action<Void> {
     
-    private UriBuilder uriBuilder;
+    private MutableUri uriBuilder;
     private String method;
 
     public HttpRequest(Context context) {

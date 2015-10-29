@@ -13,24 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
+package com.fizzed.blaze.internal;
 
-import com.fizzed.blaze.internal.FileHelper;
-import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
  * @author joelauer
  */
-public class ShellTestHelper {
+public class ObjectHelper {
     
-    static public File getBinDirAsResource() throws Exception {
-        // fix permissions from maven copy (otherwise test fails)
-        FileHelper.resourceAsFile("/bin/hello-world-test").setExecutable(true);
-        FileHelper.resourceAsFile("/bin/hello-world-test.bat").setExecutable(true);
+    static public List<String> toStringList(Object[] objects) {
+        if (objects == null) {
+            Collections.emptyList();
+        }
         
-        // must use a resource that exists to then get its parent
-        return FileHelper.resourceAsFile("/bin/hello-world-test").getParentFile();
+        List<String> strings = new ArrayList<>();
+        
+        for (int i = 0; i < objects.length; i++) {
+            Object object = objects[i];
+            if (object == null) {
+                throw new IllegalArgumentException("Object #" + i + " was null");
+            }
+            strings.add(object.toString());
+        }
+        
+        return strings;
     }
     
 }

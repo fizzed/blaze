@@ -13,38 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.internal;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import com.fizzed.blaze.core.BlazeException;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
-
-    Config config();
-
-    Logger logger();
+public class DependencyResolveException extends BlazeException {
     
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    /**
+     * Constructs an instance of <code>DependencyResolveException</code> with
+     * the specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public DependencyResolveException(String msg) {
+        super(msg);
+    }
     
 }

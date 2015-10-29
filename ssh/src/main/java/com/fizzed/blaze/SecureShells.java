@@ -15,36 +15,28 @@
  */
 package com.fizzed.blaze;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import com.fizzed.blaze.core.MutableUri;
+import com.fizzed.blaze.ssh.SshConnect;
+import com.fizzed.blaze.ssh.SshExec;
+import com.fizzed.blaze.ssh.SshSession;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
-
-    Config config();
-
-    Logger logger();
+public class SecureShells {
     
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
+    static public SshConnect sshConnect(String uri) {
+        return sshConnect(new MutableUri(uri));
+    }
     
-    Path userDir();
+    static public SshConnect sshConnect(MutableUri uri) {
+        return new SshConnect(Contexts.currentContext(), uri);
+    }
     
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    static public SshExec sshExec(SshSession session, String command, Object ... arguments) {
+        return new SshExec(Contexts.currentContext(), session)
+            .command(command, arguments);
+    }
     
 }

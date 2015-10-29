@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;

@@ -13,38 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.internal;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import com.fizzed.blaze.core.BlazeException;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
+public class MissingConfigurationException extends BlazeException {
 
-    Config config();
-
-    Logger logger();
-    
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    /**
+     * Constructs an instance of <code>MissingConfigurationException</code> with
+     * the specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public MissingConfigurationException(String msg) {
+        super(msg);
+    }
     
 }

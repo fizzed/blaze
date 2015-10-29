@@ -13,38 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.ssh;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import com.fizzed.blaze.core.MutableUri;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
-
-    Config config();
-
-    Logger logger();
+public class SshSession {
     
-    Path scriptFile();
+    final private MutableUri uri;
+    final private JSch jsch;
+    final private Session jschSession;
 
-    Path baseDir();
+    public SshSession(MutableUri uri, JSch jsch, Session jschSession) {
+        this.uri = uri;
+        this.jsch = jsch;
+        this.jschSession = jschSession;
+    }
 
-    Path withBaseDir(Path path);
+    public MutableUri getUri() {
+        return uri;
+    }
 
-    Path withBaseDir(File file);
+    public JSch getJsch() {
+        return jsch;
+    }
 
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    public Session getJschSession() {
+        return jschSession;
+    }
     
 }
