@@ -11,6 +11,10 @@
         <version>0.2.0-SNAPSHOT</version>
     </parent>
     
+    <properties>
+        <main.java.package>com.fizzed.blaze.lite</main.java.package>
+    </properties>
+    
     <build>
         <plugins>
             <!-- overwrite file produced in blaze-core -->
