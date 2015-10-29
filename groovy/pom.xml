@@ -29,14 +29,8 @@
             <artifactId>groovy-all</artifactId>
             <classifier>indy</classifier>
         </dependency>
-
-        <dependency>
-            <groupId>org.kohsuke.metainf-services</groupId>
-            <artifactId>metainf-services</artifactId>
-        </dependency>
         
         <!-- testing -->
-        
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>java-hamcrest</artifactId>

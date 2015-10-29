@@ -68,7 +68,6 @@
                                         <exclude>org/apache/ivy/plugins/resolver/AbstractSshBasedResolver.class</exclude>
                                         <exclude>org/apache/ivy/plugins/resolver/SFTPResolver.class</exclude>
                                         <exclude>org/apache/ivy/plugins/resolver/SshResolver.class</exclude>
-                                        
                                         <exclude>org/apache/ivy/*.png</exclude>
                                         <exclude>org/apache/ivy/Main.class</exclude>
                                         <exclude>org/apache/ivy/ant/**</exclude>
@@ -129,10 +128,6 @@
             <version>${project.version}</version>
             <exclusions>
                 <!-- add any dependencies we don't need with a bootstrapping version of blaze -->
-                <exclusion>
-                    <groupId>com.jcraft</groupId>
-                    <artifactId>jsch</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>org.zeroturnaround</groupId>
                     <artifactId>zt-exec</artifactId>

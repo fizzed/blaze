@@ -16,19 +16,15 @@
 package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import groovy.lang.Script;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@MetaInfServices(Engine.class)
 public class BlazeGroovyScript implements com.fizzed.blaze.core.Script {
     static final private Logger log = LoggerFactory.getLogger(BlazeGroovyScript.class);
     

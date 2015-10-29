@@ -79,14 +79,6 @@
                 <version>2.4</version>
             </dependency>
             
-            <!-- helper to create META-INF/services -->
-            <dependency>
-                <groupId>org.kohsuke.metainf-services</groupId>
-                <artifactId>metainf-services</artifactId>
-                <version>1.6</version>
-                <scope>provided</scope>
-            </dependency>
-            
             <!-- dependency management -->
             <dependency>
                 <groupId>org.apache.ivy</groupId>

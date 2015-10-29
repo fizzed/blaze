@@ -17,8 +17,6 @@ package com.fizzed.blaze.nashorn;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.ContextImpl;
-import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.util.AbstractEngine;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -30,11 +28,9 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@MetaInfServices(Engine.class)
 public class BlazeNashornEngine extends AbstractEngine<BlazeNashornScript> {
     static private final Logger log = LoggerFactory.getLogger(BlazeNashornEngine.class);
 

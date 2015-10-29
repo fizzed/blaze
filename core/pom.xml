@@ -41,13 +41,6 @@
     </build>
     
     <dependencies>
-        
-        <!-- just for building -->
-        <dependency>
-            <groupId>org.kohsuke.metainf-services</groupId>
-            <artifactId>metainf-services</artifactId>
-        </dependency>
-        
         <!-- logging, config, and ivy (only real dependencies to bootstrap) -->
         <dependency>
             <groupId>org.slf4j</groupId>

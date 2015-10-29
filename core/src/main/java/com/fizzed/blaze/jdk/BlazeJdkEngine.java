@@ -39,11 +39,9 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@MetaInfServices(Engine.class)
 public class BlazeJdkEngine extends AbstractEngine<Script> {
     static private final Logger log = LoggerFactory.getLogger(BlazeJdkEngine.class);
 

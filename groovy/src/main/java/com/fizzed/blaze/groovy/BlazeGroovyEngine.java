@@ -17,7 +17,6 @@ package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.util.AbstractEngine;
 import groovy.lang.Binding;
 import groovy.lang.Script;
@@ -26,11 +25,9 @@ import groovy.util.ResourceException;
 import groovy.util.ScriptException;
 import java.io.IOException;
 import java.net.URL;
-import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@MetaInfServices(Engine.class)
 public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
     static final private Logger log = LoggerFactory.getLogger(AbstractEngine.class);
     
