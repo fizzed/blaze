@@ -5,9 +5,9 @@ Blaze by Fizzed
 
 ## Overview
 
-A speedy, flexible, mildly-opinionated general purpose JVM script-like stack
-built on top of Java 8.  Can replace shell scripts and plays nicely with other
-tools.  Only requires adding `blaze.jar` to your project directory.
+A speedy, flexible, general purpose scripting stack for the JVM.  Can replace
+shell scripts and plays nicely with other tools.  Only requires a Java 8 runtime
+and adding `blaze.jar` to your project directory.
 
 Blaze pulls together stable, mature libraries from the Java ecosystem into a
 light-weight package that lets you focus on getting things done.  When you 
