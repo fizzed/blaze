@@ -13,38 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
-
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+package com.fizzed.blaze.util;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
-
-    Config config();
-
-    Logger logger();
+public class NameValue {
     
-    Path scriptFile();
+    final private String name;
+    final private String value;
 
-    Path baseDir();
+    public NameValue(String name, String value) {
+        this.name = name;
+        this.value = value;
+    }
 
-    Path withBaseDir(Path path);
+    public String getName() {
+        return name;
+    }
 
-    Path withBaseDir(File file);
+    public String getValue() {
+        return value;
+    }
 
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    @Override
+    public String toString() {
+        return name + "=" + value;
+    }
     
 }

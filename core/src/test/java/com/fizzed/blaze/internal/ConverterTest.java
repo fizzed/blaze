@@ -13,38 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.internal;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import com.fizzed.blaze.internal.Converter;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import org.junit.Test;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
-
-    Config config();
-
-    Logger logger();
+public class ConverterTest {
     
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    @Test
+    public void convert() {
+        assertThat(Converter.convert("1", Integer.class), is(1));
+        assertThat(Converter.convert("1", int.class), is(1));
+        assertThat(Converter.convert("true", Boolean.class), is(true));
+        assertThat(Converter.convert("true", boolean.class), is(true));
+    }
     
 }

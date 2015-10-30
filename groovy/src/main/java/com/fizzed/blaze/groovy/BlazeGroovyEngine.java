@@ -17,7 +17,7 @@ package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.util.AbstractEngine;
+import com.fizzed.blaze.internal.AbstractEngine;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import groovy.util.GroovyScriptEngine;

@@ -13,24 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
+package com.fizzed.blaze.internal;
 
-import com.fizzed.blaze.internal.FileHelper;
-import java.io.File;
+import com.fizzed.blaze.internal.EngineHelper;
+import com.fizzed.blaze.core.Engine;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.junit.Assert.assertThat;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  *
  * @author joelauer
  */
-public class ShellTestHelper {
+public class EngineHelperTest {
     
-    static public File getBinDirAsResource() throws Exception {
-        // fix permissions from maven copy (otherwise test fails)
-        FileHelper.resourceAsFile("/bin/hello-world-test").setExecutable(true);
-        FileHelper.resourceAsFile("/bin/hello-world-test.bat").setExecutable(true);
+    @Test @Ignore("service loader does return same instance")
+    public void newInstanceReturned() {
+        Engine engine0 = EngineHelper.findByFileExtension(".js", false);
         
-        // must use a resource that exists to then get its parent
-        return FileHelper.resourceAsFile("/bin/hello-world-test").getParentFile();
+        Engine engine1 = EngineHelper.findByFileExtension(".js", false);
+        
+        assertThat(engine0, not(sameInstance(engine1)));
     }
     
 }

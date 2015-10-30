@@ -78,7 +78,7 @@ public class ContextImpl implements Context {
     public Path withBaseDir(String path) {
         return withBaseDir(Paths.get(path));
     }
-
+    
     @Override
     public Path scriptFile() {
         return this.file;
@@ -87,6 +87,26 @@ public class ContextImpl implements Context {
     @Override
     public Config config() {
         return this.config;
+    }
+
+    @Override
+    public Path userDir() {
+        return Paths.get(System.getProperty("user.home"));
+    }
+
+    @Override
+    public Path withUserDir(Path path) {
+        return userDir().resolve(path);
+    }
+
+    @Override
+    public Path withUserDir(File file) {
+        return userDir().resolve(file.toPath());
+    }
+
+    @Override
+    public Path withUserDir(String path) {
+        return userDir().resolve(Paths.get(path));
     }
     
 }

@@ -123,7 +123,27 @@ public class Contexts {
      * @return The current user's home directory
      */
     static public Path userDir() {
-        return Paths.get(System.getProperty("user.home"));
+        return ContextHolder.get().userDir();
+    }
+    
+    static public Path withUserDir(Path path) {
+        return ContextHolder.get().withUserDir(path);
+    }
+    
+    static public Path withUserDir(File path) {
+        return ContextHolder.get().withUserDir(path);
+    }
+    
+    static public Path withUserDir(String path) {
+        return ContextHolder.get().withUserDir(path);
+    }
+    
+    static public String consolePrompt(String prompt, Object... args) {
+        return System.console().readLine(prompt, args);
+    }
+    
+    static public char[] consolePasswordPrompt(String prompt, Object... args) {
+        return System.console().readPassword(prompt, args);
     }
     
 }

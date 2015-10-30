@@ -13,38 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.Context;
 import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
 
 /**
  *
- * @author joelauer
+ * @author Joe Lauer
  */
-public interface Context {
+public interface DependencyResolver {
 
-    Config config();
-
-    Logger logger();
-    
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException;
     
 }

@@ -13,29 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.http;
+package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.util.MutableUri;
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.util.ImmutableUri;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 
 /**
  *
  * @author joelauer
  */
-public class HttpRequest extends Action<Void> {
+public class SshSessionImpl implements SshSession {
     
-    private MutableUri uriBuilder;
-    private String method;
+    final private ImmutableUri uri;
+    final private JSch jsch;
+    final private Session jschSession;
 
-    public HttpRequest(Context context) {
-        super(context);
+    public SshSessionImpl(ImmutableUri uri, JSch jsch, Session jschSession) {
+        this.uri = uri;
+        this.jsch = jsch;
+        this.jschSession = jschSession;
     }
-    
+
     @Override
-    protected Void doRun() throws BlazeException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public ImmutableUri getUri() {
+        return uri;
+    }
+
+    public JSch getJsch() {
+        return jsch;
+    }
+
+    public Session getJschSession() {
+        return jschSession;
     }
     
 }

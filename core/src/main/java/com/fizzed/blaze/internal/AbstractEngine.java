@@ -13,38 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.internal;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.Engine;
+import com.fizzed.blaze.core.Script;
 
-/**
- *
- * @author joelauer
- */
-public interface Context {
+abstract public class AbstractEngine<S extends Script> implements Engine<S> {
 
-    Config config();
-
-    Logger logger();
+    protected Context initialContext;
     
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
+    @Override
+    public boolean isInitialized() {
+        return initialContext != null;
+    }
     
-    Path userDir();
-    
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    @Override
+    public void init(Context initialContext) throws BlazeException {
+        this.initialContext = initialContext;
+    }
     
 }

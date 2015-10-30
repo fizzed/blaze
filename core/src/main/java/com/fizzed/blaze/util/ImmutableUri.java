@@ -13,38 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
+package com.fizzed.blaze.util;
 
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+import java.util.List;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
+public interface ImmutableUri {
 
-    Config config();
+    String getFragment();
 
-    Logger logger();
-    
-    Path scriptFile();
+    String getHost();
 
-    Path baseDir();
+    List<NameValue> getParameters();
 
-    Path withBaseDir(Path path);
+    String getPassword();
 
-    Path withBaseDir(File file);
+    String getPath();
 
-    Path withBaseDir(String path);
-    
-    Path userDir();
-    
-    Path withUserDir(Path path);
+    Integer getPort();
 
-    Path withUserDir(File file);
+    String getScheme();
 
-    Path withUserDir(String path);
+    String getUsername();
+
+    @Override
+    String toString();
     
 }

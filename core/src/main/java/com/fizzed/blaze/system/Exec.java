@@ -15,13 +15,13 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.util.DelayedFileInputStream;
-import com.fizzed.blaze.util.ObjectHelper;
+import com.fizzed.blaze.util.DeferredFileInputStream;
+import com.fizzed.blaze.internal.ObjectHelper;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -38,7 +38,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
  *
  * @author joelauer
  */
-public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
+public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecSupport<Exec> {
 
     final private Which which;
     final private ProcessExecutor executor;
@@ -59,6 +59,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
             .exitValueNormal();
     }
     
+    @Override
     public Exec command(String command, Object... arguments) {
         this.which.command(command);
         this.arguments.clear();
@@ -72,6 +73,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
      * @return 
      * @see #args(java.lang.Object...) For replacing existing arguments
      */
+    @Override
     public Exec arg(Object... arguments) {
         this.arguments.addAll(ObjectHelper.toStringList(arguments));
         return this;
@@ -84,6 +86,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
      * @see #arg(java.lang.Object...) For adding to existing arguments rather
      *      than replacing
      */
+    @Override
     public Exec args(Object... arguments) {
         this.arguments.clear();
         this.arguments.addAll(ObjectHelper.toStringList(arguments));
@@ -95,6 +98,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
         return this.which.getPaths();
     }
 
+    @Override
     public Exec env(String name, String value) {
         this.executor.environment(name, value);
         return this;
@@ -115,19 +119,16 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
         return this;
     }
 
+    @Override
     public Exec captureOutput() {
         this.executor.redirectOutput(new NullOutputStream());
         this.executor.readOutput(true);
         return this;
     }
 
+    @Override
     public Exec timeout(long timeoutInMillis) {
         this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
-        return this;
-    }
-    
-    public Exec timeout(long timeout, TimeUnit units) {
-        this.executor.timeout(timeout, units);
         return this;
     }
 
@@ -137,13 +138,12 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec> {
     }
     
     public Exec pipeInput(File file) {
-        // delays opening stream until read
-        return this.pipeInput(new DelayedFileInputStream(file));
+        return pipeInput(file.toPath());
     }
     
     public Exec pipeInput(Path file) {
-        // delays opening stream until read
-        return this.pipeInput(new DelayedFileInputStream(file));
+        // defers opening stream until read
+        return this.pipeInput(new DeferredFileInputStream(file));
     }
     
     @Override

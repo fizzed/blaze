@@ -13,38 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze;
-
-import java.io.File;
-import java.nio.file.Path;
-import org.slf4j.Logger;
+package com.fizzed.blaze.internal;
 
 /**
  *
  * @author joelauer
  */
-public interface Context {
-
-    Config config();
-
-    Logger logger();
+public class Timer {
     
-    Path scriptFile();
-
-    Path baseDir();
-
-    Path withBaseDir(Path path);
-
-    Path withBaseDir(File file);
-
-    Path withBaseDir(String path);
+    final private long start;
+    private long stop;
     
-    Path userDir();
+    public Timer() {
+        this.start = System.currentTimeMillis();
+    }
     
-    Path withUserDir(Path path);
-
-    Path withUserDir(File file);
-
-    Path withUserDir(String path);
+    public Timer stop() {
+        this.stop = System.currentTimeMillis();
+        return this;
+    }
+    
+    public long millis() {
+        return (this.stop - this.start);
+    }
     
 }

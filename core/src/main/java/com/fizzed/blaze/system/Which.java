@@ -15,11 +15,12 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.ContextImpl;
-import com.fizzed.blaze.util.ConfigHelper;
+import com.fizzed.blaze.internal.ConfigHelper;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;

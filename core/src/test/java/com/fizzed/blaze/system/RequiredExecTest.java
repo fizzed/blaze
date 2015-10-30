@@ -19,7 +19,7 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.ContextImpl;
 import com.fizzed.blaze.core.MessageOnlyException;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
-import com.fizzed.blaze.util.ConfigHelper;
+import com.fizzed.blaze.internal.ConfigHelper;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
