@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.ExecutableNotFoundException;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;

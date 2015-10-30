@@ -18,22 +18,24 @@ package com.fizzed.blaze.util;
 import com.fizzed.blaze.internal.FileNotFoundException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Defer opening a File as an InputStream until the first attempt to access it.
+ * Defer opening a File as an OutputStream until the first attempt to access it.
  * 
  * @author joelauer
  */
-public class DeferredFileInputStream extends InputStream {
-
+public class DeferredFileOutputStream extends OutputStream {
+ 
     private final File file;
-    private InputStream input;
+    private OutputStream output;
     
-    public DeferredFileInputStream(File file) {
+    public DeferredFileOutputStream(File file) {
         Objects.requireNonNull(file, "file cannot be null");
         if (!file.exists()) {
             throw new FileNotFoundException("File " + file + " not found");
@@ -41,74 +43,49 @@ public class DeferredFileInputStream extends InputStream {
         this.file = file;
     }
     
-    public DeferredFileInputStream(Path path) throws FileNotFoundException {
+    public DeferredFileOutputStream(Path path) throws FileNotFoundException {
         this(path != null ? path.toFile() : (File)null);
     }
     
     public void open() {
-        if (this.input == null) {
+        if (this.output == null) {
             try {
-                this.input = new FileInputStream(file);
+                this.output = new FileOutputStream(file);
             } catch (Exception e) {
                 throw new FileNotFoundException(e.getMessage(), e);
             }
         }
     }
-    
-    @Override
-    public int read() throws IOException {
-        open();
-        return this.input.read();
-    }
-
-    @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-        open();
-        return this.input.read(b, off, len);
-    }
-
-    @Override
-    public int read(byte[] b) throws IOException {
-        open();
-        return this.input.read(b);
-    }
-    
-    @Override
-    public boolean markSupported() {
-        open();
-        return this.input.markSupported();
-    }
-
-    @Override
-    public synchronized void reset() throws IOException {
-        open();
-        this.input.reset();
-    }
-
-    @Override
-    public synchronized void mark(int readlimit) {
-        open();
-        this.input.mark(readlimit);
-    }
 
     @Override
     public void close() throws IOException {
-        if (this.input != null) {
-            this.input.close();
-            this.input = null;
+        if (this.output != null) {
+            this.output.close();
+            this.output = null;
         }
     }
 
     @Override
-    public int available() throws IOException {
+    public void flush() throws IOException {
         open();
-        return this.input.available();
+        output.flush();
     }
 
     @Override
-    public long skip(long n) throws IOException {
+    public void write(byte[] b, int off, int len) throws IOException {
         open();
-        return this.input.skip(n);
+        output.write(b, off, len);
     }
 
+    @Override
+    public void write(byte[] b) throws IOException {
+        open();
+        output.write(b);
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+        open();
+        output.write(b);
+    }
 }

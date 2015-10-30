@@ -17,6 +17,7 @@ package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
+import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.internal.ObjectHelper;
 import com.fizzed.blaze.system.ExecSupport;
@@ -26,7 +27,10 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,20 +44,30 @@ import org.slf4j.LoggerFactory;
  *
  * @author joelauer
  */
-public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
+public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
 
     final private SshSession session;
     private String command;
     final private List<String> arguments;
+    private InputStream pipeInput;
+    private OutputStream pipeOutput;
+    private OutputStream pipeError;
+    private boolean pipeErrorToOutput;
     private ByteArrayOutputStream captureOutputStream;
     private Map<String,String> environment;
     private long timeout;
+    final private List<Integer> exitValues;
     
     public SshExec(Context context, SshSession session) {
         super(context);
+        this.pipeInput = System.in;
+        this.pipeOutput = System.out;
+        this.pipeError = System.err;
+        this.pipeErrorToOutput = false;
         this.session = session;
         this.arguments = new ArrayList<>();
+        this.exitValues = new ArrayList<>(Arrays.asList(0));
     }
     
     public SshExec command(String command) {
@@ -80,11 +94,39 @@ public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
         this.arguments.addAll(ObjectHelper.toStringList(arguments));
         return this;
     }
+    
+    @Override
+    public SshExec pipeInput(InputStream pipeInput) {
+        this.pipeInput = pipeInput;
+        return this;
+    }
 
     @Override
-    public SshExec captureOutput() {
-        if (this.captureOutputStream == null) {
-            this.captureOutputStream = new ByteArrayOutputStream();
+    public SshExec pipeOutput(OutputStream pipeOutput) {
+        this.pipeOutput = pipeOutput;
+        return this;
+    }
+
+    @Override
+    public SshExec pipeError(OutputStream pipeError) {
+        this.pipeError = pipeError;
+        return this;
+    }
+    
+    @Override
+    public SshExec pipeErrorToOutput(boolean pipeErrorToOutput) {
+        this.pipeErrorToOutput = pipeErrorToOutput;
+        return this;
+    }
+    
+    @Override
+    public SshExec captureOutput(boolean captureOutput) {
+        if (captureOutput) {
+            if (this.captureOutputStream == null) {
+                this.captureOutputStream = new ByteArrayOutputStream();
+            }
+        } else {
+            this.captureOutputStream = null;
         }
         return this;
     }
@@ -103,9 +145,16 @@ public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
         this.timeout = timeoutInMillis;
         return this;
     }
+    
+    @Override
+    public SshExec exitValues(Integer... exitValues) {
+        this.exitValues.clear();
+        this.exitValues.addAll(Arrays.asList(exitValues));
+        return this;
+    }
 
     @Override
-    protected Void doRun() throws BlazeException {
+    protected SshExecResult doRun() throws BlazeException {
         Session jschSession = ((SshSessionImpl)session).getJschSession();
         Objects.requireNonNull(jschSession, "ssh session must be established first");
         
@@ -122,20 +171,26 @@ public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
             }
             
             // do not close input
-            channel.setInputStream(System.in, true);
+            channel.setInputStream(this.pipeInput, true);
             
             // both streams closing signals exec is finished
             CountDownLatch outputStreamClosedSignal = new CountDownLatch(1);
             CountDownLatch errorStreamClosedSignal = new CountDownLatch(1);
             
-            channel.setOutputStream(new WrappedOutputStream(System.out) {
+            // determine final ouput and then wrap to monitor for close events
+            OutputStream finalPipeOutput = (this.captureOutputStream != null ? this.captureOutputStream : this.pipeOutput);
+            
+            channel.setOutputStream(new WrappedOutputStream(finalPipeOutput) {
                 @Override
                 public void close() throws IOException {
                     outputStreamClosedSignal.countDown();
                 }
             }, false);
             
-            channel.setErrStream(new WrappedOutputStream(System.err) {
+            // determine final error and then wrap to monitor for close events
+            OutputStream finalPipeError = (this.pipeErrorToOutput ? finalPipeOutput : this.pipeError);
+            
+            channel.setErrStream(new WrappedOutputStream(finalPipeError) {
                 @Override
                 public void close() throws IOException {
                     errorStreamClosedSignal.countDown();
@@ -170,8 +225,14 @@ public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
             outputStreamClosedSignal.await();
             errorStreamClosedSignal.await();
             
-            log.info("exit status: {}", channel.getExitStatus());
+            Integer exitValue = channel.getExitStatus();
             
+            if (!this.exitValues.contains(exitValue)) {
+                throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, exitValue);
+            }
+            
+            // success!
+            return new SshExecResult(exitValue, captureOutputStream);
         } catch (JSchException e) {
             throw new BlazeException(e.getMessage(), e);
         } catch (InterruptedException ex) {

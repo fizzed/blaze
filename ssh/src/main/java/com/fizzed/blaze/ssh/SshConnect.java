@@ -340,7 +340,7 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
             switch (level) {
                 case com.jcraft.jsch.Logger.INFO:
                 case com.jcraft.jsch.Logger.DEBUG:
-                    return log.isDebugEnabled();
+                    return log.isTraceEnabled();
                 case com.jcraft.jsch.Logger.ERROR:
                     return log.isErrorEnabled();
                 case com.jcraft.jsch.Logger.FATAL:
@@ -356,7 +356,7 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
             switch (level) {
                 case com.jcraft.jsch.Logger.INFO:
                 case com.jcraft.jsch.Logger.DEBUG:
-                    log.debug(message);
+                    log.trace(message);
                     break;
                 case com.jcraft.jsch.Logger.ERROR:
                     log.error(message);

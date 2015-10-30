@@ -15,15 +15,18 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.ExecutableNotFoundException;
 import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.DeferredFileInputStream;
 import com.fizzed.blaze.internal.ObjectHelper;
+import com.fizzed.blaze.util.DeferredFileOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -52,10 +55,7 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecS
         this.executor = new ProcessExecutor()
             .redirectInput(System.in)
             .redirectOutput(System.out)
-            .redirectErrorStream(true)
-            // TODO: is this really the right default?
-            // initialize executable to context of current project basedir
-            //.directory(context.baseDir())
+            .redirectError(System.err)
             .exitValueNormal();
     }
     
@@ -118,11 +118,22 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecS
         this.executor.directory(context.withBaseDir(Paths.get(dir)).toFile());
         return this;
     }
-
+    
     @Override
-    public Exec captureOutput() {
-        this.executor.redirectOutput(new NullOutputStream());
-        this.executor.readOutput(true);
+    public Exec captureOutput(boolean captureOutput) {
+        if (captureOutput) {
+            this.executor.redirectOutput(new NullOutputStream());
+            this.executor.readOutput(true);
+        } else {
+            this.executor.redirectOutput(System.out);
+            this.executor.readOutput(false);
+        }
+        return this;
+    }
+    
+    @Override
+    public Exec exitValues(Integer... exitValues) {
+        this.executor.exitValues(exitValues);
         return this;
     }
 
@@ -132,18 +143,28 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecS
         return this;
     }
 
-    public Exec pipeInput(InputStream is) {
-        this.executor.redirectInput(is);
+    @Override
+    public Exec pipeInput(InputStream pipeInput) {
+        this.executor.redirectInput(pipeInput);
+        return this;
+    }
+
+    @Override
+    public Exec pipeOutput(OutputStream pipeOutput) {
+        this.executor.redirectOutput(pipeOutput);
+        return this;
+    }
+
+    @Override
+    public Exec pipeError(OutputStream pipeError) {
+        this.executor.redirectError(pipeError);
         return this;
     }
     
-    public Exec pipeInput(File file) {
-        return pipeInput(file.toPath());
-    }
-    
-    public Exec pipeInput(Path file) {
-        // defers opening stream until read
-        return this.pipeInput(new DeferredFileInputStream(file));
+    @Override
+    public Exec pipeErrorToOutput(boolean pipeErrorToOutput) {
+        this.executor.redirectErrorStream(true);
+        return this;
     }
     
     @Override
@@ -169,5 +190,4 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecS
             throw new BlazeException("Unable to cleanly execute", e);
         }
     }
-
 }

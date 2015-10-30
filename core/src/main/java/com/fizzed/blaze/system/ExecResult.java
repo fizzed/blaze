@@ -21,7 +21,7 @@ import org.zeroturnaround.exec.ProcessResult;
  *
  * @author joelauer
  */
-public class ExecResult {
+public class ExecResult implements ExecResultSupport {
     
     final private ProcessResult result;
 
@@ -29,18 +29,22 @@ public class ExecResult {
         this.result = result;
     }
     
-    public int exitValue() {
+    @Override
+    public Integer exitValue() {
         return this.result.getExitValue();
     }
     
+    @Override
     public String output() {
         return this.result.getOutput().getUTF8();
     }
     
+    @Override
     public String output(String charset) {
         return this.result.getOutput().getString(charset);
     }
     
+    @Override
     public byte[] outputBytes() {
         return this.result.getOutput().getBytes();
     }
