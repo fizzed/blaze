@@ -13,33 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.util;
+
+import java.util.List;
 
 /**
  *
  * @author joelauer
  */
-public class NameValue {
-    
-    final private String name;
-    final private String value;
+public interface ImmutableUri {
 
-    public NameValue(String name, String value) {
-        this.name = name;
-        this.value = value;
-    }
+    String getFragment();
 
-    public String getName() {
-        return name;
-    }
+    String getHost();
 
-    public String getValue() {
-        return value;
-    }
+    List<NameValue> getParameters();
+
+    String getPassword();
+
+    String getPath();
+
+    Integer getPort();
+
+    String getScheme();
+
+    String getUsername();
 
     @Override
-    public String toString() {
-        return name + "=" + value;
-    }
+    String toString();
     
 }

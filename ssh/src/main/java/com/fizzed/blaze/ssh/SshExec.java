@@ -106,7 +106,7 @@ public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
 
     @Override
     protected Void doRun() throws BlazeException {
-        Session jschSession = session.getJschSession();
+        Session jschSession = ((SshSessionImpl)session).getJschSession();
         Objects.requireNonNull(jschSession, "ssh session must be established first");
         
         ChannelExec channel = null;
@@ -116,6 +116,7 @@ public class SshExec extends Action<Void> implements ExecSupport<SshExec> {
             // setup environment
             if (this.environment != null) {
                 for (Map.Entry<String,String> entry : this.environment.entrySet()) {
+                    log.debug("Adding env {}={}", entry.getKey(), entry.getValue());
                     channel.setEnv(entry.getKey(), entry.getValue());
                 }
             }

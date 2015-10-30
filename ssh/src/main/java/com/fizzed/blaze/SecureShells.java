@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze;
 
-import com.fizzed.blaze.core.MutableUri;
+import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.ssh.SshConnect;
 import com.fizzed.blaze.ssh.SshExec;
 import com.fizzed.blaze.ssh.SshSession;

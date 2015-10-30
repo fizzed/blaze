@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.http;
 
-import com.fizzed.blaze.core.MutableUri;
+import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;

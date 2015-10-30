@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.util;
 
-import static com.fizzed.blaze.core.MutableUri.decode;
+import static com.fizzed.blaze.util.MutableUri.decode;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +30,7 @@ import java.util.Objects;
  * 
  * @author joelauer
  */
-public class MutableUri {
+public class MutableUri implements ImmutableUri {
     
     private String scheme;
     private String username;                // userInfo split up
@@ -45,19 +45,36 @@ public class MutableUri {
         // empty
     }
     
-    public MutableUri(URI uri) {
-        this.with(uri);
+    public MutableUri(String uri) {
+        this(URI.create(uri));
     }
     
-    public MutableUri(String uri) {
-        this.with(URI.create(uri));
+    public MutableUri(URI uri) {
+        this.with(uri);
     }
     
     public MutableUri(String uri, Object... parameters) {
         this(format(uri, parameters));
     }
     
-    public URI build() {
+    public MutableUri(MutableUri uri) {
+        this.scheme = uri.scheme;
+        this.username = uri.username;
+        this.password = uri.password;
+        this.host = uri.host;
+        this.port = uri.port;
+        this.path = uri.path;
+        this.fragment = uri.fragment;
+        if (uri.parameters != null) {
+            this.parameters = new ArrayList<>(uri.parameters);
+        }
+    }
+
+    public ImmutableUri toImmutableUri() {
+        return new MutableUri(this);
+    }
+    
+    public URI toURI() {
         try {
             // only way to correctly set query string
             return new URI(toString());
@@ -106,6 +123,11 @@ public class MutableUri {
         return this;
     }
     
+    public MutableUri fragment(String fragment) {
+        this.fragment = fragment;
+        return this;
+    }
+    
     private String encodedUserInfo() {
         StringBuilder s = new StringBuilder();
         
@@ -140,44 +162,60 @@ public class MutableUri {
         return s.toString();
     }
     
-    public MutableUri fragment(String fragment) {
-        this.fragment = fragment;
-        return this;
-    }
-
+    @Override
     public String getScheme() {
         return scheme;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
     
+    @Override
     public String getHost() {
         return host;
     }
 
+    @Override
     public Integer getPort() {
         return port;
     }
 
+    @Override
     public String getPath() {
         return path;
     }
 
+    @Override
     public List<NameValue> getParameters() {
         return parameters;
     }
 
+    @Override
     public String getFragment() {
         return fragment;
     }
     
     private MutableUri with(URI uri) {
+        // there are a few cases where URI simply parses a value as a path
+        // but we'd ideally like to handle it a bit smarter
+        
+        /**
+        // ssh: user@host
+        // now this would break relative urls like "images/path", but we only
+        // plan on using mutable uris to access services etc.
+        if (uri.getScheme() == null && uri.getHost() == null && uri.getPath() != null && !uri.getPath().startsWith("/")) {
+            // simply re-parsing with a // on the front will fix it
+            uri = URI.create("//" + uri.toString());
+        }
+        */
+        
         if (uri.getScheme() != null) {
             this.scheme(uri.getScheme());
         }
@@ -286,7 +324,7 @@ public class MutableUri {
     }
     
     static public URI uri(String uri, Object... parameters) {
-        return new MutableUri(uri, parameters).build();
+        return new MutableUri(uri, parameters).toURI();
     }
     
     static public String encode(String value) {

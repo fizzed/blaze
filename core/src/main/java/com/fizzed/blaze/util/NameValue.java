@@ -13,16 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh;
-
-import com.fizzed.blaze.util.ImmutableUri;
+package com.fizzed.blaze.util;
 
 /**
  *
  * @author joelauer
  */
-public interface SshSession {
+public class NameValue {
+    
+    final private String name;
+    final private String value;
 
-    ImmutableUri getUri();
+    public NameValue(String name, String value) {
+        this.name = name;
+        this.value = value;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return name + "=" + value;
+    }
     
 }

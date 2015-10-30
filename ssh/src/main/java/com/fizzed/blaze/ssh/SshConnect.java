@@ -19,7 +19,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.MutableUri;
+import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.core.MutableUriSupport;
 import com.jcraft.jsch.ConfigRepository;
 import com.jcraft.jsch.ConfigRepository.Config;
@@ -32,12 +32,13 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
 import org.slf4j.Logger;
@@ -53,6 +54,10 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
     private final MutableUri uri;
     private long connectTimeout;
     private long keepAliveInterval;
+    // ~/.ssh/config, ~/.ssh/known_hosts, ~/.ssh/id_rsa
+    private Path configFile;
+    private Path knownHostsFile;
+    private List<Path> identityFiles;
     
     public SshConnect(Context context) {
         this(context, new MutableUri("ssh://"));
@@ -63,6 +68,11 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
         this.uri = uri;
         this.connectTimeout = 20000L;
         this.keepAliveInterval = 10000L;
+        this.configFile = context.withUserDir(".ssh/config");
+        this.knownHostsFile = context.withUserDir(".ssh/known_hosts");
+        this.identityFiles = new ArrayList<>();
+        this.identityFiles.add(context.withUserDir(".ssh/id_rsa"));
+        this.identityFiles.add(context.withUserDir(".ssh/id_dsa"));
     }
 
     public SshConnect keepAliveInterval(long keepAliveInterval) {
@@ -70,7 +80,33 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
         return this;
     }
     
+    public SshConnect configFile(Path configFile) {
+        if (!Files.exists(configFile)) {
+            throw new com.fizzed.blaze.internal.FileNotFoundException("SSH config file " + configFile + " does not exist."
+                + " Did you know we'll try to load ~/.ssh/config by default?");
+        }
+        this.configFile = configFile;
+        return this;
+    }
     
+    public SshConnect knownHostsFile(Path knownHostsFile) {
+        if (!Files.exists(knownHostsFile)) {
+            throw new com.fizzed.blaze.internal.FileNotFoundException("SSH known_hosts file " + knownHostsFile + " does not exist."
+                + " Did you know we'll try to load ~/.ssh/known_hosts by default?");
+        }
+        this.knownHostsFile = knownHostsFile;
+        return this;
+    }
+    
+    public SshConnect identityFile(Path identityFile) {
+        if (!Files.exists(identityFile)) {
+            throw new com.fizzed.blaze.internal.FileNotFoundException("SSH identity file " + identityFile + " does not exist."
+                + " Did you know we'll try to load ~/.ssh/id_rsa by default?");
+        }
+        // insert onto front (since that is likely what we want searched first)
+        this.identityFiles.add(0, identityFile);
+        return this;
+    }
     
     @Override
     public MutableUri getUri() {
@@ -79,22 +115,27 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
     
     @Override
     public SshSession doRun() throws BlazeException {
-        //Objects.requireNonNull(uri.getUsername(), "username is required for ssh");
-        Objects.requireNonNull(uri.getHost(), "host is required for ssh");
+        Objects.requireNonNull(uri.getScheme(), "uri scheme is required for ssh (e.g. ssh://user@host)");
+        Objects.requireNonNull(uri.getHost(), "uri host is required for ssh");
+        
+        if (!uri.getScheme().equals("ssh")) {
+            throw new IllegalArgumentException("Only a uri with a schem of ssh is support (e.g. ssh://user@host)");
+        }
         
         Integer port = (uri.getPort() != null ? uri.getPort() : 22);
         String username = (uri.getUsername() != null ? uri.getUsername() : System.getProperty("user.name"));
         
+        JSch.setLogger(new BlazeJschLogger());
+        
         Session jschSession = null;
         JSch jsch = new JSch();
         try {
-            
             //
             // mimic openssh ~.ssh/config
             //
             try {
                 ConfigRepository configRepository =
-                    com.jcraft.jsch.OpenSSHConfig.parseFile("~/.ssh/config");
+                    com.jcraft.jsch.OpenSSHConfig.parseFile(configFile.toAbsolutePath().toString());
 
                 jsch.setConfigRepository(configRepository);
             
@@ -112,9 +153,9 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
                         jschSession = jsch.getSession(uri.getHost());
                     }
                 }
-            } catch (FileNotFoundException e) {
+            } catch (java.io.FileNotFoundException e) {
                 // OpenSSH would fallback if it didn't exist so we will too
-                log.debug("~/.ssh/config does not exist, will fallback to password auth");
+                log.debug("{} does not exist, will fallback to password auth", configFile);
             }
             
             if (jschSession == null) {
@@ -123,23 +164,18 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
             
             
             jschSession.setDaemonThread(true);
-            jschSession.setUserInfo(new BlazeUserInfo(jschSession));
-            
+            jschSession.setUserInfo(new BlazeJschUserInfo(jschSession));
             
             
             // configure way more ciphers by default????
             //jschSession.setConfig("cipher.s2c", "aes128-cbc,3des-cbc,blowfish-cbc");
             //jschSession.setConfig("cipher.c2s", "aes128-cbc,3des-cbc,blowfish-cbc");
-            //jschSession.setConfig("CheckCiphers", "aes128-cbc");
-            
-            //jschSession.setConfig("PreferredAuthentications", "userauth.publickey");
+            //jschSession.setConfig("CheckCiphers", "aes128-cbc"); 
             
             
             //
             // mimic openssh ~.ssh/known_hosts
             //
-            // try to use user's known_hosts file
-            Path knownHostsFile = context.withUserDir(".ssh/known_hosts");
             
             // create one if it doesn't yet exist
             if (!Files.exists(knownHostsFile)) {
@@ -156,80 +192,104 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
                 JSch.setConfig("HashKnownHosts",  "yes");
             }
 
-            HostKeyRepository hkr = jsch.getHostKeyRepository();
-            HostKey[] hks = hkr.getHostKey();
-            if (hks != null) {
-                log.debug("Host keys in {}", hkr.getKnownHostsRepositoryID());
-                for (HostKey hk : hks) {
-                    log.debug("Loaded host key {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
+            if (log.isDebugEnabled()) {
+                HostKeyRepository hkr = jsch.getHostKeyRepository();
+                HostKey[] hks = hkr.getHostKey();
+                if (hks != null) {
+                    log.debug("Host keys in {}", hkr.getKnownHostsRepositoryID());
+                    for (HostKey hk : hks) {
+                        log.debug("Loaded host key {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
+                    }
                 }
             }
             
             // Setting this means the user wont' be prompted
-            //jschSession.setConfig("StrictHostKeyChecking", "yes");
+            //jschSession.setConfig("StrictHostKeyChecking", "no");
             
             jschSession.setServerAliveInterval((int)this.keepAliveInterval);
             
             // pass along password if provided
             if (this.uri.getPassword() != null) {
-                jschSession.setPassword(this.uri.getPassword());
+                // use bytes, not strings
+                jschSession.setPassword(this.uri.getPassword().getBytes(StandardCharsets.UTF_8));
             }
-            
             
             //
             // mimic openssh ~/.ssh/id_dsa
             //
-            // try to use user's known_hosts file
-            Path identityPrivateFile = context.withUserDir(".ssh/id_rsa");
-            //Path identityPublicFile = context.withUserDir(".ssh/id_rsa.pub");
             
-            if (Files.exists(identityPrivateFile)) {
-                String f = identityPrivateFile.toAbsolutePath().toString();
-                log.debug("Setting ssh identity to {}", f);
-                jsch.addIdentity(f);
+            // load identities
+            if (this.identityFiles != null) {
+                this.identityFiles.forEach((identityFile) -> {
+                    if (Files.exists(identityFile)) {
+                        String f = identityFile.toAbsolutePath().toString();
+                        log.debug("Adding ssh identity to {}", f);
+                        try {
+                            jsch.addIdentity(f);
+                        } catch (JSchException e) {
+                            throw new BlazeException("Unable to add ssh identity", e);
+                        }
+                    }
+                });
             }
             
-            IdentityRepository ir = jsch.getIdentityRepository();
-            @SuppressWarnings("UseOfObsoleteCollectionType")
-            Vector identities = ir.getIdentities();
-            for (Object identity : identities) {
-                if (identity instanceof Identity) {
-                    Identity i = (Identity)identity;
-                    log.info("Identity {} {}", i.getName(), i.getAlgName());
+            if (log.isDebugEnabled()) {
+                IdentityRepository ir = jsch.getIdentityRepository();
+                @SuppressWarnings("UseOfObsoleteCollectionType")
+                Vector identities = ir.getIdentities();
+                for (Object identity : identities) {
+                    if (identity instanceof Identity) {
+                        Identity i = (Identity)identity;
+                        log.debug("Identity {} {}", i.getName(), i.getAlgName());
+                    }
                 }
             }
             
+            //jschSession.setConfig("PreferredAuthentications", "publickey,password");
             
-            
-            log.info("Opening SSH session to {}@{}:{}...", jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
+            log.info("Trying to open ssh session to {}@{}:{}...",
+                    jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
             
             jschSession.connect((int)this.connectTimeout);
             
             HostKey hk = jschSession.getHostKey();
             
-            log.debug("SSH host key: {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
+            // update uri with the connection info
+            uri.username(jschSession.getUserName());
+            uri.host(jschSession.getHost());
+            uri.port(jschSession.getPort());
             
-            return new SshSession(this.uri, jsch, jschSession);
+            log.info("Connected ssh session to {}@{}:{}!",
+                    jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
+            
+            return new SshSessionImpl(this.uri.toImmutableUri(), jsch, jschSession);
         } catch (JSchException | IOException e) {
-            // JSchException: timeout in wating for rekeying process
-            // this happens when we need to accept the host key...
-            
+            // TODO: any specific exceptions worth doing something with?
+            // JSchException: timeout in wating for rekeying process this happens when we need to accept the host key...
             throw new BlazeException(e.getMessage(), e);
         }
     }
 
-    public class BlazeUserInfo implements UserInfo, UIKeyboardInteractive {
+    public class BlazeJschUserInfo implements UserInfo, UIKeyboardInteractive {
 
         final private Session jschSession;
 
-        public BlazeUserInfo(Session jschSession) {
+        public BlazeJschUserInfo(Session jschSession) {
             this.jschSession = jschSession;
         }
         
         @Override
         public String getPassphrase() {
-            log.info("getPassphrase");
-            return SshConnect.this.uri.getPassword();
+            String prompt = String.format("identity passphrase: ");
+            char[] password = Contexts.consolePasswordPrompt(prompt);
+            // THIS IS UNFORTUNATE SINCE THIS STRING IS INTERNED...
+            return new String(password);
+        }
+        
+        @Override
+        public boolean promptPassphrase(String string) {
+            // create our own custom prompt in getPassphrase()
+            return true;
         }
 
         @Override
@@ -243,14 +303,7 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
 
         @Override
         public boolean promptPassword(String string) {
-            //log.info("Password prompt: " + string);
             // create our own custom prompt in getPassword()
-            return true;
-        }
-
-        @Override
-        public boolean promptPassphrase(String string) {
-            log.info("Phassphrase prompt: " + string);
             return true;
         }
 
@@ -268,13 +321,53 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
 
         @Override
         public void showMessage(String string) {
-            log.info("showMessage: " + string);
+            log.info(string);
         }
 
         @Override
         public String[] promptKeyboardInteractive(String destination, String name, String instruction, String[] prompt, boolean[] echo) {
             log.info("promptKeyboardInteractive: {}, {}, {}, {}", destination, name, instruction, prompt);
+            log.error("We do not support this yet in Blaze!");
             return null;
+        }
+        
+    }
+    
+    public static class BlazeJschLogger implements com.jcraft.jsch.Logger {
+
+        @Override
+        public boolean isEnabled(int level) {
+            switch (level) {
+                case com.jcraft.jsch.Logger.INFO:
+                case com.jcraft.jsch.Logger.DEBUG:
+                    return log.isDebugEnabled();
+                case com.jcraft.jsch.Logger.ERROR:
+                    return log.isErrorEnabled();
+                case com.jcraft.jsch.Logger.FATAL:
+                    return log.isErrorEnabled();
+                case com.jcraft.jsch.Logger.WARN:
+                    return log.isWarnEnabled();
+            }
+            return false;
+        }
+
+        @Override
+        public void log(int level, String message) {
+            switch (level) {
+                case com.jcraft.jsch.Logger.INFO:
+                case com.jcraft.jsch.Logger.DEBUG:
+                    log.debug(message);
+                    break;
+                case com.jcraft.jsch.Logger.ERROR:
+                    log.error(message);
+                    break;
+                case com.jcraft.jsch.Logger.FATAL:
+                    log.error(message);
+                    break;
+                case com.jcraft.jsch.Logger.WARN:
+                    log.warn(message);
+                    break;
+            }
         }
         
     }

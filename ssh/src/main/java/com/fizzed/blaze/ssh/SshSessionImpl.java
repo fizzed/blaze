@@ -16,13 +16,36 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.util.ImmutableUri;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 
 /**
  *
  * @author joelauer
  */
-public interface SshSession {
+public class SshSessionImpl implements SshSession {
+    
+    final private ImmutableUri uri;
+    final private JSch jsch;
+    final private Session jschSession;
 
-    ImmutableUri getUri();
+    public SshSessionImpl(ImmutableUri uri, JSch jsch, Session jschSession) {
+        this.uri = uri;
+        this.jsch = jsch;
+        this.jschSession = jschSession;
+    }
+
+    @Override
+    public ImmutableUri getUri() {
+        return uri;
+    }
+
+    public JSch getJsch() {
+        return jsch;
+    }
+
+    public Session getJschSession() {
+        return jschSession;
+    }
     
 }

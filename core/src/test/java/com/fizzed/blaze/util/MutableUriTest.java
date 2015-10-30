@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.core.MutableUri;
+import com.fizzed.blaze.util.MutableUri;
 import java.net.URI;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -67,37 +68,69 @@ public class MutableUriTest {
     public void uriAndUriBuilderMatch() {
         URI uri;
         
-        uri = MutableUri.of("http://localhost:8080").build();
+        uri = MutableUri.of("http://localhost:8080").toURI();
         
         assertThat(uri, is(URI.create("http://localhost:8080")));
         
-        uri = MutableUri.of("https://localhost:8080").build();
+        uri = MutableUri.of("https://localhost:8080").toURI();
         
         assertThat(uri, is(URI.create("https://localhost:8080")));
         
-        uri = MutableUri.of("https://localhost/path").build();
+        uri = MutableUri.of("https://localhost/path").toURI();
         
         assertThat(uri, is(URI.create("https://localhost/path")));
         
-        uri = MutableUri.of("http://localhost:80/path").build();
+        uri = MutableUri.of("http://localhost:80/path").toURI();
         
         assertThat(uri, is(URI.create("http://localhost:80/path")));
         
-        uri = MutableUri.of("http://localhost:80/path?a=1&b=2").build();
+        uri = MutableUri.of("http://localhost:80/path?a=1&b=2").toURI();
         
         assertThat(uri, is(URI.create("http://localhost:80/path?a=1&b=2")));
         
-        uri = MutableUri.of("http://localhost:80/path?a=%3D%26").build();
+        uri = MutableUri.of("http://localhost:80/path?a=%3D%26").toURI();
         
         assertThat(uri, is(URI.create("http://localhost:80/path?a=%3D%26")));
         
-        uri = MutableUri.of("http://localhost:80/path?a=%3D%26#page").build();
+        uri = MutableUri.of("http://localhost:80/path?a=%3D%26#page").toURI();
         
         assertThat(uri, is(URI.create("http://localhost:80/path?a=%3D%26#page")));
         
-        uri = MutableUri.of("http://user@localhost/path?a=%3D%26#page").build();
+        uri = MutableUri.of("http://user@localhost/path?a=%3D%26#page").toURI();
         
         assertThat(uri, is(URI.create("http://user@localhost/path?a=%3D%26#page")));
+    }
+    
+    @Test
+    public void opensshStyle() {
+        URI uri;
+        
+        uri = MutableUri.of("ssh://joe@localhost").toURI();
+        
+        assertThat(uri, is(URI.create("ssh://joe@localhost")));
+        assertThat(uri.getUserInfo(), is("joe"));
+        assertThat(uri.getHost(), is("localhost"));
+ 
+        /**
+        uri = MutableUri.of("joe@localhost").toURI();
+        
+        assertThat(uri, is(URI.create("//joe@localhost")));
+        assertThat(uri.getUserInfo(), is("joe"));
+        assertThat(uri.getHost(), is("localhost"));
+        assertThat(uri.getPath(), is(""));
+        */
+    }
+    
+    @Test
+    public void browserStyle() {
+        URI uri;
+        
+        uri = MutableUri.of("//ajax.googleapis.com/ajax/jquery.js").toURI();
+        
+        assertThat(uri, is(URI.create("//ajax.googleapis.com/ajax/jquery.js")));
+        assertThat(uri.getUserInfo(), is(nullValue()));
+        assertThat(uri.getHost(), is("ajax.googleapis.com"));
+        assertThat(uri.getPath(), is("/ajax/jquery.js"));
     }
     
 }

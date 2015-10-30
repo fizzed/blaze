@@ -15,6 +15,8 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.util.MutableUri;
+
 /**
  * Support for directly supplying MutableUri methods in an action by simply
  * providing a getUri() method.
