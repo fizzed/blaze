@@ -13,31 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh;
+package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.ssh.impl.JschSession;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.internal.ObjectHelper;
-import com.fizzed.blaze.system.ExecSupport;
-import com.fizzed.blaze.util.WrappedOutputStream;
+import com.fizzed.blaze.ssh.SshSession;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +36,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author joelauer
  */
-public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExec> {
-    static private final Logger log = LoggerFactory.getLogger(SshExec.class);
+public class SshScpBETA extends Action<Void> {
+    static private final Logger log = LoggerFactory.getLogger(SshScpBETA.class);
 
     final private SshSession session;
+    private InputStream source;
+    private Path target;
+    
+    /**
     private String command;
     final private List<String> arguments;
     private InputStream pipeInput;
@@ -59,119 +54,43 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     private Map<String,String> environment;
     private long timeout;
     final private List<Integer> exitValues;
+    */
     
-    public SshExec(Context context, SshSession session) {
+    public SshScpBETA(Context context, SshSession session) {
         super(context);
-        this.pipeInput = System.in;
-        this.pipeOutput = System.out;
-        this.pipeError = System.err;
-        this.pipeErrorToOutput = false;
         this.session = session;
-        this.arguments = new ArrayList<>();
-        this.exitValues = new ArrayList<>(Arrays.asList(0));
     }
     
-    public SshExec command(String command) {
-        this.command = command;
+    public SshScpBETA source(InputStream source) {
+        this.source = source;
         return this;
     }
     
-    @Override
-    public SshExec command(String command, Object... arguments) {
-        this.command(command);
-        this.args(arguments);
-        return this;
-    }
-    
-    @Override
-    public SshExec arg(Object... arguments) {
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
+    public SshScpBETA target(Path target) {
+        this.target = target;
         return this;
     }
 
     @Override
-    public SshExec args(Object... arguments) {
-        this.arguments.clear();
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
-        return this;
-    }
-    
-    @Override
-    public SshExec pipeInput(InputStream pipeInput) {
-        this.pipeInput = pipeInput;
-        return this;
-    }
-
-    @Override
-    public SshExec pipeOutput(OutputStream pipeOutput) {
-        this.pipeOutput = pipeOutput;
-        return this;
-    }
-
-    @Override
-    public SshExec pipeError(OutputStream pipeError) {
-        this.pipeError = pipeError;
-        return this;
-    }
-    
-    @Override
-    public SshExec pipeErrorToOutput(boolean pipeErrorToOutput) {
-        this.pipeErrorToOutput = pipeErrorToOutput;
-        return this;
-    }
-    
-    @Override
-    public SshExec captureOutput(boolean captureOutput) {
-        if (captureOutput) {
-            if (this.captureOutputStream == null) {
-                this.captureOutputStream = new ByteArrayOutputStream();
-            }
-        } else {
-            this.captureOutputStream = null;
-        }
-        return this;
-    }
-
-    @Override
-    public SshExec env(String name, String value) {
-        if (this.environment == null) {
-            this.environment = new HashMap<>();
-        }
-        this.environment.put(name, value);
-        return this;
-    }
-
-    @Override
-    public SshExec timeout(long timeoutInMillis) {
-        this.timeout = timeoutInMillis;
-        return this;
-    }
-    
-    @Override
-    public SshExec exitValues(Integer... exitValues) {
-        this.exitValues.clear();
-        this.exitValues.addAll(Arrays.asList(exitValues));
-        return this;
-    }
-
-    @Override
-    protected SshExecResult doRun() throws BlazeException {
+    protected Void doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
         Objects.requireNonNull(jschSession, "ssh session must be established first");
-        Objects.requireNonNull(command, "ssh command cannot be null");
+        Objects.requireNonNull(source, "scp source cannot be null");
+        Objects.requireNonNull(target, "scp target cannot be null");
         
         ChannelExec channel = null;
         try {
+             boolean ptimestamp = true;
+
             channel = (ChannelExec)jschSession.openChannel("exec");
             
-            // setup environment
-            if (this.environment != null) {
-                for (Map.Entry<String,String> entry : this.environment.entrySet()) {
-                    log.debug("Adding env {}={}", entry.getKey(), entry.getValue());
-                    channel.setEnv(entry.getKey(), entry.getValue());
-                }
-            }
+            // exec 'scp -t rfile' remotely
+            String command = "scp " + (ptimestamp ? "-p" : "") + " -t " + target;
+            channel.setCommand(command);
             
+            // YIKES - JSCH IS LOW LEVEL FOR SCP!!!
+            
+            /**
             // do not close input
             channel.setInputStream(this.pipeInput, true);
             
@@ -217,12 +136,18 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
             String finalCommand = sb.toString();
             
             log.debug("Sending command via ssh session: {}", finalCommand);
+            */
             
-            channel.setCommand(finalCommand);
+            // get I/O streams for remote scp
+            OutputStream out = channel.getOutputStream();
+            InputStream in = channel.getInputStream();
             
             // this connects and sends command
             channel.connect();
             
+            checkAck(in);
+            
+            /**
             // wait for both streams to be closed
             outputStreamClosedSignal.await();
             errorStreamClosedSignal.await();
@@ -235,13 +160,46 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
             
             // success!
             return new SshExecResult(exitValue, captureOutputStream);
-        } catch (JSchException | InterruptedException e) {
-            throw new SshException(e.getMessage(), e);
+            */
+            
+            return null;
+        } catch (JSchException | IOException e) {
+            throw new BlazeException(e.getMessage(), e);
         } finally {
             if (channel != null) {
                 channel.disconnect();
             }
         }
+    }
+    
+    static int checkAck(InputStream in) throws IOException {
+        int b = in.read();
+        // b may be 0 for success,
+        //          1 for error,
+        //          2 for fatal error,
+        //          -1
+        if (b == 0) {
+            return b;
+        }
+        if (b == -1) {
+            return b;
+        }
+
+        if (b == 1 || b == 2) {
+            StringBuilder sb = new StringBuilder();
+            int c;
+            do {
+                c = in.read();
+                sb.append((char) c);
+            } while (c != '\n');
+            if (b == 1) { // error
+                throw new IOException(sb.toString());
+            }
+            if (b == 2) { // fatal error
+                throw new IOException(sb.toString());
+            }
+        }
+        return b;
     }
     
 }

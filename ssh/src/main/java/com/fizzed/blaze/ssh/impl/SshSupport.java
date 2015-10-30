@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh;
+package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.ssh.impl.SshSupport;
 import com.fizzed.blaze.util.ImmutableUri;
+import java.io.Closeable;
 
 /**
  *
  * @author joelauer
  */
-public interface SshSession extends SshSupport {
+public interface SshSupport extends Closeable {
 
-    Context context();
+    boolean closed();
     
-    ImmutableUri uri();
+    default public void verifyOpen() {
+        if (this.closed()) {
+            throw new IllegalStateException("Session is closed");
+        }
+    }
     
 }

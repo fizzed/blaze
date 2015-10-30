@@ -15,18 +15,14 @@
  */
 package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.ssh.impl.SshSupport;
-import com.fizzed.blaze.util.ImmutableUri;
-
 /**
  *
  * @author joelauer
  */
-public interface SshSession extends SshSupport {
+public class SshException extends RuntimeException {
 
-    Context context();
-    
-    ImmutableUri uri();
+    public SshException(String msg, Throwable t) {
+        super(msg, t);
+    }
     
 }

@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.internal.FileNotFoundException;
+import com.fizzed.blaze.core.FileNotFoundException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh;
+package com.fizzed.blaze.ssh.impl;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.ssh.impl.SshSupport;
-import com.fizzed.blaze.util.ImmutableUri;
+import com.fizzed.blaze.ssh.SshException;
+import com.fizzed.blaze.util.NamedStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Path;
 
 /**
  *
  * @author joelauer
  */
-public interface SshSession extends SshSupport {
-
-    Context context();
+public interface SshSftpSupport {
     
-    ImmutableUri uri();
+    void get(Path source, NamedStream<OutputStream> target) throws SshException;
+    
+    void put(NamedStream<InputStream> source, Path target) throws SshException;
     
 }

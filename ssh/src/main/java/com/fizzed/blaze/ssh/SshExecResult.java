@@ -40,7 +40,7 @@ public class SshExecResult implements ExecResultSupport {
     
     private void verifyOutputCaptured() {
         if (this.captureOutputStream == null) {
-            throw new IllegalStateException("Output must be captured before running. Use SshExec.captureOutput() method");
+            throw new IllegalStateException("Output must be captured before running SshExec. See SshExec.captureOutput() method.");
         }
     }
     

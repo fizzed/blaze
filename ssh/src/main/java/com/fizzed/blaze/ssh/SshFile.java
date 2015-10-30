@@ -15,18 +15,32 @@
  */
 package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.ssh.impl.SshSupport;
-import com.fizzed.blaze.util.ImmutableUri;
+import java.nio.file.Path;
 
 /**
  *
  * @author joelauer
  */
-public interface SshSession extends SshSupport {
-
-    Context context();
+public class SshFile {
     
-    ImmutableUri uri();
+    private final Path path;
+    private final SshFileAttributes attributes;
+
+    public SshFile(Path path, SshFileAttributes attributes) {
+        this.path = path;
+        this.attributes = attributes;
+    }
+    
+    public Path path() {
+        return path;
+    }
+    
+    public String fileName() {
+        return path.getFileName().toString();
+    }
+
+    public SshFileAttributes attributes() {
+        return attributes;
+    }
     
 }

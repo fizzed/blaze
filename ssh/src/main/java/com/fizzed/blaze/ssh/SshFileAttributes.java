@@ -15,37 +15,20 @@
  */
 package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.util.ImmutableUri;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 
 /**
  *
  * @author joelauer
  */
-public class SshSessionImpl implements SshSession {
+public interface SshFileAttributes extends BasicFileAttributes {
+
+    int gid();
     
-    final private ImmutableUri uri;
-    final private JSch jsch;
-    final private Session jschSession;
-
-    public SshSessionImpl(ImmutableUri uri, JSch jsch, Session jschSession) {
-        this.uri = uri;
-        this.jsch = jsch;
-        this.jschSession = jschSession;
-    }
-
-    @Override
-    public ImmutableUri getUri() {
-        return uri;
-    }
-
-    public JSch getJsch() {
-        return jsch;
-    }
-
-    public Session getJschSession() {
-        return jschSession;
-    }
+    int uid();
+    
+    Set<PosixFilePermission> permissions();
     
 }

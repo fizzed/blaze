@@ -19,6 +19,7 @@ import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.ssh.SshConnect;
 import com.fizzed.blaze.ssh.SshExec;
 import com.fizzed.blaze.ssh.SshSession;
+import com.fizzed.blaze.ssh.SshSftp;
 
 /**
  *
@@ -34,9 +35,17 @@ public class SecureShells {
         return new SshConnect(Contexts.currentContext(), uri);
     }
     
+    static public SshExec sshExec(SshSession session) {
+        return new SshExec(Contexts.currentContext(), session);
+    }
+    
     static public SshExec sshExec(SshSession session, String command, Object ... arguments) {
         return new SshExec(Contexts.currentContext(), session)
             .command(command, arguments);
+    }
+    
+    static public SshSftp sshSftp(SshSession session) {
+        return new SshSftp(Contexts.currentContext(), session);
     }
     
 }

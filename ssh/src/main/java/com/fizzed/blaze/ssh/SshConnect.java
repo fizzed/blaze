@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.ssh;
 
+import com.fizzed.blaze.ssh.impl.JschSession;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.core.Action;
@@ -40,7 +41,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Vector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +82,7 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
     
     public SshConnect configFile(Path configFile) {
         if (!Files.exists(configFile)) {
-            throw new com.fizzed.blaze.internal.FileNotFoundException("SSH config file " + configFile + " does not exist."
+            throw new com.fizzed.blaze.core.FileNotFoundException("SSH config file " + configFile + " does not exist."
                 + " Did you know we'll try to load ~/.ssh/config by default?");
         }
         this.configFile = configFile;
@@ -91,7 +91,7 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
     
     public SshConnect knownHostsFile(Path knownHostsFile) {
         if (!Files.exists(knownHostsFile)) {
-            throw new com.fizzed.blaze.internal.FileNotFoundException("SSH known_hosts file " + knownHostsFile + " does not exist."
+            throw new com.fizzed.blaze.core.FileNotFoundException("SSH known_hosts file " + knownHostsFile + " does not exist."
                 + " Did you know we'll try to load ~/.ssh/known_hosts by default?");
         }
         this.knownHostsFile = knownHostsFile;
@@ -100,7 +100,7 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
     
     public SshConnect identityFile(Path identityFile) {
         if (!Files.exists(identityFile)) {
-            throw new com.fizzed.blaze.internal.FileNotFoundException("SSH identity file " + identityFile + " does not exist."
+            throw new com.fizzed.blaze.core.FileNotFoundException("SSH identity file " + identityFile + " does not exist."
                 + " Did you know we'll try to load ~/.ssh/id_rsa by default?");
         }
         // insert onto front (since that is likely what we want searched first)
@@ -236,13 +236,13 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
             if (log.isDebugEnabled()) {
                 IdentityRepository ir = jsch.getIdentityRepository();
                 @SuppressWarnings("UseOfObsoleteCollectionType")
-                Vector identities = ir.getIdentities();
-                for (Object identity : identities) {
-                    if (identity instanceof Identity) {
-                        Identity i = (Identity)identity;
+                java.util.Vector<Object> identities = ir.getIdentities();
+                identities.stream()
+                    .filter((identity) -> (identity instanceof Identity))
+                    .map((identity) -> (Identity)identity)
+                    .forEach((i) -> {
                         log.debug("Identity {} {}", i.getName(), i.getAlgName());
-                    }
-                }
+                    });
             }
             
             //jschSession.setConfig("PreferredAuthentications", "publickey,password");
@@ -262,11 +262,11 @@ public class SshConnect extends Action<SshSession> implements MutableUriSupport<
             log.info("Connected ssh session to {}@{}:{}!",
                     jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
             
-            return new SshSessionImpl(this.uri.toImmutableUri(), jsch, jschSession);
+            return new JschSession(this.context, this.uri.toImmutableUri(), jsch, jschSession);
         } catch (JSchException | IOException e) {
             // TODO: any specific exceptions worth doing something with?
             // JSchException: timeout in wating for rekeying process this happens when we need to accept the host key...
-            throw new BlazeException(e.getMessage(), e);
+            throw new SshException(e.getMessage(), e);
         }
     }
 
