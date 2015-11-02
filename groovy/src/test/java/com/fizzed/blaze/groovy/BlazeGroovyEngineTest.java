@@ -125,12 +125,12 @@ public class BlazeGroovyEngineTest {
         assertThat(systemOutRule.getLog(), containsString("Groovy run() called"));
         
         // main should not have been called yet
-        assertThat(systemOutRule.getLog(), not(containsString("1.0")));
+        assertThat(systemOutRule.getLog(), not(containsString("1.0.FINAL")));
         
         blaze.execute();
         
         // main should have been called
-        assertThat(systemOutRule.getLog(), containsString("1.0"));
+        assertThat(systemOutRule.getLog(), containsString("1.0.FINAL"));
     }
     
     @Test
