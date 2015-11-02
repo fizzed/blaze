@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.core.Dependency;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Version;

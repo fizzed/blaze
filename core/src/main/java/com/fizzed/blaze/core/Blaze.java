@@ -15,18 +15,17 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.internal.ContextHolder;
+import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.internal.DependencyHelper;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
 import com.fizzed.blaze.internal.ConfigHelper;
-import com.fizzed.blaze.internal.Dependency;
-import com.fizzed.blaze.internal.DependencyResolveException;
-import com.fizzed.blaze.internal.DependencyResolver;
 import com.fizzed.blaze.internal.IvyDependencyResolver;
 import com.fizzed.blaze.internal.EngineHelper;
 import com.fizzed.blaze.internal.FileHelper;
-import com.fizzed.blaze.internal.Timer;
+import com.fizzed.blaze.util.Timer;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -176,7 +175,11 @@ public class Blaze {
             
             scriptExtension = FileHelper.fileExtension(detectedScriptFile);
             
-            context = new ContextImpl((detectedBaseDir != null ? detectedBaseDir.toPath() : null), detectedScriptFile.toPath(), config);
+            context = new ContextImpl(
+                (detectedBaseDir != null ? detectedBaseDir.toPath() : null),
+                null,    
+                detectedScriptFile.toPath(),
+                config);
             
             ContextHolder.set(context);
         }

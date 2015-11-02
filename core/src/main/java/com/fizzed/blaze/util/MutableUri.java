@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.util;
 
-import static com.fizzed.blaze.util.MutableUri.decode;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -327,7 +326,7 @@ public class MutableUri implements ImmutableUri {
         return new MutableUri(uri, parameters).toURI();
     }
     
-    static public String encode(String value) {
+    static private String encode(String value) {
         try {
             return java.net.URLEncoder.encode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -335,7 +334,7 @@ public class MutableUri implements ImmutableUri {
         }
     }
     
-    static public String decode(String value) {
+    static private String decode(String value) {
         try {
             return java.net.URLDecoder.decode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -350,7 +349,7 @@ public class MutableUri implements ImmutableUri {
      * @param parameters
      * @return 
      */
-    static public String format(String uri, Object... parameters) {
+    static private String format(String uri, Object... parameters) {
         if (parameters == null || parameters.length == 0 || !uri.contains("{}")) {
             return uri;
         }

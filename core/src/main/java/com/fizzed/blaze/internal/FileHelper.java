@@ -18,7 +18,6 @@ package com.fizzed.blaze.internal;
 import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.core.BlazeException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -30,16 +29,6 @@ import java.nio.file.Path;
  * @author joelauer
  */
 public class FileHelper {
-    
-    /**
-    static public FileInputStream createFileInputStream(Path path) throws FileNotFoundException {
-        try {
-            return new FileInputStream(path.toFile());
-        } catch (java.io.FileNotFoundException e) {
-            throw new FileNotFoundException(e.getMessage());
-        }
-    }
-    */
     
     static public File resourceAsFile(String resourceName) throws URISyntaxException, MalformedURLException, IOException {
         URL url = ConfigHelper.class.getResource(resourceName);

@@ -23,7 +23,7 @@ with (Imports) {
 
         var host = config.find("undertow.host").get();
         var port = config.find("undertow.port", Integer.class).get();
-        var nowait = config.find("undertow.nowait").or("false");
+        var in_try_all_example = config.find("examples.try_all").or("false");
         
         var undertow = Undertow.builder()
             .addHttpListener(port, host)
@@ -34,7 +34,8 @@ with (Imports) {
 
         log.info("Open browser to http://{}:{}", host, port);
         
-        if (nowait.equals("true")) {
+        if (in_try_all_example.equals("true")) {
+            // simply for stopping server if we're in try_all example
             undertow.stop();
         } else {
             // hack to wait

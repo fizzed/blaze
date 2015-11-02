@@ -20,7 +20,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.internal.ObjectHelper;
+import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.system.ExecSupport;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
@@ -71,28 +71,21 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
         this.exitValues = new ArrayList<>(Arrays.asList(0));
     }
     
+    @Override
     public SshExec command(String command) {
         this.command = command;
         return this;
     }
     
     @Override
-    public SshExec command(String command, Object... arguments) {
-        this.command(command);
-        this.args(arguments);
-        return this;
-    }
-    
-    @Override
-    public SshExec arg(Object... arguments) {
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
+    public SshExec arg(Object argument) {
+        this.arguments.add(ObjectHelper.nonNullToString(argument));
         return this;
     }
 
     @Override
     public SshExec args(Object... arguments) {
-        this.arguments.clear();
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
+        this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
         return this;
     }
     
@@ -157,8 +150,8 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     @Override
     protected SshExecResult doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
-        Objects.requireNonNull(jschSession, "ssh session must be established first");
-        Objects.requireNonNull(command, "ssh command cannot be null");
+        ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
+        ObjectHelper.requireNonNull(command, "ssh command cannot be null");
         
         ChannelExec channel = null;
         try {

@@ -15,6 +15,9 @@
  */
 package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.core.Dependency;
+import com.fizzed.blaze.core.DependencyResolveException;
+import com.fizzed.blaze.core.DependencyResolver;
 import com.fizzed.blaze.Context;
 import java.io.File;
 import java.io.IOException;

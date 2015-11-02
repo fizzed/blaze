@@ -18,13 +18,12 @@ package com.fizzed.blaze.ssh;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
 import com.fizzed.blaze.util.NamedStream;
-import com.fizzed.blaze.util.SizedStream;
+import com.fizzed.blaze.util.ObjectHelper;
 import java.io.OutputStream;
 
 /**
@@ -76,8 +75,8 @@ public class SshSftpGet extends Action<Void> {
 
     @Override
     protected Void doRun() throws BlazeException {
-        Objects.requireNonNull(source, "source cannot be null");
-        Objects.requireNonNull(target, "target cannot be null");
+        ObjectHelper.requireNonNull(source, "source cannot be null");
+        ObjectHelper.requireNonNull(target, "target cannot be null");
         sftp.get(source, target);
         return null;
     }

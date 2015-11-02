@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.util.Converter;
 import com.fizzed.blaze.Config;
 import com.typesafe.config.ConfigException.Missing;
 import java.util.ArrayList;

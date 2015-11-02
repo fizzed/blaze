@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.Context;
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.List;
+import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.Engine;
+import com.fizzed.blaze.core.Script;
 
-/**
- *
- * @author Joe Lauer
- */
-public interface DependencyResolver {
+abstract public class AbstractEngine<S extends Script> implements Engine<S> {
 
-    List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException;
+    protected Context initialContext;
+    
+    @Override
+    public boolean isInitialized() {
+        return initialContext != null;
+    }
+    
+    @Override
+    public void init(Context initialContext) throws BlazeException {
+        this.initialContext = initialContext;
+    }
     
 }

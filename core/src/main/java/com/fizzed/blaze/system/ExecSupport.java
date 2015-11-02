@@ -29,25 +29,24 @@ import java.util.concurrent.TimeUnit;
  */
 public interface ExecSupport<T> {
 
+    T command(String command);
+    
+    /**
+     * Adds one argument by appending to existing list.
+     * @param argument
+     * @return
+     * @see #args(java.lang.Object...) For adding more than one argument
+     */
+    T arg(Object argument);
+
     /**
      * Adds one or more arguments by appending to existing list.
      * @param arguments
      * @return
-     * @see #args(java.lang.Object...) For replacing existing arguments
-     */
-    T arg(Object... arguments);
-
-    /**
-     * Replaces existing arguments with one or more new arguments.
-     * @param arguments
-     * @return
-     * @see #arg(java.lang.Object...) For adding to existing arguments rather
-     *      than replacing
+     * @see #arg(java.lang.Object...) For adding a single argument
      */
     T args(Object... arguments);
-
-    T command(String command, Object... arguments);
-
+    
     T env(String name, String value);
 
     T timeout(long timeoutInMillis);

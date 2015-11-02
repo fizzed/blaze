@@ -18,7 +18,7 @@ public class undertow {
 
         String host = config.find("undertow.host").get();
         int port = config.find("undertow.port", int.class).get();
-        boolean nowait = config.find("undertow.nowait", Boolean.class).or(false);
+        boolean in_try_all_example = config.find("examples.try_all", Boolean.class).or(false);
 
         Undertow undertow = Undertow.builder()
             .addHttpListener(port, host)
@@ -29,7 +29,8 @@ public class undertow {
 
         log.info("Open browser to http://{}:{}", host, port);
 
-        if (nowait) {
+        if (in_try_all_example) {
+            // simply for stopping server if we're in try_all example
             undertow.stop();
         } else {
             synchronized (undertow) {

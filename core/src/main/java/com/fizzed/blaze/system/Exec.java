@@ -21,7 +21,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.DeferredFileInputStream;
-import com.fizzed.blaze.internal.ObjectHelper;
+import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.DeferredFileOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.output.NullOutputStream;
@@ -60,36 +61,20 @@ public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecS
     }
     
     @Override
-    public Exec command(String command, Object... arguments) {
+    public Exec command(String command) {
         this.which.command(command);
-        this.arguments.clear();
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
         return this;
     }
     
-    /**
-     * Adds one or more arguments by appending to existing list.
-     * @param arguments
-     * @return 
-     * @see #args(java.lang.Object...) For replacing existing arguments
-     */
     @Override
-    public Exec arg(Object... arguments) {
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
+    public Exec arg(Object argument) {
+        this.arguments.add(ObjectHelper.nonNullToString(argument));
         return this;
     }
-    
-    /**
-     * Replaces existing arguments with one or more new arguments.
-     * @param arguments
-     * @return 
-     * @see #arg(java.lang.Object...) For adding to existing arguments rather
-     *      than replacing
-     */
+
     @Override
     public Exec args(Object... arguments) {
-        this.arguments.clear();
-        this.arguments.addAll(ObjectHelper.toStringList(arguments));
+        this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
         return this;
     }
     

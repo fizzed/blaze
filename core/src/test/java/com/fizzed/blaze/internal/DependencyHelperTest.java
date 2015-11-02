@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.internal;
 
-import com.fizzed.blaze.internal.Dependency;
+import com.fizzed.blaze.core.Dependency;
 import com.fizzed.blaze.internal.DependencyHelper;
 import com.fizzed.blaze.Config;
 import java.util.Arrays;

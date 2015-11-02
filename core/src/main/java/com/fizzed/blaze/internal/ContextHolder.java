@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

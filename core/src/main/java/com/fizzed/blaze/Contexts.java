@@ -15,11 +15,16 @@
  */
 package com.fizzed.blaze;
 
-import com.fizzed.blaze.core.ContextHolder;
+import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.internal.ContextHolder;
 import com.fizzed.blaze.core.MessageOnlyException;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 
 /**
@@ -51,15 +56,6 @@ public class Contexts {
      */
     static public Config config() {
         return ContextHolder.get().config();
-    }
-    
-    /**
-     * Fails a script with a supplied message to be logged.  Does not trigger
-     * a stacktrace to be logged!
-     * @param message The message
-     */
-    static public void fail(String message) {
-        throw new MessageOnlyException(message);
     }
     
     /**
@@ -138,12 +134,21 @@ public class Contexts {
         return ContextHolder.get().withUserDir(path);
     }
     
-    static public String consolePrompt(String prompt, Object... args) {
-        return System.console().readLine(prompt, args);
+    /**
+     * Fails a script with a supplied message to be logged.  Does not trigger
+     * a stacktrace to be logged!
+     * @param message The message
+     */
+    static public void fail(String message) {
+        throw new MessageOnlyException(message);
     }
     
-    static public char[] consolePasswordPrompt(String prompt, Object... args) {
-        return System.console().readPassword(prompt, args);
+    static public String prompt(String prompt, Object... args) {
+        return ContextHolder.get().prompt(prompt, args);
+    }
+    
+    static public char[] passwordPrompt(String prompt, Object... args) {
+        return ContextHolder.get().passwordPrompt(prompt, args);
     }
     
 }

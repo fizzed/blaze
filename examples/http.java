@@ -1,6 +1,6 @@
 import org.slf4j.Logger;
 import com.fizzed.blaze.Contexts;
-import com.fizzed.blaze.http.UriBuilder;
+import com.fizzed.blaze.util.MutableUri;
 import java.net.URI;
 import org.apache.http.client.fluent.Request;
 
@@ -9,9 +9,9 @@ public class http {
     public void main() throws Exception {
         Logger log = Contexts.logger();
         
-        URI uri = UriBuilder.of("http://api.theysaidso.com/qod.json")
+        URI uri = MutableUri.of("http://api.theysaidso.com/qod.json")
             .query("category", "management")
-            .build();
+            .toURI();
         
         String output = 
             Request.Get(uri)

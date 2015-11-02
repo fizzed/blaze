@@ -20,7 +20,7 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
-import com.fizzed.blaze.internal.Dependency;
+import com.fizzed.blaze.core.Dependency;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
 import java.io.File;
 import java.util.Arrays;

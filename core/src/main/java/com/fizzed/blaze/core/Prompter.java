@@ -13,28 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
 
 /**
  *
  * @author joelauer
  */
-public class Timer {
+public interface Prompter {
     
-    final private long start;
-    private long stop;
+    String prompt(String prompt, Object... args);
     
-    public Timer() {
-        this.start = System.currentTimeMillis();
-    }
-    
-    public Timer stop() {
-        this.stop = System.currentTimeMillis();
-        return this;
-    }
-    
-    public long millis() {
-        return (this.stop - this.start);
-    }
+    char[] passwordPrompt(String prompt, Object... args);
     
 }

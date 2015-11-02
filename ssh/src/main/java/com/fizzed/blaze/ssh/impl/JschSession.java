@@ -18,6 +18,7 @@ package com.fizzed.blaze.ssh.impl;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.util.ImmutableUri;
+import com.fizzed.blaze.util.ObjectHelper;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import java.io.IOException;
@@ -36,9 +37,9 @@ public class JschSession implements SshSession {
     private boolean closed;
 
     public JschSession(Context context, ImmutableUri uri, JSch jsch, Session jschSession) {
-        Objects.requireNonNull(uri, "uri cannot be null");
-        Objects.requireNonNull(jsch, "jsch cannot be null");
-        Objects.requireNonNull(jschSession, "jsch session cannot be null");
+        ObjectHelper.requireNonNull(uri, "uri cannot be null");
+        ObjectHelper.requireNonNull(jsch, "jsch cannot be null");
+        ObjectHelper.requireNonNull(jschSession, "jsch session cannot be null");
         this.context = context;
         this.uri = uri;
         this.jsch = jsch;

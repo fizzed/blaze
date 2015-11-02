@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.internal;
 
-import com.fizzed.blaze.internal.Dependency;
+import com.fizzed.blaze.core.Dependency;
 import java.util.HashSet;
 import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;

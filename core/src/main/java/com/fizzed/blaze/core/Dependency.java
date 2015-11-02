@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.Version;
 import java.util.Objects;

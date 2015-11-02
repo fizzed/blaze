@@ -20,6 +20,7 @@ import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.ssh.impl.JschSession;
 import com.fizzed.blaze.ssh.impl.JschSftpSession;
+import com.fizzed.blaze.util.ObjectHelper;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -44,7 +45,7 @@ public class SshSftp extends Action<SshSftpSession> {
     @Override
     protected SshSftpSession doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
-        Objects.requireNonNull(jschSession, "ssh session must be established first");
+        ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
         
         ChannelSftp channel = null;
         try {

@@ -24,7 +24,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
 import com.fizzed.blaze.util.NamedStream;
-import com.fizzed.blaze.util.SizedStream;
+import com.fizzed.blaze.util.ObjectHelper;
 
 /**
  *
@@ -47,11 +47,11 @@ public class SshSftpPut extends Action<Void> {
     }
     
     public SshSftpPut source(Path sourceFile) {
-        return source(SizedStream.input(sourceFile));
+        return source(NamedStream.input(sourceFile));
     }
     
     public SshSftpPut source(File sourceFile) {
-        return source(SizedStream.input(sourceFile));
+        return source(NamedStream.input(sourceFile));
     }
     
     public SshSftpPut source(InputStream source) {
@@ -79,8 +79,8 @@ public class SshSftpPut extends Action<Void> {
 
     @Override
     protected Void doRun() throws BlazeException {
-        Objects.requireNonNull(source, "source cannot be null");
-        Objects.requireNonNull(target, "target cannot be null");
+        ObjectHelper.requireNonNull(source, "source cannot be null");
+        ObjectHelper.requireNonNull(target, "target cannot be null");
         sftp.put(source, target);
         return null;
     }

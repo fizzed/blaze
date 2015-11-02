@@ -70,5 +70,12 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

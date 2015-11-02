@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +25,21 @@ import java.util.List;
  */
 public class ObjectHelper {
     
-    static public List<String> toStringList(Object[] objects) {
+    static public void requireNonNull(Object value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+    
+    static public String nonNullToString(Object object) {
+        if (object == null) {
+            throw new IllegalArgumentException("object was null");
+        }
+        
+        return object.toString();
+    }
+    
+    static public List<String> nonNullToStringList(Object[] objects) {
         if (objects == null) {
             Collections.emptyList();
         }
@@ -35,7 +49,7 @@ public class ObjectHelper {
         for (int i = 0; i < objects.length; i++) {
             Object object = objects[i];
             if (object == null) {
-                throw new IllegalArgumentException("Object #" + i + " was null");
+                throw new IllegalArgumentException("object #" + i + " was null");
             }
             strings.add(object.toString());
         }

@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.Context;
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
 
 /**
  *
- * @author joelauer
+ * @author Joe Lauer
  */
-public class DependencyResolveException extends BlazeException {
-    
-    /**
-     * Constructs an instance of <code>DependencyResolveException</code> with
-     * the specified detail message.
-     *
-     * @param msg the detail message.
-     */
-    public DependencyResolveException(String msg) {
-        super(msg);
-    }
+public interface DependencyResolver {
+
+    List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException;
     
 }

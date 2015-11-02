@@ -28,7 +28,7 @@ public class try_all {
             .sorted()
             .forEach((f) -> {
                 log.info("Trying {}", f);
-                Systems.exec("java", "-Dundertow.nowait=true", "-jar", blazeJarFile, "-f", f).run();
+                Systems.exec("java", "-Dexamples.try_all=true", "-jar", blazeJarFile, "-f", f).run();
             });
     }
     

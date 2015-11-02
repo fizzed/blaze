@@ -15,8 +15,6 @@
  */
 package com.fizzed.blaze.ssh.impl;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.util.ImmutableUri;
 import java.io.Closeable;
 
 /**

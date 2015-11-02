@@ -33,34 +33,36 @@ import java.util.Objects;
  */
 public class NamedStream<T extends Closeable> implements Closeable {
     
-    private final Path path;
-    private final String name;
     private final T stream;
+    private final String name;
+    private final Path path;
+    private final Long size;
     private final boolean closeable;
-
-    public NamedStream(Path path, T stream) {
-        this(path, stream, false);
-    }
     
-    public NamedStream(Path path, T stream, boolean closeable) {
-        Objects.requireNonNull(path, "path cannot be null");
+    public NamedStream(T stream, String name, Path path, Long size, boolean closeable) {
         Objects.requireNonNull(stream, "stream cannot be null");
-        this.path = path;
-        this.name = path.getFileName().toString();
+        Objects.requireNonNull(name, "name cannot be null");
         this.stream = stream;
+        this.name = name;
+        this.path = path;
+        this.size = size;
         this.closeable = closeable;
     }
 
-    public Path path() {
-        return path;
+    public T stream() {
+        return stream;
     }
     
     public String name() {
         return name;
     }
-
-    public T stream() {
-        return stream;
+    
+    public Path path() {
+        return path;
+    }
+    
+    public Long size() {
+        return size;
     }
     
     public boolean closeable() {
@@ -75,31 +77,44 @@ public class NamedStream<T extends Closeable> implements Closeable {
     }
     
     static public <T extends Closeable> NamedStream of(T stream) {
-        return new NamedStream(Paths.get("<stream>"), stream);
+        return of(stream, "<stream>", false);
+    }
+    
+    static public <T extends Closeable> NamedStream of(T stream, String name, boolean closeable) {
+        return new NamedStream(stream, name, null, null, closeable);
+    }
+
+    static public NamedStream<InputStream> input(File file) {
+        Objects.requireNonNull(file, "file cannot be null");
+        return input(file.toPath());
+    }
+    
+    static public NamedStream<InputStream> input(Path path) {
+        Objects.requireNonNull(path, "path cannot be null");
+        
+        if (!Files.exists(path)) {
+            throw new FileNotFoundException("Path " + path + " not found");
+        }
+        
+        long size;
+        try {
+            size = Files.size(path);
+        } catch (IOException e) {
+            throw new BlazeException(e.getMessage(), e);
+        }
+        
+        return new NamedStream<>(new DeferredFileInputStream(path), path.getFileName().toString(), path, size, true);
     }
     
     static public NamedStream<OutputStream> output(File file) {
         Objects.requireNonNull(file, "file cannot be null");
-        
-        /** overwrite?
-        if (!file.exists()) {
-            throw new FileNotFoundException("File " + file + " not found");
-        }
-        */
-        
-        return new NamedStream<>(file.toPath(), new DeferredFileOutputStream(file), true);
+        return output(file.toPath());
     }
     
     static public NamedStream<OutputStream> output(Path path) {
         Objects.requireNonNull(path, "path cannot be null");
-
-        /** overwrite?
-        if (!file.exists()) {
-            throw new FileNotFoundException("File " + file + " not found");
-        }
-        */
         
-        return new NamedStream<>(path, new DeferredFileOutputStream(path), true);
+        return new NamedStream<>(new DeferredFileOutputStream(path), path.getFileName().toString(), path, null, true);
     }
     
 }
