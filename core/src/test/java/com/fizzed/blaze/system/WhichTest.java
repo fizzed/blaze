@@ -15,13 +15,10 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.system.Which;
 import com.fizzed.blaze.Config;
-import com.fizzed.blaze.core.ContextImpl;
+import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.internal.ConfigHelper;
-import com.fizzed.blaze.internal.FileHelper;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +47,7 @@ public class WhichTest {
     @Before
     public void setup() {
         config = ConfigHelper.create(null);
-        context = spy(new ContextImpl(null, Paths.get("blaze.js"), config));
+        context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
     }
     
     @Test

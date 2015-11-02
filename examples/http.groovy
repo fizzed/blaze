@@ -1,15 +1,15 @@
 import org.slf4j.Logger
 import com.fizzed.blaze.Contexts
-import com.fizzed.blaze.http.UriBuilder
+import com.fizzed.blaze.util.MutableUri
 import java.net.URI
 import org.apache.http.client.fluent.Request
 
 def main() {
     def log = Contexts.logger()
 
-    def uri = UriBuilder.of("http://api.theysaidso.com/qod.json")
+    def uri = MutableUri.of("http://api.theysaidso.com/qod.json")
         .query("category", "management")
-        .build()
+        .toURI()
 
     def output = 
         Request.Get(uri)

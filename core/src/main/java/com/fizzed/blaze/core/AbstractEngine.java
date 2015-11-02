@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.Engine;
+import com.fizzed.blaze.core.Script;
 
-/**
- *
- * @author joelauer
- */
-public class FileNotFoundException extends BlazeException {
+abstract public class AbstractEngine<S extends Script> implements Engine<S> {
+
+    protected Context initialContext;
     
-    public FileNotFoundException(String msg) {
-        super(msg);
+    @Override
+    public boolean isInitialized() {
+        return initialContext != null;
     }
     
-    public FileNotFoundException(String msg, Throwable cause) {
-        super(msg, cause);
+    @Override
+    public void init(Context initialContext) throws BlazeException {
+        this.initialContext = initialContext;
     }
     
 }

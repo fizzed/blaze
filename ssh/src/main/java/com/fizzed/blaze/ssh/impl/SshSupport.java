@@ -13,34 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.ssh.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.Closeable;
 
 /**
  *
  * @author joelauer
  */
-public class ObjectHelper {
+public interface SshSupport extends Closeable {
+
+    boolean closed();
     
-    static public List<String> toStringList(Object[] objects) {
-        if (objects == null) {
-            Collections.emptyList();
+    default public void verifyOpen() {
+        if (this.closed()) {
+            throw new IllegalStateException("Session is closed");
         }
-        
-        List<String> strings = new ArrayList<>();
-        
-        for (int i = 0; i < objects.length; i++) {
-            Object object = objects[i];
-            if (object == null) {
-                throw new IllegalArgumentException("Object #" + i + " was null");
-            }
-            strings.add(object.toString());
-        }
-        
-        return strings;
     }
     
 }

@@ -14,7 +14,7 @@ def main() {
     
     def host = config.find("undertow.host").get()
     def port = config.find("undertow.port", Integer.class).get()
-    def nowait = config.find("undertow.nowait", Boolean.class).or(false)
+    def in_try_all_example = config.find("examples.try_all", Boolean.class).or(false)
     
     def undertow = Undertow.builder()
         .addHttpListener(port, host)
@@ -25,7 +25,8 @@ def main() {
     
     log.info("Open browser to http://{}:{}", host, port)
     
-    if (nowait) {
+    if (in_try_all_example) {
+        // simply for stopping server if we're in try_all example
         undertow.stop();
     } else {
         synchronized (undertow) {

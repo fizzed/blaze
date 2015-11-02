@@ -13,24 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
-
-import com.fizzed.blaze.core.BlazeException;
+package com.fizzed.blaze.util;
 
 /**
  *
  * @author joelauer
  */
-public class MissingConfigurationException extends BlazeException {
-
-    /**
-     * Constructs an instance of <code>MissingConfigurationException</code> with
-     * the specified detail message.
-     *
-     * @param msg the detail message.
-     */
-    public MissingConfigurationException(String msg) {
-        super(msg);
+public class Timer {
+    
+    final private long start;
+    private long stop;
+    
+    public Timer() {
+        this.start = System.currentTimeMillis();
+    }
+    
+    public Timer stop() {
+        this.stop = System.currentTimeMillis();
+        return this;
+    }
+    
+    public long millis() {
+        return (this.stop - this.start);
     }
     
 }

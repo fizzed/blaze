@@ -27,7 +27,6 @@
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.1.53-joe</version>
         </dependency>
         
         <!--
@@ -69,6 +68,13 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

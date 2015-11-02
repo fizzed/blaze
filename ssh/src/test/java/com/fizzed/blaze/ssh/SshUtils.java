@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.Engine;
-import com.fizzed.blaze.core.Script;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.KeyPair;
+import java.nio.file.Path;
 
-abstract public class AbstractEngine<S extends Script> implements Engine<S> {
-
-    protected Context initialContext;
-    
-    @Override
-    public boolean isInitialized() {
-        return initialContext != null;
-    }
-    
-    @Override
-    public void init(Context initialContext) throws BlazeException {
-        this.initialContext = initialContext;
+/**
+ *
+ * @author joelauer
+ */
+public class SshUtils {
+ 
+    static public String fingerprint(Path privateKey) throws JSchException {
+        JSch jsch = new JSch();
+        KeyPair keypair = KeyPair.load(jsch, privateKey.toString());
+        return keypair.getFingerPrint();
     }
     
 }

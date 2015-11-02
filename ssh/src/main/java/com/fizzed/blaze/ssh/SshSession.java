@@ -15,14 +15,18 @@
  */
 package com.fizzed.blaze.ssh;
 
+import com.fizzed.blaze.Context;
+import com.fizzed.blaze.ssh.impl.SshSupport;
 import com.fizzed.blaze.util.ImmutableUri;
 
 /**
  *
  * @author joelauer
  */
-public interface SshSession {
+public interface SshSession extends SshSupport {
 
-    ImmutableUri getUri();
+    Context context();
+    
+    ImmutableUri uri();
     
 }

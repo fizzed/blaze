@@ -15,9 +15,9 @@
  */
 package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.core.BlazeException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;

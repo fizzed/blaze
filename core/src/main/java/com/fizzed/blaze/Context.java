@@ -47,4 +47,10 @@ public interface Context {
 
     Path withUserDir(String path);
     
+    void fail(String message);
+    
+    String prompt(String prompt, Object... args);
+    
+    char[] passwordPrompt(String prompt, Object... args);
+    
 }

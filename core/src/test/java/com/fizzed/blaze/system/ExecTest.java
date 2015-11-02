@@ -15,11 +15,11 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.ExecutableNotFoundException;
 import com.fizzed.blaze.Config;
-import com.fizzed.blaze.core.ContextImpl;
+import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.internal.ConfigHelper;
-import java.io.File;
 import java.nio.file.Paths;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -44,7 +44,7 @@ public class ExecTest {
     @Before
     public void setup() {
         config = ConfigHelper.create(null);
-        context = spy(new ContextImpl(null, Paths.get("blaze.js"), config));
+        context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
     }
     
     @Test(expected=ExecutableNotFoundException.class)

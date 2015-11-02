@@ -15,12 +15,13 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.internal.FileNotFoundException;
+import com.fizzed.blaze.core.FileNotFoundException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * Defer opening a File as an InputStream until the first attempt to access it.
@@ -33,6 +34,7 @@ public class DeferredFileInputStream extends InputStream {
     private InputStream input;
     
     public DeferredFileInputStream(File file) {
+        Objects.requireNonNull(file, "file cannot be null");
         if (!file.exists()) {
             throw new FileNotFoundException("File " + file + " not found");
         }
@@ -40,7 +42,7 @@ public class DeferredFileInputStream extends InputStream {
     }
     
     public DeferredFileInputStream(Path path) throws FileNotFoundException {
-        this(path.toFile());
+        this(path != null ? path.toFile() : (File)null);
     }
     
     public void open() {

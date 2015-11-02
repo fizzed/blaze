@@ -113,7 +113,8 @@ public class Systems {
      */
     static public Exec exec(String command, Object ... arguments) {
         return new Exec(Contexts.currentContext())
-            .command(command, arguments);
+            .command(command)
+            .args(arguments);
     }
     
     /**

@@ -13,28 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
+
+import com.fizzed.blaze.core.BlazeException;
 
 /**
  *
  * @author joelauer
  */
-public class Timer {
+public class FileNotFoundException extends BlazeException {
     
-    final private long start;
-    private long stop;
-    
-    public Timer() {
-        this.start = System.currentTimeMillis();
+    public FileNotFoundException(String msg) {
+        super(msg);
     }
     
-    public Timer stop() {
-        this.stop = System.currentTimeMillis();
-        return this;
-    }
-    
-    public long millis() {
-        return (this.stop - this.start);
+    public FileNotFoundException(String msg, Throwable cause) {
+        super(msg, cause);
     }
     
 }

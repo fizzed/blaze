@@ -17,7 +17,6 @@ package com.fizzed.blaze.internal;
 
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.ContextImpl;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

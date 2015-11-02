@@ -17,11 +17,11 @@ package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.ContextImpl;
+import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.Script;
-import com.fizzed.blaze.internal.AbstractEngine;
+import com.fizzed.blaze.core.AbstractEngine;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
 import com.fizzed.blaze.internal.ConfigHelper;
 import java.io.File;

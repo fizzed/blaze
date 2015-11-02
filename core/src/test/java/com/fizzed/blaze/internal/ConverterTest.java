@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.internal;
 
-import com.fizzed.blaze.internal.Converter;
+import com.fizzed.blaze.util.Converter;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;

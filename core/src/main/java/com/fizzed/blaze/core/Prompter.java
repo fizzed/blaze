@@ -13,24 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
-
-import com.fizzed.blaze.core.BlazeException;
+package com.fizzed.blaze.core;
 
 /**
  *
  * @author joelauer
  */
-public class ExecutableNotFoundException extends BlazeException {
-
-    /**
-     * Constructs an instance of <code>ExecutableNotFoundException</code> with
-     * the specified detail message.
-     *
-     * @param msg the detail message.
-     */
-    public ExecutableNotFoundException(String msg) {
-        super(msg);
-    }
+public interface Prompter {
+    
+    String prompt(String prompt, Object... args);
+    
+    char[] passwordPrompt(String prompt, Object... args);
     
 }
