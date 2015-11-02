@@ -33,17 +33,16 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.ssh.SshConnect;
 import com.fizzed.blaze.util.ObjectHelper;
+import java.nio.file.attribute.PosixFileAttributeView;
 
 /**
  *
@@ -208,13 +207,22 @@ public class JschConnect extends SshConnect {
                     Path parentDir = knownHostsFile.getParent();
 
                     if (!Files.exists(parentDir)) {
-                        Files.createDirectory(parentDir, PosixFilePermissions.asFileAttribute(
-                            PosixFilePermissions.fromString("rwx------")));
+                        Files.createDirectory(parentDir);
+                        
+                        // try to set permissions (won't work on windows)
+                        PosixFileAttributeView view = Files.getFileAttributeView(parentDir, PosixFileAttributeView.class);
+                        if (view != null) {
+                            view.setPermissions(PosixFilePermissions.fromString("rwx------"));
+                        }
                     }
-
-                    // match what OpenSSH does (it would create this file on-demand)
-                    Files.createFile(knownHostsFile, PosixFilePermissions.asFileAttribute(
-                        PosixFilePermissions.fromString("rw-------")));
+                    
+                    Files.createFile(knownHostsFile);
+                    
+                    // try to set permissions (won't work on windows)
+                    PosixFileAttributeView view = Files.getFileAttributeView(knownHostsFile, PosixFileAttributeView.class);
+                    if (view != null) {
+                        view.setPermissions(PosixFilePermissions.fromString("rw-------"));
+                    }
                 }
 
                 if (true) {

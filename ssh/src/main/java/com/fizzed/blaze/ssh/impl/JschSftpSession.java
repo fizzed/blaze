@@ -107,7 +107,8 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public void cd(Path path) throws SshException {
         try {
-            this.channel.cd(path.toString());
+            this.channel.cd(PathHelper.toString(path));
+            this.workingDir = path;
         } catch (SftpException e) {
             // 2: no such file
             // 4: Can't change directory: /bin/ls
@@ -123,7 +124,10 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public SshFileAttributes lstat(Path path) throws SshException {
         try {
-            SftpATTRS attrs = this.channel.lstat(path.toString());
+            String p = PathHelper.toString(path);
+            log.debug("lstat {}", p);
+            
+            SftpATTRS attrs = this.channel.lstat(p);
             
             return new JschFileAttributes(attrs);
         } catch (SftpException e) {
@@ -142,7 +146,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     public List<SshFile> ls(Path path) throws SshException {
         try {
             @SuppressWarnings("UseOfObsoleteCollectionType")
-            java.util.Vector<Object> fileObjects = this.channel.ls(path.toString());
+            java.util.Vector<Object> fileObjects = this.channel.ls(PathHelper.toString(path));
             
             List<SshFile> files = new ArrayList<>();
             
@@ -235,7 +239,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public void chgrp(Path path, int gid) {
         try {
-            this.channel.chgrp(gid, path.toString());
+            this.channel.chgrp(gid, PathHelper.toString(path));
         } catch (SftpException e) {
             throw new SshException(e.getMessage(), e);
         }
@@ -249,7 +253,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public void chown(Path path, int uid) {
         try {
-            this.channel.chown(uid, path.toString());
+            this.channel.chown(uid, PathHelper.toString(path));
         } catch (SftpException e) {
             throw new SshException(e.getMessage(), e);
         }
@@ -274,7 +278,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public void mkdir(Path path) {
         try {
-            this.channel.mkdir(path.toString());
+            this.channel.mkdir(PathHelper.toString(path));
         } catch (SftpException e) {
             throw new SshException(e.getMessage(), e);
         }
@@ -288,7 +292,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public void rm(Path path) {
         try {
-            this.channel.rm(path.toString());
+            this.channel.rm(PathHelper.toString(path));
         } catch (SftpException e) {
             throw new SshException(e.getMessage(), e);
         }
@@ -302,7 +306,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     @Override
     public void rmdir(Path path) {
         try {
-            this.channel.rmdir(path.toString());
+            this.channel.rmdir(PathHelper.toString(path));
         } catch (SftpException e) {
             throw new SshException(e.getMessage(), e);
         }
