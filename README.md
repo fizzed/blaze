@@ -393,7 +393,6 @@ import static com.fizzed.blaze.SecureShells.sshExec;
 
 try (SshSession session = sshConnect("ssh://user@host").run()) {
 
-    // remote working directory
     SshExecResult result
         = sshExec(session)
             .command("which")
@@ -401,7 +400,7 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
             .captureOutput()
             .run();
     
-    log.info("java is at {}", result0.output());
+    log.info("java is at {}", result.output());
 
 }
 ```
