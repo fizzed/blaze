@@ -41,13 +41,23 @@ public class Globber {
     private final List<PathMatcher> excludes;
     private boolean recursive;
     private boolean filesOnly;
+    private boolean dirsOnly;
     private boolean visibleOnly;
+    
+    public Globber() {
+        this((Path)null);
+    }
+    
+    public Globber(String root) {
+        this((root != null ? Paths.get(root) : null));
+    }
 
     public Globber(Path root) {
         this.root = (root != null ? root : Paths.get("."));
         this.includes = new ArrayList<>();
         this.excludes = new ArrayList<>();
         this.recursive = true;
+        this.dirsOnly = false;
         this.filesOnly = false;
         this.visibleOnly = false;
     }
@@ -78,6 +88,15 @@ public class Globber {
 
     public Globber recursive(boolean recursive) {
         this.recursive = recursive;
+        return this;
+    }
+    
+    public Globber dirsOnly() {
+        return dirsOnly(true);
+    }
+    
+    public Globber dirsOnly(boolean dirsOnly) {
+        this.dirsOnly = dirsOnly;
         return this;
     }
     
@@ -137,16 +156,22 @@ public class Globber {
                 // relativize path to root to perform match
                 Path relativized = root.relativize(path);
                 
-                if (matched(relativized, path)) {
-                    if (!filesOnly) {
-                        paths.add(path.normalize());
+                if (!path.equals(root)) {
+                    if (matched(relativized, path)) {
+                        if (!filesOnly) {
+                            paths.add(path.normalize());
+                        }
                     }
                 }
                 
-                if (!path.equals(root) && !recursive) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                } else {
+                if (path.equals(root)) {
                     return FileVisitResult.CONTINUE;
+                } else {
+                    if (!recursive) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    } else {
+                        return FileVisitResult.CONTINUE;
+                    }
                 }
             }
             
@@ -156,7 +181,9 @@ public class Globber {
                 Path relativized = root.relativize(path);
                 
                 if (matched(relativized, path)) {
-                    paths.add(path.normalize());
+                    if (!dirsOnly) {
+                        paths.add(path.normalize());
+                    }
                 }
                 
                 return FileVisitResult.CONTINUE;
@@ -171,8 +198,57 @@ public class Globber {
         return paths;
     }
     
+    static public Globber globber(String root, String glob) {
+        return new Globber(root)
+           .include(glob);
+    }
     
-    static public boolean containsUnescapedChars(String s, char[] targets) {
+    static public Globber globber(Path root, String glob) {
+        return new Globber(root)
+           .include(glob);
+    }
+    
+    static public Globber globber(String rootWithGlob) {
+        List<String> paths = BasicPaths.split(rootWithGlob);
+        
+        int globIndex = detectGlobIndex(paths);
+        
+        String root = null;
+        
+        // does it have a root?
+        if (globIndex > 0) {
+            root = BasicPaths.toString(paths, 0, globIndex, "/");
+        }
+        
+        Globber globber = new Globber(root);
+        
+        // does it have a glob?
+        if (globIndex > -1) {
+            String glob = BasicPaths.toString(paths, globIndex, paths.size(), "/");
+            globber.include(glob);
+        }
+        
+        return globber;
+    }
+    
+    // "src" -> "." and "src"
+    static public int detectGlobIndex(List<String> paths) {
+        int i = 0;
+        
+        for (; i < paths.size(); i++) {
+            String path = paths.get(i);
+            
+            if (path.equals("..") || path.equals(".") || paths.equals("")) {
+                // keep searching
+            } else {
+                return i;
+            }
+        }
+        
+        return i;
+    }
+    
+    static boolean containsUnescapedChars(String s, char[] targets) {
         boolean escaped = false;
         
         for (int i = 0; i < s.length(); i++) {
@@ -194,76 +270,4 @@ public class Globber {
         
         return false;
     }
-    
-    static public Globber glob(String pathWithGlob) {
-        return glob(Paths.get(pathWithGlob));
-    }
-    
-    static public Globber glob(Path pathWithGlob) {
-        int count = pathWithGlob.getNameCount();
-        
-        Path root = null;
-        
-        if (pathWithGlob.isAbsolute()) {
-            root = Paths.get("/");
-        }
-        
-        StringBuilder pattern = null;
-        
-        boolean patternFound = false;
-        for (int i = 0; i < count; i++) {
-            Path p = pathWithGlob.getName(i);
-            String s = p.toString();
-            
-            if (!patternFound) {
-                // does it contain any unescaped special chars?
-                patternFound = containsUnescapedChars(s, JAVA_GLOBBING_CHARS);
-            }
-            
-            if (patternFound) {
-                // this component onward needs to be globbed!
-                if (pattern != null) {
-                    pattern.append('/');
-                } else {
-                    pattern = new StringBuilder();
-                }
-                pattern.append(s);
-            } else {
-                // root or root + p
-                root = (root == null ? p : root.resolve(p));
-            }
-        }
-        
-        // build globber
-        Globber globber = new Globber(root);
-        
-        if (pattern != null) {
-            globber.include(pattern.toString());
-        }
-        
-        return globber;
-    }
-    
-    static public void main(String[] args) throws Exception {
-        
-        //Globber globber = Globber.glob(Paths.get("/usr/java/*"));
-        Globber globber = Globber.glob(Paths.get("src/**/*.java"));
-        
-        for (Path path : globber.scan()) {
-            System.out.println(path);
-        }
-        
-        /**
-        Globber globber
-            = new Globber()
-                //.filesOnly()
-                .visibleOnly()
-                .include("*");
-        
-        for (Path path : globber.scan(Paths.get(".."))) {
-            System.out.println(path);
-        }
-        */
-    }
-    
 }
