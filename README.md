@@ -350,7 +350,6 @@ Find all paths recursively ending with `.md` but from a different base dir
 List<Path> paths = globber("../a/different/path", "**/*.md").scan();
 ```
 
-
 ### SSH
 
 Add the following to your `blaze.conf` file to include rich support for SSH
@@ -377,6 +376,7 @@ import static com.fizzed.blaze.SecureShells.sshConnect;
 try (SshSession session = sshConnect("ssh://user@host").run()) {
     // ... use session
 }
+```
 
 Once a session is established you can create channels to execute commands or
 transfer files via sftp.  These channels all tap into the existing session and
