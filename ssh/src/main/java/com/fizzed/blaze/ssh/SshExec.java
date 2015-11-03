@@ -21,7 +21,6 @@ import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.ObjectHelper;
-import com.fizzed.blaze.system.ExecSupport;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -40,12 +39,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fizzed.blaze.system.Executable;
 
 /**
  *
  * @author joelauer
  */
-public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExec> {
+public class SshExec extends Action<SshExecResult> implements Executable<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
 
     final private SshSession session;

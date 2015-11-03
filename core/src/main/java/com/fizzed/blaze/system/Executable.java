@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author joelauer
  */
-public interface ExecSupport<T> {
+public interface Executable<T> {
 
     T command(String command);
     

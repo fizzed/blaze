@@ -16,7 +16,6 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.core.ExecutableNotFoundException;
-import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
@@ -37,12 +36,13 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
+import com.fizzed.blaze.core.PathsMixin;
 
 /**
  *
  * @author joelauer
  */
-public class Exec extends Action<ExecResult> implements PathSupport<Exec>, ExecSupport<Exec> {
+public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Executable<Exec> {
 
     final private Which which;
     final private ProcessExecutor executor;

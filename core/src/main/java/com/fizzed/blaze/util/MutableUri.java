@@ -37,7 +37,7 @@ public class MutableUri implements ImmutableUri {
     private String host;
     private Integer port;
     private String path;
-    private List<NameValue> parameters;
+    private List<NameValue<String,Object>> parameters;
     private String fragment;
 
     public MutableUri() {
@@ -49,7 +49,7 @@ public class MutableUri implements ImmutableUri {
     }
     
     public MutableUri(URI uri) {
-        this.with(uri);
+        this.apply(uri);
     }
     
     public MutableUri(String uri, Object... parameters) {
@@ -153,9 +153,9 @@ public class MutableUri implements ImmutableUri {
             if (s.length() != 0) {
                 s.append("&");
             }
-            s.append(nv.getName());
+            s.append(nv.name());
             s.append("=");
-            s.append(encode(nv.getValue()));
+            s.append(encode(ObjectHelper.nonNullToString(nv.value())));
         });
         
         return s.toString();
@@ -192,7 +192,7 @@ public class MutableUri implements ImmutableUri {
     }
 
     @Override
-    public List<NameValue> getParameters() {
+    public List<NameValue<String,Object>> getParameters() {
         return parameters;
     }
 
@@ -201,7 +201,7 @@ public class MutableUri implements ImmutableUri {
         return fragment;
     }
     
-    private MutableUri with(URI uri) {
+    private MutableUri apply(URI uri) {
         // there are a few cases where URI simply parses a value as a path
         // but we'd ideally like to handle it a bit smarter
         

@@ -25,7 +25,7 @@ import com.fizzed.blaze.util.MutableUri;
  * 
  * @author joelauer
  */
-public interface MutableUriSupport<T> {
+public interface UriMixin<T> {
 
     public MutableUri getUri();
     
@@ -46,11 +46,6 @@ public interface MutableUriSupport<T> {
     
     default public T password(String password) {
         getUri().password(password);
-        return (T)this;
-    }
-    
-    default public T path(String path) {
-        getUri().path(path);
         return (T)this;
     }
 

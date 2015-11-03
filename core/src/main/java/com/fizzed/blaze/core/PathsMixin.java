@@ -15,10 +15,12 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.util.ObjectHelper;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,50 +30,47 @@ import java.util.List;
  * 
  * @author joelauer
  */
-public interface PathSupport<T> {
+public interface PathsMixin<T> {
 
     public List<Path> getPaths();
     
-    default public T paths(Path... paths) {
-        // insert onto front since user would likely want this searched first
-        getPaths().clear();
-        getPaths().addAll(Arrays.asList(paths));
-        return (T)this;
-    }
-    
-    default public T paths(File... files) {
-        // insert onto front since user would likely want this searched first
-        getPaths().clear();
-        for (File file : files) {
-            getPaths().add(file.toPath());
-        }
-        return (T)this;
-    }
-    
     default public T path(Path path) {
+        ObjectHelper.requireNonNull(path, "path cannot be null");
         // insert onto front since user would likely want this searched first
         getPaths().add(0, path);
         return (T)this;
     }
     
     default public T path(File path) {
+        ObjectHelper.requireNonNull(path, "path cannot be null");
         // insert onto front since user would likely want this searched first
         getPaths().add(0, path.toPath());
         return (T)this;
     }
     
     default public T path(String path) {
+        ObjectHelper.requireNonNull(path, "path cannot be null");
         // insert onto front since user would likely want this searched first
         getPaths().add(0, Paths.get(path));
         return (T)this;
     }
     
-    /**
-    default public T path(String first, String ... more) {
+    default public T paths(Path... paths) {
+        ObjectHelper.requireNonNull(paths, "paths cannot be null");
         // insert onto front since user would likely want this searched first
-        getPaths().add(0, Paths.get(first, more));
+        for (int i = paths.length - 1; i >= 0; i--) {
+            getPaths().add(0, paths[i]);
+        }
         return (T)this;
     }
-    */
+    
+    default public T paths(File... files) {
+        ObjectHelper.requireNonNull(files, "files cannot be null");
+        // insert onto front since user would likely want this searched first
+        for (int i = files.length - 1; i >= 0; i--) {
+            getPaths().add(0, files[i].toPath());
+        }
+        return (T)this;
+    }
     
 }

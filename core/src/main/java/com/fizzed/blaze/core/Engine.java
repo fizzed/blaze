@@ -17,10 +17,6 @@ package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.Context;
 
-/**
- *
- * @author joelauer
- */
 public interface Engine<S extends Script> {
     
     String getFileExtension();

@@ -16,7 +16,7 @@
 package com.fizzed.blaze;
 
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.internal.ContextHolder;
+import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.core.MessageOnlyException;
 import java.io.BufferedReader;
 import java.io.File;

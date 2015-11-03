@@ -27,7 +27,7 @@ public interface ImmutableUri {
 
     String getHost();
 
-    List<NameValue> getParameters();
+    List<NameValue<String,Object>> getParameters();
 
     String getPassword();
 

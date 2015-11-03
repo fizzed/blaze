@@ -15,25 +15,22 @@
  */
 package com.fizzed.blaze.util;
 
-/**
- *
- * @author joelauer
- */
-public class NameValue {
+public class NameValue<N,V> {
     
-    final private String name;
-    final private String value;
+    final private N name;
+    final private V value;
 
-    public NameValue(String name, String value) {
+    public NameValue(N name, V value) {
+        ObjectHelper.requireNonNull(name, "name cannot be null");
         this.name = name;
         this.value = value;
     }
 
-    public String getName() {
+    public N name() {
         return name;
     }
 
-    public String getValue() {
+    public V value() {
         return value;
     }
 

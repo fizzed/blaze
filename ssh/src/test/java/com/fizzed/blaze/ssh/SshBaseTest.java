@@ -16,7 +16,7 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.Config;
-import com.fizzed.blaze.internal.ContextHolder;
+import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ExpectPrompter;

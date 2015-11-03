@@ -15,19 +15,19 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.MessageOnlyException;
 import java.nio.file.Path;
 import java.util.List;
+import com.fizzed.blaze.core.PathsMixin;
 
 /**
  * 
  * @author joelauer
  */
-public class RequireExec extends Action<Path> implements PathSupport<RequireExec> {
+public class RequireExec extends Action<Path> implements PathsMixin<RequireExec> {
     
     private final Which which;
     private String message;

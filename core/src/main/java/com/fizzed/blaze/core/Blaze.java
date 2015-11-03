@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.internal.ContextHolder;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;

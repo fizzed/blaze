@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.internal.ContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

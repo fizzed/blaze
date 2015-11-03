@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
@@ -26,13 +25,14 @@ import java.nio.file.Path;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fizzed.blaze.core.PathsMixin;
 
 /**
  * which - locate a file for a command.
  * 
  * @author joelauer
  */
-public class Which extends Action<Path> implements PathSupport<Which> {
+public class Which extends Action<Path> implements PathsMixin<Which> {
     private static final Logger log = LoggerFactory.getLogger(Which.class);
     
     private final List<Path> paths;

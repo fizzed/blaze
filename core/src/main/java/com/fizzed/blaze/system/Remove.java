@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.core.PathSupport;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
@@ -27,13 +26,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import com.fizzed.blaze.core.PathsMixin;
 
 /**
  * rm - remove files or directories
  * 
  * @author joelauer
  */
-public class Remove extends Action<Void> implements PathSupport<Remove> {
+public class Remove extends Action<Void> implements PathsMixin<Remove> {
    
     final private List<Path> paths;
     private boolean force;
@@ -44,6 +44,11 @@ public class Remove extends Action<Void> implements PathSupport<Remove> {
         this.paths = new ArrayList<>();
         this.force = false;
         this.recursive = false;
+    }
+    
+    @Override
+    public List<Path> getPaths() {
+        return this.paths;
     }
     
     public Remove force() {
@@ -64,11 +69,6 @@ public class Remove extends Action<Void> implements PathSupport<Remove> {
     public Remove recursive(boolean recursive) {
         this.recursive = recursive;
         return this;
-    }
-    
-    @Override
-    public List<Path> getPaths() {
-        return this.paths;
     }
 
     @Override

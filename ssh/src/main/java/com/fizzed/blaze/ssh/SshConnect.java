@@ -17,14 +17,14 @@ package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.MutableUriSupport;
 import java.nio.file.Path;
+import com.fizzed.blaze.core.UriMixin;
 
 /**
  *
  * @author joelauer
  */
-abstract public class SshConnect extends Action<SshSession> implements MutableUriSupport<SshConnect> {
+abstract public class SshConnect extends Action<SshSession> implements UriMixin<SshConnect> {
 
     public SshConnect(Context context) {
         super(context);
