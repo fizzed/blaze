@@ -350,6 +350,12 @@ Find all paths recursively ending with `.md` but from a different base dir
 List<Path> paths = globber("../a/different/path", "**/*.md").scan();
 ```
 
+Many blaze commands accept a globber object (no need to call .scan() on it either)
+
+```java
+Systems.remove(globber("**/*.md")).run();
+```
+
 ### SSH
 
 Add the following to your `blaze.conf` file to include rich support for SSH
@@ -447,7 +453,7 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
 }
 ```
 
-### Http
+### HTTP
 
 Add the following to your `blaze.conf` file to include rich support for HTTP --
 much better support than the JDK HttpUrlConnection class.
