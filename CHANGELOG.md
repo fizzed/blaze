@@ -1,6 +1,14 @@
 Blaze by Fizzed
 ==========================
 
+#### 0.3.0 - 2015-11-03
+ 
+ - Feature rich SSH client for both executing commands (exec) and file transfers
+   (sftp). Very much like programmatic access to "openssh" but all with pure Java.
+   See examples/ssh.java and examples/sftp.java for demos.
+ - Excellent "glob" support with com.fizzed.blaze.util.Globber class
+   See examples/globber.java for demo.
+
 #### 0.2.1 - 2015-10-28
 
  - Initial public release

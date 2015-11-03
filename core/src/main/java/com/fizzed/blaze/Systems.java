@@ -19,6 +19,7 @@ import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
 import com.fizzed.blaze.system.Which;
+import com.fizzed.blaze.util.Globber;
 import java.io.File;
 import java.nio.file.Path;
 
@@ -161,6 +162,29 @@ public class Systems {
      */
     static public Exec exec(File command, Object ... arguments) {
         return exec(command.toString(), arguments);
+    }
+    
+    /**
+     * Prepares an action to delete one or more files and directories using
+     * a globber.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.remove;
+     * import static com.fizzed.blaze.util.Globber.globber;
+     * 
+     * // ...
+     * 
+     * remove(globber("images/**").filesOnly())
+     *      .force()
+     *      .run();
+     * </pre>
+     * 
+     * @param globber The globber to use to find the paths to delete
+     * @return A new Remove action bound to current context
+     */
+    static public Remove remove(Globber globber) {
+        return new Remove(Contexts.currentContext())
+            .paths(globber);
     }
     
     /**

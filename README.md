@@ -7,7 +7,8 @@ Blaze by Fizzed
 
 A speedy, flexible, general purpose scripting stack for the JVM.  Can replace
 shell scripts and plays nicely with other tools.  Only requires a Java 8 runtime
-and adding `blaze.jar` to your project directory.
+and adding `blaze.jar` to your project directory.  Start writing portable and 
+cross-platform scripts -- that don't require the user to install anything!
 
 Blaze pulls together stable, mature libraries from the Java ecosystem into a
 light-weight package that lets you focus on getting things done.  When you 
@@ -15,10 +16,10 @@ invoke blaze, it does the following:
 
  - Sets up console logging
  - Loads your optional configuration file(s)
- - Downloads other dependencies (e.g. from Maven central)
- - Adds dependencies to the runtime classpath
+ - Downloads runtime dependencies (e.g. jars from Maven central)
+ - Adds dependencies to the classpath
  - Loads and compiles your script(s)
- - Executes "tasks" (basically methods your script defines)
+ - Executes "tasks" (methods your script defines)
 
 ## Features
 
@@ -37,6 +38,10 @@ invoke blaze, it does the following:
    to Blaze-supplied utilities.
  - Fluent-style method calls for elegant looking scripts
  - APIs encourage use of modern Java APIs (e.g. `java.nio.file.Path` instead of `java.io.File`)
+ - Excellent framework support for executing processes, modifying the filesystem,
+   user interaction, http, and ssh.
+ - Easily include in any Java library as a dependency to accomplish whatever
+   the framework doesn't provide.
 
 ## Install
 
@@ -206,13 +211,22 @@ javac 1.8.0_66
 [INFO] Executed examples/javac.js:main in 254 ms
 [INFO] Blazed in 1181 ms
 ```
-## More advanced example
+## More advanced examples
+
+### Try all
 
 The [try_all](examples/try_all.java) example is a more interesting demo of why
 you should start using a real programming language for your scripts.  The demo
 uses Java 8 lambdas to find all the other example scripts and spawns a new 
 java process to try them all out.  The script is used to verify if all the
 examples work (so we can test across platforms, between versions, etc.)
+
+### Custom build tool
+
+The [Font Mfizz custom build script](https://github.com/fizzed/font-mfizz/blob/master/blaze.groovy)
+example is a demo of compiling a custom font for use on the web. An all around
+example of multiple tasks that spawn processes, copy & delete files, and use
+a third party Unix4j library for cat, sed, tail, and grep support.
 
 ## Configuration and dependency management
 
@@ -303,9 +317,141 @@ blaze: [options] <task> [<task> ...]
 -v|--version      Display version and then exit
 ```
 
+### Globbing
+
+Finding and working with files and directories is one of the most common scripting
+tasks.  One nice part of shell scripts is that you can take advantage of globbing
+syntax to find files or directories.  Blaze provides excellent support for globbing
+with a utility wrapper around Java's own glob support.  The [Java documentation
+on globbing is a good start](http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileSystem.html#getPathMatcher(java.lang.String))
+, but here are some examples as well.
+
+Statically import the `Globber.globber` method
+
+```java
+import static com.fizzed.blaze.util.Globber.globber;
+```
+
+Find all paths in the current working directory with ending with `.md`
+
+```java
+List<Path> paths = globber("*.md").scan();
+```
+
+Find all paths recursively in the current working directory with ending with `.md`
+
+```java
+List<Path> paths = globber("**/*.md").scan();
+```
+
+Find all paths recursively ending with `.md` but from a different base dir 
+
+```java
+List<Path> paths = globber("../a/different/path", "**/*.md").scan();
+```
+
+
+### SSH
+
+Add the following to your `blaze.conf` file to include rich support for SSH
+with Blaze wrappers around the stable pure Java JSch library.
+You do not want to specify a version so Blaze will resolve the identical version
+to whatever `blaze-core` you're running with.
+
+```
+blaze.dependencies = [
+    "com.fizzed:blaze-ssh"
+]
+```
+
+A session (connection) must be established before you can execute remote commands
+or transfer files.  By default, Blaze will configure the session like OpenSSH --
+it will load defaults from ~/.ssh/config, ~/.ssh/known_hosts, and your ~/.ssh/id_rsa
+identity.  It'll prompt you for a password or to accept an unknown host as well.
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+
+// ... other code
+
+try (SshSession session = sshConnect("ssh://user@host").run()) {
+    // ... use session
+}
+
+Once a session is established you can create channels to execute commands or
+transfer files via sftp.  These channels all tap into the existing session and
+do not require re-establishing a connection.  Much better than using `ssh` from
+the command-line where you may re-establish a connection over and over again if
+you need to run multiple commands.  This is an example of running the `which` command
+to see if java is available.
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+import static com.fizzed.blaze.SecureShells.sshExec;
+
+// ... other code
+
+try (SshSession session = sshConnect("ssh://user@host").run()) {
+
+    // remote working directory
+    SshExecResult result
+        = sshExec(session)
+            .command("which")
+            .arg("java")
+            .captureOutput()
+            .run();
+    
+    log.info("java is at {}", result0.output());
+
+}
+```
+
+Working with the remote filesystem with sftp is also supported.
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+import static com.fizzed.blaze.SecureShells.sshSftp;
+
+// ... other code
+
+try (SshSession session = sshConnect("ssh://user@host").run()) {
+
+    try (SshSftpSession sftp = sshSftp(session).run()) {
+            
+        Path pwd = sftp.pwd();
+
+        log.info("Remote working dir is {}", pwd);
+
+        // get file attributes for current working dir
+        SshFileAttributes attrs = sftp.lstat(pwd);
+
+        log.info("{} with permissions {}", pwd, PosixFilePermissions.toString(attrs.permissions()));
+
+        sftp.ls(pwd)
+            .stream()
+                .forEach((file) -> {
+                    log.info("{} {} at {}", file.attributes().lastModifiedTime(), file.path(), file.attributes().size());
+                });
+
+        sftp.put()
+            .source("my/source/file.txt")
+            .target("file.txt")
+            .run();
+
+        sftp.get()
+            .source("file.txt")
+            .target("my/target/file.txt")
+            .run();
+
+        // many more methods in sftp class...
+    }
+}
+```
+
 ### Http
 
-Add the following to your `blaze.conf` file to include the Blaze HTTP plugin.
+Add the following to your `blaze.conf` file to include rich support for HTTP --
+much better support than the JDK HttpUrlConnection class.
 You do not want to specify a version so Blaze will resolve the identical version
 to whatever `blaze-core` you're running with.
 
@@ -323,19 +469,3 @@ working with HTTP via Apache HttpClient even easier -- although it's [own
 fluent client](https://hc.apache.org/httpcomponents-client-ga/tutorial/html/fluent.html) isn't awful.
 
 Checkout [this](examples/http.java) for an example API get request
-
-### Ssh
-
-Add the following to your `blaze.conf` file to include the Blaze SSH plugin.
-You do not want to specify a version so Blaze will resolve the identical version
-to whatever `blaze-core` you're running with.
-
-```
-blaze.dependencies = [
-    "com.fizzed:blaze-ssh"
-]
-```
-
-For now this is mostly a "virtual" dependency that will trigger the transitive
-dependency of `jsch` to be downloaded and added to the classpath.  Down the road
-we plan on providing wrappers to make working with SSH via jsch even easier.

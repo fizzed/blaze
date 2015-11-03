@@ -1,11 +1,13 @@
 import com.fizzed.blaze.Contexts;
+import static com.fizzed.blaze.Contexts.baseDir;
 import com.fizzed.blaze.Systems;
+import static com.fizzed.blaze.util.Globber.globber;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 
 public class try_all {
@@ -21,15 +23,22 @@ public class try_all {
             Contexts.fail("Unable to find blaze.jar on classpath");
         }
         
-        // find all non .conf files and try 'em out
-        Files.list(examplesDir)
-            .filter((f) -> !f.getFileName().toString().equals("try_all.java"))
-            .filter((f) -> !f.getFileName().toString().endsWith(".conf"))
+        final AtomicInteger count = new AtomicInteger();
+        
+        // use globber to find files to run
+        globber(baseDir(), "**")
+            .filesOnly()
+            .exclude("**try_all.java")
+            .exclude((p) -> p.getFileName().toString().endsWith(".conf"))
+            .stream()
             .sorted()
-            .forEach((f) -> {
-                log.info("Trying {}", f);
-                Systems.exec("java", "-Dexamples.try_all=true", "-jar", blazeJarFile, "-f", f).run();
+            .forEach((p) -> {
+                log.info("Trying {}", p);
+                Systems.exec("java", "-Dexamples.try_all=true", "-jar", blazeJarFile, "-f", p).run();
+                count.incrementAndGet();
             });
+        
+        log.info("Ran {} examples!", count);
     }
     
     private Path findBlazeJarOnClassPath() throws URISyntaxException {
