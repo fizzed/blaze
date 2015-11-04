@@ -16,9 +16,9 @@ public class undertow {
         Logger log = Contexts.logger();
         Config config = Contexts.config();
 
-        String host = config.find("undertow.host").get();
-        int port = config.find("undertow.port", int.class).get();
-        boolean in_try_all_example = config.find("examples.try_all", Boolean.class).or(false);
+        String host = config.value("undertow.host").get();
+        int port = config.value("undertow.port", int.class).get();
+        boolean in_try_all_example = config.value("examples.try_all", Boolean.class).getOr(false);
 
         Undertow undertow = Undertow.builder()
             .addHttpListener(port, host)

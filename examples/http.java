@@ -8,12 +8,13 @@ public class http {
     static final private Logger log = Contexts.logger();
 
     public void main() throws Exception {
-        URI uri = MutableUri.of("http://api.theysaidso.com/qod.json")
-            .query("category", "management")
+        URI uri = MutableUri.of("http://jsonplaceholder.typicode.com/comments")
+            .query("postId", 1)
             .toURI();
         
         String output = 
             Request.Get(uri)
+                .addHeader("Accept", "application/json")
                 .execute()
                 .returnContent()
                 .toString();

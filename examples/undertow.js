@@ -21,9 +21,9 @@ with (Imports) {
         var log = Contexts.logger();
         var config = Contexts.config();
 
-        var host = config.find("undertow.host").get();
-        var port = config.find("undertow.port", Integer.class).get();
-        var in_try_all_example = config.find("examples.try_all").or("false");
+        var host = config.value("undertow.host").get();
+        var port = config.value("undertow.port", Integer.class).get();
+        var in_try_all_example = config.value("examples.try_all").getOr("false");
         
         var undertow = Undertow.builder()
             .addHttpListener(port, host)

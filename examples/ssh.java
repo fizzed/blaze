@@ -15,14 +15,14 @@ public class ssh {
     
     public void main() throws Exception {
         // simple for skipping this example in try_all.java
-        boolean in_try_all_example = config.find("examples.try_all", Boolean.class).or(false);
+        boolean in_try_all_example = config.value("examples.try_all", Boolean.class).getOr(false);
         
         if (in_try_all_example) {
             return;
         }
         
         // get or prompt for uri to ssh to
-        MutableUri uri = config.find("ssh.uri", MutableUri.class).or(null);
+        MutableUri uri = config.value("ssh.uri", MutableUri.class).getOrNull();
         
         if (uri == null) {
             String s = prompt("Enter ssh uri (e.g. ssh://user@host)> ");

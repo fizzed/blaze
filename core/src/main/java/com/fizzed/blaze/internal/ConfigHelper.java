@@ -17,6 +17,7 @@ package com.fizzed.blaze.internal;
 
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.Version;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -133,7 +134,12 @@ public class ConfigHelper {
         
         // md5 of the canonical path of this application's base directory
         // should be a consistent hash very usable for generating classes in
-        String md5 = md5(context.baseDir().toFile().getCanonicalPath());
+        String key = new StringBuilder()
+            .append(context.baseDir().toFile().getCanonicalPath())
+            .append(Version.getVersion())
+            .toString();
+        
+        String md5 = md5(key);
         
         // /tmp/blaze/<md5hash>
         Path contextTempPath = systemTempPath.resolve("blaze").resolve(md5);

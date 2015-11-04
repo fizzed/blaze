@@ -94,19 +94,18 @@ Blaze will output something like
 
 ```
 [INFO] Resolving dependencies...
-[INFO] Resolved dependencies in 434 ms
+[INFO] Resolved dependencies in 429 ms
 [INFO] Adding zt-exec-1.8.jar to classpath
-[INFO] Adding jsch-0.1.53.jar to classpath
 [INFO] Compiling script...
 [INFO] No need to recompile!
-[INFO] Adding /tmp/blaze/iIAEMyt1hXuT8II9VOZj9g==/classes to classpath
+[INFO] Adding /tmp/blaze/O5DwfS-5UkJiX2OXhRKxAA==/classes to classpath
 [INFO] Compiled script in 7 ms
 [INFO] Executing examples/javac.java:main...
 [INFO] Finding javac...
 [INFO] Using javac /usr/java/default/bin/javac
 javac 1.8.0_66
-[INFO] Executed examples/javac.java:main in 222 ms
-[INFO] Blazed in 710 ms
+[INFO] Executed examples/javac.java:main in 225 ms
+[INFO] Blazed in 708 ms
 ```
 
 If you'd like to quiet Blaze down and only log what your script produces run
@@ -154,19 +153,18 @@ This will output
 
 ```
 [INFO] Resolving dependencies...
-[INFO] Resolved dependencies in 492 ms
+[INFO] Resolved dependencies in 447 ms
 [INFO] Adding zt-exec-1.8.jar to classpath
-[INFO] Adding jsch-0.1.53.jar to classpath
-[INFO] Adding blaze-groovy-0.1.0-SNAPSHOT.jar to classpath
+[INFO] Adding blaze-groovy-0.3.1-SNAPSHOT.jar to classpath
 [INFO] Adding groovy-all-2.4.5-indy.jar to classpath
 [INFO] Compiling script...
-[INFO] Compiled script in 340 ms
+[INFO] Compiled script in 346 ms
 [INFO] Executing examples/javac.groovy:main...
 [INFO] Finding javac...
 [INFO] Using javac /usr/java/default/bin/javac
 javac 1.8.0_66
-[INFO] Executed examples/javac.groovy:main in 280 ms
-[INFO] Blazed in 1160 ms
+[INFO] Executed examples/javac.groovy:main in 284 ms
+[INFO] Blazed in 1125 ms
 ```
 
 ## Example (but now in JavaScript)
@@ -199,18 +197,18 @@ This will output
 
 ```
 [INFO] Resolving dependencies...
-[INFO] Resolved dependencies in 435 ms
+[INFO] Resolved dependencies in 429 ms
 [INFO] Adding zt-exec-1.8.jar to classpath
-[INFO] Adding jsch-0.1.53.jar to classpath
 [INFO] Compiling script...
-[INFO] Compiled script in 444 ms
+[INFO] Compiled script in 446 ms
 [INFO] Executing examples/javac.js:main...
 [INFO] Finding javac...
 [INFO] Using javac /usr/java/default/bin/javac
 javac 1.8.0_66
-[INFO] Executed examples/javac.js:main in 254 ms
-[INFO] Blazed in 1181 ms
+[INFO] Executed examples/javac.js:main in 256 ms
+[INFO] Blazed in 1178 ms
 ```
+
 ## More advanced examples
 
 ### Try all
@@ -254,18 +252,18 @@ import static com.fizzed.blaze.Contexts.config
 
 // ... other code
 
-Integer port = config().find("undertow.port", Integer.class).get();
+Integer port = config().value("undertow.port", Integer.class).get();
 ```
 
 `.get()` will throw an exception if the value is missing.  A default value can
-be used instead with a call to `.or()` instead
+be used instead with a call to `.getOr()` instead
 
 ```java
 import static com.fizzed.blaze.Contexts.config
 
 // ... other code
 
-Integer port = config().find("undertow.port", Integer.class).or(9000);
+Integer port = config().value("undertow.port", Integer.class).getOr(9000);
 ```
 
 The `Config` object prefers System properties over config file values.  So

@@ -1,0 +1,1 @@
+import com.google.common.base.Joiner;public class guava {    public void main() {        String s = Joiner.on("; ").skipNulls().join("Harry", null, "Ron", "Hermione");        System.out.println(s);    }}

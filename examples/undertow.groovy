@@ -12,9 +12,9 @@ def main() {
     def log = Contexts.logger()
     def config = Contexts.config()
     
-    def host = config.find("undertow.host").get()
-    def port = config.find("undertow.port", Integer.class).get()
-    def in_try_all_example = config.find("examples.try_all", Boolean.class).or(false)
+    def host = config.value("undertow.host").get()
+    def port = config.value("undertow.port", Integer.class).get()
+    def in_try_all_example = config.value("examples.try_all", Boolean.class).getOr(false)
     
     def undertow = Undertow.builder()
         .addHttpListener(port, host)
