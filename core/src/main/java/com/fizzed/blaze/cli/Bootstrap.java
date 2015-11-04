@@ -48,7 +48,16 @@ public class Bootstrap {
 
         while (!argString.isEmpty()) {
             String arg = argString.remove();
-            if (arg.equals("-v") || arg.equals("--version")) {
+            
+            if (arg.startsWith("-D")) {
+                // strip -D then split on =
+                String[] tokens = arg.substring(2).split("=");
+                if (tokens.length == 1) {
+                    System.setProperty(tokens[0], "");
+                } else {
+                    System.setProperty(tokens[0], tokens[1]);
+                }
+            } else if (arg.equals("-v") || arg.equals("--version")) {
                 System.out.println("blaze: v" + Version.getLongVersion());
                 System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
                 System.out.println(" at https://github.com/fizzed/blaze");
@@ -96,6 +105,7 @@ public class Bootstrap {
                 System.out.println("-qq               Only log warnings to stdout (including script logging)");
                 System.out.println("-x[x...]          Increases verbosity of logging to stdout");
                 System.out.println("-v|--version      Display version and then exit");
+                System.out.println("-Dname=value      Sets a System property as name=value");
                 System.exit(0);
             } else if (arg.equals("-f") || arg.equals("--file")) {
                 if (argString.isEmpty()) {
