@@ -34,16 +34,22 @@ import org.apache.commons.io.output.NullOutputStream;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
+import com.fizzed.blaze.util.NamedStream;
+import java.util.Arrays;
 
 /**
  *
  * @author joelauer
  */
-public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Executable<Exec> {
+public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSupport<Exec> {
 
     final private Which which;
     final private ProcessExecutor executor;
     final private List<String> arguments;
+    private NamedStream<InputStream> pipeInput;
+    private NamedStream<OutputStream> pipeOutput;
+    private NamedStream<OutputStream> pipeError;
+    final private List<Integer> exitValues;
     
     public Exec(Context context) {
         super(context);
@@ -51,10 +57,12 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Execut
         this.which = new Which(context);
         this.arguments = new ArrayList<>();
         this.executor = new ProcessExecutor()
-            .redirectInput(System.in)
-            .redirectOutput(System.out)
-            .redirectError(System.err)
             .exitValueNormal();
+        this.pipeInput = NamedStream.STDIN;
+        this.pipeOutput = NamedStream.STDOUT;
+        this.pipeError = NamedStream.STDERR;
+        this.exitValues = new ArrayList<>();
+        this.exitValues.add(0);  
     }
     
     @Override
@@ -104,10 +112,10 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Execut
     @Override
     public Exec captureOutput(boolean captureOutput) {
         if (captureOutput) {
-            this.executor.redirectOutput(new NullOutputStream());
+            pipeOutput(NamedStream.NULLOUT);
             this.executor.readOutput(true);
         } else {
-            this.executor.redirectOutput(System.out);
+            pipeOutput(NamedStream.STDOUT);
             this.executor.readOutput(false);
         }
         return this;
@@ -116,6 +124,8 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Execut
     @Override
     public Exec exitValues(Integer... exitValues) {
         this.executor.exitValues(exitValues);
+        this.exitValues.clear();
+        this.exitValues.addAll(Arrays.asList(exitValues));
         return this;
     }
 
@@ -124,22 +134,22 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Execut
         this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
         return this;
     }
-
+    
     @Override
-    public Exec pipeInput(InputStream pipeInput) {
-        this.executor.redirectInput(pipeInput);
+    public Exec pipeInput(NamedStream<InputStream> pipeInput) {
+        this.pipeInput = pipeInput;
         return this;
     }
-
+    
     @Override
-    public Exec pipeOutput(OutputStream pipeOutput) {
-        this.executor.redirectOutput(pipeOutput);
+    public Exec pipeOutput(NamedStream<OutputStream> pipeOutput) {
+        this.pipeOutput = pipeOutput;
         return this;
     }
-
+    
     @Override
-    public Exec pipeError(OutputStream pipeError) {
-        this.executor.redirectError(pipeError);
+    public Exec pipeError(NamedStream<OutputStream> pipeError) {
+        this.pipeError = pipeError;
         return this;
     }
     
@@ -164,12 +174,18 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, Execut
         
         command.addAll(arguments);
         
-        this.executor.command(command);
+        this.executor
+            .command(command)
+            .redirectInput(pipeInput.stream())
+            .redirectOutput(pipeOutput.stream())
+            .redirectError(pipeError.stream());
         
         try {
             return new ExecResult(this.executor.execute());
-        } catch (IOException | InterruptedException | TimeoutException | InvalidExitValueException e) {
-            throw new BlazeException("Unable to cleanly execute", e);
+        } catch (InvalidExitValueException e) {
+            throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
+        } catch (IOException | InterruptedException | TimeoutException e) {
+            throw new BlazeException("Unable to cleanly execute process", e);
         }
     }
 }

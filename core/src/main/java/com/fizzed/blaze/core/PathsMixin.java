@@ -23,13 +23,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * Support for path() in an action by simply providing a getPaths() method.
- * 
- * Sort of a 'mixin for Java.
+ * Mixin for path() in an action by simply providing a getPaths() method.
  * 
  * @author joelauer
  */

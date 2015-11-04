@@ -65,7 +65,7 @@ public class MutableUriTest {
     }
     
     @Test
-    public void uriAndUriBuilderMatch() {
+    public void matchesJdkURIParsing() {
         URI uri;
         
         uri = MutableUri.of("http://localhost:8080").toURI();

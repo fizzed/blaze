@@ -25,8 +25,8 @@ public class try_all {
         final AtomicInteger count = new AtomicInteger();
         
         // use globber to find files to run
-        globber(baseDir(), "**.{java,groovy,js}")
-            .exclude("**try_all.java")
+        globber(baseDir(), "*.{java,groovy,js}")
+            .exclude("try_all.java")
             .stream()
             .sorted()
             .forEach((p) -> {

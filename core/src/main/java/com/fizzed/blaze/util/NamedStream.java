@@ -24,8 +24,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
+import org.apache.commons.io.input.CloseShieldInputStream;
+import org.apache.commons.io.input.NullInputStream;
+import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.apache.commons.io.output.NullOutputStream;
 
 /**
  *
@@ -76,6 +79,21 @@ public class NamedStream<T extends Closeable> implements Closeable {
         }
     }
     
+    static public NamedStream<InputStream> STDIN
+            = new NamedStream<>(System.in, "<stdin>", null, -1L, false);
+    
+    static public NamedStream<OutputStream> STDOUT
+            = new NamedStream<>(System.out, "<stdout>", null, -1L, false);
+    
+    static public NamedStream<OutputStream> STDERR
+            = new NamedStream<>(System.err, "<stderr>", null, -1L, false);
+    
+    static public NamedStream<InputStream> NULLIN
+            = new NamedStream<>(new NullInputStream(0, true, true), "</dev/null>", null, -1L, false);
+    
+    static public NamedStream<OutputStream> NULLOUT
+            = new NamedStream<>(new NullOutputStream(), "</dev/null>", null, -1L, false);
+    
     static public <T extends Closeable> NamedStream of(T stream) {
         return of(stream, "<stream>", false);
     }
@@ -84,6 +102,11 @@ public class NamedStream<T extends Closeable> implements Closeable {
         return new NamedStream(stream, name, null, null, closeable);
     }
 
+    static public NamedStream<InputStream> input(InputStream stream) {
+        Objects.requireNonNull(stream, "stream cannot be null");
+        return of(stream);
+    }
+    
     static public NamedStream<InputStream> input(File file) {
         Objects.requireNonNull(file, "file cannot be null");
         return input(file.toPath());
@@ -106,6 +129,11 @@ public class NamedStream<T extends Closeable> implements Closeable {
         return new NamedStream<>(new DeferredFileInputStream(path), path.getFileName().toString(), path, size, true);
     }
     
+    static public NamedStream<OutputStream> output(OutputStream stream) {
+        Objects.requireNonNull(stream, "stream cannot be null");
+        return of(stream);
+    }
+    
     static public NamedStream<OutputStream> output(File file) {
         Objects.requireNonNull(file, "file cannot be null");
         return output(file.toPath());
@@ -113,7 +141,6 @@ public class NamedStream<T extends Closeable> implements Closeable {
     
     static public NamedStream<OutputStream> output(Path path) {
         Objects.requireNonNull(path, "path cannot be null");
-        
         return new NamedStream<>(new DeferredFileOutputStream(path), path.getFileName().toString(), path, null, true);
     }
     

@@ -15,8 +15,11 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.PathsMixin;
+import com.fizzed.blaze.core.PipeErrorMixin;
 import com.fizzed.blaze.util.DeferredFileInputStream;
 import com.fizzed.blaze.util.DeferredFileOutputStream;
+import com.fizzed.blaze.util.NamedStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author joelauer
  */
-public interface Executable<T> {
+public interface ExecSupport<T> extends PipeErrorMixin<T> {
 
     T command(String command);
     
@@ -67,39 +70,6 @@ public interface Executable<T> {
     }
     
     T captureOutput(boolean captureOutput);
-    
-    T pipeInput(InputStream is);
-    
-    default public T pipeInput(Path file) {
-        // defers opening stream until read
-        return this.pipeInput(new DeferredFileInputStream(file));
-    }
-    
-    default public T pipeInput(File file) {
-        return pipeInput(file.toPath());
-    }
-    
-    T pipeOutput(OutputStream is);
-    
-    default public T pipeOutput(Path file) {
-        // defers opening stream until read
-        return this.pipeOutput(new DeferredFileOutputStream(file));
-    }
-    
-    default public T pipeOutput(File file) {
-        return pipeOutput(file.toPath());
-    }
-    
-    T pipeError(OutputStream is);
-    
-    default public T pipeError(Path file) {
-        // defers opening stream until read
-        return this.pipeError(new DeferredFileOutputStream(file));
-    }
-    
-    default public T pipeError(File file) {
-        return pipeError(file.toPath());
-    }
     
     default public T pipeErrorToOutput() {
         return pipeErrorToOutput(true);

@@ -20,6 +20,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
@@ -34,26 +35,26 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fizzed.blaze.system.Executable;
+import com.fizzed.blaze.system.ExecSupport;
+import com.fizzed.blaze.util.NamedStream;
+import java.nio.file.Path;
 
 /**
  *
  * @author joelauer
  */
-public class SshExec extends Action<SshExecResult> implements Executable<SshExec> {
+public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
 
     final private SshSession session;
     private String command;
     final private List<String> arguments;
-    private InputStream pipeInput;
-    private OutputStream pipeOutput;
-    private OutputStream pipeError;
+    private NamedStream<InputStream> pipeInput;
+    private NamedStream<OutputStream> pipeOutput;
+    private NamedStream<OutputStream> pipeError;
     private boolean pipeErrorToOutput;
     private ByteArrayOutputStream captureOutputStream;
     private Map<String,String> environment;
@@ -62,9 +63,9 @@ public class SshExec extends Action<SshExecResult> implements Executable<SshExec
     
     public SshExec(Context context, SshSession session) {
         super(context);
-        this.pipeInput = System.in;
-        this.pipeOutput = System.out;
-        this.pipeError = System.err;
+        this.pipeInput = NamedStream.STDIN;
+        this.pipeOutput = NamedStream.STDOUT;
+        this.pipeError = NamedStream.STDERR;
         this.pipeErrorToOutput = false;
         this.session = session;
         this.arguments = new ArrayList<>();
@@ -88,25 +89,25 @@ public class SshExec extends Action<SshExecResult> implements Executable<SshExec
         this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
         return this;
     }
-    
+
     @Override
-    public SshExec pipeInput(InputStream pipeInput) {
+    public SshExec pipeInput(NamedStream<InputStream> pipeInput) {
         this.pipeInput = pipeInput;
         return this;
     }
 
     @Override
-    public SshExec pipeOutput(OutputStream pipeOutput) {
+    public SshExec pipeOutput(NamedStream<OutputStream> pipeOutput) {
         this.pipeOutput = pipeOutput;
         return this;
     }
-
+    
     @Override
-    public SshExec pipeError(OutputStream pipeError) {
+    public SshExec pipeError(NamedStream<OutputStream> pipeError) {
         this.pipeError = pipeError;
         return this;
     }
-    
+
     @Override
     public SshExec pipeErrorToOutput(boolean pipeErrorToOutput) {
         this.pipeErrorToOutput = pipeErrorToOutput;
@@ -166,14 +167,14 @@ public class SshExec extends Action<SshExecResult> implements Executable<SshExec
             }
             
             // do not close input
-            channel.setInputStream(this.pipeInput, true);
+            channel.setInputStream(this.pipeInput.stream(), true);
             
             // both streams closing signals exec is finished
             CountDownLatch outputStreamClosedSignal = new CountDownLatch(1);
             CountDownLatch errorStreamClosedSignal = new CountDownLatch(1);
             
             // determine final ouput and then wrap to monitor for close events
-            OutputStream finalPipeOutput = (this.captureOutputStream != null ? this.captureOutputStream : this.pipeOutput);
+            OutputStream finalPipeOutput = (this.captureOutputStream != null ? this.captureOutputStream : this.pipeOutput.stream());
             
             channel.setOutputStream(new WrappedOutputStream(finalPipeOutput) {
                 @Override
@@ -183,7 +184,7 @@ public class SshExec extends Action<SshExecResult> implements Executable<SshExec
             }, false);
             
             // determine final error and then wrap to monitor for close events
-            OutputStream finalPipeError = (this.pipeErrorToOutput ? finalPipeOutput : this.pipeError);
+            OutputStream finalPipeError = (this.pipeErrorToOutput ? finalPipeOutput : this.pipeError.stream());
             
             channel.setErrStream(new WrappedOutputStream(finalPipeError) {
                 @Override

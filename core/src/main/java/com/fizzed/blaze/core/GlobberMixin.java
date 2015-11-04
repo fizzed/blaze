@@ -19,9 +19,7 @@ import com.fizzed.blaze.util.Globber;
 import java.nio.file.PathMatcher;
 
 /**
- * Support for globber in an action by simply providing a getGlobber() method.
- * 
- * Sort of a 'mixin for Java.
+ * Mixin for globber in an action by simply providing a getGlobber() method.
  * 
  * @author joelauer
  */

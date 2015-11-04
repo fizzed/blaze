@@ -15,36 +15,31 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.util.MutableUri;
+import com.fizzed.blaze.util.NamedStream;
+import java.io.File;
+import java.io.OutputStream;
+import java.nio.file.Path;
 
 /**
- * Mixin for directly supplying MutableUri methods in an action by simply
- * providing a getUri() method.
+ * Mixin with pipeError support.
  * 
  * @author joelauer
  */
-public interface UriMixin<T> {
+public interface PipeErrorMixin<T> extends PipeMixin<T> {
+    
+    T pipeError(NamedStream<OutputStream> pipeError);
 
-    public MutableUri getUri();
-    
-    default public T host(String host) {
-        getUri().host(host);
-        return (T)this;
+    default public T pipeError(OutputStream stream) {
+        return pipeError(NamedStream.output(stream));
     }
     
-    default public T port(Integer port) {
-        getUri().port(port);
-        return (T)this;
+    default public T pipeError(Path path) {
+        return pipeError(NamedStream.output(path));
     }
     
-    default public T username(String username) {
-        getUri().username(username);
-        return (T)this;
+    default public T pipeError(File file) {
+        return pipeError(NamedStream.output(file));
     }
     
-    default public T password(String password) {
-        getUri().password(password);
-        return (T)this;
-    }
-
+    
 }

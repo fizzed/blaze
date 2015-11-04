@@ -52,10 +52,6 @@ public class MutableUri implements ImmutableUri {
         this.apply(uri);
     }
     
-    public MutableUri(String uri, Object... parameters) {
-        this(format(uri, parameters));
-    }
-    
     public MutableUri(MutableUri uri) {
         this.scheme = uri.scheme;
         this.username = uri.username;
@@ -319,11 +315,13 @@ public class MutableUri implements ImmutableUri {
     }
     
     static public MutableUri of(String uri, Object... parameters) {
-        return new MutableUri(uri, parameters);
+        String s = format(uri, parameters);
+        return new MutableUri(s);
     }
     
     static public URI uri(String uri, Object... parameters) {
-        return new MutableUri(uri, parameters).toURI();
+        String s = format(uri, parameters);
+        return new MutableUri(s).toURI();
     }
     
     static private String encode(String value) {

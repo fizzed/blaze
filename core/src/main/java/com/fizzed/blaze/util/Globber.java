@@ -243,7 +243,7 @@ public class Globber {
         for (; i < paths.size(); i++) {
             String path = paths.get(i);
             
-            if (path.equals("..") || path.equals(".") || paths.equals("")) {
+            if (paths.equals("") || path.equals("..") || path.equals(".")) {
                 // keep searching
             } else {
                 return i;
