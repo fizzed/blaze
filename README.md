@@ -130,7 +130,7 @@ named `blaze.groovy`
 ```groovy
 import static com.fizzed.blaze.Systems.which
 import static com.fizzed.blaze.Systems.exec
-import com.fizzed.blaze.Contexts;
+import com.fizzed.blaze.Contexts
 
 def main() {
     def log = Contexts.logger()
@@ -452,6 +452,21 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
     }
 }
 ```
+
+#### Passwordless authentication not working
+
+Verify authentication works via openssh without prompting for password
+
+    ssh user@host
+
+Verify you don't have some other mechanism in place (e.g. ssh-agent).  Blaze's
+SSH implementation uses JSch under-the-hood and it currently supports public key
+and password authentication.
+
+#### Why doesn't setting environment variables work?
+
+Most likley your SSHD server is filtering them out.  OpenSSH has an `AcceptEnv`
+configuration file that determines which environment variables are allowed.
 
 ### HTTP
 

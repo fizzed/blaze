@@ -1,6 +1,7 @@
 import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.baseDir;
 import com.fizzed.blaze.Systems;
+import static com.fizzed.blaze.Systems.exec;
 import static com.fizzed.blaze.util.Globber.globber;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -14,8 +15,6 @@ public class try_all {
     private final Logger log = Contexts.logger();
 
     public void main() throws Exception {
-        final Path examplesDir = Contexts.baseDir();
-
         // find blaze jar to use (same one that is on our classpath)
         final Path blazeJarFile = findBlazeJarOnClassPath();
         
@@ -26,15 +25,13 @@ public class try_all {
         final AtomicInteger count = new AtomicInteger();
         
         // use globber to find files to run
-        globber(baseDir(), "**")
-            .filesOnly()
+        globber(baseDir(), "**.{java,groovy,js}")
             .exclude("**try_all.java")
-            .exclude((p) -> p.getFileName().toString().endsWith(".conf"))
             .stream()
             .sorted()
             .forEach((p) -> {
                 log.info("Trying {}", p);
-                Systems.exec("java", "-Dexamples.try_all=true", "-jar", blazeJarFile, "-f", p).run();
+                exec("java", "-Dexamples.try_all=true", "-jar", blazeJarFile, "-f", p).run();
                 count.incrementAndGet();
             });
         
