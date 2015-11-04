@@ -13,29 +13,29 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 
 public class sftp {
-    final private Logger log = Contexts.logger();
-    final private Config config = Contexts.config();
-    
+    static final private Logger log = Contexts.logger();
+    static final private Config config = Contexts.config();
+
     public void main() throws Exception {
-        // simple for skipping this example in try_all.java
+        // for skipping this example in try_all.java
         boolean in_try_all_example = config.find("examples.try_all", Boolean.class).or(false);
-        
+
         if (in_try_all_example) {
             return;
         }
-        
+
         // get or prompt for uri to sftp to
-        MutableUri uri = Contexts.config().find("ssh.uri", MutableUri.class).or(null);
-        
+        MutableUri uri = config.find("ssh.uri", MutableUri.class).or(null);
+
         if (uri == null) {
             String s = prompt("Enter ssh uri (e.g. ssh://user@host)> ");
             uri = MutableUri.of(s);
         }
-        
+
         try (SshSession session = sshConnect(uri).run()) {
-            
+
             try (SshSftpSession sftp = sshSftp(session).run()) {
-            
+
                 Path pwd = sftp.pwd();
 
                 log.info("Remote working dir is {}", pwd);
@@ -46,27 +46,20 @@ public class sftp {
                 log.info("{} with permissions {}", pwd, PosixFilePermissions.toString(attrs.permissions()));
 
                 sftp.ls(pwd)
-                    .stream()
+                        .stream()
                         .forEach((file) -> {
                             log.info("{} {} at {}", file.attributes().lastModifiedTime(), file.path(), file.attributes().size());
                         });
 
                 /**
-                sftp.put()
-                    .source("my/source/file.txt")
-                    .target("file.txt")
-                    .run();
-                */
-
+                 * sftp.put() .source("my/source/file.txt") .target("file.txt")
+                 * .run();
+                 */
                 /**
-                sftp.get()
-                    .source("file.txt")
-                    .target("my/target/file.txt")
-                    .run();
-                */
-
+                 * sftp.get() .source("file.txt") .target("my/target/file.txt")
+                 * .run();
+                 */
                 //sftp.symlink("blaze.jar", "blaze.jar.lnk");
-                
                 // many more methods in sftp class...
             }
         }

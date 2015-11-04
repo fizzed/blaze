@@ -39,46 +39,47 @@ public interface Config {
     static List<String> DEFAULT_COMMAND_EXTS_WINDOWS = Arrays.asList(".exe", ".bat", ".cmd");
     
     /**
-     * Finds a configuration value by its key.
+     * Gets a configuration value by its key.
      * @param key The configuration key (e.g. "undertow.port")
      * @return The value as a String
-     * @see #find(java.lang.String, java.lang.Class) To get a value that will
+     * @see #value(java.lang.String, java.lang.Class) To get a value that will
      *      be converted to a type other than a String.
      */
-    Value<String> find(String key);
+    Value<String> value(String key);
     
     /**
-     * Finds a configuration value by its key.
+     * Gets a configuration value by its key.
      * @param key The configuration key (e.g. "undertow.port")
      * @param type The type to convert to
      * @return The value as the supplied type
-     * @see #find(java.lang.String) To get a value that will
+     * @see #value(java.lang.String) To get a value that will
      *      be returned as a String.
      */
-    <T> Value<T> find(String key, Class<T> type);
+    <T> Value<T> value(String key, Class<T> type);
     
     /**
-     * Finds a configuration List of values by its key.
+     * Gets a configuration List of values by its key.
      * @param key The configuration key (e.g. "undertow.port")
      * @return A List of String values
-     * @see #findList(java.lang.String, java.lang.Class) To get a value that will
+     * @see #valueList(java.lang.String, java.lang.Class) To get a value that will
      *      be converted to a type other than a String.
      */
-    Value<List<String>> findList(String key);
+    Value<List<String>> valueList(String key);
     
     /**
-     * Finds a configuration List of values by its key.
+     * Gets a configuration List of values by its key.
      * @param key The configuration key (e.g. "undertow.port")
      * @param type The type to convert to
      * @return A List of values in supplied type
-     * @see #findList(java.lang.String) To get a value that will
+     * @see #valueList(java.lang.String) To get a value that will
      *      be a String.
      */
-    <T> Value<List<T>> findList(String key, Class<T> type);
+    <T> Value<List<T>> valueList(String key, Class<T> type);
     
     /**
-     * Like an optional, but remembers the 'key' that created it.
-     * @param <T> 
+     * Like an optional, but remembers the config 'key' that created it. Allows
+     * a better exception to be thrown if a value is missing.
+     * @param <T> The type of value
      */
     static public class Value<T> {
     
@@ -98,7 +99,11 @@ public interface Config {
             this.value = value;
         }
         
-        public boolean isPresent() {
+        public boolean absent() {
+            return this.value == null;
+        }
+        
+        public boolean present() {
             return this.value != null;
         }
         
@@ -121,13 +126,22 @@ public interface Config {
          * Gets the value if its present or will return the supplied default.
          * @param defaultValue The default if the value is missing
          * @return The value or the default
+         * @see #getOrNull() 
          */
-        public T or(T defaultValue) {
+        public T getOr(T defaultValue) {
             if (value == null) {
                 return defaultValue;
             } else {
                 return value;
             }
+        }
+        
+        /**
+         * Gets the value if its present or returns null.
+         * @return The value or null if its absent.
+         */
+        public T getOrNull() {
+            return value;
         }
 
         /**

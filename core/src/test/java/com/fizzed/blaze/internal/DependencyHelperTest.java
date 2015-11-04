@@ -16,7 +16,6 @@
 package com.fizzed.blaze.internal;
 
 import com.fizzed.blaze.core.Dependency;
-import com.fizzed.blaze.internal.DependencyHelper;
 import com.fizzed.blaze.Config;
 import java.util.Arrays;
 import java.util.List;
@@ -44,14 +43,14 @@ public class DependencyHelperTest {
     public void applicationDependencies() {
         Config config = mock(Config.class);
         
-        when(config.findList(Config.KEY_DEPENDENCIES)).thenReturn(Config.Value.empty(Config.KEY_DEPENDENCIES));
+        when(config.valueList(Config.KEY_DEPENDENCIES)).thenReturn(Config.Value.empty(Config.KEY_DEPENDENCIES));
         
         List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(config);
         
         assertThat(applicationDependencies, is(nullValue()));
         
         
-        when(config.findList(Config.KEY_DEPENDENCIES)).thenReturn(Config.Value.of(Config.KEY_DEPENDENCIES, Arrays.asList("com.example:hello:1.0.0")));
+        when(config.valueList(Config.KEY_DEPENDENCIES)).thenReturn(Config.Value.of(Config.KEY_DEPENDENCIES, Arrays.asList("com.example:hello:1.0.0")));
         
         applicationDependencies = DependencyHelper.applicationDependencies(config);
         

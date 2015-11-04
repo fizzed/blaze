@@ -37,6 +37,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.fizzed</groupId>
+                <artifactId>fizzed-stork-maven-plugin</artifactId>
+                <version>1.2.3</version>
+                <executions>
+                    <execution>
+                        <id>generate-stork-launchers</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions> 
+            </plugin>
         </plugins>
     </build>
     

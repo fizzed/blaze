@@ -5,10 +5,9 @@ import java.net.URI;
 import org.apache.http.client.fluent.Request;
 
 public class http {
+    static final private Logger log = Contexts.logger();
 
     public void main() throws Exception {
-        Logger log = Contexts.logger();
-        
         URI uri = MutableUri.of("http://api.theysaidso.com/qod.json")
             .query("category", "management")
             .toURI();
@@ -20,6 +19,6 @@ public class http {
                 .toString();
         
         log.info("Quote of the day JSON is {}", output);
-    };
+    }
     
 }

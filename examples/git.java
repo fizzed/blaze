@@ -1,12 +1,12 @@
+import com.fizzed.blaze.Contexts;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class git {
-    static final private Logger log = LoggerFactory.getLogger("script");
+    static final private Logger log = Contexts.logger();
 
     public void status() throws Exception {
         Repository repo = new FileRepositoryBuilder()
@@ -14,8 +14,8 @@ public class git {
             .findGitDir()       // scan up the file system tree
             .build();
         
-        try (Git g = new Git(repo)) {
-            Status status = g.status().call();
+        try (Git git = new Git(repo)) {
+            Status status = git.status().call();
             log.info("Added: " + status.getAdded());
             log.info("Changed: " + status.getChanged());
             log.info("Conflicting: " + status.getConflicting());

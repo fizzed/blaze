@@ -34,7 +34,7 @@ public class ConfigImpl implements Config {
     }
 
     @Override
-    public Value<String> find(String key) {
+    public Value<String> value(String key) {
         try {
             return Value.of(key, this.config.getString(key));
         } catch (Missing e) {
@@ -43,7 +43,7 @@ public class ConfigImpl implements Config {
     }
     
     @Override
-    public <T> Value<T> find(String key, Class<T> type) {
+    public <T> Value<T> value(String key, Class<T> type) {
         try {
             String value = this.config.getString(key);
             return Value.of(key, Converter.convert(value, type));
@@ -53,7 +53,7 @@ public class ConfigImpl implements Config {
     }
     
     @Override
-    public Value<List<String>> findList(String key) {
+    public Value<List<String>> valueList(String key) {
         try {
             return Value.of(key, this.config.getStringList(key));
         } catch (Missing e) {
@@ -62,7 +62,7 @@ public class ConfigImpl implements Config {
     }
     
     @Override
-    public <T> Value<List<T>> findList(String key, Class<T> type) {
+    public <T> Value<List<T>> valueList(String key, Class<T> type) {
         try {
             List<String> values = this.config.getStringList(key);
             List<T> convertedValues = new ArrayList<>(values.size());

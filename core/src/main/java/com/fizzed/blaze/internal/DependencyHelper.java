@@ -56,8 +56,7 @@ public class DependencyHelper {
      * @return 
      */
     static public List<Dependency> applicationDependencies(Config config) {
-        //List<String> ds = config.getStringList(Config.KEY_DEPENDENCIES);
-        List<String> ds = config.findList(Config.KEY_DEPENDENCIES).or(null);
+        List<String> ds = config.valueList(Config.KEY_DEPENDENCIES).getOrNull();
         
         if (ds == null || ds.isEmpty()) {
             return null;

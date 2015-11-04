@@ -67,7 +67,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         // TODO: ivy truly is a piece of junk - unable to figure out how to NOT
         // cache a SNAPSHOT version so this is the workaround for now - allowing you
         // to delete the entire cache
-        if (context.config().find(Config.KEY_DEPENDENCY_CLEAN, Boolean.class).or(Config.DEFAULT_DEPENDENCY_CLEAN)) {
+        if (context.config().value(Config.KEY_DEPENDENCY_CLEAN, Boolean.class).getOr(Config.DEFAULT_DEPENDENCY_CLEAN)) {
             log.info("Cleaning dependency cache...");
             ivy.getResolutionCacheManager().clean();
         }
