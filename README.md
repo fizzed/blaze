@@ -81,11 +81,13 @@ Let's see why you'd consider Blaze against some of the more common options...
    language & compiler and make it available on the command-line though. Plus, they don't
    solve the dependency issue -- the fact is to do anything meaningful,
    you'll want to use 3rd party libraries at runtime. Blaze helps to *bootstrap*
-   running your script in these languages.
+   running your script in these languages and APIs for doing scripting tasks
+   like spawning other processes, globbing files, etc.
 
  - SBT/Ant/Maven/Gradle/Makefile: They sorta work, but they are designed for
-   compiling projects.  Doing anything *scripty* ends up being awkward.  Plus,
-   you'll still need your user to have them installed on their machine.
+   compiling projects.  Doing anything *scripty* ends up either being awkward or 
+   downright maddening.  Plus, you'll still need your user to have them installed
+   on their machine.
 
  - Groovy: Groovy has the @Grab feature to download dependencies, so it's probably
    the closest to Blaze.  However, you'll still need to have your user install
