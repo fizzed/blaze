@@ -29,6 +29,7 @@
         <module>http</module>
         <module>ssh</module>
         <module>groovy</module>
+        <module>kotlin</module>
         <module>lite</module>
     </modules>
     
