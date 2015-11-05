@@ -117,50 +117,46 @@ public class ConfigHelper {
         }
     }
     
-    static public Path contextSemiPersistentTempPath(Context context) throws IOException {
-        String tmpDirStr = System.getProperty("java.io.tmpdir");
+    static public Path userBlazeDir(Context context) throws IOException {
+        Path userBlazeDir = context.withUserDir(".blaze");
         
-        if (tmpDirStr == null) {
-            log.warn("Java system property java.io.tmpdir not set");
-            return null;
+        if (Files.notExists(userBlazeDir)) {
+            Files.createDirectory(userBlazeDir);
         }
         
-        Path systemTempPath = Paths.get(tmpDirStr);
+        return userBlazeDir;
+    }
+    
+    static public Path userCacheDir(Context context) throws IOException {
+        Path userCacheDir = userBlazeDir(context).resolve("cache");
         
-        if (!Files.exists(systemTempPath)) {
-            log.warn("Java java.io.tmpdir of {} does not exist", systemTempPath);
-            return null;
+        if (Files.notExists(userCacheDir)) {
+            Files.createDirectory(userCacheDir);
         }
+        
+        return userCacheDir;
+    }
+    
+    static public Path userEngineClassesDir(Context context, String engineName) throws IOException {
+        Path userBlazeDir = userBlazeDir(context);
         
         // md5 of the canonical path of this application's base directory
         // should be a consistent hash very usable for generating classes in
         String key = new StringBuilder()
+            // base directory where script is from
             .append(context.baseDir().toFile().getCanonicalPath())
+            // version of blaze
             .append(Version.getVersion())
             .toString();
         
-        String md5 = md5(key);
+        String md5hash = md5(key);
         
-        // /tmp/blaze/<md5hash>
-        Path contextTempPath = systemTempPath.resolve("blaze").resolve(md5);
+        // ~/.blaze/classes/{engine}/{md5hash}
+        Path engineClassesDir = userBlazeDir.resolve("classes").resolve(engineName).resolve(md5hash);
         
-        Files.createDirectories(contextTempPath);
+        Files.createDirectories(engineClassesDir);
         
-        return contextTempPath;
-    }
-    
-    static public Path semiPersistentClassesPath(Context context) throws IOException {
-        Path path = contextSemiPersistentTempPath(context);
-        
-        if (path == null) {
-            return null;
-        }
-        
-        Path classesPath = path.resolve("classes");
-        
-        Files.createDirectories(classesPath);
-        
-        return classesPath;
+        return engineClassesDir;
     }
     
     static public String md5(String value) {

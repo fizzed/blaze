@@ -34,6 +34,11 @@ public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
     private GroovyScriptEngine groovy;
 
     @Override
+    public String getName() {
+        return "groovy";
+    }
+    
+    @Override
     public String getFileExtension() {
         return ".groovy";
     }

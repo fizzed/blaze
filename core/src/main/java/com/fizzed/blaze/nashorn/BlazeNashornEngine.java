@@ -38,6 +38,11 @@ public class BlazeNashornEngine extends AbstractEngine<BlazeNashornScript> {
     private List<String> defaultNashornFunctions;
 
     @Override
+    public String getName() {
+        return "js";
+    }
+    
+    @Override
     public String getFileExtension() {
         return ".js";
     }

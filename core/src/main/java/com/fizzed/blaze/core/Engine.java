@@ -19,6 +19,8 @@ import com.fizzed.blaze.Context;
 
 public interface Engine<S extends Script> {
     
+    String getName();
+    
     String getFileExtension();
     
     boolean isInitialized();

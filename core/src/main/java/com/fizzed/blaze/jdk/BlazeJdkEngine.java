@@ -17,8 +17,6 @@ package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.internal.ContextImpl;
-import com.fizzed.blaze.core.Engine;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.Script;
 import com.fizzed.blaze.core.AbstractEngine;
@@ -46,6 +44,11 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
     static private final Logger log = LoggerFactory.getLogger(BlazeJdkEngine.class);
 
     @Override
+    public String getName() {
+        return "java";
+    }
+    
+    @Override
     public String getFileExtension() {
         return ".java";
     }
@@ -67,7 +70,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         
         try {
             // directory to output classs to semi-permanently
-            classesPath = ConfigHelper.semiPersistentClassesPath(context);
+            classesPath = ConfigHelper.userEngineClassesDir(context, getName());
             
             sourceLastModified = Files.getLastModifiedTime(context.scriptFile()).toMillis();
             
