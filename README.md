@@ -105,10 +105,8 @@ If you have `curl` available
 
     curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.4.0/blaze-lite-0.4.0.jar'
 
-Or simply download the file in your web browser and save it to your project directory
-named `blaze.jar`
-
-    [http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.4.0/blaze-lite-0.4.0.jar](http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.4.0/blaze-lite-0.4.0.jar)
+Or simply [download the file in your web browser](http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.4.0/blaze-lite-0.4.0.jar)
+and save it to your project directory with a name of `blaze.jar`
     
 ## Example
 
