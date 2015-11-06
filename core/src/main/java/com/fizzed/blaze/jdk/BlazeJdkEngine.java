@@ -18,19 +18,22 @@ package com.fizzed.blaze.jdk;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.MessageOnlyException;
-import com.fizzed.blaze.core.Script;
 import com.fizzed.blaze.core.AbstractEngine;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
 import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.internal.FileHelper;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -65,30 +68,37 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         
         Path classesPath = null;
         Path expectedClassFile = null;
-        long sourceLastModified = 0;
-        long compiledLastModified = 0;
+        String scriptHash = null;
+        boolean compile = true;
         
         try {
-            // directory to output classs to semi-permanently
+            // directory to save compile classes on a semi-reliable basis
             classesPath = ConfigHelper.userEngineClassesDir(context, getName());
             log.trace("Using classesPath {}", classesPath);
             
-            sourceLastModified = Files.getLastModifiedTime(context.scriptFile()).toMillis();
-            
-            // do we need to recompile?
             expectedClassFile = classesPath.resolve(className + ".class");
             
-            if (Files.exists(expectedClassFile)) {
-                compiledLastModified = Files.getLastModifiedTime(expectedClassFile).toMillis();
+            // to check if we need to recompile we use an md5 hash of the source file
+            scriptHash = FileHelper.md5hash(context.scriptFile());
+            
+            if (FileHelper.verifyHashFileFor(expectedClassFile, scriptHash)) {
+                compile = false;
             }
-        } catch (IOException e) {
+        } catch (NoSuchAlgorithmException | IOException e) {
             throw new BlazeException("Unable to get or create path to compile classes", e);
         }
         
-        if (sourceLastModified <= compiledLastModified) {
-            log.info("No need to recompile!");
+        if (!compile) {
+            log.info("Script has not changed, using previous compiled version");
         } else {
             javac(context, classesPath);
+            
+            try {
+                // save the hash for future use
+                FileHelper.writeHashFileFor(expectedClassFile, scriptHash);
+            } catch (IOException e) {
+                throw new BlazeException("Unable to save script hash", e);
+            }
         }
         
         // add directory it was compiled to classpath
@@ -101,12 +111,11 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         try {
             Class<?> type = Thread.currentThread().getContextClassLoader().loadClass(className);
             
-            Object object = type.newInstance();
-            
-            //log.debug("class {}", object.getClass());
-            
+            Object object = type.getConstructor().newInstance();
+
             return new BlazeJdkScript(this, object);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalArgumentException |
+                IllegalAccessException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
             throw new BlazeException("Unable to load class '" + className + "'", e);
         }
     }
