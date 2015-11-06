@@ -1,6 +1,5 @@
 import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.baseDir;
-import com.fizzed.blaze.Systems;
 import static com.fizzed.blaze.Systems.exec;
 import static com.fizzed.blaze.util.Globber.globber;
 import java.net.URISyntaxException;
@@ -45,7 +44,7 @@ public class try_all {
         for (URL u : urlClassLoader.getURLs()) {
             Path loadedJarFile = Paths.get(u.toURI());
             String loadedJarName = loadedJarFile.getFileName().toString();
-            if (loadedJarName.startsWith("blaze-") && loadedJarName.endsWith(".jar")) {
+            if (loadedJarName.startsWith("blaze") && loadedJarName.endsWith(".jar")) {
                 log.info("Using blaze jar {}", loadedJarFile);
                 return loadedJarFile;
             }
