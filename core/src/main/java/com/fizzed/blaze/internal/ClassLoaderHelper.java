@@ -68,11 +68,13 @@ public class ClassLoaderHelper {
             
             String jarName = Paths.get(uri).getFileName().toString();
             
-            for (URL u : urlClassLoader.getURLs()) {
-                String loadedJarName = Paths.get(u.toURI()).getFileName().toString();
-                if (jarName.equals(loadedJarName)) {
-                    log.trace("Jar " + jarName + " already exists on classpath with " + u);
-                    return 0;
+            if (jarName.endsWith(".jar")) {
+                for (URL u : urlClassLoader.getURLs()) {
+                    String loadedJarName = Paths.get(u.toURI()).getFileName().toString();
+                    if (jarName.equals(loadedJarName)) {
+                        log.trace("Jar " + jarName + " already exists on classpath with " + u);
+                        return 0;
+                    }
                 }
             }
             

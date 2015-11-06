@@ -40,7 +40,7 @@ import javax.tools.ToolProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BlazeJdkEngine extends AbstractEngine<Script> {
+public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
     static private final Logger log = LoggerFactory.getLogger(BlazeJdkEngine.class);
 
     @Override
@@ -59,7 +59,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
     }
 
     @Override
-    public Script compile(Context context) throws BlazeException {
+    public BlazeJdkScript compile(Context context) throws BlazeException {
         // what class would we be producing?
         String className = context.scriptFile().toFile().getName().replace(".java", "");
         
@@ -71,6 +71,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         try {
             // directory to output classs to semi-permanently
             classesPath = ConfigHelper.userEngineClassesDir(context, getName());
+            log.trace("Using classesPath {}", classesPath);
             
             sourceLastModified = Files.getLastModifiedTime(context.scriptFile()).toMillis();
             
@@ -98,7 +99,7 @@ public class BlazeJdkEngine extends AbstractEngine<Script> {
         
         // create new instance of this class
         try {
-            Class<?> type = Class.forName(className);
+            Class<?> type = Thread.currentThread().getContextClassLoader().loadClass(className);
             
             Object object = type.newInstance();
             
