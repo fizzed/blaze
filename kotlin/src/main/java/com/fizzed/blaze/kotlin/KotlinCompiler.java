@@ -18,24 +18,22 @@ package com.fizzed.blaze.kotlin;
 //import static org.jetbrains.kotlin.cli.jvm.config.ConfigPackage.addJvmClasspathRoots;
 //import static org.jetbrains.kotlin.config.ConfigPackage.addKotlinSourceRoot;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
+import com.fizzed.blaze.internal.ConfigHelper;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.jetbrains.kotlin.builtins.KotlinBuiltIns;
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys;
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity;
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
-import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
 import org.jetbrains.kotlin.cli.jvm.compiler.CommandLineScriptUtils;
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler;
 import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
-import org.jetbrains.kotlin.name.Name;
 import org.jetbrains.kotlin.resolve.AnalyzerScriptParameter;
 //import org.jetbrains.kotlin.types.JetType;
 import org.jetbrains.kotlin.utils.KotlinPaths;
@@ -44,10 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.intellij.openapi.Disposable;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 import static org.jetbrains.kotlin.cli.jvm.config.JvmContentRootsKt.addJvmClasspathRoots;
 import static org.jetbrains.kotlin.config.ContentRootsKt.addKotlinSourceRoot;
 import org.jetbrains.kotlin.parsing.JetScriptDefinitionProvider;
@@ -57,16 +51,20 @@ public class KotlinCompiler implements MessageCollector, Disposable {
 
     private static final Logger log = LoggerFactory.getLogger("kc");
 
-    private final KotlinPaths paths;
-    private final List<String> configPaths;
+    private KotlinPaths paths;
+    private List<String> configPaths;
 
     public KotlinCompiler() {
-        this.paths = PathUtil.getKotlinPathsForCompiler();
-        this.configPaths = EnvironmentConfigFiles.JVM_CONFIG_FILES;
+        
     }
 
-    public Class<?> compileScript(File file) {
+    public Class<?> compileScript(File file) throws ClassNotFoundException {
         log.info("Compiling '{}'...", file);
+     
+        
+        this.paths = PathUtil.getKotlinPathsForCompiler();
+        this.configPaths = EnvironmentConfigFiles.JVM_CONFIG_FILES;
+        
         CompilerConfiguration config = createCompilerConfig(file);
         config = addCurrentClassPath(config);
         
@@ -74,7 +72,17 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         
         JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
         
-        return KotlinToJVMBytecodeCompiler.compileScript(config, paths, env);
+        
+        
+        File classesDir = new File("target/kotlin");
+        
+        KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir, false);
+        
+        ClassLoaderHelper.addFileToClassPath(classesDir, Thread.currentThread().getContextClassLoader());
+        
+        return Class.forName("Hello");
+        
+        //return KotlinToJVMBytecodeCompiler.compileScript(config, paths, env);
     }
 
     @SuppressWarnings("unchecked")
@@ -93,7 +101,7 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, this);
         
         // Put arguments as field
-        List<AnalyzerScriptParameter> scriptParams = new LinkedList<AnalyzerScriptParameter>();
+        List<AnalyzerScriptParameter> scriptParams = new LinkedList<>();
         scriptParams.addAll(CommandLineScriptUtils.scriptParameters());
         
         config.put(JVMConfigurationKeys.MODULE_NAME, "");
@@ -111,6 +119,7 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         addJvmClasspathRoots(config, PathUtil.getJdkClassesRoots());
         
         addJvmClasspathRoots(config, ClassLoaderHelper.getClassPathFiles());
+        
         addKotlinSourceRoot(config, file.getAbsolutePath());
         
         return config;

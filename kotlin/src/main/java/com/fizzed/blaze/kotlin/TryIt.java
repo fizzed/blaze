@@ -35,14 +35,11 @@ import org.jetbrains.kotlin.utils.PathUtil;
  *
  * @author Joe Lauer
  */
-public class KotlinTest {
+public class TryIt {
     
     static public void main(String[] args) throws Exception {
         KotlinCompiler compiler = new KotlinCompiler();
-        
-        
-        
-  
+
         Timer timer = new Timer();
         
         Class<?> scriptClass = compiler.compileScript(new File("hello.kt"));
@@ -65,43 +62,6 @@ public class KotlinTest {
         
         Method  method = script.getClass().getDeclaredMethod("main");
         method.invoke(script, null);
-        
-        /**
-        //CompilerConfiguration config = new CompilerConfiguration();
-        //KotlinPaths paths = new KotlinPaths();
-        //KotlinToJVMBytecodeCompiler.compileScript(config, , kce)
-        KotlinPaths paths = PathUtil.getKotlinPathsForCompiler();
-        //MessageCollector messageCollector = MessageCollectorPlainTextToStream.PLAIN_TEXT_TO_SYSTEM_ERR;
-        //Disposable rootDisposable = Disposer.newDisposable();
-        try {
-        //KotlinCoreEnvironment kce = new KotlinCoreEnvironment();
-        CompilerConfiguration configuration = new CompilerConfiguration();
-        //JetTestUtils.compilerConfigurationForTests(ConfigurationKind.JDK_AND_ANNOTATIONS, TestJdkKind.MOCK_JDK);
-        //configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector);
-        //configuration.add(CommonConfigurationKeys.SOURCE_ROOTS_KEY, "compiler/testData/script/" + scriptPath);
-        //configuration.addAll(CommonConfigurationKeys.SCRIPT_DEFINITIONS_KEY, scriptDefinitions);
-        //configuration.put(JVMConfigurationKeys.SCRIPT_PARAMETERS, scriptParameters);
-        //JetCoreEnvironment environment =
-        //        JetCoreEnvironment.createForProduction(rootDisposable, configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES);
-        try {
-        //JetScriptDefinitionProvider.getInstance(environment.getProject()).markFileAsScript(environment.getSourceFiles().get(0));
-        KotlinToJVMBytecodeCompiler.compileScript(configuration, );
-        }
-        catch (CompilationException e) {
-        //messageCollector.report(CompilerMessageSeverity.EXCEPTION, OutputMessageUtil.renderException(e),
-        //                        MessageUtil.psiElementToMessageLocation(e.getElement()));
-        //return null;
-        }
-        catch (Throwable t) {
-        //MessageCollectorUtil.reportException(messageCollector, t);
-        //return null;
-        }
-        }
-        finally {
-        //Disposer.dispose(rootDisposable);
-        }
-         */
-
     }
     
 }

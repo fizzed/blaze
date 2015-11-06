@@ -106,6 +106,7 @@ public class ClassLoaderHelper {
     public static  File getContainingJar(String resourceName) {
         File jarFile;
         URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
+        
         if ("jar".equals(url.getProtocol())) { //NOI18N
             
             String path = url.getPath();
