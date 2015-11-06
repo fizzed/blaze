@@ -25,6 +25,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,4 +132,21 @@ public class ClassLoaderHelper {
         return jarFile;
     }
     
+    static public List<URL> getClassPathUrls() {
+        return java.util.Arrays.asList(
+                ((URLClassLoader)(Thread.currentThread().getContextClassLoader())).getURLs());
+    }
+    
+    static public List<File> getClassPathFiles() {
+        List<URL> urls = getClassPathUrls();
+        List<File> files = new ArrayList<>();
+        for (URL u : urls) {
+            try {
+                files.add(new File(u.toURI()));
+            } catch (Exception e) {
+                // do nothing...
+            }
+        }
+        return files;
+    }
 }
