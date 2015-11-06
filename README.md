@@ -99,11 +99,11 @@ Let's see why you'd consider Blaze against some of the more common options...
 
 Download `blaze.jar` to your project directory.  If you have `wget` available
 
-    wget -O blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.3.0/blaze-lite-0.3.0.jar'
+    wget -O blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.4.0/blaze-lite-0.4.0.jar'
 
 If you have `curl` available
 
-    curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.3.0/blaze-lite-0.3.0.jar'
+    curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.4.0/blaze-lite-0.4.0.jar'
 
 Or simply download the file in your web browser and name it `blaze.jar`
     

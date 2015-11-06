@@ -140,19 +140,11 @@
         </dependency>
                 
         <!-- logback is suprisingly huge -->
-        
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
         </dependency>
         
-        <!--
-        <dependency> 
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.12</version>
-        </dependency>
-        -->
     </dependencies>
     <name>blaze-lite</name>
 </project>

@@ -99,4 +99,35 @@ public class ClassLoaderHelper {
         return m.invoke(obj, params);
     }
 
+    public static  File getContainingJar(String resourceName) {
+        File jarFile;
+        URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
+        if ("jar".equals(url.getProtocol())) { //NOI18N
+            
+            String path = url.getPath();
+            int index = path.indexOf("!/"); //NOI18N
+
+            if (index >= 0) {
+                try {
+                    String jarPath = path.substring(0, index);
+                    if (jarPath.contains("file://") && !jarPath.contains("file:////")) {  //NOI18N
+                        /* Replace because JDK application classloader wrongly recognizes UNC paths. */
+                        jarPath = jarPath.replaceFirst("file://", "file:////");  //NOI18N
+                    }
+                    url = new URL(jarPath);
+
+                } catch (MalformedURLException mue) {
+                    throw new RuntimeException(mue);
+                }
+            }
+        }
+        try {
+            jarFile = new File(url.toURI());
+        } catch (URISyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
+        assert jarFile.exists();
+        return jarFile;
+    }
+    
 }
