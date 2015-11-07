@@ -45,7 +45,8 @@ public class ContextHolder {
         Context context = CONTEXT.get();
         
         if (context == null) {
-            throw new IllegalStateException("Context not bound");
+            throw new IllegalStateException("Context not bound. Did you forget to call "
+                + ContextHolder.class.getCanonicalName() + ".set(context)?");
         }
         
         return context;

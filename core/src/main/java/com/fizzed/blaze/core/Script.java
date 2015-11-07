@@ -17,10 +17,6 @@ package com.fizzed.blaze.core;
 
 import java.util.List;
 
-/**
- *
- * @author joelauer
- */
 public interface Script {
     
     List<String> tasks() throws BlazeException;

@@ -127,7 +127,7 @@ public class ConfigHelper {
         return userBlazeDir;
     }
     
-    static public Path userCacheDir(Context context) throws IOException {
+    static public Path userBlazeCacheDir(Context context) throws IOException {
         Path userCacheDir = userBlazeDir(context).resolve("cache");
         
         if (Files.notExists(userCacheDir)) {
@@ -137,9 +137,21 @@ public class ConfigHelper {
         return userCacheDir;
     }
     
-    static public Path userEngineClassesDir(Context context, String engineName) throws IOException {
+    static public Path userBlazeEngineDir(Context context, String engineName) throws IOException {
         Path userBlazeDir = userBlazeDir(context);
         
+        // ~/.blaze/engine/{engineName}
+        Path userBlazeEngineDir
+            = userBlazeDir
+                .resolve("engine")
+                .resolve(engineName);
+        
+        Files.createDirectories(userBlazeEngineDir);
+        
+        return userBlazeEngineDir;
+    }
+    
+    static public Path userBlazeEngineScriptClassesDir(Context context, String engineName) throws IOException {
         // md5 of the canonical path of this application's base directory
         // should be a consistent hash very usable for generating classes in
         String key = new StringBuilder()
@@ -151,12 +163,15 @@ public class ConfigHelper {
         
         String md5hash = md5(key);
         
-        // ~/.blaze/classes/{engine}/{md5hash}
-        Path engineClassesDir = userBlazeDir.resolve("classes").resolve(engineName).resolve(md5hash);
+        // ~/.blaze/engine/{engineName}/{md5hash}
+        Path userBlazeEngineScriptClassesDir
+            = userBlazeEngineDir(context, engineName)
+                .resolve(md5hash)
+                .resolve("classes");
         
-        Files.createDirectories(engineClassesDir);
+        Files.createDirectories(userBlazeEngineScriptClassesDir);
         
-        return engineClassesDir;
+        return userBlazeEngineScriptClassesDir;
     }
     
     static public String md5(String value) {

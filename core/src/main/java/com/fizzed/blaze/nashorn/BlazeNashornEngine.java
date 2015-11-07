@@ -34,17 +34,19 @@ import org.slf4j.LoggerFactory;
 public class BlazeNashornEngine extends AbstractEngine<BlazeNashornScript> {
     static private final Logger log = LoggerFactory.getLogger(BlazeNashornEngine.class);
 
+    static public final List<String> EXTS = Arrays.asList(".js");
+    
     private ScriptEngineManager scriptEngineManager;
     private List<String> defaultNashornFunctions;
 
     @Override
     public String getName() {
-        return "js";
+        return "nashorn";
     }
     
     @Override
-    public String getFileExtension() {
-        return ".js";
+    public List<String> getFileExtensions() {
+        return EXTS;
     }
     
     @Override
@@ -74,9 +76,10 @@ public class BlazeNashornEngine extends AbstractEngine<BlazeNashornScript> {
             
             scriptEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             
+            // do NOT expose any functions as global...
             // expose functions as global variables to script
-            bindings.put("context", context);
-            bindings.put("log", context.logger());
+            //bindings.put("context", context);
+            //bindings.put("log", context.logger());
             //bindings.put("console", new Console());
 
             scriptEngine.eval(new FileReader(context.scriptFile().toFile()), bindings);

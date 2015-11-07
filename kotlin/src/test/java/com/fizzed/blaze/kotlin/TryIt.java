@@ -16,6 +16,7 @@
 package com.fizzed.blaze.kotlin;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
@@ -34,6 +35,7 @@ public class TryIt {
         File scriptFile = new File("hello.kt");  
         
         Context context = new ContextImpl(null, null, scriptFile.toPath(), null);
+        ContextHolder.set(context);
                 
         BlazeKotlinEngine engine = new BlazeKotlinEngine();
         

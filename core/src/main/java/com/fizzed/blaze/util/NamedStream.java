@@ -25,9 +25,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.commons.io.input.NullInputStream;
-import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.io.output.NullOutputStream;
 
 /**

@@ -25,11 +25,15 @@ import groovy.util.ResourceException;
 import groovy.util.ScriptException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
     static final private Logger log = LoggerFactory.getLogger(AbstractEngine.class);
+    
+    static final public List<String> EXTS = Arrays.asList(".groovy");
     
     private GroovyScriptEngine groovy;
 
@@ -39,8 +43,8 @@ public class BlazeGroovyEngine extends AbstractEngine<BlazeGroovyScript> {
     }
     
     @Override
-    public String getFileExtension() {
-        return ".groovy";
+    public List<String> getFileExtensions() {
+        return EXTS;
     }
     
     @Override

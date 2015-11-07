@@ -47,14 +47,16 @@ import org.slf4j.LoggerFactory;
 public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
     static private final Logger log = LoggerFactory.getLogger(BlazeJdkEngine.class);
 
+    static public final List<String> EXTS = Arrays.asList(".java");
+    
     @Override
     public String getName() {
         return "java";
     }
     
     @Override
-    public String getFileExtension() {
-        return ".java";
+    public List<String> getFileExtensions() {
+        return EXTS;
     }
     
     @Override
@@ -75,7 +77,7 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         
         try {
             // directory to save compile classes on a semi-reliable basis
-            classesDir = ConfigHelper.userEngineClassesDir(context, getName());
+            classesDir = ConfigHelper.userBlazeEngineScriptClassesDir(context, getName());
             log.trace("Using classes dir {}", classesDir);
             
             expectedClassFile = classesDir.resolve(className + ".class");

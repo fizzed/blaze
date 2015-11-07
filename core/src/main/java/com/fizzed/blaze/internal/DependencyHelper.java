@@ -46,6 +46,8 @@ public class DependencyHelper {
             Arrays.asList(new Dependency("com.fizzed", "blaze-groovy", Version.getVersion())));
         WELL_KNOWN_ENGINE_DEPENDENCIES.put(".kt",
             Arrays.asList(new Dependency("com.fizzed", "blaze-kotlin", Version.getVersion())));
+        WELL_KNOWN_ENGINE_DEPENDENCIES.put(".kts",
+            Arrays.asList(new Dependency("com.fizzed", "blaze-kotlin", Version.getVersion())));
     }
     
     static public List<Dependency> wellKnownEngineDependencies(String fileExtension) {

@@ -17,6 +17,7 @@ package com.fizzed.blaze.kotlin;
 
 //import static org.jetbrains.kotlin.cli.jvm.config.ConfigPackage.addJvmClasspathRoots;
 //import static org.jetbrains.kotlin.config.ConfigPackage.addKotlinSourceRoot;
+import com.fizzed.blaze.core.CompilationException;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
 import java.io.File;
 import java.util.LinkedList;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.intellij.openapi.Disposable;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicInteger;
 import static org.jetbrains.kotlin.cli.jvm.config.JvmContentRootsKt.addJvmClasspathRoots;
 import static org.jetbrains.kotlin.config.ContentRootsKt.addKotlinSourceRoot;
 import org.jetbrains.kotlin.parsing.JetScriptDefinitionProvider;
@@ -50,19 +52,31 @@ public class KotlinCompiler implements MessageCollector, Disposable {
 
     private final ClassLoader classLoader;
     private final List<String> configPaths;
+    private final AtomicInteger compileErrors;
+    private final AtomicInteger compileWarnings;
 
     public KotlinCompiler(ClassLoader classLoader) {
         this.classLoader = classLoader;
         this.configPaths = EnvironmentConfigFiles.JVM_CONFIG_FILES;
+        this.compileErrors = new AtomicInteger();
+        this.compileWarnings = new AtomicInteger();
     }
 
-    public void compile(Path file, Path classesDir) throws ClassNotFoundException {
-        //log.info("Compiling '{}'...", file);
-        
+    public void compile(Path file, Path classesDir, boolean isScript) throws CompilationException {
+        this.compileErrors.set(0);
+        this.compileWarnings.set(0);
         CompilerConfiguration configuration = buildCompilerConfiguration(classLoader, file.toFile());
         KotlinCoreEnvironment env = KotlinCoreEnvironment.createForProduction(this, configuration, configPaths);
-        JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
-        KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir.toFile(), false);
+        // marking it as a script dramatically changes what is produced
+        if (isScript) {
+            JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
+        }
+        boolean compiled = 
+                KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir.toFile(), false);
+        if (!compiled) {
+            throw new CompilationException("Unable to compile with " + this.compileErrors.get()
+                    + " errors and " + this.compileWarnings.get() + " warnings.");
+        }
     }
 
     private CompilerConfiguration buildCompilerConfiguration(ClassLoader classLoader, File file) {
@@ -81,7 +95,6 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         
         //scriptParams.add(new AnalyzerScriptParameter(ctxName, type));
         
-        // Finish configuration
         config.put(JVMConfigurationKeys.SCRIPT_PARAMETERS, scriptParams);
         
         addJvmClasspathRoots(config, PathUtil.getJdkClassesRoots());
@@ -98,12 +111,14 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         switch (severity) {
             case ERROR:
             case EXCEPTION:
+                this.compileErrors.incrementAndGet();
                 log.error(message + " " + location);
                 break;
             case INFO:
                 log.info(message + " " + location);
                 break;
             case WARNING:
+                this.compileWarnings.incrementAndGet();
                 log.warn(message + " " + location);
                 break;
             default:
@@ -114,6 +129,6 @@ public class KotlinCompiler implements MessageCollector, Disposable {
 
     @Override
     public void dispose() {
-        log.info("Disposed.");
+        //log.info("Disposed.");
     }
 }

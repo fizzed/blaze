@@ -24,22 +24,27 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.FileHelper;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
     static private final Logger log = LoggerFactory.getLogger(BlazeKotlinEngine.class);
 
+    static public final List<String> EXTS = Arrays.asList(".kt", ".kts");
+    
     @Override
     public String getName() {
         return "kotlin";
     }
     
     @Override
-    public String getFileExtension() {
-        return ".kt";
+    public List<String> getFileExtensions() {
+        return EXTS;
     }
     
     @Override
@@ -49,10 +54,7 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
 
     @Override
     public BlazeKotlinScript compile(Context context) throws BlazeException {
-        // what class would we be producing?
-        // hello.kt -> Hello
-        String className = context.scriptFile().toFile().getName().replace(".kt", "");
-        className = className.substring(0, 1).toUpperCase() + className.substring(1);
+        KotlinSourceFile sourceFile = new KotlinSourceFile(context.scriptFile());
         
         ClassLoader classLoader = currentThreadContextClassLoader();
         Path classesDir = null;
@@ -62,10 +64,10 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         
         try {
             // directory to save compile classes on a semi-reliable basis
-            classesDir = ConfigHelper.userEngineClassesDir(context, getName());
+            classesDir = ConfigHelper.userBlazeEngineScriptClassesDir(context, getName());
             log.trace("Using classes dir {}", classesDir);
             
-            expectedClassFile = classesDir.resolve(className + ".class");
+            expectedClassFile = classesDir.resolve(sourceFile.getClassName() + ".class");
             
             // to check if we need to recompile we use an md5 hash of the source file
             scriptHash = FileHelper.md5hash(context.scriptFile());
@@ -80,14 +82,8 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         if (!compile) {
             log.info("Script has not changed, using previous compiled version");
         } else {
-            //javac(classLoader, context, classesDir);
             KotlinCompiler compiler = new KotlinCompiler(classLoader);
-            
-            try {
-                compiler.compile(context.scriptFile(), classesDir);
-            } catch (Exception e) {
-                throw new BlazeException(e.getMessage(), e);
-            }
+            compiler.compile(context.scriptFile(), classesDir, sourceFile.isScript());
             
             try {
                 // save the hash for future use
@@ -103,8 +99,18 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         }
         
         // create new instance of this class
+        String className = sourceFile.getClassName();
         try {
+            if (!sourceFile.isScript()) {
+                if (Files.notExists(classesDir.resolve(className + ".class"))) {
+                    className = sourceFile.getClassNameAlt();
+                }
+            }
+            
             Class<?> type = classLoader.loadClass(className);
+            
+            log.debug("{}", Arrays.asList(type.getConstructors()));
+            log.debug("{}", Arrays.asList(type.getDeclaredMethods()));
             
             Object targetObject = type.getConstructor().newInstance();
 

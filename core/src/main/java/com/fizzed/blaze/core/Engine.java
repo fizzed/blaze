@@ -16,17 +16,18 @@
 package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.Context;
+import java.util.List;
 
 public interface Engine<S extends Script> {
     
-    String getName();
+    public String getName();
     
-    String getFileExtension();
+    public List<String> getFileExtensions();
     
-    boolean isInitialized();
+    public boolean isInitialized();
     
-    void init(Context initialContext) throws BlazeException;
+    public void init(Context initialContext) throws BlazeException;
     
-    S compile(Context context) throws BlazeException;
+    public S compile(Context context) throws BlazeException;
     
 }

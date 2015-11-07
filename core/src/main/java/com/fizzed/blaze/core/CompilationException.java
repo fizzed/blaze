@@ -15,26 +15,19 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.Context;
-import java.util.List;
+/**
+ *
+ * @author joelauer
+ */
+public class CompilationException extends BlazeException {
 
-abstract public class AbstractEngine<S extends Script> implements Engine {
-
-    protected Context initialContext;
-    
-    @Override
-    public boolean isInitialized() {
-        return initialContext != null;
+    /**
+     * Constructs an instance of <code>MessageOnlyException</code> with the
+     * specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public CompilationException(String msg) {
+        super(msg);
     }
-    
-    @Override
-    public void init(Context initialContext) throws BlazeException {
-        this.initialContext = initialContext;
-    }
-    
-    @Override
-    public List<String> getFileExtensions() {
-        throw new UnsupportedOperationException();
-    }
-    
 }

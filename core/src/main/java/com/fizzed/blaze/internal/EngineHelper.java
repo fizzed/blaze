@@ -17,14 +17,11 @@ package com.fizzed.blaze.internal;
 
 import com.fizzed.blaze.core.Engine;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
 public class EngineHelper {
     static private final Logger log = LoggerFactory.getLogger(EngineHelper.class);
  
@@ -41,8 +38,11 @@ public class EngineHelper {
         while (iterator.hasNext()) {
             Engine engine = iterator.next();
             
-            if (engine.getFileExtension().equals(fileExtension)) {
-                return engine;
+            List<String> exts = engine.getFileExtensions();
+            for (String ext : exts) {
+                if (ext.equals(fileExtension)) {
+                    return engine;
+                }
             }
         }
         

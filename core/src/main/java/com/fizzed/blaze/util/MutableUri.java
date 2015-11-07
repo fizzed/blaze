@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Helps to build a URI.  Why another one?  This one has a simple fluent style
+ * Helps to build a URI.  Why another one?  Unlike Java's URI this one allows
+ * modification after it's been created. This one has a simple fluent style
  * and accepts Objects for parameter values.  It also has an interesting "format"
  * style it'll accept which does placeholder swapping.
  * 
