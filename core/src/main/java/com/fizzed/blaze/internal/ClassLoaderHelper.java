@@ -37,73 +37,67 @@ import org.slf4j.LoggerFactory;
 public class ClassLoaderHelper {
     static private final Logger log = LoggerFactory.getLogger(ClassLoaderHelper.class);
     
-    /**
-     * Adds additional file or path to classpath during runtime.
-     *
-     * @param file
-     * @param classLoader
-     * @return 
-     * @see #addUrlToClassPath(java.net.URL, ClassLoader)
-     */
-    public static int addFileToClassPath(File file, ClassLoader classLoader) {
-        return addUrlToClassPath(file.toURI(), classLoader);
+    static public ClassLoader currentThreadContextClassLoader() {
+        return Thread.currentThread().getContextClassLoader();
     }
     
-    public static int addFileToClassPath(Path path, ClassLoader classLoader) {
-        return addUrlToClassPath(path.toUri(), classLoader);
+    static public URLClassLoader requireURLClassLoader(ClassLoader classLoader) {
+        if (!(classLoader instanceof URLClassLoader)) {
+            throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
+        }
+        
+        return (URLClassLoader)classLoader;
+    }
+    
+    static public boolean addClassPath(ClassLoader classLoader, File file) {
+        return addClassPath(classLoader, file.toURI());
+    }
+    
+    static public boolean addClassPath(ClassLoader classLoader, Path path) {
+        return addClassPath(classLoader, path.toUri());
     }
 
-    /**
-     * Adds the content pointed by the URL to the classpath during runtime. Uses
-     * reflection since <code>addURL</code> method of
-     * <code>URLClassLoader</code> is protected.
-     * @param url
-     * @param classLoader
-     * @return 
-     */
-    public static int addUrlToClassPath(URI uri, ClassLoader classLoader) {
+    static public boolean addClassPath(ClassLoader classLoader, URI uri) {
+        URLClassLoader urlClassLoader = requireURLClassLoader(classLoader);
+        boolean isJar = uri.getScheme().startsWith("jar:");
+        File file = new File(uri);
+        
         try {
-            // does the jar already exist on claspath?
-            URLClassLoader urlClassLoader = (URLClassLoader)classLoader;
-            
-            String jarName = Paths.get(uri).getFileName().toString();
-            
-            if (jarName.endsWith(".jar")) {
-                for (URL u : urlClassLoader.getURLs()) {
-                    String loadedJarName = Paths.get(u.toURI()).getFileName().toString();
-                    if (jarName.equals(loadedJarName)) {
-                        log.trace("Jar " + jarName + " already exists on classpath with " + u);
-                        return 0;
+            // prevent duplicates
+            for (URL url : urlClassLoader.getURLs()) {
+                URI loadedUri = url.toURI();
+                
+                // exact match is a duplicate
+                if (loadedUri.equals(uri)) {
+                    log.trace("URI " + uri + " already on classpath");
+                    return false;
+                }
+                
+                if (isJar) {
+                    File loadedFile = new File(loadedUri);
+                    if (file.getName().equals(loadedFile.getName())) {
+                        log.trace("File " + file + " already on classpath");
+                        return false;
                     }
                 }
             }
             
-            // use reflection to add url
-            invokeDeclared(
-                    URLClassLoader.class, classLoader, "addURL", new Class[] { URL.class }, new Object[] { uri.toURL() });
+            // add url via reflection (to workaround private access)
+            invokeDeclared(URLClassLoader.class, classLoader, "addURL", new Class[] { URL.class }, new Object[] { uri.toURL() });
             
-            return 1;
+            return true;
         } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | URISyntaxException | MalformedURLException e) {
-            throw new IllegalArgumentException("Unable to add url to classloader: " + uri, e);
+            throw new IllegalArgumentException("Unable to add " + uri + " to classpath", e);
         }
     }
 
-    /**
-     * Invokes any method of a class, even private ones.
-     *
-     * @param c class to examine
-     * @param obj object to inspect
-     * @param method method to invoke
-     * @param paramClasses	parameter types
-     * @param params parameters
-     */
-    public static Object invokeDeclared(Class c, Object obj, String method, Class[] paramClasses, Object[] params) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    static public Object invokeDeclared(Class c, Object obj, String method, Class[] paramClasses, Object[] params) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Method m = c.getDeclaredMethod(method, paramClasses);
         m.setAccessible(true);
         return m.invoke(obj, params);
     }
 
-    public static  File getContainingJar(String resourceName) {
+    static public File findContainingJar(ClassLoader classLoader, String resourceName) {
         File jarFile;
         URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
         
@@ -135,14 +129,37 @@ public class ClassLoaderHelper {
         return jarFile;
     }
     
-    static public List<URL> getClassPathUrls() {
-        return java.util.Arrays.asList(
-                ((URLClassLoader)(Thread.currentThread().getContextClassLoader())).getURLs());
+    static public List<URL> buildClassPath(ClassLoader classLoader) {
+        if (!(classLoader instanceof URLClassLoader)) {
+            throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
+        }
+        
+        URLClassLoader urlClassLoader = (URLClassLoader)classLoader;
+        
+        return java.util.Arrays.asList(urlClassLoader.getURLs());
     }
     
-    static public List<File> getClassPathFiles() {
-        List<URL> urls = getClassPathUrls();
+    static public String buildClassPathAsString(ClassLoader classLoader) {
+        List<File> files = buildClassPathAsFiles(classLoader);
+        
+        StringBuilder cp = new StringBuilder();
+        
+        for (File file : files) {
+            if (cp.length() > 0) {
+                cp.append(File.pathSeparator);
+            }
+            
+            cp.append(file.getAbsolutePath());
+        }
+        
+        return cp.toString();
+    }
+    
+    static public List<File> buildClassPathAsFiles(ClassLoader classLoader) {
+        List<URL> urls = buildClassPath(classLoader);
+        
         List<File> files = new ArrayList<>();
+        
         for (URL u : urls) {
             try {
                 files.add(new File(u.toURI()));
@@ -150,6 +167,7 @@ public class ClassLoaderHelper {
                 // do nothing...
             }
         }
+        
         return files;
     }
 }

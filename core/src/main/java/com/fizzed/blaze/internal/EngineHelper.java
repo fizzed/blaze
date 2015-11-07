@@ -29,7 +29,7 @@ public class EngineHelper {
     static private final Logger log = LoggerFactory.getLogger(EngineHelper.class);
  
     private static final ServiceLoader<Engine> ENGINE_LOADER
-        = ServiceLoader.load(Engine.class, Thread.currentThread().getContextClassLoader());
+        = ServiceLoader.load(Engine.class, ClassLoaderHelper.currentThreadContextClassLoader());
     
     static public Engine findByFileExtension(String fileExtension, boolean invalidateCache) {
         if (invalidateCache) {
@@ -43,16 +43,6 @@ public class EngineHelper {
             
             if (engine.getFileExtension().equals(fileExtension)) {
                 return engine;
-                /**
-                // strange issue with abstract class being instantiated...
-                try {
-                    Class engineClass = engine.getClass();
-                    log.debug("Found engine class {}", engineClass);
-                    return (Engine)engineClass.newInstance();
-                } catch (InstantiationException | IllegalAccessException e) {
-                    throw new BlazeException("Unable to create new engine instance", e);
-                }
-                */
             }
         }
         

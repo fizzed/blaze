@@ -31,7 +31,6 @@ public class TryIt {
     static private final Logger log = LoggerFactory.getLogger(TryIt.class);
     
     static public void main(String[] args) throws Exception {
-        
         File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");
                 
         Context context = new ContextImpl(null, null, scriptFile.toPath(), null);

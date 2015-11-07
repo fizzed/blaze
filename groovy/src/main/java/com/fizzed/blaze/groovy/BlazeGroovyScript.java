@@ -17,73 +17,45 @@ package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.NoSuchTaskException;
+import com.fizzed.blaze.jdk.TargetObjectScript;
 import groovy.lang.Script;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BlazeGroovyScript implements com.fizzed.blaze.core.Script {
+public class BlazeGroovyScript extends TargetObjectScript {
     static final private Logger log = LoggerFactory.getLogger(BlazeGroovyScript.class);
+    
+    static final public Predicate<Method> FILTER_EXCLUDE_RUN_METHOD = (Method m) -> {
+        return !m.getName().equals("run");
+    };
     
     final private BlazeGroovyEngine engine;
     final private Script script;
 
     public BlazeGroovyScript(BlazeGroovyEngine engine, Script script) {
+        super(script);
         this.engine = engine;
         this.script = script;
     }
     
     @Override
     public List<String> tasks() throws BlazeException {
-        List<String> tasks = new ArrayList<>();
-        
-        try {
-            Method[] methods = this.script.getClass().getDeclaredMethods();
-            
-            for (Method m : methods) {
-                
-                //log.debug("method: {}", m);
-                
-                // groovy defines run() and a static main() method
-                if (!Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())) {
-                    // groovy scripts have a run() method by default (filter it)
-                    if (!m.getName().equals("run")) {
-                        tasks.add(m.getName());
-                    }
-                }
-            }
-        } catch (SecurityException e) {
-            throw new BlazeException("Unable to groovy script class", e);
-        }
-        
-        //log.debug("tasks {}", tasks);
-        
-        return tasks;
+        return findTasks(FILTER_PUBLIC_INSTANCE_METHOD, FILTER_EXCLUDE_RUN_METHOD);
     }
 
     @Override
     public void execute(String task) throws BlazeException {
-        // verify the method (task) exists first
-        Method method;
-        try {
-            method = this.script.getClass().getDeclaredMethod(task, new Class[]{});
-        } catch (NoSuchMethodException e) {
-            throw new NoSuchTaskException(task);
-        } catch (SecurityException e) {
-            throw new BlazeException("Unable to access task '" + task + "'", e);
-        }
+        Method method = findTaskMethod(task);
         
         try {
             script.invokeMethod(task, new Object[]{});
-            //method.invoke(this.script, new Object[]{});
         } catch (Exception e) {
-            //Throwable t = e.getCause();
-            
             logFirstScriptSource(e);
-            
             if (e instanceof BlazeException) {
                 throw (BlazeException)e;
             } else if (e instanceof RuntimeException) {
@@ -92,9 +64,6 @@ public class BlazeGroovyScript implements com.fizzed.blaze.core.Script {
                 throw new BlazeException("Unable to execute task '" + task + "'", e);
             }
         }
-        //} catch (IllegalAccessException | IllegalArgumentException e) {
-        //    throw new BlazeException("Unable to execute task '" + task + "'", e);
-        //}
     }
     
     public void logFirstScriptSource(Throwable t) {

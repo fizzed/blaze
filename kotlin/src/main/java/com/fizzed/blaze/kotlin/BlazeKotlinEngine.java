@@ -20,7 +20,6 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.AbstractEngine;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
-import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.FileHelper;
 import java.io.File;
@@ -67,18 +66,17 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         // what class would we be producing?
         String className = context.scriptFile().toFile().getName().replace(".java", "");
         
-        ClassLoader classLoader = currentThreadContextClassLoader();
-        Path classesDir = null;
+        Path classesPath = null;
         Path expectedClassFile = null;
         String scriptHash = null;
         boolean compile = true;
         
         try {
             // directory to save compile classes on a semi-reliable basis
-            classesDir = ConfigHelper.userEngineClassesDir(context, getName());
-            log.trace("Using classes dir {}", classesDir);
+            classesPath = ConfigHelper.userEngineClassesDir(context, getName());
+            log.trace("Using classesPath {}", classesPath);
             
-            expectedClassFile = classesDir.resolve(className + ".class");
+            expectedClassFile = classesPath.resolve(className + ".class");
             
             // to check if we need to recompile we use an md5 hash of the source file
             scriptHash = FileHelper.md5hash(context.scriptFile());
@@ -93,7 +91,7 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         if (!compile) {
             log.info("Script has not changed, using previous compiled version");
         } else {
-            javac(classLoader, context, classesDir);
+            javac(context, classesPath);
             
             try {
                 // save the hash for future use
@@ -104,27 +102,40 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         }
         
         // add directory it was compiled to classpath
-        if (ClassLoaderHelper.addClassPath(classLoader, classesDir)) {
-            log.info("Added {} to classpath", classesDir);
+        int changes = ClassLoaderHelper.addFileToClassPath(classesPath, Thread.currentThread().getContextClassLoader());
+        if (changes > 0) {
+            log.info("Adding {} to classpath", classesPath);
         }
         
         // create new instance of this class
         try {
-            Class<?> type = classLoader.loadClass(className);
+            Class<?> type = Thread.currentThread().getContextClassLoader().loadClass(className);
             
-            Object targetObject = type.getConstructor().newInstance();
+            Object object = type.getConstructor().newInstance();
 
-            return new BlazeJdkScript(targetObject);
+            return new BlazeJdkScript(this, object);
         } catch (ClassNotFoundException | InstantiationException | IllegalArgumentException |
                 IllegalAccessException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
             throw new BlazeException("Unable to load class '" + className + "'", e);
         }
     }
     
-    public void javac(ClassLoader classLoader, Context context, Path classesDir) throws BlazeException {
-        // java compiler requires a classpath to build with - use the existing
-        // runtime classpath (not what we started with, but current one)
-        String classpath = ClassLoaderHelper.buildClassPathAsString(classLoader);
+    public void javac(Context context, Path classesPath) throws BlazeException {
+        // classpath may have been adjusted at runtime, build a new one
+        StringBuilder classpath = new StringBuilder();
+        
+        URL[] classpathUrls = ((URLClassLoader)(Thread.currentThread().getContextClassLoader())).getURLs();
+        for (URL url : classpathUrls) {
+            if (classpath.length() > 0) {
+                classpath.append(File.pathSeparator);
+            }
+            
+            try {
+                classpath.append(new File(url.toURI()).getAbsolutePath());
+            } catch (Exception e) {
+                throw new BlazeException("Unable to build javac classpath", e);
+            }
+        }
 
         List<String> javacOptions = new ArrayList<>();
 
@@ -135,18 +146,18 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         
         // classpath to compile java file with
         javacOptions.add("-cp");
-        javacOptions.add(classpath);
+        javacOptions.add(classpath.toString());
 
         // directory to output compiles classes
         javacOptions.add("-d");
-        javacOptions.add(classesDir.toString());
+        javacOptions.add(classesPath.toString());
 
         javacOptions.add("-Xlint:unchecked");
         
         //
         // java -> class
         //
-        JavaCompiler compiler = loadJavaCompiler(classLoader, context);
+        JavaCompiler compiler = loadJavaCompiler(context);
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
@@ -201,14 +212,14 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         }
     }
     
-    static public JavaCompiler loadJavaCompiler(ClassLoader classLoader, Context context) {
+    static public JavaCompiler loadJavaCompiler(Context context) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         
         if (compiler == null) {
             // try to fallback to the eclipse compiler (if its on classpath)
             Class<?> eclipseJavaCompilerClass = null;
             try {
-                eclipseJavaCompilerClass = classLoader.loadClass("org.eclipse.jdt.internal.compiler.tool.EclipseCompiler");
+                eclipseJavaCompilerClass = Class.forName("org.eclipse.jdt.internal.compiler.tool.EclipseCompiler");
 
                 compiler = (JavaCompiler)eclipseJavaCompilerClass.newInstance();
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {

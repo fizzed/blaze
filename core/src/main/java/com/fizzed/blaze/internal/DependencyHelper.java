@@ -43,7 +43,9 @@ public class DependencyHelper {
     static private final Map<String, List<Dependency>> WELL_KNOWN_ENGINE_DEPENDENCIES = new HashMap<>();
     static {
         WELL_KNOWN_ENGINE_DEPENDENCIES.put(".groovy",
-            Arrays.asList(new Dependency("com.fizzed", "blaze-groovy", Version.getVersion())));     
+            Arrays.asList(new Dependency("com.fizzed", "blaze-groovy", Version.getVersion())));
+        WELL_KNOWN_ENGINE_DEPENDENCIES.put(".kt",
+            Arrays.asList(new Dependency("com.fizzed", "blaze-kotlin", Version.getVersion())));
     }
     
     static public List<Dependency> wellKnownEngineDependencies(String fileExtension) {

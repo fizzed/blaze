@@ -20,6 +20,7 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.internal.DependencyHelper;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
+import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.IvyDependencyResolver;
 import com.fizzed.blaze.internal.EngineHelper;
@@ -231,11 +232,10 @@ public class Blaze {
             }
             
             if (dependencyJarFiles != null) {
+                final ClassLoader classLoader = currentThreadContextClassLoader();
                 dependencyJarFiles.stream().forEach((jarFile) -> {
-                    int changed
-                            = ClassLoaderHelper.addFileToClassPath(jarFile, Thread.currentThread().getContextClassLoader());
-                    if (changed > 0) {
-                        log.info("Adding {} to classpath", jarFile.getName());
+                    if (ClassLoaderHelper.addClassPath(classLoader, jarFile)) {
+                        log.info("Added {} to classpath", jarFile.getName());
                         log.debug(" => {}", jarFile);
                     }
                 });

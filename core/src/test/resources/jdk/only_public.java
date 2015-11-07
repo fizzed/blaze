@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.Context;
-
-abstract public class AbstractEngine<S extends Script> implements Engine<S> {
-
-    protected Context initialContext;
+/**
+ *
+ * @author joelauer
+ */
+public class only_public {
     
-    @Override
-    public boolean isInitialized() {
-        return initialContext != null;
+    private void priv() {
+        // this should not be in tasks
     }
     
-    @Override
-    public void init(Context initialContext) throws BlazeException {
-        this.initialContext = initialContext;
+    protected void prot() {
+        // this should not work
+    }
+    
+    public void main() {
+        System.out.println("Hello World!");
     }
     
 }
