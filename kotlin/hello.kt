@@ -1,6 +1,6 @@
 import com.fizzed.blaze.Contexts
 
-log = Contexts.logger()
+const log = Contexts.logger()
 
 fun main() {
     log.info("Hi!")
