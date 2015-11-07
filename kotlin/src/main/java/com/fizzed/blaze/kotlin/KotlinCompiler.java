@@ -18,13 +18,11 @@ package com.fizzed.blaze.kotlin;
 //import static org.jetbrains.kotlin.cli.jvm.config.ConfigPackage.addJvmClasspathRoots;
 //import static org.jetbrains.kotlin.config.ConfigPackage.addKotlinSourceRoot;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
-import com.fizzed.blaze.internal.ConfigHelper;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys;
-import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity;
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
@@ -36,67 +34,38 @@ import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
 import org.jetbrains.kotlin.resolve.AnalyzerScriptParameter;
 //import org.jetbrains.kotlin.types.JetType;
-import org.jetbrains.kotlin.utils.KotlinPaths;
 import org.jetbrains.kotlin.utils.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.intellij.openapi.Disposable;
+import java.nio.file.Path;
 import static org.jetbrains.kotlin.cli.jvm.config.JvmContentRootsKt.addJvmClasspathRoots;
 import static org.jetbrains.kotlin.config.ContentRootsKt.addKotlinSourceRoot;
 import org.jetbrains.kotlin.parsing.JetScriptDefinitionProvider;
 //import com.xafero.dynkt.util.ReflUtils;
 
 public class KotlinCompiler implements MessageCollector, Disposable {
+    static private final Logger log = LoggerFactory.getLogger(KotlinCompiler.class);
 
-    private static final Logger log = LoggerFactory.getLogger("kc");
+    private final ClassLoader classLoader;
+    private final List<String> configPaths;
 
-    private KotlinPaths paths;
-    private List<String> configPaths;
-
-    public KotlinCompiler() {
-        
-    }
-
-    public Class<?> compileScript(File file) throws ClassNotFoundException {
-        log.info("Compiling '{}'...", file);
-     
-        
-        this.paths = PathUtil.getKotlinPathsForCompiler();
+    public KotlinCompiler(ClassLoader classLoader) {
+        this.classLoader = classLoader;
         this.configPaths = EnvironmentConfigFiles.JVM_CONFIG_FILES;
+    }
+
+    public void compile(Path file, Path classesDir) throws ClassNotFoundException {
+        //log.info("Compiling '{}'...", file);
         
-        CompilerConfiguration config = createCompilerConfig(file);
-        config = addCurrentClassPath(config);
-        
-        KotlinCoreEnvironment env = KotlinCoreEnvironment.createForProduction(this, config, configPaths);
-        
+        CompilerConfiguration configuration = buildCompilerConfiguration(classLoader, file.toFile());
+        KotlinCoreEnvironment env = KotlinCoreEnvironment.createForProduction(this, configuration, configPaths);
         JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
-        
-        
-        
-        File classesDir = new File("target/kotlin");
-        
-        KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir, false);
-        
-        ClassLoaderHelper.addFileToClassPath(classesDir, Thread.currentThread().getContextClassLoader());
-        
-        return Class.forName("Hello");
-        
-        //return KotlinToJVMBytecodeCompiler.compileScript(config, paths, env);
+        KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir.toFile(), false);
     }
 
-    @SuppressWarnings("unchecked")
-    private CompilerConfiguration addCurrentClassPath(CompilerConfiguration config) {
-        K2JVMCompilerArguments args = new K2JVMCompilerArguments();
-        args.classpath = System.getProperty("java.class.path");
-        args.noStdlib = true;
-        
-        //addJvmClasspathRoots(config,
-        //        (List<File>) ReflUtils.invoke(K2JVMCompiler.class, null, "getClasspath", paths, cmpArgs));
-        return config;
-    }
-
-    private CompilerConfiguration createCompilerConfig(File file) {
+    private CompilerConfiguration buildCompilerConfiguration(ClassLoader classLoader, File file) {
         CompilerConfiguration config = new CompilerConfiguration();
         config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, this);
         
@@ -105,8 +74,7 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         scriptParams.addAll(CommandLineScriptUtils.scriptParameters());
         
         config.put(JVMConfigurationKeys.MODULE_NAME, "");
-        
-        
+
         // Bundle injectionscriptParams
         //JetType type = KotlinBuiltIns.getInstance().getMutableMap().getDefaultType();
         //Name ctxName = Name.identifier("ctx");
@@ -118,7 +86,7 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         
         addJvmClasspathRoots(config, PathUtil.getJdkClassesRoots());
         
-        addJvmClasspathRoots(config, ClassLoaderHelper.getClassPathFiles());
+        addJvmClasspathRoots(config, ClassLoaderHelper.buildClassPathAsFiles(classLoader));
         
         addKotlinSourceRoot(config, file.getAbsolutePath());
         

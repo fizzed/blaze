@@ -13,47 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.jdk;
+package com.fizzed.blaze.kotlin;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.AbstractEngine;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
+import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.FileHelper;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Level;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
-    static private final Logger log = LoggerFactory.getLogger(BlazeJdkEngine.class);
+public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
+    static private final Logger log = LoggerFactory.getLogger(BlazeKotlinEngine.class);
 
     @Override
     public String getName() {
-        return "java";
+        return "kotlin";
     }
     
     @Override
     public String getFileExtension() {
-        return ".java";
+        return ".kt";
     }
     
     @Override
@@ -62,21 +48,24 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
     }
 
     @Override
-    public BlazeJdkScript compile(Context context) throws BlazeException {
+    public BlazeKotlinScript compile(Context context) throws BlazeException {
         // what class would we be producing?
-        String className = context.scriptFile().toFile().getName().replace(".java", "");
+        // hello.kt -> Hello
+        String className = context.scriptFile().toFile().getName().replace(".kt", "");
+        className = className.substring(0, 1).toUpperCase() + className.substring(1);
         
-        Path classesPath = null;
+        ClassLoader classLoader = currentThreadContextClassLoader();
+        Path classesDir = null;
         Path expectedClassFile = null;
         String scriptHash = null;
         boolean compile = true;
         
         try {
             // directory to save compile classes on a semi-reliable basis
-            classesPath = ConfigHelper.userEngineClassesDir(context, getName());
-            log.trace("Using classesPath {}", classesPath);
+            classesDir = ConfigHelper.userEngineClassesDir(context, getName());
+            log.trace("Using classes dir {}", classesDir);
             
-            expectedClassFile = classesPath.resolve(className + ".class");
+            expectedClassFile = classesDir.resolve(className + ".class");
             
             // to check if we need to recompile we use an md5 hash of the source file
             scriptHash = FileHelper.md5hash(context.scriptFile());
@@ -91,7 +80,14 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         if (!compile) {
             log.info("Script has not changed, using previous compiled version");
         } else {
-            javac(context, classesPath);
+            //javac(classLoader, context, classesDir);
+            KotlinCompiler compiler = new KotlinCompiler(classLoader);
+            
+            try {
+                compiler.compile(context.scriptFile(), classesDir);
+            } catch (Exception e) {
+                throw new BlazeException(e.getMessage(), e);
+            }
             
             try {
                 // save the hash for future use
@@ -102,140 +98,20 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         }
         
         // add directory it was compiled to classpath
-        int changes = ClassLoaderHelper.addFileToClassPath(classesPath, Thread.currentThread().getContextClassLoader());
-        if (changes > 0) {
-            log.info("Adding {} to classpath", classesPath);
+        if (ClassLoaderHelper.addClassPath(classLoader, classesDir)) {
+            log.info("Added {} to classpath", classesDir);
         }
         
         // create new instance of this class
         try {
-            Class<?> type = Thread.currentThread().getContextClassLoader().loadClass(className);
+            Class<?> type = classLoader.loadClass(className);
             
-            Object object = type.getConstructor().newInstance();
+            Object targetObject = type.getConstructor().newInstance();
 
-            return new BlazeJdkScript(this, object);
+            return new BlazeKotlinScript(targetObject);
         } catch (ClassNotFoundException | InstantiationException | IllegalArgumentException |
                 IllegalAccessException | NoSuchMethodException | InvocationTargetException | SecurityException e) {
             throw new BlazeException("Unable to load class '" + className + "'", e);
         }
-    }
-    
-    public void javac(Context context, Path classesPath) throws BlazeException {
-        // classpath may have been adjusted at runtime, build a new one
-        StringBuilder classpath = new StringBuilder();
-        
-        URL[] classpathUrls = ((URLClassLoader)(Thread.currentThread().getContextClassLoader())).getURLs();
-        for (URL url : classpathUrls) {
-            if (classpath.length() > 0) {
-                classpath.append(File.pathSeparator);
-            }
-            
-            try {
-                classpath.append(new File(url.toURI()).getAbsolutePath());
-            } catch (Exception e) {
-                throw new BlazeException("Unable to build javac classpath", e);
-            }
-        }
-
-        List<String> javacOptions = new ArrayList<>();
-
-        javacOptions.add("-source");
-        javacOptions.add("1.8");
-        javacOptions.add("-target");
-        javacOptions.add("1.8");
-        
-        // classpath to compile java file with
-        javacOptions.add("-cp");
-        javacOptions.add(classpath.toString());
-
-        // directory to output compiles classes
-        javacOptions.add("-d");
-        javacOptions.add(classesPath.toString());
-
-        javacOptions.add("-Xlint:unchecked");
-        
-        //
-        // java -> class
-        //
-        JavaCompiler compiler = loadJavaCompiler(context);
-
-        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-        
-        Iterable<? extends JavaFileObject> compilationUnits =
-                fileManager.getJavaFileObjectsFromFiles(Arrays.asList(context.scriptFile().toFile()));
-
-        JavaCompiler.CompilationTask task
-                = compiler.getTask(null, null, diagnostics, javacOptions, null, compilationUnits);
-
-        boolean success = task.call();
-        
-        if (!success) {
-            log.info("---- Compilation Error ----");
-        }
-        
-        // e.g. [ERROR] /home/joelauer/workspace/fizzed/java-blaze/core/src/main/java/com/fizzed/blaze/jdk/BlazeJdkEngine.java:[163,60] ';' expected
-        for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-            JavaFileObject jfo = (JavaFileObject)diagnostic.getSource();
-            
-            File javaFile = new File(jfo.toUri());
-            
-            // build message
-            String diagnosticMessage = new StringBuilder()
-                .append(javaFile)
-                .append(":[")
-                .append(diagnostic.getLineNumber())
-                .append(",")
-                .append(diagnostic.getColumnNumber())
-                .append("] ")
-                .append(diagnostic.getMessage(null))
-                .toString();
-                    
-            switch (diagnostic.getKind()) {
-                case ERROR:
-                    log.error(diagnosticMessage);
-                    break;
-                case MANDATORY_WARNING:
-                case WARNING:
-                    log.warn(diagnosticMessage);
-                    break;
-                case OTHER:
-                case NOTE:
-                    log.info(diagnosticMessage);
-                    break;
-            }
-        }
-        
-        if (!success) {
-            throw new MessageOnlyException("Unable to compile " + context.scriptFile());
-        }
-    }
-    
-    static public JavaCompiler loadJavaCompiler(Context context) {
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        
-        if (compiler == null) {
-            // try to fallback to the eclipse compiler (if its on classpath)
-            Class<?> eclipseJavaCompilerClass = null;
-            try {
-                eclipseJavaCompilerClass = Class.forName("org.eclipse.jdt.internal.compiler.tool.EclipseCompiler");
-
-                compiler = (JavaCompiler)eclipseJavaCompilerClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                // do nothing
-            }
-        }
-        
-        if (compiler == null) {
-            throw new MessageOnlyException("Unable to compile " + context.scriptFile() + " to a class file.\n"
-                + " The system java compiler is missing (are you running a JRE rather than a JDK?)\n"
-                + " Either run this with a JDK or add \"org.eclipse.jdt.core.compiler:ecj:<version>\" to blaze.dependencies.");
-        }
-        
-        log.debug("Using java compiler {}", compiler.getClass().getCanonicalName());
-        
-        return compiler;
-    }
-    
+    } 
 }

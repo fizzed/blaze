@@ -15,29 +15,40 @@
  */
 package com.fizzed.blaze.kotlin;
 
+import com.fizzed.blaze.Context;
+import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.util.Timer;
-import com.intellij.util.ArrayUtil;
 import java.io.File;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
-import org.jetbrains.kotlin.cli.common.messages.MessageCollectorUtil;
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler;
-import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
-import org.jetbrains.kotlin.codegen.CompilationException;
-import org.jetbrains.kotlin.config.CommonConfigurationKeys;
-import org.jetbrains.kotlin.config.CompilerConfiguration;
-import org.jetbrains.kotlin.utils.KotlinPaths;
-import org.jetbrains.kotlin.utils.PathUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Joe Lauer
  */
 public class TryIt {
+    static private final Logger log = LoggerFactory.getLogger(TryIt.class);
     
     static public void main(String[] args) throws Exception {
+        //File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");
+        File scriptFile = new File("hello.kt");  
+        
+        Context context = new ContextImpl(null, null, scriptFile.toPath(), null);
+                
+        BlazeKotlinEngine engine = new BlazeKotlinEngine();
+        
+        engine.init(context);
+        
+        Timer timer = new Timer();
+        
+        BlazeKotlinScript script = engine.compile(context);
+        
+        log.info("Compiled in {} ms", timer.stop().millis());
+        
+        script.execute("main");
+        
+        
+        /**
         KotlinCompiler compiler = new KotlinCompiler();
 
         Timer timer = new Timer();
@@ -62,6 +73,7 @@ public class TryIt {
         
         Method  method = script.getClass().getDeclaredMethod("main");
         method.invoke(script, null);
+        */
     }
     
 }

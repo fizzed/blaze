@@ -1,8 +1,7 @@
+import com.fizzed.blaze.Contexts
 
-fun getHelloString() : String {
-    return "Hello, world!"
-}
+log = Contexts.logger()
 
 fun main() {
-    System.out.println(getHelloString())
+    log.info("Hi!")
 }
