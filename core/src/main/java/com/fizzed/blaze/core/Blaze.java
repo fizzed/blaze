@@ -28,7 +28,6 @@ import com.fizzed.blaze.internal.FileHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -235,7 +234,7 @@ public class Blaze {
                 final ClassLoader classLoader = currentThreadContextClassLoader();
                 dependencyJarFiles.stream().forEach((jarFile) -> {
                     if (ClassLoaderHelper.addClassPath(classLoader, jarFile)) {
-                        log.info("Added {} to classpath", jarFile.getName());
+                        log.debug("Added {} to classpath", jarFile.getName());
                         log.debug(" => {}", jarFile);
                     }
                 });

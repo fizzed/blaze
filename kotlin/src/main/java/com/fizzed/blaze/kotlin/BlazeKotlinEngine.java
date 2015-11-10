@@ -80,7 +80,7 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         }
         
         if (!compile) {
-            log.info("Script has not changed, using previous compiled version");
+            log.debug("Script has not changed, using previous compiled version");
         } else {
             KotlinCompiler compiler = new KotlinCompiler(classLoader);
             compiler.compile(context.scriptFile(), classesDir, sourceFile.isScript());
@@ -95,7 +95,7 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         
         // add directory it was compiled to classpath
         if (ClassLoaderHelper.addClassPath(classLoader, classesDir)) {
-            log.info("Added {} to classpath", classesDir);
+            log.debug("Added {} to classpath", classesDir);
         }
         
         // create new instance of this class

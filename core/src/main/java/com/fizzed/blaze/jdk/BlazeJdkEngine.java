@@ -26,15 +26,11 @@ import com.fizzed.blaze.internal.FileHelper;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -93,7 +89,7 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         }
         
         if (!compile) {
-            log.info("Script has not changed, using previous compiled version");
+            log.debug("Script has not changed, using previous compiled version");
         } else {
             javac(classLoader, context, classesDir);
             
@@ -107,7 +103,7 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         
         // add directory it was compiled to classpath
         if (ClassLoaderHelper.addClassPath(classLoader, classesDir)) {
-            log.info("Added {} to classpath", classesDir);
+            log.debug("Added {} to classpath", classesDir);
         }
         
         // create new instance of this class
