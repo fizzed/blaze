@@ -21,6 +21,7 @@ import com.fizzed.blaze.core.CompilationException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
+import com.fizzed.blaze.internal.NoopDependencyResolver;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,6 +57,8 @@ public class BlazeKotlinEngineTest {
     public void hello() throws Exception {
         Blaze blaze
             = Blaze.builder()
+                // to prevent tests failing on new version not being installed locally yet
+                .dependencyResolver(new NoopDependencyResolver())
                 .file(resourceAsFile("/kotlin/hello.kts"))
                 .build();
         
@@ -70,6 +73,7 @@ public class BlazeKotlinEngineTest {
     public void noclazz() throws Exception {
         Blaze blaze
             = Blaze.builder()
+                .dependencyResolver(new NoopDependencyResolver())
                 .file(resourceAsFile("/kotlin/noclazz.kt"))
                 .build();
         
@@ -85,6 +89,7 @@ public class BlazeKotlinEngineTest {
         try {
             Blaze blaze
                 = Blaze.builder()
+                    .dependencyResolver(new NoopDependencyResolver())
                     .file(resourceAsFile("/kotlin/nocompile.kts"))
                     .build();
             fail();
@@ -97,6 +102,7 @@ public class BlazeKotlinEngineTest {
     public void tasks() throws Exception {
         Blaze blaze
             = Blaze.builder()
+                .dependencyResolver(new NoopDependencyResolver())
                 .file(resourceAsFile("/kotlin/only_public.kt"))
                 .build();
         

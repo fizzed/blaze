@@ -49,6 +49,7 @@ public class BlazeGroovyEngineTest {
     public void empty() throws Exception {
         Blaze blaze
             = Blaze.builder()
+                // to prevent tests failing on new version not being installed locally yet
                 .dependencyResolver(new NoopDependencyResolver())
                 .file(resourceAsFile("/groovy/empty.groovy"))
                 .build();
