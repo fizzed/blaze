@@ -12,7 +12,7 @@ with (Imports) {
     var globber = Globber.globber;
 
     var main = function() {
-        globber("*")
+        globber(Contexts.baseDir(), "*.{java,js,groovy,kt,kts}")
             .filesOnly()
             .visibleOnly()
             .scan().stream().forEach(function(p) {

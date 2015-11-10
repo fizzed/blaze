@@ -5,7 +5,7 @@ import static com.fizzed.blaze.util.Globber.globber
 log = Contexts.logger()
 
 def main() {
-    globber("*")
+    globber(Contexts.baseDir(), "*.{java,js,groovy,kt,kts}")
         .filesOnly()
         .visibleOnly()
         .scan().stream().forEach { p ->

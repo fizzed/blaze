@@ -34,7 +34,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler;
 import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
 import org.jetbrains.kotlin.resolve.AnalyzerScriptParameter;
-//import org.jetbrains.kotlin.types.JetType;
 import org.jetbrains.kotlin.utils.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,12 +66,15 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         this.compileWarnings.set(0);
         CompilerConfiguration configuration = buildCompilerConfiguration(classLoader, file.toFile());
         KotlinCoreEnvironment env = KotlinCoreEnvironment.createForProduction(this, configuration, configPaths);
+        
         // marking it as a script dramatically changes what is produced
         if (isScript) {
             JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
         }
+        
         boolean compiled = 
-                KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir.toFile(), false);
+            KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir.toFile(), false);
+        
         if (!compiled) {
             throw new CompilationException("Unable to compile with " + this.compileErrors.get()
                     + " errors and " + this.compileWarnings.get() + " warnings.");
@@ -88,13 +90,6 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         scriptParams.addAll(CommandLineScriptUtils.scriptParameters());
         
         config.put(JVMConfigurationKeys.MODULE_NAME, "");
-
-        // Bundle injectionscriptParams
-        //JetType type = KotlinBuiltIns.getInstance().getMutableMap().getDefaultType();
-        //Name ctxName = Name.identifier("ctx");
-        
-        //scriptParams.add(new AnalyzerScriptParameter(ctxName, type));
-        
         config.put(JVMConfigurationKeys.SCRIPT_PARAMETERS, scriptParams);
         
         addJvmClasspathRoots(config, PathUtil.getJdkClassesRoots());
@@ -129,6 +124,6 @@ public class KotlinCompiler implements MessageCollector, Disposable {
 
     @Override
     public void dispose() {
-        //log.info("Disposed.");
+        // nothing to do
     }
 }

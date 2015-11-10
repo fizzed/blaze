@@ -19,7 +19,7 @@ package com.fizzed.blaze.core;
  *
  * @author joelauer
  */
-public class CompilationException extends BlazeException {
+public class CompilationException extends MessageOnlyException {
 
     /**
      * Constructs an instance of <code>MessageOnlyException</code> with the

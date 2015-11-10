@@ -109,8 +109,8 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
             
             Class<?> type = classLoader.loadClass(className);
             
-            log.debug("{}", Arrays.asList(type.getConstructors()));
-            log.debug("{}", Arrays.asList(type.getDeclaredMethods()));
+            //log.trace("{}", Arrays.asList(type.getConstructors()));
+            //log.trace("{}", Arrays.asList(type.getDeclaredMethods()));
             
             Object targetObject = type.getConstructor().newInstance();
 
