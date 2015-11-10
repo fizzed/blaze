@@ -5,7 +5,7 @@
     <artifactId>blaze</artifactId>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
-    <version>0.4.1-SNAPSHOT</version>
+    <version>0.5.0</version>
  
     <parent>
         <groupId>com.fizzed</groupId>
@@ -21,7 +21,7 @@
     <scm>
         <url>https://github.com/fizzed/blaze</url>
         <connection>scm:git:git@github.com:fizzed/blaze.git</connection>
-        <tag>HEAD</tag>
+        <tag>v0.5.0</tag>
     </scm>
     
     <modules>
