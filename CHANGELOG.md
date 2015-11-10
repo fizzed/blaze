@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ==========================
 
+#### 0.5.0 - 2015-11-10
+
+ - Support for Kotlin and Kotlin scripts
+ - Default logging statements optimized (even less by default)
+ - Cached compiles now use MD5 hashes vs. timestamps
+
 #### 0.4.0 - 2015-11-05
 
  - System properties with -D are now processed and passed thru to a script

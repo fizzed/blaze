@@ -29,7 +29,8 @@ invoke blaze, it does the following:
     - Java (.java)
     - JavaScript (.js)
     - Groovy (.groovy)
-    - Or write your own (examples [here](core/src/main/java/com/fizzed/blaze/jdk), [here](core/src/main/java/com/fizzed/blaze/nashorn), and [here](groovy/src/main/java/com/fizzed/blaze/groovy))
+    - Kotlin (.kt, .kts)
+    - Or write your own (examples [here](core/src/main/java/com/fizzed/blaze/jdk), [here](core/src/main/java/com/fizzed/blaze/nashorn), [here](kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](groovy/src/main/java/com/fizzed/blaze/groovy))
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
  - Small size so you can commit `blaze.jar` to your repository
@@ -148,10 +149,7 @@ Blaze will output something like
 ```
 [INFO] Resolving dependencies...
 [INFO] Resolved dependencies in 429 ms
-[INFO] Adding zt-exec-1.8.jar to classpath
 [INFO] Compiling script...
-[INFO] No need to recompile!
-[INFO] Adding /tmp/blaze/O5DwfS-5UkJiX2OXhRKxAA==/classes to classpath
 [INFO] Compiled script in 7 ms
 [INFO] Executing examples/javac.java:main...
 [INFO] Finding javac...
@@ -207,9 +205,6 @@ This will output
 ```
 [INFO] Resolving dependencies...
 [INFO] Resolved dependencies in 447 ms
-[INFO] Adding zt-exec-1.8.jar to classpath
-[INFO] Adding blaze-groovy-0.3.1-SNAPSHOT.jar to classpath
-[INFO] Adding groovy-all-2.4.5-indy.jar to classpath
 [INFO] Compiling script...
 [INFO] Compiled script in 346 ms
 [INFO] Executing examples/javac.groovy:main...
@@ -251,7 +246,6 @@ This will output
 ```
 [INFO] Resolving dependencies...
 [INFO] Resolved dependencies in 429 ms
-[INFO] Adding zt-exec-1.8.jar to classpath
 [INFO] Compiling script...
 [INFO] Compiled script in 446 ms
 [INFO] Executing examples/javac.js:main...
@@ -366,6 +360,7 @@ blaze: [options] <task> [<task> ...]
 -qq               Only log warnings to stdout (including script logging)
 -x[x...]          Increases verbosity of logging to stdout
 -v|--version      Display version and then exit
+-Dname=value      Sets a System property as name=value
 ```
 
 ### Globbing
