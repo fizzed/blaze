@@ -23,7 +23,7 @@ import org.openide.util.*;
 public class BlazeNodeFactory implements NodeFactory {
 
     @Override
-    public NodeList createNodes(Project project) {
+    public NodeList<?> createNodes(Project project) {
         /**
         File projectDir = BlazeNetbeansProjects.getProjectDirectory(project);
         
@@ -46,11 +46,18 @@ public class BlazeNodeFactory implements NodeFactory {
             // find path we need
             FileObject p = project.getProjectDirectory();
             
-            Node node = DataObject.find(p).getNodeDelegate();
+            if (!blazeProject.getScriptRoots().contains(blazeProject.getProjectDir())) {
+                // lookup sub-dir
+                p = p.getFileObject("blaze");
+            }
             
-            if (node != null) {
-                projectNode = new BlazeNode(node, new BlazeNodeChildren(blazeProject, node));
-                return NodeFactorySupport.fixedNodeList(projectNode);
+            if (p != null) {
+                Node node = DataObject.find(p).getNodeDelegate();
+
+                if (node != null) {
+                    projectNode = new BlazeNode(node, new BlazeNodeChildren(blazeProject, node));
+                    return NodeFactorySupport.fixedNodeList(projectNode);
+                }
             }
         } catch (DataObjectNotFoundException ex) {
             Exceptions.printStackTrace(ex);

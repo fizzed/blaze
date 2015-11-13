@@ -29,6 +29,7 @@ public class BlazeProjects {
      */
     static public boolean isBlazed(File dir) {
         File blazeJarFile = findBlazeJar(dir);
+        
         return blazeJarFile != null;
     }
     
@@ -131,7 +132,12 @@ public class BlazeProjects {
             return false;
         }
         
-        String fileExtension = FileHelper.fileExtension(file);
+        String fileExtension = null;
+        try {
+            fileExtension = FileHelper.fileExtension(file);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
         
         if (SCRIPT_EXCLUDE_FILE_EXTS.contains(fileExtension)) {
             return false;

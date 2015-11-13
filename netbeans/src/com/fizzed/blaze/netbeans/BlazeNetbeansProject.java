@@ -37,7 +37,6 @@ import org.openide.filesystems.FileUtil;
 public class BlazeNetbeansProject {
     private static final Logger LOG = Logger.getLogger(BlazeNetbeansProject.class.getCanonicalName());
     
-    private final Project project;
     private final File projectDir;
     private final File blazeJarFile;
     private final Set<File> scriptRoots;
@@ -52,7 +51,6 @@ public class BlazeNetbeansProject {
     private final ExecutorService scriptResolvingExecutor;
     
     public BlazeNetbeansProject(Project project) {
-        this.project = project;
         this.projectDir = BlazeNetbeansProjects.getProjectDirectory(project);
         this.blazeJarFile = BlazeProjects.findBlazeJar(projectDir);
         this.scriptRoots = new LinkedHashSet<>();
@@ -61,10 +59,23 @@ public class BlazeNetbeansProject {
         this.scriptResolvingFutures = new ConcurrentHashMap<>();
         this.scriptResolvingExecutor = Executors.newFixedThreadPool(2);
     }
+
+    public File getProjectDir() {
+        return projectDir;
+    }
+
+    public Set<File> getScriptRoots() {
+        return scriptRoots;
+    }
     
     public void onOpen() {
-        // script root(s) (just project directory for now)
-        this.scriptRoots.add(projectDir);
+        // root project direcotyr OR blaze directory?
+        // when within maven/ant project any sources at root project dir really screws things up
+        if (BlazeProjects.isOnlyBlazed(projectDir)) {
+            this.scriptRoots.add(projectDir);
+        } else {
+            this.scriptRoots.add(new File(projectDir, "blaze"));
+        }
         
         // build source classpath for script roots
         List<URL> scriptRootUrls = new LinkedList<>();
@@ -169,9 +180,19 @@ public class BlazeNetbeansProject {
         }
         */
         
-        // regardless of file, boot classpath will always be the same
         if (this.bootClassPath == null) {
             LOG.log(Level.INFO, "Boot classpath not initialized yet for file {0}", file);
+            return null;
+        }
+        
+        // is the query on a script root dir?
+        if (file.isDirectory()) {
+            if (!this.scriptRoots.contains(file)) {
+                LOG.log(Level.INFO, "Not handling boot classpath query (not a script root dir) for {0}", file);
+                return null;
+            }
+        } else if (!BlazeProjects.isBlazeScript(this.scriptRoots, file)) {
+            LOG.log(Level.INFO, "Not handling boot classpath query (not a blaze script) for {0}", file);
             return null;
         }
         
@@ -185,10 +206,20 @@ public class BlazeNetbeansProject {
             return null;
         }
         */
-        //return this.sourceClassPaths[0];
         
         if (this.sourceClassPath == null) {
             LOG.log(Level.INFO, "Source classpath not initialized yet for file {0}", file);
+            return null;
+        }
+        
+        // is the query on a script root dir?
+        if (file.isDirectory()) {
+            if (!this.scriptRoots.contains(file)) {
+                LOG.log(Level.INFO, "Not handling source classpath query (not a script root dir) for {0}", file);
+                return null;
+            }
+        } else if (!BlazeProjects.isBlazeScript(this.scriptRoots, file)) {
+            LOG.log(Level.INFO, "Not handling source classpath query (not a blaze script) for {0}", file);
             return null;
         }
         
@@ -200,10 +231,12 @@ public class BlazeNetbeansProject {
         
         // is the file really one of the script root directories?
         if (this.scriptRoots.contains(file)) {
+            
             /**
             LOG.log(Level.INFO, "Not handling compile classpath query for script root dir {0}", file);
             return null;
             */
+            
             // netbeans uses the "source root" directory to determine if badges
             // need to be displayed for files in the packages windows -- the problem
             // is that blaze permits per-file classpaths -- one idea is to simply
@@ -217,7 +250,13 @@ public class BlazeNetbeansProject {
             //return this.scriptClassPaths.get(projectDir).getUnderlyingClassPath();
         }
         
-        if (!BlazeProjects.isBlazeScript(this.scriptRoots, file)) {
+        // is the query on a script root dir?
+        if (file.isDirectory()) {
+            if (!this.scriptRoots.contains(file)) {
+                LOG.log(Level.INFO, "Not handling compile classpath query (not a script root dir) for {0}", file);
+                return null;
+            }
+        } else if (!BlazeProjects.isBlazeScript(this.scriptRoots, file)) {
             LOG.log(Level.INFO, "Not handling compile classpath query (not a blaze script) for {0}", file);
             return null;
         }

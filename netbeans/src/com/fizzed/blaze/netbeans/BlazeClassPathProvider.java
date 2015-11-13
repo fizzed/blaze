@@ -31,7 +31,7 @@ public class BlazeClassPathProvider implements ClassPathProvider {
             return null;
         }
         
-        LOG.log(Level.FINEST, "findClassPath({0}, {1}) on project {2}", new Object[] { fileObject, type, project} );
+        LOG.log(Level.INFO, "findClassPath({0}, {1}) on project {2}", new Object[] { fileObject, type, project} );
         
         BlazeNetbeansProject blazeProject = BlazeNetbeansProjects.find(project);
         
@@ -54,7 +54,6 @@ public class BlazeClassPathProvider implements ClassPathProvider {
         ClassPath cp = null;
         
         switch (type) {
-            case JavaClassPathConstants.PROCESSOR_PATH:
             case ClassPath.COMPILE:
             case ClassPath.EXECUTE:
                 cp = blazeProject.findCompileClassPath(file);
@@ -71,7 +70,7 @@ public class BlazeClassPathProvider implements ClassPathProvider {
         
         }
         
-        LOG.log(Level.INFO, "Returning classpath {0} for {1}", new Object[] { cp, file });
+        LOG.log(Level.INFO, "Returning {0} classpath {1} for {2}", new Object[] { type, cp, file });
         
         return cp;
     }
