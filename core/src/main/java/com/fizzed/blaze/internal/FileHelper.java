@@ -54,28 +54,32 @@ public class FileHelper {
         return workingDir.toPath().relativize(file.toPath()).toFile();
     }
     
-    static public File relativizeToJavaWorkingDir(File file) {
+    static public Path relativizeToJavaWorkingDir(Path path) {
         try {
             // can it look better if we relativize it to the working dir?
-            File workingDir = new File(System.getProperty("user.dir"));
-            Path workingPath = workingDir.getCanonicalFile().toPath();
+            Path workingDir = Paths.get(System.getProperty("user.dir"));
+            Path workingPath = workingDir.toAbsolutePath().normalize();
             
-            Path filePath = file.getCanonicalFile().toPath();
+            Path filePath = path.toAbsolutePath().normalize();
         
             //System.out.println("workingPath: " + workingPath);
             //System.out.println("filePath: " + filePath);
 
-            return workingPath.relativize(filePath).toFile();
+            return workingPath.relativize(filePath);
         } catch (Exception e) {
             throw new BlazeException("Unable to canonicalize file", e);
         }
     }
     
     static public String fileExtension(File file) {
-        String name = file.getName();
+        return fileExtension(file.toPath());
+    }
+    
+    static public String fileExtension(Path path) {
+        String name = path.getFileName().toString();
         int lastIndexOf = name.lastIndexOf('.');
         if (lastIndexOf < 0) {
-            throw new IllegalArgumentException("File " + file + " missing file extension");
+            throw new IllegalArgumentException("Path " + path + " missing file extension");
         }
         return name.substring(lastIndexOf);
     }

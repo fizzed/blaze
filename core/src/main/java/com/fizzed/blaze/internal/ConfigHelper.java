@@ -51,6 +51,20 @@ public class ConfigHelper {
         return new File(directory, confFileName);
     }
     
+    static public Path path(Path directory, Path file) {
+        String fileExt = FileHelper.fileExtension(file);
+
+        String confFileName = file.getFileName().toString();
+        confFileName = confFileName.substring(0, confFileName.length() - fileExt.length());
+        confFileName += ".conf";
+
+        if (directory == null) {
+            return Paths.get(confFileName);
+        } else {
+            return directory.resolve(confFileName);
+        }
+    }
+    
     static public Config create(File file) {
         //
         // configuration

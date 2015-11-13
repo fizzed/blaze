@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
@@ -87,6 +88,40 @@ public class BlazeJdkEngineTest {
         
         assertThat(tasks, hasSize(1));
         assertThat(tasks, contains("main"));
+    }
+    
+    @Test
+    public void defaultBlazeInWorkingDir() throws Exception {
+        Blaze blaze
+            = Blaze.builder()
+                .directory(resourceAsFile("/jdk/project0"))
+                .build();
+        
+        systemOutRule.clearLog();
+        
+        blaze.execute();
+        
+        assertThat(systemOutRule.getLog(), containsString("worked"));
+        
+        assertThat(blaze.context().scriptFile(), is(resourceAsFile("/jdk/project0/blaze.java").toPath()));
+        assertThat(blaze.context().baseDir(), is(resourceAsFile("/jdk/project0").toPath()));
+    }
+    
+    @Test
+    public void defaultBlazeInSubBlazeDir() throws Exception {
+        Blaze blaze
+            = Blaze.builder()
+                .directory(resourceAsFile("/jdk/project1"))
+                .build();
+        
+        systemOutRule.clearLog();
+        
+        blaze.execute();
+        
+        assertThat(systemOutRule.getLog(), containsString("worked"));
+        
+        assertThat(blaze.context().scriptFile(), is(resourceAsFile("/jdk/project1/blaze/blaze.java").toPath()));
+        assertThat(blaze.context().baseDir(), is(resourceAsFile("/jdk/project1/blaze").toPath()));
     }
     
 }

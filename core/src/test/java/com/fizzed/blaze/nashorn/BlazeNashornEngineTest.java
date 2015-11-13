@@ -60,6 +60,8 @@ public class BlazeNashornEngineTest {
         try {
             Blaze blaze
                 = Blaze.builder()
+                    // bin directory exists but does not have a blaze script in it
+                    .directory(resourceAsFile("/globber"))
                     .build();
             fail();
         } catch (BlazeException e) {

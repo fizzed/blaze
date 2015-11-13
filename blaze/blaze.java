@@ -18,6 +18,7 @@ import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.withBaseDir;
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
+import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.system.ExecResult;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,6 +31,14 @@ import org.slf4j.Logger;
 
 public class blaze {
     static private final Logger log = Contexts.logger();
+    
+    public void try_all() {
+        // boom -- execute another blaze script in this jvm
+        Blaze.builder()
+            .file(withBaseDir("../examples/try_all.java"))
+            .build()
+            .execute();
+    }
     
     private String latest_tag() {
         String latestTag
@@ -56,8 +65,8 @@ public class blaze {
     }
     
     public void update_readme() throws IOException {
-        Path readmeFile = withBaseDir("README.md");
-        Path newReadmeFile = withBaseDir("README.md.new");
+        Path readmeFile = withBaseDir("../README.md");
+        Path newReadmeFile = withBaseDir("../README.md.new");
         
         // find latest version via git tag
         String latestVersion = latest_tag();

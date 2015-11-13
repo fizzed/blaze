@@ -28,9 +28,14 @@ import com.fizzed.blaze.internal.FileHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +46,14 @@ import org.slf4j.LoggerFactory;
 public class Blaze {
     static private final Logger log = LoggerFactory.getLogger(Blaze.class);
     
+    static public final List<Path> SEARCH_RELATIVE_DIRECTORIES = Arrays.asList(
+        Paths.get("blaze")
+    );
+    
     static public class Builder {
         
-        private File directory;
-        private File file;
+        private Path directory;
+        private Path file;
         private List<Dependency> collectedDependencies;
         private DependencyResolver dependencyResolver;
         
@@ -52,31 +61,41 @@ public class Blaze {
             this.dependencyResolver = new IvyDependencyResolver();
         }
         
-        public Builder directory(String directory) {
-            this.directory = new File(directory);
-            return this;
-        }
-        
-        public Builder directory(File directory) {
+        public Builder directory(Path directory) {
             this.directory = directory;
             return this;
         }
         
-        public File getDirectory() {
-            return this.directory;
-        }
-        
-        public Builder file(String file) {
-            this.file = new File(file);
+        public Builder directory(String directory) {
+            directory((directory != null ? Paths.get(directory) : null));
             return this;
         }
         
-        public Builder file(File file) {
+        public Builder directory(File directory) {
+            directory((directory != null ? directory.toPath() : null));
+            return this;
+        }
+        
+        public Path getDirectory() {
+            return this.directory;
+        }
+        
+        public Builder file(Path file) {
             this.file = file;
             return this;
         }
         
-        public File getFile() {
+        public Builder file(String file) {
+            file((file != null ? Paths.get(file) : null));
+            return this;
+        }
+        
+        public Builder file(File file) {
+            file((file != null ? file.toPath() : null));
+            return this;
+        }
+        
+        public Path getFile() {
             return this.file;
         }
         
@@ -99,8 +118,8 @@ public class Blaze {
         }
         
         // set during build process (maybe refactor how this is done eventually...)
-        private File detectedBaseDir;
-        private File detectedScriptFile;
+        private Path detectedBaseDir;
+        private Path detectedScriptFile;
         private Config config;
         private String scriptExtension;
         private Context context;
@@ -119,47 +138,78 @@ public class Blaze {
         
         public void locate() {
             if (this.file != null) {
-                detectedBaseDir = this.file.getParentFile();
                 detectedScriptFile = this.file;
             } else {
-                // otherwise fallback to trying to figure it out ourselves
-                if (this.directory == null) {
-                    this.directory = new File(".");
+                Path dir = (this.directory != null ? this.directory : Paths.get("."));
+                
+                List<Path> searchDirs = new ArrayList<>();
+                
+                searchDirs.add(dir);
+                
+                // add extra search directories
+                for (Path d : SEARCH_RELATIVE_DIRECTORIES) {
+                    searchDirs.add(dir.resolve(d));
                 }
                 
-                // search for file named "blaze.<ext>"
-                File[] blazeFiles = this.directory.listFiles(
-                    (File f) -> f.getName().startsWith("blaze.")
-                        && !f.getName().endsWith(".conf") && !f.getName().endsWith(".jar"));
+                List<Path> blazeFiles = null;
                 
-                if (blazeFiles.length == 0) {
-                    throw new MessageOnlyException("Unable to find a blaze file (e.g. blaze.js). Perhaps this is not a Blaze project?");
+                for (Path searchDir : searchDirs) {
+                    // skip directories that do not exist
+                    if (Files.notExists(searchDir) || !Files.isDirectory(searchDir)) {
+                        continue;
+                    }
+
+                    try {
+                        // search for file named "blaze.<ext>" (but not blaze.conf or blaze.jar)
+                        blazeFiles 
+                            = Files.list(searchDir)
+                                .filter((path) -> {
+                                    String name = path.getFileName().toString();
+                                    return name.startsWith("blaze.")
+                                            && !name.endsWith(".conf")
+                                            && !name.endsWith(".jar");
+                                })
+                                .collect(Collectors.toList());
+                        
+                        if (blazeFiles.size() > 0) {
+                            // stop searching
+                            break;
+                        }
+                    } catch (IOException e) {
+                        throw new BlazeException(e.getMessage(), e);
+                    }
                 }
                 
-                if (blazeFiles.length > 1) {
+                if (blazeFiles == null || blazeFiles.isEmpty()) {
+                    throw new MessageOnlyException("Unable to find a blaze file (e.g. blaze.java). Perhaps this is not a Blaze project?");
+                }
+                
+                if (blazeFiles.size() > 1) {
                     throw new MessageOnlyException("More than one blaze file found. Either delete the extra files use -f parameter");
                 }
                 
-                detectedBaseDir = this.directory;
-                detectedScriptFile = blazeFiles[0];
+                detectedScriptFile = blazeFiles.get(0);
             }
             
             // at this point we should have a file - verify it exists and works
-            if (!detectedScriptFile.exists()) {
+            if (Files.notExists(detectedScriptFile)) {
                 throw new MessageOnlyException("Blaze file " + detectedScriptFile + " not found. Perhaps this is not a Blaze project?");
             }
             
-            if (!detectedScriptFile.isFile()) {
+            if (!Files.isRegularFile(detectedScriptFile)) {
                 throw new MessageOnlyException("Blaze file " + detectedScriptFile + " is not a file. Perhaps this is not a Blaze project?");
             }
             
-            
-            if (detectedBaseDir != null && detectedBaseDir.getPath().equals(".")) {
-                detectedBaseDir = null;
-            }
-            
+            // cleanup look of detected script so something like "./../dir/blaze.java" -> "blaze.java"
             detectedScriptFile = FileHelper.relativizeToJavaWorkingDir(detectedScriptFile);
             
+            // base directory will always be the parent of the script
+            detectedBaseDir = detectedScriptFile.getParent();
+            
+            if (detectedBaseDir != null && detectedBaseDir.equals(Paths.get("."))) {
+                detectedBaseDir = null;
+            }
+
             log.trace("Using blaze dir {} and file {}", detectedBaseDir, detectedScriptFile);
         }
         
@@ -168,16 +218,16 @@ public class Blaze {
                 locate();
             }
             
-            File configFile = ConfigHelper.file(detectedBaseDir, detectedScriptFile);
+            Path configFile = ConfigHelper.path(detectedBaseDir, detectedScriptFile);
             
-            config = ConfigHelper.create(configFile);
+            config = ConfigHelper.create(configFile.toFile());
             
             scriptExtension = FileHelper.fileExtension(detectedScriptFile);
             
             context = new ContextImpl(
-                (detectedBaseDir != null ? detectedBaseDir.toPath() : null),
+                (detectedBaseDir != null ? detectedBaseDir : null),
                 null,    
-                detectedScriptFile.toPath(),
+                detectedScriptFile,
                 config);
             
             ContextHolder.set(context);
