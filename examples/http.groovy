@@ -1,3 +1,5 @@
+#!/usr/bin/env blaze
+
 import org.slf4j.Logger
 import com.fizzed.blaze.Contexts
 import com.fizzed.blaze.util.MutableUri

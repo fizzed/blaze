@@ -1,3 +1,5 @@
+#!/usr/bin/env blaze
+
 import static com.fizzed.blaze.Systems.which
 import static com.fizzed.blaze.Systems.exec
 import com.fizzed.blaze.Contexts;

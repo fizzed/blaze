@@ -1,3 +1,5 @@
+#!/usr/bin/env blaze
+
 import com.fizzed.blaze.Contexts
 import io.undertow.Undertow
 import io.undertow.server.HttpHandler
