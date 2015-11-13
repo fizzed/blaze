@@ -87,7 +87,7 @@ abstract public class TargetObjectScript implements Script {
             } else if (t instanceof RuntimeException) {
                 throw (RuntimeException)t;
             } else {
-                throw new BlazeException("Unable to execute task '" + method + "'", t);
+                throw new BlazeException("Unable to execute task '" + task + "'", t);
             }
         } catch (IllegalAccessException | IllegalArgumentException e) {
             throw new BlazeException("Unable to execute task '" + task + "'", e);
