@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package com.fizzed.blaze.netbeans;
 
 import com.fizzed.blaze.core.BlazeProjects;
@@ -41,7 +37,6 @@ public class BlazeNetbeansProject {
     private final File blazeJarFile;
     private final Set<File> scriptRoots;
     private final Set<BlazeFileChangeListener> scriptRootListeners;
-    
     private BlazeClassPath sourceClassPath;
     private BlazeClassPath bootClassPath;
     private AggregateBlazeClassPath scriptRootsClassPath;
@@ -71,6 +66,7 @@ public class BlazeNetbeansProject {
     public void onOpen() {
         // root project direcotyr OR blaze directory?
         // when within maven/ant project any sources at root project dir really screws things up
+        // placing those in a separate directory solves the many problems it created
         if (BlazeProjects.isOnlyBlazed(projectDir)) {
             this.scriptRoots.add(projectDir);
         } else {
@@ -155,8 +151,8 @@ public class BlazeNetbeansProject {
                         
                         /**
                         IndexingManager.getDefault().refreshIndex(
-                                Utilities.toURI(projectDir).toURL(),
-                                Arrays.asList(Utilities.toURI(scriptFile).toURL()), true);
+                            Utilities.toURI(projectDir).toURL(),
+                            Arrays.asList(Utilities.toURI(scriptFile).toURL()), true);
                         */
                         
                         //IndexingManager.getDefault().refreshAllIndices(FileUtil.toFileObject(scriptFile));
@@ -173,13 +169,6 @@ public class BlazeNetbeansProject {
     }
     
     public ClassPath findBootClassPath(File file) {
-        /**
-        if (this.scriptRoots.contains(file)) {
-            LOG.log(Level.INFO, "Not handling boot classpath query for script root dir {0}", file);
-            return null;
-        }
-        */
-        
         if (this.bootClassPath == null) {
             LOG.log(Level.INFO, "Boot classpath not initialized yet for file {0}", file);
             return null;
@@ -200,13 +189,6 @@ public class BlazeNetbeansProject {
     }
     
     public ClassPath findSourceClassPath(File file) {
-        /**
-        if (this.scriptRoots.contains(file)) {
-            LOG.log(Level.INFO, "Not handling source classpath query for script root dir {0}", file);
-            return null;
-        }
-        */
-        
         if (this.sourceClassPath == null) {
             LOG.log(Level.INFO, "Source classpath not initialized yet for file {0}", file);
             return null;
@@ -231,12 +213,6 @@ public class BlazeNetbeansProject {
         
         // is the file really one of the script root directories?
         if (this.scriptRoots.contains(file)) {
-            
-            /**
-            LOG.log(Level.INFO, "Not handling compile classpath query for script root dir {0}", file);
-            return null;
-            */
-            
             // netbeans uses the "source root" directory to determine if badges
             // need to be displayed for files in the packages windows -- the problem
             // is that blaze permits per-file classpaths -- one idea is to simply
@@ -245,9 +221,6 @@ public class BlazeNetbeansProject {
             LOG.log(Level.INFO, "Handling compile classpath query for script root dir {0}", file);
             
             return this.scriptRootsClassPath.getUnderlyingClassPath();
-            
-            //return this.scriptClassPaths.entrySet().iterator().next().getValue().getUnderlyingClassPath();
-            //return this.scriptClassPaths.get(projectDir).getUnderlyingClassPath();
         }
         
         // is the query on a script root dir?
@@ -289,7 +262,9 @@ public class BlazeNetbeansProject {
         BlazeClassPath cp = this.scriptClassPaths.get(scriptFile);
         
         if (cp == null) {
-            cp = new BlazeClassPath(ClassPath.COMPILE, urls, false);
+            // registering the classpath globally enables auto package import hint
+            // e.g. click on left-hand item to auto pick the package import to add
+            cp = new BlazeClassPath(ClassPath.COMPILE, urls, true);
             if (this.scriptClassPaths.putIfAbsent(scriptFile, cp) != null) {
                 // some other thread happened to create the classpath before us
                 cp = this.scriptClassPaths.get(scriptFile);

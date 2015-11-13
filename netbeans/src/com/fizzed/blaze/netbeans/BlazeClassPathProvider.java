@@ -54,6 +54,7 @@ public class BlazeClassPathProvider implements ClassPathProvider {
         ClassPath cp = null;
         
         switch (type) {
+            case JavaClassPathConstants.PROCESSOR_PATH:
             case ClassPath.COMPILE:
             case ClassPath.EXECUTE:
                 cp = blazeProject.findCompileClassPath(file);
