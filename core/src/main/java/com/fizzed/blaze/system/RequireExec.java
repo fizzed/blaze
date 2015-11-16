@@ -22,6 +22,7 @@ import com.fizzed.blaze.core.MessageOnlyException;
 import java.nio.file.Path;
 import java.util.List;
 import com.fizzed.blaze.core.PathsMixin;
+import java.io.File;
 
 /**
  * 
@@ -41,6 +42,16 @@ public class RequireExec extends Action<Path> implements PathsMixin<RequireExec>
     @Override
     public List<Path> getPaths() {
         return this.which.getPaths();
+    }
+    
+    public RequireExec command(Path command) {
+        this.which.command(command);
+        return this;
+    }
+    
+    public RequireExec command(File command) {
+        this.which.command(command);
+        return this;
     }
     
     public RequireExec command(String command) {

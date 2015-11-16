@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.apache.commons.io.output.NullOutputStream;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
@@ -63,6 +62,18 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
         this.pipeError = NamedStream.STDERR;
         this.exitValues = new ArrayList<>();
         this.exitValues.add(0);  
+    }
+    
+    @Override
+    public Exec command(Path command) {
+        this.which.command(command);
+        return this;
+    }
+
+    @Override
+    public Exec command(File command) {
+        this.which.command(command);
+        return this;
     }
     
     @Override

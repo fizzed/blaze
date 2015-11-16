@@ -18,7 +18,6 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.internal.ConfigHelper;
 import java.io.File;
 import java.nio.file.Path;
@@ -26,6 +25,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.core.PathsMixin;
+import com.fizzed.blaze.util.ObjectHelper;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * which - locate a file for a command.
@@ -36,7 +38,7 @@ public class Which extends Action<Path> implements PathsMixin<Which> {
     private static final Logger log = LoggerFactory.getLogger(Which.class);
     
     private final List<Path> paths;
-    private String command;
+    private Path command;
     
     public Which(Context context) {
         super(context);
@@ -44,12 +46,25 @@ public class Which extends Action<Path> implements PathsMixin<Which> {
         this.paths = ConfigHelper.systemEnvironmentPaths();
     }
 
-    public String getCommand() {
+    public Path getCommand() {
         return this.command;
     }
     
     public Which command(String command) {
+        ObjectHelper.requireNonNull("command", "command cannot be null");
+        this.command = Paths.get(command);
+        return this;
+    }
+    
+    public Which command(Path command) {
+        ObjectHelper.requireNonNull("command", "command cannot be null");
         this.command = command;
+        return this;
+    }
+    
+    public Which command(File command) {
+        ObjectHelper.requireNonNull("command", "command cannot be null");
+        this.command = command.toPath();
         return this;
     }
 
@@ -63,23 +78,31 @@ public class Which extends Action<Path> implements PathsMixin<Which> {
         return find(context, paths, command);
     }
     
-    static public Path find(Context context, List<Path> paths, String command) throws BlazeException {
+    static public Path find(Context context, List<Path> paths, Path command) throws BlazeException {
+        // first, check if the command is already an absolute file
+        if (Files.exists(command)) {
+            return command;
+        }
+        
+        // second, check each path to see if the command exists
         for (Path path : paths) {
             List<String> commandExtensions = ConfigHelper.commandExtensions(context.config());
             for (String ext : commandExtensions) {
-                String commandWithExt = command + ext;
+                // cmd -> cmd.exe
+                String commandWithExt = command.toString() + ext;
                 
-                File commandFile = new File(path.toFile(), commandWithExt);
+                //File commandFile = new File(path.toFile(), commandWithExt);
+                Path exeFile = path.resolve(commandWithExt);
                 
                 //logger.trace("commandFile: {}", commandFile);
-                File f = commandFile;
+                //File f = commandFile;
                 
-                log.trace("Trying file: {}", f);
-                if (f.exists() && f.isFile()) {
-                    if (f.canExecute()) {
-                        return f.toPath();
+                log.trace("Trying file: {}", exeFile);
+                if (Files.exists(exeFile)) {
+                    if (Files.isExecutable(exeFile)) {
+                        return exeFile;
                     } else {
-                        log.warn("Command '" + f + "' found but it isn't executable! (continuing search...)");
+                        log.warn("Command '" + exeFile + "' found but it isn't executable! (continuing search...)");
                     }
                 }
             }

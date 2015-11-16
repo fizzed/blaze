@@ -15,23 +15,17 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.core.PathsMixin;
 import com.fizzed.blaze.core.PipeErrorMixin;
-import com.fizzed.blaze.util.DeferredFileInputStream;
-import com.fizzed.blaze.util.DeferredFileOutputStream;
-import com.fizzed.blaze.util.NamedStream;
 import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-/**
- *
- * @author joelauer
- */
 public interface ExecSupport<T> extends PipeErrorMixin<T> {
 
+    T command(Path command);
+    
+    T command(File command);
+    
     T command(String command);
     
     /**

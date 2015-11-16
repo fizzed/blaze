@@ -19,6 +19,8 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.internal.FileHelper;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,6 +108,18 @@ public class WhichTest {
         assertThat(Files.isRegularFile(f), is(true));
         assertThat(Files.isExecutable(f), is(true));
         assertThat(f.getFileName().toString(), either(is("hello-world-test")).or(is("hello-world-test.bat")));
+    }
+    
+    @Test
+    public void worksWithAbsolutePath() throws Exception {
+        File exeFile = FileHelper.resourceAsFile("/bin/hello-world-test.bat");
+        
+        Path f = new Which(context)
+            .command(exeFile.toString())
+            .run();
+        
+        assertThat(f, is(not(nullValue())));
+        assertThat(f.toFile(), is(exeFile));
     }
     
 }
