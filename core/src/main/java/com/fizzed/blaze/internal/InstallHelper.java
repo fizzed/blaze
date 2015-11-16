@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,25 +41,31 @@ public class InstallHelper {
             throw new MessageOnlyException("Install directory " + installDir + " is not writable (run this as an Administor or with sudo?)");
         }
         
-        String fileName = null;
-        InputStream is = null;
+        List<Path> installedFiles = new ArrayList<>();
         
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             // install blaze.bat
-            is = Blaze.class.getResourceAsStream("/bin/blaze.bat");
-            fileName = "blaze.bat";
-        } else {
-            // install blaze
-            is = Blaze.class.getResourceAsStream("/bin/blaze");
-            fileName = "blaze";
+            Path blazeBatFile = installDir.resolve("blaze.bat");
+            installResource("/bin/blaze.bat", blazeBatFile);
+            installedFiles.add(blazeBatFile);
         }
+        
+        // for ming32 compat also install the *nix version
+        Path blazeFile = installDir.resolve("blaze");
+        installResource("/bin/blaze", blazeFile);
+        installedFiles.add(blazeFile);
+        
+        return installedFiles;
+    }
+    
+    static private void installResource(String resourceName, Path targetFile) throws MessageOnlyException {
+        String fileName = targetFile.getFileName().toString();
+        InputStream is = Blaze.class.getResourceAsStream(resourceName);
         
         if (is == null) {
-            throw new MessageOnlyException("Unable to find resource for " + fileName);
+            throw new MessageOnlyException("Unable to find resource for " + resourceName);
         }
-        
-        Path targetFile = installDir.resolve(fileName);
-        
+
         if (Files.exists(targetFile)) {
             throw new MessageOnlyException("File " + targetFile + " already exists (delete first then try again)");
         }
@@ -68,10 +75,8 @@ public class InstallHelper {
             // world execute!
             targetFile.toFile().setExecutable(true, false);
         } catch (IOException e) {
-            throw new MessageOnlyException("Unable to copy resource " + fileName + " to " + installDir + " (" + e.getMessage() + ")");
+            throw new MessageOnlyException("Unable to copy resource " + fileName + " to " + targetFile + " (" + e.getMessage() + ")");
         }
-        
-        return Arrays.asList(targetFile);
     }
     
 }

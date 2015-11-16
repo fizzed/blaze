@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 0.6.1 - 2015-11-16
+
+ - Windows -i command-line switch installs both blaze.bat and blaze (so it's
+   compatible with bash, mingw32, etc.)
+
 #### 0.6.0 - 2015-11-16
 
  - Netbeans plugin support 
