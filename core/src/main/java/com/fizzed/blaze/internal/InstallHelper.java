@@ -1,0 +1,77 @@
+/*
+ * Copyright 2015 Fizzed, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.fizzed.blaze.internal;
+
+import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.MessageOnlyException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
+
+public class InstallHelper {
+    
+    static public List<Path> installBlazeBinaries(Path installDir) throws MessageOnlyException {
+        if (Files.notExists(installDir)) {
+            throw new MessageOnlyException("Install directory " + installDir + " does not exist");
+        }
+        
+        if (!Files.isDirectory(installDir)) {
+            throw new MessageOnlyException("Install directory " + installDir + " is not a directory");
+        }
+        
+        if (!Files.isWritable(installDir)) {
+            throw new MessageOnlyException("Install directory " + installDir + " is not writable (run this as an Administor or with sudo?)");
+        }
+        
+        String fileName = null;
+        InputStream is = null;
+        
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            // install blaze.bat
+            is = Blaze.class.getResourceAsStream("/bin/blaze.bat");
+            fileName = "blaze.bat";
+        } else {
+            // install blaze
+            is = Blaze.class.getResourceAsStream("/bin/blaze");
+            fileName = "blaze";
+        }
+        
+        if (is == null) {
+            throw new MessageOnlyException("Unable to find resource for " + fileName);
+        }
+        
+        Path targetFile = installDir.resolve(fileName);
+        
+        if (Files.exists(targetFile)) {
+            throw new MessageOnlyException("File " + targetFile + " already exists (delete first then try again)");
+        }
+        
+        try {
+            Files.copy(is, targetFile, StandardCopyOption.REPLACE_EXISTING);
+            // world execute!
+            targetFile.toFile().setExecutable(true, false);
+        } catch (IOException e) {
+            throw new MessageOnlyException("Unable to copy resource " + fileName + " to " + installDir + " (" + e.getMessage() + ")");
+        }
+        
+        return Arrays.asList(targetFile);
+    }
+    
+}

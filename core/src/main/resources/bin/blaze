@@ -1,7 +1,2 @@
 #!/bin/sh
-# if first arg is a file then insert -f arg
-if [ -e "$1" ]; then
-  java -jar blaze.jar -f "$@"
-else
-  java -jar blaze.jar "$@"
-fi
+java -jar blaze.jar "$@"

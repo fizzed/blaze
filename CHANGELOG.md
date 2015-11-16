@@ -1,5 +1,15 @@
 Blaze by Fizzed
-==========================
+===============
+
+#### 0.6.0 - 2015-11-16
+
+ - Netbeans plugin support 
+ - Default blaze script now searches current dir and then "blaze" subdir
+ - Examples adjusted to include shebang on groovy and kotline scripts
+ - Exception message for missing tasks optimized
+ - Exec, which, and requireExec now support actual file and paths
+ - blaze.jar supports "-i" command-line switch to install helper blaze or blaze.bat
+   scripts to a target directory
 
 #### 0.5.0 - 2015-11-10
 

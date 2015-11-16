@@ -20,9 +20,13 @@ import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.DependencyResolveException;
+import com.fizzed.blaze.internal.InstallHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,8 +44,8 @@ public class Bootstrap {
         // process command line args
         ArrayDeque<String> argString = new ArrayDeque(Arrays.asList(args));
 
-        File blazeFile = null;
-        File blazeDir = null;
+        Path blazeFile = null;
+        Path blazeDir = null;
         List<String> tasks = new ArrayList<>();
 
         boolean listTasks = false;
@@ -98,34 +102,61 @@ public class Bootstrap {
                  */
             } else if (arg.equals("-h") || arg.equals("--help")) {
                 System.out.println("blaze: [options] <task> [<task> ...]");
-                System.out.println("-f|--file <file>  Use this blaze file instead of default");
-                System.out.println("-d|--dir <dir>    Search this dir for blaze file instead of default (-f supercedes)");
-                System.out.println("-l|--list         Display list of available tasks");
-                System.out.println("-q                Only log blaze warnings to stdout (script logging is still info level)");
-                System.out.println("-qq               Only log warnings to stdout (including script logging)");
-                System.out.println("-x[x...]          Increases verbosity of logging to stdout");
-                System.out.println("-v|--version      Display version and then exit");
-                System.out.println("-Dname=value      Sets a System property as name=value");
+                System.out.println("-f|--file <file>   Use this blaze file instead of default");
+                System.out.println("-d|--dir <dir>     Search this dir for blaze file instead of default (-f supercedes)");
+                System.out.println("-l|--list          Display list of available tasks");
+                System.out.println("-q                 Only log blaze warnings to stdout (script logging is still info level)");
+                System.out.println("-qq                Only log warnings to stdout (including script logging)");
+                System.out.println("-x[x...]           Increases verbosity of logging to stdout");
+                System.out.println("-v|--version       Display version and then exit");
+                System.out.println("-Dname=value       Sets a System property as name=value");
+                System.out.println("-i|--install <dir> Install blaze or blaze.bat to directory");
                 System.exit(0);
             } else if (arg.equals("-f") || arg.equals("--file")) {
                 if (argString.isEmpty()) {
                     System.err.println("[ERROR] -f|--file parameter requires next arg to be file");
                     System.exit(1);
                 }
-                blazeFile = new File(argString.remove());
+                blazeFile = Paths.get(argString.remove());
             } else if (arg.equals("-d") || arg.equals("--dir")) {
                 if (argString.isEmpty()) {
                     System.err.println("[ERROR] -d|--dir parameter requires next arg to be directory");
                     System.exit(1);
                 }
-                blazeDir = new File(argString.remove());
+                blazeDir = Paths.get(argString.remove());
+            } else if (arg.equals("-i") || arg.equals("--install")) {
+                if (argString.isEmpty()) {
+                    System.err.println("[ERROR] -i|--install parameter requires next arg to be directory");
+                    System.exit(1);
+                }
+                Path installDir = Paths.get(argString.remove());
+                
+                try {
+                    List<Path> installedFiles = InstallHelper.installBlazeBinaries(installDir);
+                    for (Path installedFile : installedFiles) {
+                        System.out.println("Installed " + installedFile);
+                    }
+                    System.exit(0);
+                } catch (MessageOnlyException e) {
+                    System.err.println("[ERROR] " + e.getMessage());
+                    System.exit(1);
+                }
             } else if (arg.equals("-l") || arg.equals("--list")) {
                 listTasks = true;
             } else if (arg.startsWith("-")) {
                 System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; blaze -h for more info");
                 System.exit(1);
             } else {
-                // this arg must be a task to run
+                // this may be a task to run - special case for first occurrence
+                // which may be a script to run
+                if (tasks.isEmpty()) {
+                    Path maybeBlazeFile = Paths.get(arg);
+                    if (Files.exists(maybeBlazeFile) && Files.isRegularFile(maybeBlazeFile)) {
+                        blazeFile = maybeBlazeFile;
+                        continue;
+                    }
+                }
+                // otherwise this is a task to run
                 tasks.add(arg);
             }
         }

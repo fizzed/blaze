@@ -46,8 +46,93 @@ public class Systems {
      * @param command The command to search for such as "javac" or "ls"
      * @return A new Which action bound to current context
      */
+    static public Which which(Path command) {
+        return new Which(Contexts.currentContext())
+            .command(command);
+    }
+    
+    /**
+     * Prepares an action to find `which` executable to use for a command.  Similiar to a Unix `which`
+     * command.  Platform-specific executable extensions do not need to included
+     * (e.g. `.bat` on windows).  Will search for an executable base do on 
+     * the environment PATH variable as well as any user-defined paths.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.which;
+     * 
+     * // ...
+     * 
+     * Path p = which("javac").run();
+     * </pre>
+     * 
+     * @param command The command to search for such as "javac" or "ls"
+     * @return A new Which action bound to current context
+     */
+    static public Which which(File command) {
+        return new Which(Contexts.currentContext())
+            .command(command);
+    }
+    
+    /**
+     * Prepares an action to find `which` executable to use for a command.  Similiar to a Unix `which`
+     * command.  Platform-specific executable extensions do not need to included
+     * (e.g. `.bat` on windows).  Will search for an executable base do on 
+     * the environment PATH variable as well as any user-defined paths.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.which;
+     * 
+     * // ...
+     * 
+     * Path p = which("javac").run();
+     * </pre>
+     * 
+     * @param command The command to search for such as "javac" or "ls"
+     * @return A new Which action bound to current context
+     */
     static public Which which(String command) {
         return new Which(Contexts.currentContext())
+            .command(command);
+    }
+    
+    
+    /**
+     * Prepares an action to require an executable to be present or an exception will be thrown and
+     * the script will stop executing. Will use which() under-the-hood.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.requireExec;
+     * 
+     * // ...
+     * 
+     * requireExec("javac").run();
+     * </pre>
+     * 
+     * @param command The command to require for such as "javac" or "ls"
+     * @return A new RequireExec action bound to current context
+     */
+    static public RequireExec requireExec(Path command) {
+        return new RequireExec(Contexts.currentContext())
+            .command(command);
+    }
+    
+    /**
+     * Prepares an action to require an executable to be present or an exception will be thrown and
+     * the script will stop executing. Will use which() under-the-hood.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.requireExec;
+     * 
+     * // ...
+     * 
+     * requireExec("javac").run();
+     * </pre>
+     * 
+     * @param command The command to require for such as "javac" or "ls"
+     * @return A new RequireExec action bound to current context
+     */
+    static public RequireExec requireExec(File command) {
+        return new RequireExec(Contexts.currentContext())
             .command(command);
     }
     
@@ -69,6 +154,50 @@ public class Systems {
     static public RequireExec requireExec(String command) {
         return new RequireExec(Contexts.currentContext())
             .command(command);
+    }
+    
+    /**
+     * Prepares an action to require an executable to be present or an exception will be thrown and
+     * the script will stop executing. Will use which() under-the-hood.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.requireExec;
+     * 
+     * // ...
+     * 
+     * requireExec("javac", "Java is used for compiling stuff.").run();
+     * </pre>
+     * 
+     * @param command The command to require for such as "javac" or "ls"
+     * @param message The custom message to display
+     * @return A new RequireExec action bound to current context
+     */
+    static public RequireExec requireExec(Path command, String message) {
+        return new RequireExec(Contexts.currentContext())
+            .command(command)
+            .message(message);
+    }
+    
+    /**
+     * Prepares an action to require an executable to be present or an exception will be thrown and
+     * the script will stop executing. Will use which() under-the-hood.
+     * 
+     * <pre>
+     * import static com.fizzed.blaze.Systems.requireExec;
+     * 
+     * // ...
+     * 
+     * requireExec("javac", "Java is used for compiling stuff.").run();
+     * </pre>
+     * 
+     * @param command The command to require for such as "javac" or "ls"
+     * @param message The custom message to display
+     * @return A new RequireExec action bound to current context
+     */
+    static public RequireExec requireExec(File command, String message) {
+        return new RequireExec(Contexts.currentContext())
+            .command(command)
+            .message(message);
     }
     
     /**
@@ -138,7 +267,9 @@ public class Systems {
      * @return A new Exec action bound to current context
      */
     static public Exec exec(Path command, Object ... arguments) {
-        return exec(command.toString(), arguments);
+        return new Exec(Contexts.currentContext())
+            .command(command)
+            .args(arguments);
     }
     
     /**
@@ -161,7 +292,9 @@ public class Systems {
      * @return A new Exec action bound to current context
      */
     static public Exec exec(File command, Object ... arguments) {
-        return exec(command.toString(), arguments);
+        return new Exec(Contexts.currentContext())
+            .command(command)
+            .args(arguments);
     }
     
     /**

@@ -20,7 +20,6 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
@@ -39,8 +38,11 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.system.ExecSupport;
+import com.fizzed.blaze.system.Which;
 import com.fizzed.blaze.util.NamedStream;
+import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  *
@@ -50,7 +52,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
 
     final private SshSession session;
-    private String command;
+    private Path command;
     final private List<String> arguments;
     private NamedStream<InputStream> pipeInput;
     private NamedStream<OutputStream> pipeOutput;
@@ -74,7 +76,22 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     
     @Override
     public SshExec command(String command) {
+        ObjectHelper.requireNonNull("command", "command cannot be null");
+        this.command = Paths.get(command);
+        return this;
+    }
+    
+    @Override
+    public SshExec command(Path command) {
+        ObjectHelper.requireNonNull("command", "command cannot be null");
         this.command = command;
+        return this;
+    }
+    
+    @Override
+    public SshExec command(File command) {
+        ObjectHelper.requireNonNull("command", "command cannot be null");
+        this.command = command.toPath();
         return this;
     }
     
@@ -194,7 +211,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
             }, false);
             
             // building the command may be a little tricky, not sure about spaces...
-            final StringBuilder sb = new StringBuilder(command);
+            final StringBuilder sb = new StringBuilder(command.toString());
             
             arguments.stream().forEach((arg) -> {
                 sb.append(" ");
