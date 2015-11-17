@@ -18,6 +18,7 @@ package com.fizzed.blaze.jdk;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.Script;
+import com.fizzed.blaze.core.WrappedBlazeException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -77,7 +78,7 @@ abstract public class TargetObjectScript implements Script {
         }
     }
     
-    public void invokeTaskMethod(String task, Method method) {
+    public void invokeTaskMethod(String task, Method method) throws Exception {
         try {
             method.invoke(targetObject, new Object[]{});
         } catch (InvocationTargetException e) {
@@ -86,11 +87,13 @@ abstract public class TargetObjectScript implements Script {
                 throw (BlazeException)t;
             } else if (t instanceof RuntimeException) {
                 throw (RuntimeException)t;
+            } else if (t instanceof Exception) {
+                throw (Exception)t;
             } else {
-                throw new BlazeException("Unable to execute task '" + task + "'", t);
+                throw new WrappedBlazeException(t);
             }
         } catch (IllegalAccessException | IllegalArgumentException e) {
-            throw new BlazeException("Unable to execute task '" + task + "'", e);
+            throw new WrappedBlazeException(e);
         }
     }
     
@@ -100,7 +103,7 @@ abstract public class TargetObjectScript implements Script {
     }
 
     @Override
-    public void execute(String task) throws BlazeException {
+    public void execute(String task) throws Exception {
         Method method = findTaskMethod(task);
         invokeTaskMethod(task, method);
     }

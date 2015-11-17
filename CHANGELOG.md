@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 0.6.2 - Not Released Yet
+
+ - Scripts now can throw checked exceptions.  Enables cleaner stacktraces to
+   console without using wrapped runtime exceptions.
+
 #### 0.6.1 - 2015-11-16
 
  - Windows -i command-line switch installs both blaze.bat and blaze (so it's

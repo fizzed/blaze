@@ -360,11 +360,11 @@ public class Blaze {
         return this.script.tasks();
     }
     
-    public void execute() throws BlazeException {
+    public void execute() throws Exception {
         execute(null);
     }
     
-    public void execute(String task) throws BlazeException {
+    public void execute(String task) throws Exception {
         if (task == null || task.equals("")) {
             task = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
         }
@@ -377,14 +377,14 @@ public class Blaze {
         log.info("Executed {}:{} in {} ms", context.scriptFile(), task, executeTimer.stop().millis());
     }
     
-    public void executeAll(List<String> tasks) throws BlazeException {
+    public void executeAll(List<String> tasks) throws Exception {
         // default task?
         if (tasks == null || tasks.isEmpty()) {
             execute(null);
         } else {
-            tasks.stream().forEach((task) -> {
+            for (String task : tasks) {
                 execute(task);
-            });
+            }
         }
     }
 }

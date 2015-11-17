@@ -15,12 +15,10 @@
  */
 package com.fizzed.blaze.core;
 
-import java.util.List;
+public class WrappedBlazeException extends BlazeException {
 
-public interface Script {
-    
-    List<String> tasks() throws BlazeException;
-    
-    void execute(String task) throws Exception;
+    public WrappedBlazeException(Throwable t) {
+        super(t.getMessage(), t);
+    }
     
 }

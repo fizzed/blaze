@@ -20,6 +20,7 @@ import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.DependencyResolveException;
+import com.fizzed.blaze.core.WrappedBlazeException;
 import com.fizzed.blaze.internal.InstallHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 public class Bootstrap {
 
+    @SuppressWarnings("ThrowableResultIgnored")
     static public void main(String[] args) throws IOException {
         JdkLoggerHelper.configure();
         
@@ -192,9 +194,14 @@ public class Bootstrap {
             // do not log stack trace
             log.error(e.getMessage());
             System.exit(1);
-        } catch (Exception e) {
+        } catch (Throwable t) {
+            // unwrap a wrapped exception (much cleaner)
+            if (t instanceof WrappedBlazeException) {
+                WrappedBlazeException wbe = (WrappedBlazeException)t;
+                t = wbe.getCause();
+            }
             // hmmm... definitely something unexpected so log stack trace
-            log.error(e.getMessage(), e);
+            log.error(t.getMessage(), t);
             System.exit(1);
         }
         
