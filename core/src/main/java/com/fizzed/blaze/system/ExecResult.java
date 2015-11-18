@@ -34,6 +34,7 @@ public class ExecResult implements ExecResultSupport {
         return this.result.getExitValue();
     }
     
+    /**
     @Override
     public String output() {
         return this.result.getOutput().getUTF8();
@@ -48,5 +49,6 @@ public class ExecResult implements ExecResultSupport {
     public byte[] outputBytes() {
         return this.result.getOutput().getBytes();
     }
+    */
     
 }

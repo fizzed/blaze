@@ -8,6 +8,8 @@ import com.fizzed.blaze.ssh.SshSession;
 import org.slf4j.Logger;
 import static com.fizzed.blaze.SecureShells.sshConnect;
 import static com.fizzed.blaze.SecureShells.sshExec;
+import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.Streamables;
 
 public class ssh {
     final private Logger log = Contexts.logger();
@@ -31,22 +33,24 @@ public class ssh {
         
         try (SshSession session = sshConnect(uri).run()) {
             // remote working directory
-            SshExecResult result0
-                = sshExec(session)
-                    .command("pwd")
-                    .captureOutput()
-                    .run();
+            CaptureOutput capture = Streamables.captureOutput();
             
-            log.info("Remote working dir is {}", result0.output().trim());
+            sshExec(session)
+                .command("pwd")
+                .pipeOutput(capture)
+                .run();
+            
+            log.info("Remote working dir is {}", capture.toString().trim());
             
             // who are we logged in as?
-            SshExecResult result1
-                = sshExec(session)
-                    .command("whoami")
-                    .captureOutput()
-                    .run();
+            capture = Streamables.captureOutput();
             
-            log.info("Logged in as {}", result1.output().trim());
+            sshExec(session)
+                .command("whoami")
+                .pipeOutput(capture)
+                .run();
+            
+            log.info("Logged in as {}", capture.toString().trim());
             
             log.info("Listing current directory...");
             

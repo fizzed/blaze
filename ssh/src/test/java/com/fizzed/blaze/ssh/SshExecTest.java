@@ -16,6 +16,8 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.core.UnexpectedExitValueException;
+import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.Streamables;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
@@ -89,14 +91,16 @@ public class SshExecTest extends SshBaseTest {
         
         SshSession session = startAndConnect();
 
+        CaptureOutput capture = Streamables.captureOutput();
+        
         SshExecResult result
             = new SshExec(context, session)
                 .command("hello")
-                .captureOutput()
+                .pipeOutput(capture)
                 .run();
         
         assertThat(result.exitValue(), is(0));
-        assertThat(result.output(), is("Hello World!"));
+        assertThat(capture.toString(), is("Hello World!"));
     }
     
     @Test
@@ -113,15 +117,17 @@ public class SshExecTest extends SshBaseTest {
         
         SshSession session = startAndConnect();
 
+        CaptureOutput capture = Streamables.captureOutput();
+        
         SshExecResult result
             = new SshExec(context, session)
                 .command("error")
-                .captureOutput()
+                .pipeOutput(capture)
                 .pipeErrorToOutput()
                 .run();
         
         assertThat(result.exitValue(), is(0));
-        assertThat(result.output(), is("Hello World!"));
+        assertThat(capture.toString(), is("Hello World!"));
     }
     
     @Test
@@ -140,15 +146,17 @@ public class SshExecTest extends SshBaseTest {
         
         SshSession session = startAndConnect();
 
+        CaptureOutput capture = Streamables.captureOutput();
+        
         SshExecResult result
             = new SshExec(context, session)
                 .command("echo")
                 .env("JAVA_HOME", "/usr/java/default")
-                .captureOutput()
+                .pipeOutput(capture)
                 .run();
         
         assertThat(result.exitValue(), is(0));
-        assertThat(result.output(), containsString("JAVA_HOME -> /usr/java/default"));
+        assertThat(capture.toString(), containsString("JAVA_HOME -> /usr/java/default"));
     }
     
     @Test

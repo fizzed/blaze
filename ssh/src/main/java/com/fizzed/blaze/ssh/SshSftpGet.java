@@ -20,10 +20,10 @@ import com.fizzed.blaze.core.BlazeException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
-import com.fizzed.blaze.util.NamedStream;
 import com.fizzed.blaze.util.ObjectHelper;
+import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.io.OutputStream;
 
 /**
@@ -33,7 +33,7 @@ import java.io.OutputStream;
 public class SshSftpGet extends Action<Void> {
 
     private final SshSftpSupport sftp;
-    private NamedStream<OutputStream> target;
+    private StreamableOutput target;
     private Path source;
     
     public SshSftpGet(SshSftpSession sftp) {
@@ -51,24 +51,23 @@ public class SshSftpGet extends Action<Void> {
         return this;
     }
     
-    
     public SshSftpGet target(String targetFile) {
         return target(Paths.get(targetFile));
     }
     
     public SshSftpGet target(Path targetFile) {
-        return target(NamedStream.output(targetFile));
+        return target(Streamables.output(targetFile));
     }
     
     public SshSftpGet target(File targetFile) {
-        return target(NamedStream.output(targetFile));
+        return target(Streamables.output(targetFile));
     }
     
     public SshSftpGet target(OutputStream target) {
-        return target(NamedStream.of(target));
+        return target(Streamables.output(target));
     }
     
-    public SshSftpGet target(NamedStream<OutputStream> target) {
+    public SshSftpGet target(StreamableOutput target) {
         this.target = target;
         return this;
     }

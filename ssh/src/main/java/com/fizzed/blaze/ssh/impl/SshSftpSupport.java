@@ -16,7 +16,7 @@
 package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.ssh.SshException;
-import com.fizzed.blaze.util.NamedStream;
+import com.fizzed.blaze.util.Streamable;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -27,8 +27,8 @@ import java.nio.file.Path;
  */
 public interface SshSftpSupport {
     
-    void get(Path source, NamedStream<OutputStream> target) throws SshException;
+    void get(Path source, Streamable<OutputStream> target) throws SshException;
     
-    void put(NamedStream<InputStream> source, Path target) throws SshException;
+    void put(Streamable<InputStream> source, Path target) throws SshException;
     
 }

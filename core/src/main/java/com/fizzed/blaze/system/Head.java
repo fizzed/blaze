@@ -21,16 +21,16 @@ import com.fizzed.blaze.util.StreamableOutput;
 import static com.fizzed.blaze.util.Streamables.lineOutput;
 import java.util.Deque;
 
-public class Tail extends AbstractLineAction<Tail> implements PipeMixin<Tail> {
+public class Head extends AbstractLineAction<Head> implements PipeMixin<Head> {
     
     private int count;
     
-    public Tail(Context context) {
+    public Head(Context context) {
         super(context);
         this.count = 10;
     }
     
-    public Tail count(int count) {
+    public Head count(int count) {
         this.count = count;
         return this;
     }
@@ -38,10 +38,10 @@ public class Tail extends AbstractLineAction<Tail> implements PipeMixin<Tail> {
     @Override
     protected StreamableOutput createLineOutput(final Deque<String> lines) {
         return lineOutput((line) -> {
-            if (lines.size() >= this.count) {
-                lines.remove();
+            if (lines.size() < this.count) {
+                lines.add(line);
             }
-            lines.add(line);
+            // discard rest...
         });
     }
     

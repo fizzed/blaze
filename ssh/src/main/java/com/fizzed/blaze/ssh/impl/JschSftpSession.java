@@ -22,7 +22,7 @@ import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.ssh.SshSftpGet;
 import com.fizzed.blaze.ssh.SshSftpPut;
 import com.fizzed.blaze.ssh.SshSftpSession;
-import com.fizzed.blaze.util.NamedStream;
+import com.fizzed.blaze.util.Streamable;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.SftpATTRS;
@@ -178,7 +178,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     }
     
     @Override
-    public void get(Path source, NamedStream<OutputStream> target) throws SshException {
+    public void get(Path source, Streamable<OutputStream> target) throws SshException {
         try {
             // TODO: how can we log w/o requring it be a line???
             if (log.isInfoEnabled()) {
@@ -203,7 +203,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     }
     
     @Override
-    public void put(NamedStream<InputStream> source, Path target) throws SshException {
+    public void put(Streamable<InputStream> source, Path target) throws SshException {
         try {
             // TODO: how can we log w/o requring it be a complete line?
             if (log.isInfoEnabled()) {

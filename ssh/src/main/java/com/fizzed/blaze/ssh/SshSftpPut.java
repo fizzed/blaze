@@ -21,10 +21,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
-import com.fizzed.blaze.util.NamedStream;
 import com.fizzed.blaze.util.ObjectHelper;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.Streamables;
 
 /**
  *
@@ -33,7 +33,7 @@ import com.fizzed.blaze.util.ObjectHelper;
 public class SshSftpPut extends Action<Void> {
 
     private final SshSftpSupport sftp;
-    private NamedStream<InputStream> source;
+    private StreamableInput source;
     private Path target;
     
     public SshSftpPut(SshSftpSession sftp) {
@@ -47,18 +47,18 @@ public class SshSftpPut extends Action<Void> {
     }
     
     public SshSftpPut source(Path sourceFile) {
-        return source(NamedStream.input(sourceFile));
+        return source(Streamables.input(sourceFile));
     }
     
     public SshSftpPut source(File sourceFile) {
-        return source(NamedStream.input(sourceFile));
+        return source(Streamables.input(sourceFile));
     }
     
     public SshSftpPut source(InputStream source) {
-        return source(NamedStream.of(source));
+        return source(Streamables.input(source));
     }
     
-    public SshSftpPut source(NamedStream<InputStream> source) {
+    public SshSftpPut source(StreamableInput source) {
         this.source = source;
         return this;
     }

@@ -59,11 +59,13 @@ public interface ExecSupport<T> extends PipeErrorMixin<T> {
     
     T exitValues(Integer... exitValues);
     
+    /**
     default public T captureOutput() {
         return this.captureOutput(true);
     }
     
     T captureOutput(boolean captureOutput);
+    */
     
     default public T pipeErrorToOutput() {
         return pipeErrorToOutput(true);

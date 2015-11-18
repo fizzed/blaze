@@ -19,23 +19,31 @@ import java.nio.charset.Charset;
 
 public class ByteArray {
     
+    static private final int DEFAULT_SIZE = 16384;
+    static private final int INFINITE_MAX_SIZE = -1;
+    
+    private final int maxSize;
     private byte[] buffer;
     private int length;
 
     public ByteArray() {
-        this(new byte[1024]);
+        this(new byte[DEFAULT_SIZE], INFINITE_MAX_SIZE);
     }
     
-    public ByteArray(int initialCapacity) {
-        this(new byte[initialCapacity]);
+    public ByteArray(int initialSize, int maxSize) {
+        this(new byte[initialSize], maxSize);
     }
     
-    public ByteArray(byte[] buffer) {
+    public ByteArray(byte[] buffer, int maxSize) {
+        if (maxSize != INFINITE_MAX_SIZE && buffer.length > maxSize) {
+            throw new IllegalArgumentException("maxSize exceeded initialSize");
+        }
+        this.maxSize = maxSize;
         this.buffer = buffer;
         this.length = 0;
     }
     
-    public byte[] array() {
+    public byte[] backingArray() {
         return this.buffer;
     }
     
@@ -43,29 +51,33 @@ public class ByteArray {
         return this.buffer[index];
     }
     
-    public int length() {
-        return this.length;
+    public boolean isInfinite() {
+        return this.maxSize == INFINITE_MAX_SIZE;
     }
     
-    public int capacity() {
+    public int remaining() {
         return this.buffer.length - this.length;
+    }
+    
+    public int length() {
+        return this.length;
     }
     
     public void reset() {
         this.length = 0;
     }
     
-    public void ensureCapacity(int capacity) {
-        int delta = capacity - this.capacity();
+    public void ensureSize(int size) {
+        int delta = size - this.remaining();
         if (delta > 0) {
-            byte[] newBuffer = new byte[capacity];
+            byte[] newBuffer = new byte[size];
             System.arraycopy(this.buffer, 0, newBuffer, 0, this.length);
             this.buffer = newBuffer;
         }
     }
     
     public void append(byte[] buffer, int offset, int length) {
-        ensureCapacity(this.length + length);
+        ensureSize(this.length + length);
         System.arraycopy(buffer, offset, this.buffer, this.length, length);
         this.length += length;
     }

@@ -13,37 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.util.StreamableOutput;
-import com.fizzed.blaze.util.Streamables;
-import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
-/**
- * Mixin with pipeError support.
- * 
- * @author joelauer
- * @param <T>
- */
-public interface PipeErrorMixin<T> extends PipeMixin<T> {
-    
-    StreamableOutput getPipeError();
-    
-    T pipeError(StreamableOutput pipeError);
+public class StreamableOutput extends Streamable<OutputStream> {
 
-    default public T pipeError(OutputStream stream) {
-        return pipeError(Streamables.output(stream));
+    private final boolean flushable;
+    
+    public StreamableOutput(OutputStream stream, String name, Path path, Long size, boolean closeable, boolean flushable) {
+        super(stream, name, path, size, closeable);
+        this.flushable = flushable;
     }
     
-    default public T pipeError(Path path) {
-        return pipeError(Streamables.output(path));
+    public boolean flushable() {
+        return flushable;
+    }
+
+    public void flush() throws IOException {
+        if (flushable()) {
+            stream().flush();
+        }
     }
     
-    default public T pipeError(File file) {
-        return pipeError(Streamables.output(file));
+    @Override
+    public void close() throws IOException {
+        flush();
+        super.close();
     }
-    
     
 }

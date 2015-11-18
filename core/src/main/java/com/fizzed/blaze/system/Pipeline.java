@@ -20,12 +20,10 @@ import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.PipeMixin;
 import com.fizzed.blaze.core.WrappedBlazeException;
-import com.fizzed.blaze.util.NamedStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import com.fizzed.blaze.util.BytePipe;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -35,63 +33,91 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Pipeline extends Action<Void> {
+public class Pipeline extends Action<Void> implements PipeMixin<Pipeline> {
     static private final Logger log = LoggerFactory.getLogger(Pipeline.class);
 
-    private final List<PipeMixin> actions;
+    private StreamableInput pipeInput;
+    private StreamableOutput pipeOutput;
+    private final List<PipeMixin> pipables;
     
     public Pipeline(Context context) {
         super(context);
-        this.actions = new ArrayList<>();
+        this.pipables = new ArrayList<>();
     }
     
-    public Pipeline add(PipeMixin action) {
-        if (!(action instanceof Action)) {
-            throw new IllegalArgumentException("action must be of type " + Action.class.getCanonicalName());
+    @Override
+    public StreamableInput getPipeInput() {
+        return this.pipeInput;
+    }
+
+    @Override
+    public Pipeline pipeInput(StreamableInput pipeInput) {
+        this.pipeInput = pipeInput;
+        return this;
+    }
+
+    @Override
+    public StreamableOutput getPipeOutput() {
+        return this.pipeOutput;
+    }
+
+    @Override
+    public Pipeline pipeOutput(StreamableOutput pipeOutput) {
+        this.pipeOutput = pipeOutput;
+        return this;
+    }
+    
+    public Pipeline add(PipeMixin pipable) {
+        if (!(pipable instanceof Action)) {
+            throw new IllegalArgumentException("pipable must be an instance of " + Action.class.getCanonicalName());
         }
         
-        if (this.actions.size() > 0) {
-            PipeMixin lastAction = this.actions.get(this.actions.size() - 1);
+        if (this.pipables.size() > 0) {
+            PipeMixin lastPipable = this.pipables.get(this.pipables.size() - 1);
             
             // connect output to input
-            try {
-                PipedOutputStream pos = new PipedOutputStream();
-                PipedInputStream pis = new PipedInputStream(pos);
+            log.debug("Connecting {} output -> {} input", lastPipable.getClass(), pipable.getClass());
                 
-                log.debug("Connecting {} output -> {} input", lastAction.getClass(), action.getClass());
-                
-                lastAction.pipeOutput(NamedStream.of(pos, "<pipe>", true));
-                action.pipeInput(NamedStream.of(pis, "<pipe>", true));
-            } catch (IOException e) {
-                throw new WrappedBlazeException(e);
-            }
+            BytePipe pipe = new BytePipe();
+            lastPipable.pipeOutput(Streamables.output(pipe.getOutputStream(), "<pipe>", true, true));
+            pipable.pipeInput(Streamables.input(pipe.getInputStream(), "<pipe>", true));
         }
         
-        this.actions.add(action);
+        this.pipables.add(pipable);
         
         return this;
     }
 
     @Override
     protected Void doRun() throws BlazeException {
-        ExecutorService executor = Executors.newFixedThreadPool(this.actions.size());
+        ExecutorService executor = Executors.newFixedThreadPool(this.pipables.size());
+        
+        // apply input to first action
+        if (this.pipeInput != null) {
+            PipeMixin firstPipable = this.pipables.get(0);
+            firstPipable.pipeInput(this.pipeInput);
+        }
+        
+        // apply output to last action
+        if (this.pipeOutput != null) {
+            PipeMixin lastPipable = this.pipables.get(this.pipables.size() - 1);
+            lastPipable.pipeOutput(this.pipeOutput);
+        }
         
         final List<Future> futures = new ArrayList<>();
         
-        actions.stream().forEach((action) -> {
+        this.pipables.stream().forEach((pipable) -> {
             futures.add(executor.submit(() -> {
-                Action a = (Action)action;
-                log.debug("running action {}", a.getClass());
-                a.run();
+                Action action = (Action)pipable;
                 
-                try {
-                    //action.getPipeInput().close();
-                    NamedStream<OutputStream> output = action.getPipeOutput();
-                    output.stream().flush();
-                    output.close();
-                } catch (Exception e) {
-                    log.warn("Unable to close streams", e);
-                }
+                log.debug("Running action {}", action.getClass());
+                
+                action.run();
+                
+                // closing input and output after action is done is critical
+                // for pipeline to continue processing correctly and EOF's triggered
+                Streamables.closeQuietly(pipable.getPipeInput());
+                Streamables.closeQuietly(pipable.getPipeOutput());
             }));
         });
         

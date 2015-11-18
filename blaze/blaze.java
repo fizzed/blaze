@@ -20,6 +20,8 @@ import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.system.ExecResult;
+import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,7 +34,7 @@ import org.slf4j.Logger;
 public class blaze {
     static private final Logger log = Contexts.logger();
     
-    public void try_all() {
+    public void try_all() throws Exception {
         // boom -- execute another blaze script in this jvm
         Blaze.builder()
             .file(withBaseDir("../examples/try_all.java"))
@@ -41,11 +43,12 @@ public class blaze {
     }
     
     private String latest_tag() {
-        String latestTag
-            = exec("git", "describe", "--abbrev=0", "--tags")
-                .captureOutput()
-                .run()
-                .output();
+        CaptureOutput capture = Streamables.captureOutput();
+        exec("git", "describe", "--abbrev=0", "--tags")
+            .pipeOutput(capture)
+            .run();
+        
+        String latestTag = capture.toString().trim();
         
         // chop off leading "v"
         return latestTag.trim().substring(1);

@@ -28,9 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * An OutputStream that finds full lines of text (either '\r' or '\r\n') and
  * applies a function to it.  Allows processing of line-based output as its
  * written.
- * 
- * @author joelauer
- * @param <P>
  */
 public class LineOutputStream<P extends Processor> extends OutputStream {
     
@@ -98,7 +95,7 @@ public class LineOutputStream<P extends Processor> extends OutputStream {
     
     public LineOutputStream(P processor, Charset charset) {
         this.closed = false;
-        this.buffer = new ByteArray(4096);
+        this.buffer = new ByteArray();
         this.charset = (charset != null ? charset : StandardCharsets.UTF_8);
         this.processorRef = new AtomicReference<>(processor);
     }

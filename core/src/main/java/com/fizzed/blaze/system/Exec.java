@@ -33,7 +33,10 @@ import java.util.concurrent.TimeoutException;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
-import com.fizzed.blaze.util.NamedStream;
+import com.fizzed.blaze.util.Streamable;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.util.Arrays;
 
 /**
@@ -45,9 +48,9 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     final private Which which;
     final private ProcessExecutor executor;
     final private List<String> arguments;
-    private NamedStream<InputStream> pipeInput;
-    private NamedStream<OutputStream> pipeOutput;
-    private NamedStream<OutputStream> pipeError;
+    private StreamableInput pipeInput;
+    private StreamableOutput pipeOutput;
+    private StreamableOutput pipeError;
     private boolean pipeErrorToOutput;
     final private List<Integer> exitValues;
     
@@ -58,9 +61,9 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
         this.arguments = new ArrayList<>();
         this.executor = new ProcessExecutor()
             .exitValueNormal();
-        this.pipeInput = NamedStream.standardInput();
-        this.pipeOutput = NamedStream.standardOutput();
-        this.pipeError = NamedStream.standardError();
+        this.pipeInput = Streamables.standardInput();
+        this.pipeOutput = Streamables.standardOutput();
+        this.pipeError = Streamables.standardError();
         this.exitValues = new ArrayList<>();
         this.exitValues.add(0);  
     }
@@ -121,17 +124,19 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
         return this;
     }
     
+    /**
     @Override
     public Exec captureOutput(boolean captureOutput) {
         if (captureOutput) {
-            pipeOutput(NamedStream.nullOutput());
+            pipeOutput(Streamables.nullOutput());
             this.executor.readOutput(true);
         } else {
-            pipeOutput(NamedStream.standardOutput());
+            pipeOutput(Streamables.standardOutput());
             this.executor.readOutput(false);
         }
         return this;
     }
+    */
     
     @Override
     public Exec exitValues(Integer... exitValues) {
@@ -148,29 +153,34 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     }
     
     @Override
-    public NamedStream<InputStream> getPipeInput() {
+    public StreamableInput getPipeInput() {
         return this.pipeInput;
     }
 
     @Override
-    public NamedStream<OutputStream> getPipeOutput() {
+    public Exec pipeInput(StreamableInput pipeInput) {
+        this.pipeInput = pipeInput;
+        return this;
+    }
+
+    @Override
+    public StreamableOutput getPipeOutput() {
         return this.pipeOutput;
     }
     
     @Override
-    public Exec pipeInput(NamedStream<InputStream> pipeInput) {
-        this.pipeInput = pipeInput;
-        return this;
-    }
-    
-    @Override
-    public Exec pipeOutput(NamedStream<OutputStream> pipeOutput) {
+    public Exec pipeOutput(StreamableOutput pipeOutput) {
         this.pipeOutput = pipeOutput;
         return this;
     }
     
     @Override
-    public Exec pipeError(NamedStream<OutputStream> pipeError) {
+    public StreamableOutput getPipeError() {
+        return this.pipeError;
+    }
+    
+    @Override
+    public Exec pipeError(StreamableOutput pipeError) {
         this.pipeError = pipeError;
         return this;
     }
@@ -196,11 +206,13 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
         
         command.addAll(arguments);
         
+        OutputStream os = pipeOutput.stream();
+        
         this.executor
             .command(command)
             .redirectInput(pipeInput.stream())
-            .redirectOutput(pipeOutput.stream())
-            .redirectError((pipeErrorToOutput ? pipeOutput.stream() : pipeError.stream()));
+            .redirectOutput(os)
+            .redirectError((pipeErrorToOutput ? os : pipeError.stream()));
         
         try {
             return new ExecResult(this.executor.execute());

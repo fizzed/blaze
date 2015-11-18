@@ -20,6 +20,8 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.nio.file.Paths;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -64,6 +66,7 @@ public class ExecTest {
         assertThat(r.exitValue(), is(0));
     }
     
+    /**
     @Test
     public void outputSetupBad() throws Exception {
         try {
@@ -79,16 +82,19 @@ public class ExecTest {
             assertThat(e.getMessage(), containsString("readOutput"));
         }
     }
+    */
     
     @Test
-    public void capture() throws Exception {
+    public void captureOutput() throws Exception {
+        CaptureOutput capture = Streamables.captureOutput();
+        
         ExecResult r = new Exec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
-            .captureOutput()
+            .pipeOutput(capture)
             .run();
             
-        String output = r.output();
+        String output = capture.asString();
         
         assertThat(output.trim(), is("Hello World"));
     }

@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
+package com.fizzed.blaze.util;
 
-/**
- *
- * @author joelauer
- */
-public interface ExecResultSupport {
+import java.io.InputStream;
+import java.nio.file.Path;
 
-    Integer exitValue();
+public class StreamableInput extends Streamable<InputStream> {
 
-    /**
-    String output();
-
-    String output(String charset);
-
-    byte[] outputBytes();
-    */
+    public StreamableInput(InputStream stream, String name, Path path, Long size, boolean closeable) {
+        super(stream, name, path, size, closeable);
+    }
     
 }

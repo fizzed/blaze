@@ -26,11 +26,9 @@ import java.io.UnsupportedEncodingException;
 public class SshExecResult implements ExecResultSupport {
     
     final private Integer exitValue;
-    final private ByteArrayOutputStream captureOutputStream;
     
-    public SshExecResult(Integer exitValue, ByteArrayOutputStream captureOutputStream) {
+    public SshExecResult(Integer exitValue) {
         this.exitValue = exitValue;
-        this.captureOutputStream = captureOutputStream;
     }
     
     @Override
@@ -38,12 +36,13 @@ public class SshExecResult implements ExecResultSupport {
         return exitValue;
     }
     
+    /**
     private void verifyOutputCaptured() {
         if (this.captureOutputStream == null) {
             throw new IllegalStateException("Output must be captured before running SshExec. See SshExec.captureOutput() method.");
         }
     }
-    
+    * 
     @Override
     public String output() {
         verifyOutputCaptured();
@@ -69,5 +68,6 @@ public class SshExecResult implements ExecResultSupport {
         verifyOutputCaptured();
         return this.captureOutputStream.toByteArray();
     }
+    */
     
 }

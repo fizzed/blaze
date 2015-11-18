@@ -15,7 +15,10 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.util.NamedStream;
+import com.fizzed.blaze.util.Streamable;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,36 +32,36 @@ import java.nio.file.Path;
  */
 public interface PipeMixin<T> {
     
-    NamedStream<InputStream> getPipeInput();
+    StreamableInput getPipeInput();
     
-    T pipeInput(NamedStream<InputStream> pipeInput);
+    T pipeInput(StreamableInput pipeInput);
 
     default public T pipeInput(InputStream stream) {
-        return pipeInput(NamedStream.input(stream));
+        return pipeInput(Streamables.input(stream));
     }
     
     default public T pipeInput(Path path) {
-        return pipeInput(NamedStream.input(path));
+        return pipeInput(Streamables.input(path));
     }
     
     default public T pipeInput(File file) {
-        return pipeInput(NamedStream.input(file));
+        return pipeInput(Streamables.input(file));
     }
     
-    NamedStream<OutputStream> getPipeOutput();
+    StreamableOutput getPipeOutput();
     
-    T pipeOutput(NamedStream<OutputStream> pipeOutput);
+    T pipeOutput(StreamableOutput pipeOutput);
 
     default public T pipeOutput(OutputStream stream) {
-        return pipeOutput(NamedStream.output(stream));
+        return pipeOutput(Streamables.output(stream));
     }
     
     default public T pipeOutput(Path path) {
-        return pipeOutput(NamedStream.output(path));
+        return pipeOutput(Streamables.output(path));
     }
     
     default public T pipeOutput(File file) {
-        return pipeOutput(NamedStream.output(file));
+        return pipeOutput(Streamables.output(file));
     }
     
 }

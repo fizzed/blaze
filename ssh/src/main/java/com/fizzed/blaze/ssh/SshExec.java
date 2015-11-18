@@ -38,7 +38,10 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.system.ExecSupport;
-import com.fizzed.blaze.util.NamedStream;
+import com.fizzed.blaze.util.Streamable;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,20 +56,20 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     final private SshSession session;
     private Path command;
     final private List<String> arguments;
-    private NamedStream<InputStream> pipeInput;
-    private NamedStream<OutputStream> pipeOutput;
-    private NamedStream<OutputStream> pipeError;
+    private StreamableInput pipeInput;
+    private StreamableOutput pipeOutput;
+    private StreamableOutput pipeError;
     private boolean pipeErrorToOutput;
-    private ByteArrayOutputStream captureOutputStream;
+    //private ByteArrayOutputStream captureOutputStream;
     private Map<String,String> environment;
     private long timeout;
     final private List<Integer> exitValues;
     
     public SshExec(Context context, SshSession session) {
         super(context);
-        this.pipeInput = NamedStream.standardInput();
-        this.pipeOutput = NamedStream.standardOutput();
-        this.pipeError = NamedStream.standardError();
+        this.pipeInput = Streamables.standardInput();
+        this.pipeOutput = Streamables.standardOutput();
+        this.pipeError = Streamables.standardError();
         this.pipeErrorToOutput = false;
         this.session = session;
         this.arguments = new ArrayList<>();
@@ -107,29 +110,34 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     }
     
     @Override
-    public NamedStream<InputStream> getPipeInput() {
+    public StreamableInput getPipeInput() {
         return this.pipeInput;
     }
-
+    
     @Override
-    public NamedStream<OutputStream> getPipeOutput() {
-        return this.pipeOutput;
-    }
-
-    @Override
-    public SshExec pipeInput(NamedStream<InputStream> pipeInput) {
+    public SshExec pipeInput(StreamableInput pipeInput) {
         this.pipeInput = pipeInput;
         return this;
     }
 
     @Override
-    public SshExec pipeOutput(NamedStream<OutputStream> pipeOutput) {
+    public StreamableOutput getPipeOutput() {
+        return this.pipeOutput;
+    }
+
+    @Override
+    public SshExec pipeOutput(StreamableOutput pipeOutput) {
         this.pipeOutput = pipeOutput;
         return this;
     }
     
     @Override
-    public SshExec pipeError(NamedStream<OutputStream> pipeError) {
+    public StreamableOutput getPipeError() {
+        return this.pipeError;
+    }
+    
+    @Override
+    public SshExec pipeError(StreamableOutput pipeError) {
         this.pipeError = pipeError;
         return this;
     }
@@ -140,6 +148,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
         return this;
     }
     
+    /**
     @Override
     public SshExec captureOutput(boolean captureOutput) {
         if (captureOutput) {
@@ -151,6 +160,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
         }
         return this;
     }
+    */
 
     @Override
     public SshExec env(String name, String value) {
@@ -200,7 +210,8 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
             CountDownLatch errorStreamClosedSignal = new CountDownLatch(1);
             
             // determine final ouput and then wrap to monitor for close events
-            OutputStream finalPipeOutput = (this.captureOutputStream != null ? this.captureOutputStream : this.pipeOutput.stream());
+            //OutputStream finalPipeOutput = (this.captureOutputStream != null ? this.captureOutputStream : this.pipeOutput.stream());
+            OutputStream finalPipeOutput = this.pipeOutput.stream();
             
             channel.setOutputStream(new WrappedOutputStream(finalPipeOutput) {
                 @Override
@@ -254,7 +265,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
             }
             
             // success!
-            return new SshExecResult(exitValue, captureOutputStream);
+            return new SshExecResult(exitValue);
         } catch (JSchException | InterruptedException e) {
             throw new SshException(e.getMessage(), e);
         } finally {
