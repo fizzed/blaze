@@ -38,7 +38,6 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.system.ExecSupport;
-import com.fizzed.blaze.system.Which;
 import com.fizzed.blaze.util.NamedStream;
 import java.io.File;
 import java.nio.file.Path;
@@ -65,9 +64,9 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     
     public SshExec(Context context, SshSession session) {
         super(context);
-        this.pipeInput = NamedStream.STDIN;
-        this.pipeOutput = NamedStream.STDOUT;
-        this.pipeError = NamedStream.STDERR;
+        this.pipeInput = NamedStream.standardInput();
+        this.pipeOutput = NamedStream.standardOutput();
+        this.pipeError = NamedStream.standardError();
         this.pipeErrorToOutput = false;
         this.session = session;
         this.arguments = new ArrayList<>();
@@ -105,6 +104,16 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     public SshExec args(Object... arguments) {
         this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
         return this;
+    }
+    
+    @Override
+    public NamedStream<InputStream> getPipeInput() {
+        return this.pipeInput;
+    }
+
+    @Override
+    public NamedStream<OutputStream> getPipeOutput() {
+        return this.pipeOutput;
     }
 
     @Override

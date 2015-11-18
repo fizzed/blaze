@@ -57,9 +57,9 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
         this.arguments = new ArrayList<>();
         this.executor = new ProcessExecutor()
             .exitValueNormal();
-        this.pipeInput = NamedStream.STDIN;
-        this.pipeOutput = NamedStream.STDOUT;
-        this.pipeError = NamedStream.STDERR;
+        this.pipeInput = NamedStream.standardInput();
+        this.pipeOutput = NamedStream.standardOutput();
+        this.pipeError = NamedStream.standardError();
         this.exitValues = new ArrayList<>();
         this.exitValues.add(0);  
     }
@@ -123,10 +123,10 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     @Override
     public Exec captureOutput(boolean captureOutput) {
         if (captureOutput) {
-            pipeOutput(NamedStream.NULLOUT);
+            pipeOutput(NamedStream.nullOutput());
             this.executor.readOutput(true);
         } else {
-            pipeOutput(NamedStream.STDOUT);
+            pipeOutput(NamedStream.standardOutput());
             this.executor.readOutput(false);
         }
         return this;
@@ -144,6 +144,16 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     public Exec timeout(long timeoutInMillis) {
         this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
         return this;
+    }
+    
+    @Override
+    public NamedStream<InputStream> getPipeInput() {
+        return this.pipeInput;
+    }
+
+    @Override
+    public NamedStream<OutputStream> getPipeOutput() {
+        return this.pipeOutput;
     }
     
     @Override
@@ -199,4 +209,5 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
             throw new BlazeException("Unable to cleanly execute process", e);
         }
     }
+    
 }

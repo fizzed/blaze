@@ -25,8 +25,11 @@ import java.nio.file.Path;
  * Mixin for piping in and out.
  * 
  * @author joelauer
+ * @param <T>
  */
 public interface PipeMixin<T> {
+    
+    NamedStream<InputStream> getPipeInput();
     
     T pipeInput(NamedStream<InputStream> pipeInput);
 
@@ -41,6 +44,8 @@ public interface PipeMixin<T> {
     default public T pipeInput(File file) {
         return pipeInput(NamedStream.input(file));
     }
+    
+    NamedStream<OutputStream> getPipeOutput();
     
     T pipeOutput(NamedStream<OutputStream> pipeOutput);
 

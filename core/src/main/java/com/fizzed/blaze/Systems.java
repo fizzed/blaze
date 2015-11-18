@@ -16,8 +16,10 @@
 package com.fizzed.blaze;
 
 import com.fizzed.blaze.system.Exec;
+import com.fizzed.blaze.system.Pipeline;
 import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
+import com.fizzed.blaze.system.Tail;
 import com.fizzed.blaze.system.Which;
 import com.fizzed.blaze.util.Globber;
 import java.io.File;
@@ -363,5 +365,17 @@ public class Systems {
         return new Remove(Contexts.currentContext())
             .paths(files);
     }
+ 
+    
+    
+    static public Pipeline pipeline() {
+        return new Pipeline(Contexts.currentContext());
+    }
+    
+    static public Tail tail(int count) {
+        return new Tail(Contexts.currentContext())
+            .count(count);
+    }
+    
     
 }
