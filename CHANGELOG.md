@@ -1,10 +1,16 @@
 Blaze by Fizzed
 ===============
 
-#### 0.6.2 - Not Released Yet
+#### 0.7.0 - 2015-11-18
 
  - Scripts now can throw checked exceptions.  Enables cleaner stacktraces to
    console without using wrapped runtime exceptions.
+ - Refactored capturing output from actions (e.g. Exec).  A CaptureOutput needs
+   to be injected into an action.
+ - Added Tail feature - tailing output for N number of lines
+ - Added Head feature - heading output for N number of lines
+ - Added Pipeline feature - running multiple actions in sequence with streaming
+   I/O between
 
 #### 0.6.1 - 2015-11-16
 
