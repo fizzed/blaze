@@ -119,6 +119,12 @@ public class LineOutputStream<P extends Processor> extends OutputStream {
     
     @Override
     public void close() throws IOException {
+        // any unprocessed buffer?
+        if (this.buffer.length() > 0) {
+            String line = this.buffer.toString(this.charset);
+            this.buffer.reset();
+            this.processorRef.get().process(line);
+        }
         this.closed = true;
     }
 
@@ -132,24 +138,23 @@ public class LineOutputStream<P extends Processor> extends OutputStream {
         verifyNotClosed();
         
         // scan array for lines
+        int end = offset+length;
         int pos = offset;
         
-        for (int i = offset; i < length; i++) {
+        for (int i = offset; i < end; i++) {
             byte b = buffer[i];
             
             if (b == CARRIAGE_RETURN || b == NEWLINE) {
-                String line = null;
+                String line = new String(buffer, pos, (i-pos), this.charset);
                 
                 // is there any previous buffer not processed?
                 if (this.buffer.length() > 0) {
                     StringBuilder sb = new StringBuilder();
                     // append current buffer + new buffer as strings
                     sb.append(this.buffer.toString(this.charset));
-                    sb.append(new String(buffer, pos, i, this.charset));
+                    sb.append(line);
                     line = sb.toString();
                     this.buffer.reset();
-                } else {
-                    line = new String(buffer, pos, i, this.charset);
                 }
                 
                 // either process OR accumulate
@@ -158,7 +163,7 @@ public class LineOutputStream<P extends Processor> extends OutputStream {
                 pos = i + 1;
                 
                 // if this was a carriage return do we need to skip the next byte if newline?
-                if (b == CARRIAGE_RETURN && (i+1) < length && buffer[i+1] == NEWLINE) {
+                if (b == CARRIAGE_RETURN && (i+1) < end && buffer[i+1] == NEWLINE) {
                     // skip next byte
                     pos++;
                     i++;

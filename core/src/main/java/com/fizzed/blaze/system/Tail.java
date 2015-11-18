@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author joelauer
  */
-public class Tail extends Action<Stream<String>> implements PipeMixin<Tail> {
+public class Tail extends Action<Deque<String>> implements PipeMixin<Tail> {
     static private final Logger log = LoggerFactory.getLogger(Tail.class);
 
     public static final byte[] DEFAULT_NEWLINE = new byte[] { '\r', '\n' };
@@ -94,7 +94,7 @@ public class Tail extends Action<Stream<String>> implements PipeMixin<Tail> {
     }
     
     @Override
-    protected Stream<String> doRun() throws BlazeException {
+    protected Deque<String> doRun() throws BlazeException {
         ObjectHelper.requireNonNull(pipeInput, "pipeInput is required");
 
         final Deque<String> lines = new ArrayDeque<>(this.count);
@@ -110,6 +110,8 @@ public class Tail extends Action<Stream<String>> implements PipeMixin<Tail> {
         
         try {
             NamedStream.pipe(this.pipeInput, lineOutput);
+            // closing is important to finish any unprocessed buffer as a line...
+            lineOutput.close();
         } catch (IOException e) {
             throw new WrappedBlazeException(e);
         }
@@ -128,6 +130,6 @@ public class Tail extends Action<Stream<String>> implements PipeMixin<Tail> {
             }
         }
         
-        return lines.stream();
+        return lines;
     }
 }

@@ -48,6 +48,7 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     private NamedStream<InputStream> pipeInput;
     private NamedStream<OutputStream> pipeOutput;
     private NamedStream<OutputStream> pipeError;
+    private boolean pipeErrorToOutput;
     final private List<Integer> exitValues;
     
     public Exec(Context context) {
@@ -176,7 +177,7 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     
     @Override
     public Exec pipeErrorToOutput(boolean pipeErrorToOutput) {
-        this.executor.redirectErrorStream(true);
+        this.pipeErrorToOutput = pipeErrorToOutput;
         return this;
     }
     
@@ -199,7 +200,7 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
             .command(command)
             .redirectInput(pipeInput.stream())
             .redirectOutput(pipeOutput.stream())
-            .redirectError(pipeError.stream());
+            .redirectError((pipeErrorToOutput ? pipeOutput.stream() : pipeError.stream()));
         
         try {
             return new ExecResult(this.executor.execute());

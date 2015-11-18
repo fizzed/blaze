@@ -21,7 +21,9 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.PipeMixin;
 import com.fizzed.blaze.core.WrappedBlazeException;
 import com.fizzed.blaze.util.NamedStream;
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.ArrayList;
@@ -56,6 +58,8 @@ public class Pipeline extends Action<Void> {
                 PipedOutputStream pos = new PipedOutputStream();
                 PipedInputStream pis = new PipedInputStream(pos);
                 
+                log.debug("Connecting {} output -> {} input", lastAction.getClass(), action.getClass());
+                
                 lastAction.pipeOutput(NamedStream.of(pos, "<pipe>", true));
                 action.pipeInput(NamedStream.of(pis, "<pipe>", true));
             } catch (IOException e) {
@@ -82,7 +86,9 @@ public class Pipeline extends Action<Void> {
                 
                 try {
                     //action.getPipeInput().close();
-                    //action.getPipeOutput().
+                    NamedStream<OutputStream> output = action.getPipeOutput();
+                    output.stream().flush();
+                    output.close();
                 } catch (Exception e) {
                     log.warn("Unable to close streams", e);
                 }
