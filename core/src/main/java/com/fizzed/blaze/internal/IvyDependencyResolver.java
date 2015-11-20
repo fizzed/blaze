@@ -98,7 +98,11 @@ public class IvyDependencyResolver implements DependencyResolver {
         FileSystemResolver mavenLocalResolver = new FileSystemResolver();
         mavenLocalResolver.setName("mavenLocal");
         mavenLocalResolver.setLocal(true);
-        File userHomeDir = new File(System.getProperty("user.home"));
+        
+        // it'd be sweet to use the context here, eh?
+        //File userHomeDir = new File(System.getProperty("user.home"));
+        File userHomeDir = context.userDir().toFile();
+        
         mavenLocalResolver.addArtifactPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]");
         mavenLocalResolver.addIvyPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision].pom");
         mavenLocalResolver.setM2compatible(true);
