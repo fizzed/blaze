@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.util.Streamable;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
