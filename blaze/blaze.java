@@ -19,7 +19,6 @@ import static com.fizzed.blaze.Contexts.withBaseDir;
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
 import com.fizzed.blaze.core.Blaze;
-import com.fizzed.blaze.system.ExecResult;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.BufferedWriter;
@@ -62,9 +61,12 @@ public class blaze {
     }
     
     public void after_release() throws IOException {
-        ExecResult result = exec("git", "diff-files", "--quiet").exitValues(0,1).run();
+        Integer exitValue
+            = exec("git", "diff-files", "--quiet")
+                .exitValues(0,1)
+                .run();
         
-        if (result.exitValue() == 1) {
+        if (exitValue == 1) {
             fail("Uncommitted changes in git. Commit them first then re-run this task");
         }
 
