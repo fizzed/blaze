@@ -1,6 +1,13 @@
 Blaze by Fizzed
 ===============
 
+#### 0.8.0 - 2015-11-20
+
+ - Refactored actions to return a concrete Result.  run() returns the primary
+   result type and runResult() returns the full result.
+ - Context.userDir() now checks for environment HOME variable rather than
+   Java property "user.home".  Allows running under "sudo" properly.
+
 #### 0.7.0 - 2015-11-18
 
  - Scripts now can throw checked exceptions.  Enables cleaner stacktraces to

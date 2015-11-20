@@ -20,10 +20,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.ConsolePrompter;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.Prompter;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -46,7 +43,7 @@ public class ContextImpl implements Context {
     
     public ContextImpl(Path baseDir, Path userDir, Path scriptFile, Config config) {
         this.baseDir = (baseDir != null ? baseDir : Paths.get("."));
-        this.userDir = (userDir != null ? userDir : Paths.get(System.getProperty("user.home")));
+        this.userDir = (userDir != null ? userDir : findUserDir());
         this.scriptFile = scriptFile;
         this.config = config;
         this.logger = LoggerFactory.getLogger("script");
@@ -68,8 +65,6 @@ public class ContextImpl implements Context {
     public void scriptFile(Path scriptFile) {
         this.scriptFile = scriptFile;
     }
-    
-    
     
     @Override
     public Logger logger() {
@@ -145,6 +140,24 @@ public class ContextImpl implements Context {
     @Override
     public char[] passwordPrompt(String prompt, Object... args) {
         return this.prompter.passwordPrompt(prompt, args);
+    }
+    
+    
+    
+    static Path findUserDir() {
+        // environment var is better than java "user.home"
+        String home = System.getenv("HOME");
+        
+        if (home == null) {
+            // try HOMEPATH (windows)
+            home = System.getenv("HOMEPATH");
+            
+            if (home == null) {
+                home = System.getProperty("user.home");
+            }
+        }
+        
+        return Paths.get(home);
     }
     
 }
