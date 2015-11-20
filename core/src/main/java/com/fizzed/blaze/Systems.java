@@ -26,10 +26,6 @@ import com.fizzed.blaze.util.Globber;
 import java.io.File;
 import java.nio.file.Path;
 
-/**
- *
- * @author joelauer
- */
 public class Systems {
     
     /**

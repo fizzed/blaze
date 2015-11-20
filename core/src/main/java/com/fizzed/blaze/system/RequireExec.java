@@ -24,11 +24,7 @@ import java.util.List;
 import com.fizzed.blaze.core.PathsMixin;
 import java.io.File;
 
-/**
- * 
- * @author joelauer
- */
-public class RequireExec extends Action<Path> implements PathsMixin<RequireExec> {
+public class RequireExec extends Action<RequireExec.Result,Path> implements PathsMixin<RequireExec> {
     
     private final Which which;
     private String message;
@@ -65,7 +61,7 @@ public class RequireExec extends Action<Path> implements PathsMixin<RequireExec>
     }
 
     @Override
-    protected Path doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         Path exeFile = this.which.run();
         
         if (exeFile == null) {
@@ -73,7 +69,15 @@ public class RequireExec extends Action<Path> implements PathsMixin<RequireExec>
                 + (message != null ? " " + message : ""));
         }
         
-        return exeFile;
+        return new Result(this, exeFile);
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<RequireExec,Path,Result> {
+        
+        Result(RequireExec action, Path value) {
+            super(action, value);
+        }
+        
     }
     
 }

@@ -17,29 +17,28 @@ package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.Context;
 
-/**
- *
- * @author joelauer
- * @param <T>
- */
-public abstract class Action<T> {
+public abstract class Action<R extends Result<?,V,R>,V> {
     
-    final protected Context context;
-    protected volatile boolean ran;
+    protected final Context context;
+    protected volatile boolean used;
     
     public Action(Context context) {
         this.context = context;
     }
     
-    public T run() throws BlazeException {
-        if (ran) {
+    public R runResult() throws BlazeException {
+        if (used) {
             throw new BlazeException("Can only run once");
         }
-        T value = doRun();
-        ran = true;
-        return value;
+        R result = doRun();
+        used = true;
+        return result;
     }
     
-    abstract protected T doRun() throws BlazeException;
+    public V run() throws BlazeException {
+        return runResult().get();
+    }
+    
+    abstract protected R doRun() throws BlazeException;
     
 }

@@ -33,7 +33,7 @@ import com.fizzed.blaze.core.PathsMixin;
  * 
  * @author joelauer
  */
-public class Remove extends Action<Void> implements PathsMixin<Remove> {
+public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Remove> {
    
     final private List<Path> paths;
     private boolean force;
@@ -72,7 +72,7 @@ public class Remove extends Action<Void> implements PathsMixin<Remove> {
     }
 
     @Override
-    protected Void doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         try {
             if (!recursive) {
                 for (Path path : paths) {
@@ -115,7 +115,15 @@ public class Remove extends Action<Void> implements PathsMixin<Remove> {
             throw new BlazeException("Unable to remove", e);
         }
         
-        return null;
+        return new Result(this, null);
     }
 
+    static public class Result extends com.fizzed.blaze.core.Result<Remove,Void,Result> {
+        
+        Result(Remove action, Void value) {
+            super(action, value);
+        }
+        
+    }
+    
 }

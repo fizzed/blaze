@@ -15,10 +15,6 @@
  */
 package com.fizzed.blaze.ssh;
 
-/**
- *
- * @author joelauer
- */
 public class SshException extends RuntimeException {
 
     public SshException(String msg, Throwable t) {

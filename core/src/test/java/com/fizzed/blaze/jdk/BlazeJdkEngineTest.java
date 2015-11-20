@@ -120,7 +120,7 @@ public class BlazeJdkEngineTest {
         
         assertThat(systemOutRule.getLog(), containsString("worked"));
         
-        assertThat(blaze.context().scriptFile(), is(resourceAsFile("/jdk/project1/blaze/blaze.java").toPath()));
+        assertThat(blaze.context().scriptFile(), is(resourceAsFile("/jdk/project1/blaze/blaze.js").toPath()));
         assertThat(blaze.context().baseDir(), is(resourceAsFile("/jdk/project1/blaze").toPath()));
     }
     

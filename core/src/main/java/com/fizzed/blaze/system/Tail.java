@@ -16,33 +16,35 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.PipeMixin;
-import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.core.BlazeException;
 import static com.fizzed.blaze.util.Streamables.lineOutput;
 import java.util.Deque;
 
-public class Tail extends AbstractLineAction<Tail> implements PipeMixin<Tail> {
-    
-    private int count;
+public class Tail extends LineAction<Tail,Tail.Result,Deque<String>> {
     
     public Tail(Context context) {
         super(context);
-        this.count = 10;
-    }
-    
-    public Tail count(int count) {
-        this.count = count;
-        return this;
     }
     
     @Override
-    protected StreamableOutput createLineOutput(final Deque<String> lines) {
-        return lineOutput((line) -> {
-            if (lines.size() >= this.count) {
-                lines.remove();
-            }
-            lines.add(line);
+    protected Result doRun() throws BlazeException {
+        Deque<String> processedLines = LineAction.processLines(this.charset, this, (lines) -> {
+            return lineOutput((line) -> {
+                if (lines.size() >= this.count) {
+                    lines.remove();
+                }
+                lines.add(line);
+            });
         });
+        return new Tail.Result(this, processedLines);
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<Tail,Deque<String>,Result> {
+        
+        Result(Tail action, Deque<String> value) {
+            super(action, value);
+        }
+        
     }
     
 }

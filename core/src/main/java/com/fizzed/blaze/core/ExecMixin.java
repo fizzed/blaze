@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
+package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.core.PipeErrorMixin;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-public interface ExecSupport<T> extends PipeErrorMixin<T> {
+public interface ExecMixin<T> extends PipeErrorMixin<T> {
 
     T command(Path command);
     

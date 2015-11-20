@@ -22,12 +22,7 @@ import com.fizzed.blaze.util.ObjectHelper;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import java.io.IOException;
-import java.util.Objects;
 
-/**
- *
- * @author joelauer
- */
 public class JschSession implements SshSession {
     
     final private Context context;

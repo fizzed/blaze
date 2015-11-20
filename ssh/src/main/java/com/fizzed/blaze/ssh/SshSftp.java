@@ -24,15 +24,10 @@ import com.fizzed.blaze.util.ObjectHelper;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
-public class SshSftp extends Action<SshSftpSession> {
+public class SshSftp extends Action<SshSftp.Result, SshSftpSession> {
     static private final Logger log = LoggerFactory.getLogger(SshSftp.class);
 
     final private SshSession session;
@@ -43,7 +38,7 @@ public class SshSftp extends Action<SshSftpSession> {
     }
     
     @Override
-    protected SshSftpSession doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
         ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
         
@@ -53,10 +48,18 @@ public class SshSftp extends Action<SshSftpSession> {
             
             channel.connect();
             
-            return new JschSftpSession(session, channel);
+            return new Result(this, new JschSftpSession(session, channel));
         } catch (JSchException e) {
             throw new SshException(e.getMessage(), e);
         }
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<SshSftp,SshSftpSession,Result> {
+        
+        Result(SshSftp action, SshSftpSession value) {
+            super(action, value);
+        }
+        
     }
     
 }

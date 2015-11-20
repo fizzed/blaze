@@ -23,7 +23,6 @@ import com.fizzed.blaze.core.DependencyResolveException;
 import com.fizzed.blaze.core.WrappedBlazeException;
 import com.fizzed.blaze.internal.InstallHelper;
 import com.fizzed.blaze.util.Timer;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

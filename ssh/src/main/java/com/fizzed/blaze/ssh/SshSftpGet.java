@@ -26,11 +26,7 @@ import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.OutputStream;
 
-/**
- *
- * @author joelauer
- */
-public class SshSftpGet extends Action<Void> {
+public class SshSftpGet extends Action<SshSftpGet.Result,Void> {
 
     private final SshSftpSupport sftp;
     private StreamableOutput target;
@@ -73,11 +69,19 @@ public class SshSftpGet extends Action<Void> {
     }
 
     @Override
-    protected Void doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         ObjectHelper.requireNonNull(source, "source cannot be null");
         ObjectHelper.requireNonNull(target, "target cannot be null");
         sftp.get(source, target);
-        return null;
+        return new Result(this, null);
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<SshSftpGet,Void,Result> {
+        
+        Result(SshSftpGet action, Void value) {
+            super(action, value);
+        }
+        
     }
     
 }

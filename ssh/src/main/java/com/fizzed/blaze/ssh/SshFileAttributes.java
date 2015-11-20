@@ -19,10 +19,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 
-/**
- *
- * @author joelauer
- */
 public interface SshFileAttributes extends BasicFileAttributes {
 
     int gid();

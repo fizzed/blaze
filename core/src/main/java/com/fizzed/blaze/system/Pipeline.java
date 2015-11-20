@@ -33,7 +33,7 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Pipeline extends Action<Void> implements PipeMixin<Pipeline> {
+public class Pipeline extends Action<Pipeline.Result,Void> implements PipeMixin<Pipeline> {
     static private final Logger log = LoggerFactory.getLogger(Pipeline.class);
 
     private StreamableInput pipeInput;
@@ -89,7 +89,7 @@ public class Pipeline extends Action<Void> implements PipeMixin<Pipeline> {
     }
 
     @Override
-    protected Void doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         ExecutorService executor = Executors.newFixedThreadPool(this.pipables.size());
         
         // apply input to first action
@@ -136,7 +136,15 @@ public class Pipeline extends Action<Void> implements PipeMixin<Pipeline> {
         log.debug("waiting for executor shutdown...");
         executor.shutdown();
         
-        return null;
+        return new Result(this, null);
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<Pipeline,Void,Result> {
+        
+        Result(Pipeline action, Void value) {
+            super(action, value);
+        }
+        
     }
     
 }

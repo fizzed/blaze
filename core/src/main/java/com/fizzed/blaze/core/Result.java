@@ -13,22 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.system;
+package com.fizzed.blaze.core;
 
-/**
- *
- * @author joelauer
- */
-public interface ExecResultSupport {
+import java.util.function.BiFunction;
 
-    Integer exitValue();
+public class Result<A extends Action,V,R extends Result> {
+    
+    private final A action;
+    private final V value;
 
-    /**
-    String output();
-
-    String output(String charset);
-
-    byte[] outputBytes();
-    */
+    public Result(A action, V value) {
+        this.action = action;
+        this.value = value;
+    }
+    
+    public A action() {
+        return this.action;
+    }
+    
+    public V get() {
+        return this.value;
+    }
+    
+    public <U> U map(BiFunction<A,R,U> mapper) {
+        return mapper.apply(action, (R)this);
+    }
     
 }

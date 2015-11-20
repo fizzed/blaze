@@ -17,10 +17,6 @@ package com.fizzed.blaze.ssh;
 
 import java.nio.file.Path;
 
-/**
- *
- * @author joelauer
- */
 public class SshFile {
     
     private final Path path;

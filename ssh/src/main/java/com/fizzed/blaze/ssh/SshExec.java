@@ -25,9 +25,7 @@ import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,20 +35,15 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fizzed.blaze.system.ExecSupport;
-import com.fizzed.blaze.util.Streamable;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import com.fizzed.blaze.core.ExecMixin;
 
-/**
- *
- * @author joelauer
- */
-public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExec> {
+public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
 
     final private SshSession session;
@@ -60,7 +53,6 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     private StreamableOutput pipeOutput;
     private StreamableOutput pipeError;
     private boolean pipeErrorToOutput;
-    //private ByteArrayOutputStream captureOutputStream;
     private Map<String,String> environment;
     private long timeout;
     final private List<Integer> exitValues;
@@ -147,20 +139,6 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
         this.pipeErrorToOutput = pipeErrorToOutput;
         return this;
     }
-    
-    /**
-    @Override
-    public SshExec captureOutput(boolean captureOutput) {
-        if (captureOutput) {
-            if (this.captureOutputStream == null) {
-                this.captureOutputStream = new ByteArrayOutputStream();
-            }
-        } else {
-            this.captureOutputStream = null;
-        }
-        return this;
-    }
-    */
 
     @Override
     public SshExec env(String name, String value) {
@@ -185,7 +163,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
     }
 
     @Override
-    protected SshExecResult doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
         ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
         ObjectHelper.requireNonNull(command, "ssh command cannot be null");
@@ -265,7 +243,7 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
             }
             
             // success!
-            return new SshExecResult(exitValue);
+            return new Result(this, exitValue);
         } catch (JSchException | InterruptedException e) {
             throw new SshException(e.getMessage(), e);
         } finally {
@@ -273,6 +251,14 @@ public class SshExec extends Action<SshExecResult> implements ExecSupport<SshExe
                 channel.disconnect();
             }
         }
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<SshExec,Integer,Result> {
+        
+        Result(SshExec action, Integer value) {
+            super(action, value);
+        }
+        
     }
     
 }

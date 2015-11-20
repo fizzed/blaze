@@ -48,12 +48,12 @@ public class SshExecTest extends SshBaseTest {
         
         SshSession session = startAndConnect();
 
-        SshExecResult result
+        Integer exitValue
             = new SshExec(context, session)
                 .command("hello")
                 .run();
         
-        assertThat(result.exitValue(), is(0));
+        assertThat(exitValue, is(0));
     }
     
     @Test
@@ -66,10 +66,9 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         try {
-            SshExecResult result
-                = new SshExec(context, session)
-                    .command("hello")
-                    .run();
+            new SshExec(context, session)
+                .command("hello")
+                .run();
             fail();
         } catch (UnexpectedExitValueException e) {
             assertThat(e.getActual(), is(1));
@@ -93,13 +92,13 @@ public class SshExecTest extends SshBaseTest {
 
         CaptureOutput capture = Streamables.captureOutput();
         
-        SshExecResult result
+        Integer exitValue
             = new SshExec(context, session)
                 .command("hello")
                 .pipeOutput(capture)
                 .run();
         
-        assertThat(result.exitValue(), is(0));
+        assertThat(exitValue, is(0));
         assertThat(capture.toString(), is("Hello World!"));
     }
     
@@ -119,14 +118,14 @@ public class SshExecTest extends SshBaseTest {
 
         CaptureOutput capture = Streamables.captureOutput();
         
-        SshExecResult result
+        Integer exitValue
             = new SshExec(context, session)
                 .command("error")
                 .pipeOutput(capture)
                 .pipeErrorToOutput()
                 .run();
         
-        assertThat(result.exitValue(), is(0));
+        assertThat(exitValue, is(0));
         assertThat(capture.toString(), is("Hello World!"));
     }
     
@@ -148,14 +147,14 @@ public class SshExecTest extends SshBaseTest {
 
         CaptureOutput capture = Streamables.captureOutput();
         
-        SshExecResult result
+        Integer exitValue
             = new SshExec(context, session)
                 .command("echo")
                 .env("JAVA_HOME", "/usr/java/default")
                 .pipeOutput(capture)
                 .run();
         
-        assertThat(result.exitValue(), is(0));
+        assertThat(exitValue, is(0));
         assertThat(capture.toString(), containsString("JAVA_HOME -> /usr/java/default"));
     }
     
@@ -172,13 +171,13 @@ public class SshExecTest extends SshBaseTest {
         
         SshSession session = startAndConnect();
 
-        SshExecResult result
+        Integer exitValue
             = new SshExec(context, session)
                 .command("arg")
                 .arg("a=1")
                 .args("b=2")
                 .run();
         
-        assertThat(result.exitValue(), is(0));
+        assertThat(exitValue, is(0));
     }
 }

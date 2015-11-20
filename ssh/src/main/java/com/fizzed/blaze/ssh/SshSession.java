@@ -19,10 +19,6 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.ssh.impl.SshSupport;
 import com.fizzed.blaze.util.ImmutableUri;
 
-/**
- *
- * @author joelauer
- */
 public interface SshSession extends SshSupport {
 
     Context context();

@@ -15,10 +15,8 @@
  */
 package com.fizzed.blaze.ssh.impl;
 
-import com.fizzed.blaze.ssh.impl.JschSession;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.ssh.SshSession;
 import com.jcraft.jsch.ChannelExec;
@@ -32,11 +30,7 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
-public class SshScpBETA extends Action<Void> {
+public class SshScpBETA extends Action<SshScpBETA.Result,Void> {
     static private final Logger log = LoggerFactory.getLogger(SshScpBETA.class);
 
     final private SshSession session;
@@ -72,7 +66,7 @@ public class SshScpBETA extends Action<Void> {
     }
 
     @Override
-    protected Void doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
         Objects.requireNonNull(jschSession, "ssh session must be established first");
         Objects.requireNonNull(source, "scp source cannot be null");
@@ -200,6 +194,15 @@ public class SshScpBETA extends Action<Void> {
             }
         }
         return b;
+    }
+    
+    
+    static public class Result extends com.fizzed.blaze.core.Result<SshScpBETA,Void,Result> {
+        
+        Result(SshScpBETA action, Void value) {
+            super(action, value);
+        }
+        
     }
     
 }

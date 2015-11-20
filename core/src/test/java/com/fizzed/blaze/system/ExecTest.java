@@ -23,10 +23,8 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.nio.file.Paths;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.Mockito.spy;
@@ -51,19 +49,20 @@ public class ExecTest {
     
     @Test(expected=ExecutableNotFoundException.class)
     public void notFind() throws Exception {
-        ExecResult r = new Exec(context)
+        new Exec(context)
             .command("thisdoesnotexist")
             .run();
     }
     
     @Test
     public void works() throws Exception {
-        ExecResult r = new Exec(context)
-            .command("hello-world-test")
-            .path(getBinDirAsResource())
-            .run();
+        Integer exitValue
+            = new Exec(context)
+                .command("hello-world-test")
+                .path(getBinDirAsResource())
+                .run();
         
-        assertThat(r.exitValue(), is(0));
+        assertThat(exitValue, is(0));
     }
     
     /**
@@ -88,7 +87,7 @@ public class ExecTest {
     public void captureOutput() throws Exception {
         CaptureOutput capture = Streamables.captureOutput();
         
-        ExecResult r = new Exec(context)
+        new Exec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
             .pipeOutput(capture)

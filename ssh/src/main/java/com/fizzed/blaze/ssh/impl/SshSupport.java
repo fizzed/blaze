@@ -17,10 +17,6 @@ package com.fizzed.blaze.ssh.impl;
 
 import java.io.Closeable;
 
-/**
- *
- * @author joelauer
- */
 public interface SshSupport extends Closeable {
 
     boolean closed();

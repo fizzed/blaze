@@ -20,11 +20,7 @@ import com.fizzed.blaze.core.Action;
 import java.nio.file.Path;
 import com.fizzed.blaze.core.UriMixin;
 
-/**
- *
- * @author joelauer
- */
-abstract public class SshConnect extends Action<SshSession> implements UriMixin<SshConnect> {
+abstract public class SshConnect extends Action<SshConnect.Result,SshSession> implements UriMixin<SshConnect> {
 
     public SshConnect(Context context) {
         super(context);
@@ -39,5 +35,18 @@ abstract public class SshConnect extends Action<SshSession> implements UriMixin<
     abstract public SshConnect knownHostsFile(Path knownHostsFile);
     
     abstract public SshConnect disableHostChecking();
+    
+    
+    protected Result createResult(SshSession value) {
+        return new Result(this, value);
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<SshConnect,SshSession,Result> {
+        
+        Result(SshConnect action, SshSession value) {
+            super(action, value);
+        }
+        
+    }
     
 }

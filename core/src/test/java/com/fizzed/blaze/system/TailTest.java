@@ -17,7 +17,6 @@ package com.fizzed.blaze.system;
 
 import java.io.StringReader;
 import java.util.Deque;
-import java.util.stream.Stream;
 import org.apache.commons.io.input.ReaderInputStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;

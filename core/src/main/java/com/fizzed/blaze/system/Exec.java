@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.core.ExecMixin;
 import com.fizzed.blaze.core.ExecutableNotFoundException;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
@@ -22,7 +23,6 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.ObjectHelper;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,17 +33,17 @@ import java.util.concurrent.TimeoutException;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
-import com.fizzed.blaze.util.Streamable;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.util.Arrays;
+import org.zeroturnaround.exec.ProcessResult;
 
 /**
  *
  * @author joelauer
  */
-public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSupport<Exec> {
+public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec>, ExecMixin<Exec> {
 
     final private Which which;
     final private ProcessExecutor executor;
@@ -124,20 +124,6 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
         return this;
     }
     
-    /**
-    @Override
-    public Exec captureOutput(boolean captureOutput) {
-        if (captureOutput) {
-            pipeOutput(Streamables.nullOutput());
-            this.executor.readOutput(true);
-        } else {
-            pipeOutput(Streamables.standardOutput());
-            this.executor.readOutput(false);
-        }
-        return this;
-    }
-    */
-    
     @Override
     public Exec exitValues(Integer... exitValues) {
         this.executor.exitValues(exitValues);
@@ -192,7 +178,7 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
     }
     
     @Override
-    protected ExecResult doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         Path exeFile = this.which.run();
         
         if (exeFile == null) {
@@ -215,12 +201,21 @@ public class Exec extends Action<ExecResult> implements PathsMixin<Exec>, ExecSu
             .redirectError((pipeErrorToOutput ? os : pipeError.stream()));
         
         try {
-            return new ExecResult(this.executor.execute());
+            ProcessResult processResult = this.executor.execute();
+            return new Result(this, processResult.getExitValue());
         } catch (InvalidExitValueException e) {
             throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new BlazeException("Unable to cleanly execute process", e);
         }
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<Exec,Integer,Result> {
+        
+        Result(Exec action, Integer value) {
+            super(action, value);
+        }
+        
     }
     
 }

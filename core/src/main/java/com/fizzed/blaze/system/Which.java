@@ -34,7 +34,7 @@ import java.nio.file.Paths;
  * 
  * @author joelauer
  */
-public class Which extends Action<Path> implements PathsMixin<Which> {
+public class Which extends Action<Which.Result,Path> implements PathsMixin<Which> {
     private static final Logger log = LoggerFactory.getLogger(Which.class);
     
     private final List<Path> paths;
@@ -74,8 +74,9 @@ public class Which extends Action<Path> implements PathsMixin<Which> {
     }
     
     @Override
-    protected Path doRun() throws BlazeException {
-        return find(context, paths, command);
+    protected Result doRun() throws BlazeException {
+        Path path = find(context, paths, command);
+        return new Result(this, path);
     }
     
     static public Path find(Context context, List<Path> paths, Path command) throws BlazeException {
@@ -109,6 +110,14 @@ public class Which extends Action<Path> implements PathsMixin<Which> {
         }
         
         return null;
+    }
+    
+    static public class Result extends com.fizzed.blaze.core.Result<Which,Path,Result> {
+        
+        Result(Which action, Path value) {
+            super(action, value);
+        }
+        
     }
     
 }

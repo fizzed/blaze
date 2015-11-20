@@ -21,10 +21,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
-/**
- *
- * @author joelauer
- */
 public interface SshSftpSupport {
     
     void get(Path source, Streamable<OutputStream> target) throws SshException;

@@ -17,10 +17,6 @@ package com.fizzed.blaze.ssh.impl;
 
 import java.nio.file.Path;
 
-/**
- *
- * @author Joe Lauer
- */
 public class PathHelper {
     
     static public String toString(Path path) {

@@ -18,46 +18,33 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.util.ObjectHelper;
-import java.io.OutputStream;
 import com.fizzed.blaze.core.PipeMixin;
 import com.fizzed.blaze.core.WrappedBlazeException;
+import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
-import static com.fizzed.blaze.util.Streamables.lineOutput;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-abstract public class AbstractLineAction<T extends AbstractLineAction> extends Action<Deque<String>> implements PipeMixin<T> {
-    static private final Logger log = LoggerFactory.getLogger(AbstractLineAction.class);
-
-    public static final byte[] DEFAULT_NEWLINE = new byte[] { '\r', '\n' };
+abstract public class LineAction<A extends LineAction, R extends com.fizzed.blaze.core.Result<?,V,R>,V> extends Action<R,V> implements PipeMixin<A> {
     
-    private StreamableInput pipeInput;
-    private StreamableOutput pipeOutput;
-    private byte[] newline;
-    private Charset charset;
+    protected Charset charset;
+    protected StreamableInput pipeInput;
+    protected StreamableOutput pipeOutput;
+    protected int count;
     
-    public AbstractLineAction(Context context) {
+    public LineAction(Context context) {
         super(context);
-        this.newline = DEFAULT_NEWLINE;
-        this.charset = StandardCharsets.UTF_8;
+        this.count = 10;
     }
     
-    public T newline(byte[] newline) {
-        this.newline = newline;
-        return (T)this;
-    }
-    
-    public T charset(Charset charset) {
+    public A charset(Charset charset) {
         this.charset = charset;
-        return (T)this;
+        return (A)this;
     }
     
     @Override
@@ -66,9 +53,9 @@ abstract public class AbstractLineAction<T extends AbstractLineAction> extends A
     }
 
     @Override
-    public T pipeInput(StreamableInput pipeInput) {
+    public A pipeInput(StreamableInput pipeInput) {
         this.pipeInput = pipeInput;
-        return (T)this;
+        return (A)this;
     }
     
     @Override
@@ -77,44 +64,51 @@ abstract public class AbstractLineAction<T extends AbstractLineAction> extends A
     }
     
     @Override
-    public T pipeOutput(StreamableOutput pipeOutput) {
+    public A pipeOutput(StreamableOutput pipeOutput) {
         this.pipeOutput = pipeOutput;
-        return (T)this;
+        return (A)this;
     }
     
-    abstract protected StreamableOutput createLineOutput(final Deque<String> lines);
+    public A count(int count) {
+        this.count = count;
+        return (A)this;
+    }
     
-    @Override
-    protected Deque<String> doRun() throws BlazeException {
-        ObjectHelper.requireNonNull(pipeInput, "pipeInput is required");
+    static public interface LineOutputSupplier {
+        public StreamableOutput create(Deque<String> lines);
+    }
+
+    static public Deque<String> processLines(final Charset charset, final PipeMixin pipable, final LineOutputSupplier lineOuputSupplier) throws BlazeException {
+        ObjectHelper.requireNonNull(pipable.getPipeInput(), "pipeInput is required");
 
         final Deque<String> lines = new ArrayDeque<>();
         
-        final StreamableOutput lineOutput = createLineOutput(lines);
+        final StreamableOutput lineOutput = lineOuputSupplier.create(lines);
         
         try {
-            Streamables.copy(this.pipeInput, lineOutput);
+            Streamables.copy(pipable.getPipeInput(), lineOutput);
         } catch (IOException e) {
             throw new WrappedBlazeException(e);
         }
         
-        Streamables.close(this.pipeInput);
+        Streamables.close(pipable.getPipeInput());
         Streamables.close(lineOutput);
         
-        if (this.pipeOutput != null) {
+        if (pipable.getPipeOutput() != null) {
             try {
-                OutputStream os = this.pipeOutput.stream();
+                OutputStream os = pipable.getPipeOutput().stream();
                 for (String line : lines) {
                     String s = line + "\r\n";
-                    os.write(s.getBytes(this.charset));
+                    os.write(s.getBytes(charset));
                 }
             } catch (IOException e) {
                 throw new WrappedBlazeException(e);
             } finally {
-                Streamables.closeQuietly(this.pipeOutput);
+                Streamables.closeQuietly(pipable.getPipeOutput());
             }
         }
         
         return lines;
     }
+    
 }

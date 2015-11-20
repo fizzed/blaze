@@ -20,7 +20,6 @@ import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.ssh.SshException;
-import com.fizzed.blaze.ssh.SshSession;
 import com.jcraft.jsch.ConfigRepository;
 import com.jcraft.jsch.ConfigRepository.Config;
 import com.jcraft.jsch.HostKey;
@@ -126,7 +125,7 @@ public class JschConnect extends SshConnect {
     }
     
     @Override
-    protected SshSession doRun() throws BlazeException {
+    protected Result doRun() throws BlazeException {
         ObjectHelper.requireNonNull(uri, "uri cannot be null");
         ObjectHelper.requireNonNull(uri.getScheme(), "uri scheme is required for ssh (e.g. ssh://user@host)");
         ObjectHelper.requireNonNull(uri.getHost(), "uri host is required for ssh");
@@ -297,7 +296,7 @@ public class JschConnect extends SshConnect {
             log.info("Connected ssh session to {}@{}:{}!",
                     jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
             
-            return new JschSession(this.context, this.uri.toImmutableUri(), jsch, jschSession);
+            return createResult(new JschSession(this.context, this.uri.toImmutableUri(), jsch, jschSession));
         } catch (JSchException e) {
             throw tryToUnwrap(e);
         } catch (IOException e) {
