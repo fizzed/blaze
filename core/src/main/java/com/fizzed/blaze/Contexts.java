@@ -115,7 +115,12 @@ public class Contexts {
     }
 
     /**
-     * The current user's home directory such as "/home/joelauer" or "C:\Users\Joe Lauer"
+     * The current user's home directory such as "/home/joelauer" or "C:\Users\Joe Lauer".
+     * This method differs from <code>System.getProperty("user.home")</code> by
+     * checking the environment variables HOME and HOMEPATH first.  This allows
+     * a program running under something like "sudo" to still correctly find
+     * the actual user's home directory rather than "root".
+     * 
      * @return The current user's home directory
      */
     static public Path userDir() {

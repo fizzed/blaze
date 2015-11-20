@@ -42,6 +42,13 @@ public class blaze {
             .execute();
     }
     
+    public void update_version() {
+        String newVersion = Contexts.prompt("New version? ");
+        
+        exec("mvn", "versions:set", "-DnewVersion=" + newVersion).run();
+        exec("mvn", "versions:commit").run();
+    }
+    
     private String latest_tag() {
         CaptureOutput capture = Streamables.captureOutput();
         exec("git", "describe", "--abbrev=0", "--tags")
