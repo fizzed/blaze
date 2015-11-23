@@ -3,7 +3,7 @@ Blaze by Fizzed
 
 ## Example
 
-The [examples](examples) directory is full of cross-language example scripts
+The [examples](../examples) directory is full of cross-language example scripts
 to help whet your appetite.
 
 As a simple example, let's write a script to find out if "javac" is available
