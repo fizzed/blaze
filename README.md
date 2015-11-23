@@ -1,7 +1,11 @@
 Blaze by Fizzed
 =======================================
 
- - [Fizzed, Inc.](http://fizzed.com)
+[![Build Status](https://travis-ci.org/fizzed/blaze.svg?branch=master)](https://travis-ci.org/fizzed/blaze)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fizzed/blaze/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fizzed/blaze)
+
+[Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
+
 
 ## Overview
 
@@ -26,13 +30,11 @@ invoke blaze, it does the following:
 
  - Write your applications (e.g. scripts) in whatever JVM language you prefer.
    Out-of-the-box support for
-
     - Java (.java)
     - JavaScript (.js)
     - Groovy (.groovy)
     - Kotlin (.kt, .kts)
     - Or write your own (examples [here](core/src/main/java/com/fizzed/blaze/jdk), [here](core/src/main/java/com/fizzed/blaze/nashorn), [here](kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](groovy/src/main/java/com/fizzed/blaze/groovy))
-
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
  - Small size so you can commit `blaze.jar` to your repository
