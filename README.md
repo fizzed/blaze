@@ -25,12 +25,14 @@ invoke blaze, it does the following:
 ## Features
 
  - Write your applications (e.g. scripts) in whatever JVM language you prefer.
-   Out-of-the-box support for:
+   Out-of-the-box support for
+
     - Java (.java)
     - JavaScript (.js)
     - Groovy (.groovy)
     - Kotlin (.kt, .kts)
     - Or write your own (examples [here](core/src/main/java/com/fizzed/blaze/jdk), [here](core/src/main/java/com/fizzed/blaze/nashorn), [here](kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](groovy/src/main/java/com/fizzed/blaze/groovy))
+
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
  - Small size so you can commit `blaze.jar` to your repository
