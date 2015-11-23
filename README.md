@@ -164,3 +164,9 @@ can run it like so
 
 If no task is supplied on the command line, Blaze will attempt to run the `main`
 task by default.
+
+## IDE support
+
+A Netbeans-certified plugin is available for Nebeans 8.1+.  You can find it
+in Netbeans 8.1 -> Tools > Plugins > Available Plugins > Blaze.  The source
+code and project are [here](https://github.com/fizzed/blaze-netbeans)
