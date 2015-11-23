@@ -1,7 +1,7 @@
 Blaze by Fizzed
 =======================================
 
-## Why?
+## Why Blaze?
 
 Here's why we took the time to build this. Other than having a JVM on the machine,
 that's all that's required to run a script.  All dependencies will be downloaded
