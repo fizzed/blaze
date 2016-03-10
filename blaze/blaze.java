@@ -18,8 +18,8 @@ import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.withBaseDir;
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
+import com.fizzed.blaze.core.Actions;
 import com.fizzed.blaze.core.Blaze;
-import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -43,21 +43,22 @@ public class blaze {
     
     public void update_version() {
         String newVersion = Contexts.prompt("New version? ");
-        
         exec("mvn", "versions:set", "-DnewVersion=" + newVersion).run();
         exec("mvn", "versions:commit").run();
     }
     
     private String latest_tag() {
-        CaptureOutput capture = Streamables.captureOutput();
-        exec("git", "describe", "--abbrev=0", "--tags")
-            .pipeOutput(capture)
-            .run();
+        // get latest tag and trim off "v"
+        String latestTag
+            = exec("git", "describe", "--abbrev=0", "--tags")
+                .pipeOutput(Streamables.captureOutput())
+                .runResult()
+                .map(Actions::toCaptureOutput)
+                .toString()
+                .trim()
+                .substring(1);
         
-        String latestTag = capture.toString().trim();
-        
-        // chop off leading "v"
-        return latestTag.trim().substring(1);
+        return latestTag;
     }
     
     public void after_release() throws IOException {
@@ -113,16 +114,16 @@ public class blaze {
         
         try (BufferedWriter writer = Files.newBufferedWriter(newReadmeFile)) {
             Files.lines(readmeFile)
-                    .forEach((l) -> {
-                        Matcher matcher = replacePattern.matcher(l);
-                        String newLine = matcher.replaceAll(latestVersion);
-                        try {
-                            writer.append(newLine);
-                            writer.append("\n");
-                        } catch (IOException e) {
-                            throw new RuntimeException(e.getMessage(), e);
-                        }
-                    });
+                .forEach((l) -> {
+                    Matcher matcher = replacePattern.matcher(l);
+                    String newLine = matcher.replaceAll(latestVersion);
+                    try {
+                        writer.append(newLine);
+                        writer.append("\n");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e.getMessage(), e);
+                    }
+                });
             writer.flush();
         }
         
