@@ -1,3 +1,4 @@
+.vagrant
 target
 lite/dependency-reduced-pom.xml
 ssh/src/test/java/ssh.*
