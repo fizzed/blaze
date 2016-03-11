@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh.impl;
+package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.ssh.SshSftpException;
-import com.fizzed.blaze.util.Streamable;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Path;
-
-public interface SshSftpSupport {
+public class SshSftpNoSuchFileException extends SshSftpException {
     
-    void get(Path source, Streamable<OutputStream> target) throws SshSftpException;
-    
-    void put(Streamable<InputStream> source, String target) throws SshSftpException;
+    public SshSftpNoSuchFileException(int errorCode, String msg, Throwable t) {
+        super(errorCode, msg, t);
+    }
     
 }

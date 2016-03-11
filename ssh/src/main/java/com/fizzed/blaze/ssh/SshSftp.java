@@ -42,9 +42,8 @@ public class SshSftp extends Action<SshSftp.Result, SshSftpSession> {
         Session jschSession = ((JschSession)session).getJschSession();
         ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
         
-        ChannelSftp channel = null;
         try {
-            channel = (ChannelSftp)jschSession.openChannel("sftp");
+            ChannelSftp channel = (ChannelSftp)jschSession.openChannel("sftp");
             
             channel.connect();
             

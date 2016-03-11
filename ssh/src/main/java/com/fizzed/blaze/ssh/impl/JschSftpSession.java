@@ -19,7 +19,9 @@ import com.fizzed.blaze.ssh.SshException;
 import com.fizzed.blaze.ssh.SshFile;
 import com.fizzed.blaze.ssh.SshFileAttributes;
 import com.fizzed.blaze.ssh.SshSession;
+import com.fizzed.blaze.ssh.SshSftpException;
 import com.fizzed.blaze.ssh.SshSftpGet;
+import com.fizzed.blaze.ssh.SshSftpNoSuchFileException;
 import com.fizzed.blaze.ssh.SshSftpPut;
 import com.fizzed.blaze.ssh.SshSftpSession;
 import com.fizzed.blaze.util.Streamable;
@@ -48,7 +50,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author joelauer
  */
-public class JschSftpSession implements SshSftpSession, SshSftpSupport {
+public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     static private final Logger log = LoggerFactory.getLogger(JschSftpSession.class);
 
     private final SshSession session;
@@ -95,7 +97,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
             this.workingDir = Paths.get(this.channel.pwd());
             return this.workingDir;
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -110,19 +112,17 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
             this.channel.cd(PathHelper.toString(path));
             this.workingDir = path;
         } catch (SftpException e) {
-            // 2: no such file
-            // 4: Can't change directory: /bin/ls
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
     @Override
-    public SshFileAttributes lstat(String path) {
+    public SshFileAttributes lstat(String path) throws SshSftpException {
         return lstat(Paths.get(path));
     }
     
     @Override
-    public SshFileAttributes lstat(Path path) throws SshException {
+    public SshFileAttributes lstat(Path path) throws SshSftpException {
         try {
             String p = PathHelper.toString(path);
             log.debug("lstat {}", p);
@@ -131,9 +131,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
             
             return new JschFileAttributes(attrs);
         } catch (SftpException e) {
-            // 2: no such file
-            // 4: Can't change directory: /bin/ls
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -166,9 +164,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
             
             return files;
         } catch (SftpException e) {
-            // 2: no such file
-            // 4: Can't change directory: /bin/ls
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -191,9 +187,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
                 IOUtils.closeQuietly(target);
             }  
         } catch (SftpException e) {
-            // 2: no such file
-            // 4: Can't change directory: /bin/ls
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -226,10 +220,10 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
                 IOUtils.closeQuietly(output);
                 IOUtils.closeQuietly(source);
             }
-        } catch (SftpException | IOException e) {
-            // 2: no such file
-            // 4: Can't change directory: /bin/ls
+        } catch (IOException e) {
             throw new SshException(e.getMessage(), e);
+        } catch (SftpException e) {
+            throw convertSftpException(e);
         }
     }
     
@@ -243,7 +237,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.chgrp(gid, PathHelper.toString(path));
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -257,7 +251,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.chown(uid, PathHelper.toString(path));
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -282,7 +276,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.mkdir(PathHelper.toString(path));
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -296,7 +290,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.rm(PathHelper.toString(path));
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -310,7 +304,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.rmdir(PathHelper.toString(path));
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -324,7 +318,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.rename(source.toString(), target.toString());
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
         }
     }
     
@@ -338,7 +332,15 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
         try {
             this.channel.symlink(target.toString(), link.toString());
         } catch (SftpException e) {
-            throw new SshException(e.getMessage(), e);
+            throw convertSftpException(e);
+        }
+    }
+    
+    private SshSftpException convertSftpException(SftpException e) {
+        if (e.id == 2) {
+            return new SshSftpNoSuchFileException(e.id, e.getMessage(), e);
+        } else {
+            return new SshSftpException(e.id, e.getMessage(), e);
         }
     }
 

@@ -16,70 +16,81 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.ssh.impl.SshSupport;
-import com.jcraft.jsch.SftpException;
 import java.nio.file.Path;
 import java.util.List;
 
-/**
- *
- * @author joelauer
- */
-public interface SshSftpSession extends SshSupport {
+public abstract class SshSftpSession implements SshSupport {
 
-    SshSession session();
+    abstract public SshSession session();
     
-    Path pwd() throws SshException;
+    abstract public Path pwd() throws SshException;
     
-    void cd(String path) throws SshException;
+    abstract public void cd(String path) throws SshException;
     
-    void cd(Path path) throws SshException;
+    abstract public void cd(Path path) throws SshException;
     
     // like Files.readAttributes(file, BasicFileAttributes.class);
-    SshFileAttributes lstat(String path) throws SshException;
+    abstract public SshFileAttributes lstat(String path) throws SshSftpException;
     
-    SshFileAttributes lstat(Path path) throws SshException;
+    abstract public SshFileAttributes lstat(Path path) throws SshSftpException;
+    
+    public SshFileAttributes lstatSafely(String path) throws SshSftpException {
+        try {
+            return lstat(path);
+        } catch (SshSftpNoSuchFileException e) {
+            return null;
+        }
+    }
+    
+    public SshFileAttributes lstatSafely(Path path) throws SshSftpException {
+        try {
+            return lstat(path);
+        } catch (SshSftpNoSuchFileException e) {
+            return null;
+        }
+    }
 
     // like Files.listFiles
-    List<SshFile> ls(String path) throws SshException;
+    abstract public List<SshFile> ls(String path) throws SshException;
     
-    List<SshFile> ls(Path path) throws SshException;
+    abstract public List<SshFile> ls(Path path) throws SshException;
 
     // builder-syntax for puts is better
-    SshSftpGet get() throws SshException;
+    abstract public SshSftpGet get() throws SshException;
     
     // builder-syntax for puts is better
-    SshSftpPut put() throws SshException;
+    abstract public SshSftpPut put() throws SshException;
     
-    void chgrp(String path, int gid);
+    abstract public void chgrp(String path, int gid);
     
-    void chgrp(Path path, int gid);
+    abstract public void chgrp(Path path, int gid);
     
-    void chown(String path, int uid);
+    abstract public void chown(String path, int uid);
     
-    void chown(Path path, int uid);
+    abstract public void chown(Path path, int uid);
     
-    void chown(String path, int uid, int gid);
+    abstract public void chown(String path, int uid, int gid);
     
-    void chown(Path path, int uid, int gid);
+    abstract public void chown(Path path, int uid, int gid);
     
-    void mkdir(String path);
+    abstract public void mkdir(String path);
     
-    void mkdir(Path path);
+    abstract public void mkdir(Path path);
     
-    void rm(String path);
+    abstract public void rm(String path);
     
-    void rm(Path path);
+    abstract public void rm(Path path);
     
-    void rmdir(String path);
+    abstract public void rmdir(String path);
     
-    void rmdir(Path path);
+    abstract public void rmdir(Path path);
     
-    void mv(String source, String target);
+    abstract public void mv(String source, String target);
     
-    void mv(Path source, Path target);
+    abstract public void mv(Path source, Path target);
     
-    void symlink(String target, String link);
+    abstract public void symlink(String target, String link);
     
-    void symlink(Path target, Path link);
+    abstract public void symlink(Path target, Path link);
     
 }

@@ -33,12 +33,22 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import static com.fizzed.blaze.SecureShells.sshConnect;
+import static com.fizzed.blaze.SecureShells.sshExec;
 import com.fizzed.blaze.internal.FileHelper;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+/**
+ * Real tests against actual hosts via ssh.
+ * 
+ * @author joelauer
+ */
 @RunWith(Parameterized.class)
 public class SshIntegrationTest {
     static private final Logger log = LoggerFactory.getLogger(SshIntegrationTest.class);
@@ -67,36 +77,79 @@ public class SshIntegrationTest {
     
     @Test
     public void sftpPutAndGet() throws Exception {
-        Path exampleFile = FileHelper.resourceAsFile("/example/test1.txt").toPath();
+        Path exampleFile = FileHelper.resourceAsPath("/example/test1.txt");
         
         try (SshSession ssh = sshConnect(uri).configFile(sshConfigFile).run()) {
             try (SshSftpSession sftp = SecureShells.sshSftp(ssh).run()) {
-                //sftp.cd("/vagrant/target");
-                
-                try {
-                    SshFileAttributes lstat = sftp.lstat("target");
-                } catch (SshException e) {
-                    sftp.mkdir("target");
-                }
-                
-                sftp.mkdir("target/test-classes");
-                sftp.mkdir("target/test-classes/example");
+                // make sure file does not exist on remote system
+                sshExec(ssh, "rm", "-f", "test1.txt").run();
                 
                 sftp.put()
                     .source(exampleFile)
-                    .target(exampleFile)
+                    .target(exampleFile.getFileName())
                     .run();
                 
                 File tempFile = File.createTempFile("blaze.", ".sshtest");
                 tempFile.deleteOnExit();
                 
                 sftp.get()
-                    .source(exampleFile)
+                    .source(exampleFile.getFileName())
                     .target(tempFile)
                     .run();
                 
                 // files match?
                 assertTrue("The files differ!", FileUtils.contentEquals(tempFile, exampleFile.toFile()));
+            }
+        }
+    }
+    
+    @Test
+    public void sftpPutTwiceOverwrites() throws Exception {
+        Path exampleFile = FileHelper.resourceAsPath("/example/test1.txt");
+        
+        try (SshSession ssh = sshConnect(uri).configFile(sshConfigFile).run()) {
+            try (SshSftpSession sftp = SecureShells.sshSftp(ssh).run()) {
+                // make sure file does not exist on remote system
+                sshExec(ssh, "rm", "-f", "test1.txt").run();
+                
+                sftp.put()
+                    .source(exampleFile)
+                    .target(exampleFile.getFileName())
+                    .run();
+                
+                sftp.put()
+                    .source(exampleFile)
+                    .target(exampleFile.getFileName())
+                    .run();
+            }
+        }
+    }
+    
+    @Test
+    public void lstat() throws Exception {
+        try (SshSession ssh = sshConnect(uri).configFile(sshConfigFile).run()) {
+            try (SshSftpSession sftp = SecureShells.sshSftp(ssh).run()) {
+                // regular file
+                sshExec(ssh, "touch", "temp.txt").run();
+                try {
+                    SshFileAttributes attrs = sftp.lstat("temp.txt");
+                    assertThat(attrs.isDirectory(), is(false));
+                    assertThat(attrs.isRegularFile(), is(true));
+                } finally {
+                    sshExec(ssh, "rm", "-f", "temp.txt").run();
+                }
+                
+                // non-existent file throws specific exception
+                try {
+                    SshFileAttributes attrs = sftp.lstat("file_does_not_exist.txt");
+                    fail();
+                } catch (SshSftpNoSuchFileException e) {
+                    // expected specific exception
+                }
+                
+                // lstat safely!
+                SshFileAttributes attrs = sftp.lstatSafely("file_does_not_exist.txt");
+                assertThat(attrs, is(nullValue()));
             }
         }
     }

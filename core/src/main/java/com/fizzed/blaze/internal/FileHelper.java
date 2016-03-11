@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -39,7 +38,7 @@ import java.util.Base64;
  */
 public class FileHelper {
     
-    static public File resourceAsFile(String resourceName) throws URISyntaxException, MalformedURLException, IOException {
+    static public Path resourceAsPath(String resourceName) throws URISyntaxException, MalformedURLException, IOException {
         URL url = ConfigHelper.class.getResource(resourceName);
         
         if (url == null) {
@@ -51,7 +50,11 @@ public class FileHelper {
         // can it look better if we relativize it to the working dir?
         File workingDir = new File(System.getProperty("user.dir"));
         
-        return workingDir.toPath().relativize(file.toPath()).toFile();
+        return workingDir.toPath().relativize(file.toPath());
+    }
+    
+    static public File resourceAsFile(String resourceName) throws URISyntaxException, MalformedURLException, IOException {        
+        return resourceAsPath(resourceName).toFile();
     }
     
     static public Path relativizeToJavaWorkingDir(Path path) {

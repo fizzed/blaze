@@ -244,7 +244,10 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
             
             // success!
             return new Result(this, exitValue);
-        } catch (JSchException | InterruptedException e) {
+        } catch (JSchException e) {
+            
+            throw new SshException(e.getMessage(), e);
+        } catch (InterruptedException e) {
             throw new SshException(e.getMessage(), e);
         } finally {
             if (channel != null) {
