@@ -36,6 +36,7 @@ import static com.fizzed.blaze.SecureShells.sshConnect;
 import static com.fizzed.blaze.SecureShells.sshExec;
 import com.fizzed.blaze.internal.FileHelper;
 import java.io.File;
+import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -59,7 +60,7 @@ public class SshIntegrationTest {
     
     @Parameters(name = "{index}: vagrant={0}")
     public static Collection<String> data() {
-        return Arrays.asList("freebsd102", "jessie64", "centos7");
+        return Arrays.asList("jessie64", "centos7", "freebsd102");
     }
     
     @Before
@@ -72,7 +73,9 @@ public class SshIntegrationTest {
         Config config = ConfigHelper.create(null);
         this.context = new ContextImpl(null, null, null, config);
         ContextHolder.set(this.context);
-        this.sshConfigFile = TestHelper.VAGRANT.fetchSshConfig().toPath();
+        this.sshConfigFile = Optional.ofNullable(TestHelper.VAGRANT.fetchSshConfig())
+            .map((f) -> f.toPath())
+            .orElse(null);
     }
     
     @Test
