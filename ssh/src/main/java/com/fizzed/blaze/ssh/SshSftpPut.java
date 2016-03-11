@@ -17,6 +17,7 @@ package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.ssh.impl.PathHelper;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -30,7 +31,7 @@ public class SshSftpPut extends Action<SshSftpPut.Result,Void> {
 
     private final SshSftpSupport sftp;
     private StreamableInput source;
-    private Path target;
+    private String target;
     
     public SshSftpPut(SshSftpSession sftp) {
         super(sftp.session().context());
@@ -60,17 +61,16 @@ public class SshSftpPut extends Action<SshSftpPut.Result,Void> {
     }
     
     public SshSftpPut target(String targetFile) {
-        return target(Paths.get(targetFile));
-    }
-    
-    public SshSftpPut target(Path targetFile) {
         this.target = targetFile;
         return this;
     }
     
+    public SshSftpPut target(Path targetFile) {
+        return target(PathHelper.toString(targetFile));
+    }
+    
     public SshSftpPut target(File targetFile) {
-        this.target = targetFile.toPath();
-        return this;
+        return target(targetFile.toPath());
     }
 
     @Override

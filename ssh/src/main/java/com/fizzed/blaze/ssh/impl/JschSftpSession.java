@@ -203,8 +203,10 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
     }
     
     @Override
-    public void put(Streamable<InputStream> source, Path target) throws SshException {
+    public void put(Streamable<InputStream> source, String target) throws SshException {
         try {
+            // target potentially 
+            
             // TODO: how can we log w/o requring it be a complete line?
             if (log.isInfoEnabled()) {
                 if (source.size() != null) {
@@ -215,7 +217,7 @@ public class JschSftpSession implements SshSftpSession, SshSftpSupport {
             }
                     
             OutputStream output
-                = this.channel.put(target.toString(), new DefaultProgressMonitor(), ChannelSftp.OVERWRITE, 0);
+                = this.channel.put(target, new DefaultProgressMonitor(), ChannelSftp.OVERWRITE, 0);
             
             try {
                 // copy streams input -> output

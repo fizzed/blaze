@@ -25,6 +25,6 @@ public interface SshSftpSupport {
     
     void get(Path source, Streamable<OutputStream> target) throws SshException;
     
-    void put(Streamable<InputStream> source, Path target) throws SshException;
+    void put(Streamable<InputStream> source, String target) throws SshException;
     
 }
