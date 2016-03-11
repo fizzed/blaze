@@ -141,9 +141,7 @@ public class ContextImpl implements Context {
     public char[] passwordPrompt(String prompt, Object... args) {
         return this.prompter.passwordPrompt(prompt, args);
     }
-    
-    
-    
+
     static Path findUserDir() {
         // environment var is better than java "user.home"
         String home = System.getenv("HOME");
@@ -158,6 +156,5 @@ public class ContextImpl implements Context {
         }
         
         return Paths.get(home);
-    }
-    
+    }    
 }

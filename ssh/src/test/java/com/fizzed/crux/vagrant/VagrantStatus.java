@@ -18,13 +18,13 @@ package com.fizzed.crux.vagrant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class Status {
+public class VagrantStatus {
     
     private final String id;
     private final String name;
     private final Map<String,String> values;
 
-    public Status(String id, String name) {
+    public VagrantStatus(String id, String name) {
         this.id = id;
         this.name = name;
         this.values = new LinkedHashMap<>();

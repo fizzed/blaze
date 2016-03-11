@@ -22,10 +22,6 @@ import com.fizzed.blaze.ssh.SshExec;
 import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.ssh.SshSftp;
 
-/**
- *
- * @author joelauer
- */
 public class SecureShells {
     
     static public SshConnect sshConnect(String uri) {

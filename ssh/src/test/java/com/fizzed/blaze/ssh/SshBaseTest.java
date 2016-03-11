@@ -36,7 +36,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import org.junit.After;
 import static org.junit.Assert.assertThat;
 import org.junit.Before;
-import static org.mockito.Mockito.spy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.mockito.Mockito.spy;

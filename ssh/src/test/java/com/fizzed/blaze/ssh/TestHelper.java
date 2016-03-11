@@ -15,7 +15,7 @@
  */
 package com.fizzed.blaze.ssh;
 
-import com.fizzed.crux.vagrant.Vagrant;
+import com.fizzed.crux.vagrant.VagrantClient;
 import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 public class TestHelper {
     static private final Logger log = LoggerFactory.getLogger(TestHelper.class);
     
-    static public final Vagrant VAGRANT
-        = new Vagrant.Loader()
+    static public final VagrantClient VAGRANT
+        = new VagrantClient.Builder()
             .workingDirectory(new File("."))
             .safeLoad();
     
