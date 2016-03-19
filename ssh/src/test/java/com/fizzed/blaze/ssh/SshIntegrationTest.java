@@ -74,7 +74,6 @@ public class SshIntegrationTest {
         this.context = new ContextImpl(null, null, null, config);
         ContextHolder.set(this.context);
         this.sshConfigFile = Optional.ofNullable(TestHelper.VAGRANT.fetchSshConfig())
-            .map((f) -> f.toPath())
             .orElse(null);
     }
     

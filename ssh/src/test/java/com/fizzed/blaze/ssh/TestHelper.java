@@ -16,7 +16,7 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.crux.vagrant.VagrantClient;
-import java.io.File;
+import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class TestHelper {
     
     static public final VagrantClient VAGRANT
         = new VagrantClient.Builder()
-            .workingDirectory(new File("."))
+            .workingDirectory(Paths.get("."))
             .safeLoad();
     
 }

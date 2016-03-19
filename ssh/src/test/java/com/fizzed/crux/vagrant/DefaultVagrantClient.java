@@ -18,6 +18,7 @@ package com.fizzed.crux.vagrant;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +36,13 @@ import org.zeroturnaround.exec.ProcessResult;
 public class DefaultVagrantClient implements VagrantClient {
     static private final Logger log = LoggerFactory.getLogger(DefaultVagrantClient.class);
 
-    private final File workingDirectory;
+    private final Path workingDirectory;
     private final AtomicReference<Map<String,VagrantStatus>> statusRef;
     private final AtomicBoolean areAllMachinesRunning;
     private final AtomicBoolean areAnyMachinesRunning;
-    private final AtomicReference<File> sshConfigFileRef;
+    private final AtomicReference<Path> sshConfigFileRef;
 
-    DefaultVagrantClient(File workingDirectory) {
+    DefaultVagrantClient(Path workingDirectory) {
         this.workingDirectory = workingDirectory;
         this.statusRef = new AtomicReference<>();
         this.areAllMachinesRunning = new AtomicBoolean();
@@ -50,7 +51,7 @@ public class DefaultVagrantClient implements VagrantClient {
     }
 
     @Override
-    public File workingDirectory() {
+    public Path workingDirectory() {
         return this.workingDirectory;
     }
     
@@ -143,7 +144,7 @@ public class DefaultVagrantClient implements VagrantClient {
     }
     
     @Override
-    public File fetchSshConfig() throws UncheckedVagrantException {
+    public Path fetchSshConfig() throws UncheckedVagrantException {
         try {
             return fetchSshConfig(false);
         } catch (VagrantException e) {
@@ -152,16 +153,17 @@ public class DefaultVagrantClient implements VagrantClient {
     }
     
     @Override
-    public File fetchSshConfig(boolean refresh) throws VagrantException {
-        File sshConfigFile = this.sshConfigFileRef.get();
+    public Path fetchSshConfig(boolean refresh) throws VagrantException {
+        Path sshConfigFile = this.sshConfigFileRef.get();
         
         if (!refresh && sshConfigFile != null) {
             return sshConfigFile;
         }
         
         try {
-            sshConfigFile = File.createTempFile("vagrant.", ".ssh-config");
-            sshConfigFile.deleteOnExit();
+            File tempFile = File.createTempFile("vagrant.", ".ssh-config");
+            tempFile.deleteOnExit();
+            sshConfigFile = tempFile.toPath();
         } catch (IOException e) {
             throw new VagrantException(e.getMessage(), e);
         }
@@ -172,7 +174,7 @@ public class DefaultVagrantClient implements VagrantClient {
     }
     
     @Override
-    public void fetchSshConfig(File sshConfigFile) throws VagrantException {
+    public void fetchSshConfig(Path sshConfigFile) throws VagrantException {
         try {
             ProcessResult result
                 = new ProcessExecutor()
@@ -181,7 +183,7 @@ public class DefaultVagrantClient implements VagrantClient {
                     .execute();
             
             // save .ssh-config
-            Files.write(sshConfigFile.toPath(),
+            Files.write(sshConfigFile,
                         result.output(),
                         StandardOpenOption.TRUNCATE_EXISTING);
             
@@ -189,12 +191,12 @@ public class DefaultVagrantClient implements VagrantClient {
             // remove UserKnownHostsFile line
             // identity file probably wrong too
             List<String> filteredConfig
-                = Files.lines(sshConfigFile.toPath())
+                = Files.lines(sshConfigFile)
                     .filter((line) -> !line.contains("UserKnownHostsFile"))
                     .map((line) -> (!line.contains("IdentityFile") ? line : line.replace("\"", "")))
                     .collect(Collectors.toList());
         
-            Files.write(sshConfigFile.toPath(),
+            Files.write(sshConfigFile,
                         filteredConfig,
                         StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException | InterruptedException | TimeoutException | InvalidExitValueException e) {

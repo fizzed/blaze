@@ -16,6 +16,7 @@
 package com.fizzed.crux.vagrant;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,14 +25,14 @@ import java.util.Map;
  */
 public class EmptyVagrantClient implements VagrantClient {
 
-    private final File workingDirectory;
+    private final Path workingDirectory;
 
-    public EmptyVagrantClient(File workingDirectory) {
+    public EmptyVagrantClient(Path workingDirectory) {
         this.workingDirectory = workingDirectory;
     }
     
     @Override
-    public File workingDirectory() {
+    public Path workingDirectory() {
         return this.workingDirectory;
     }
     
@@ -56,17 +57,17 @@ public class EmptyVagrantClient implements VagrantClient {
     }
 
     @Override
-    public File fetchSshConfig() throws UncheckedVagrantException {
+    public Path fetchSshConfig() throws UncheckedVagrantException {
         return null;
     }
 
     @Override
-    public File fetchSshConfig(boolean refresh) throws VagrantException {
+    public Path fetchSshConfig(boolean refresh) throws VagrantException {
         return null;
     }
 
     @Override
-    public void fetchSshConfig(File sshConfigFile) throws VagrantException {
+    public void fetchSshConfig(java.nio.file.Path sshConfigFile) throws VagrantException {
         // do nothing
     }
 

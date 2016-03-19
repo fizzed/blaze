@@ -16,6 +16,7 @@
 package com.fizzed.crux.vagrant;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 public interface VagrantClient {
@@ -28,27 +29,27 @@ public interface VagrantClient {
 
     boolean areAnyMachinesRunning(boolean refresh) throws VagrantException;
 
-    File fetchSshConfig() throws UncheckedVagrantException;
+    Path fetchSshConfig() throws UncheckedVagrantException;
 
-    File fetchSshConfig(boolean refresh) throws VagrantException;
+    Path fetchSshConfig(boolean refresh) throws VagrantException;
 
-    void fetchSshConfig(File sshConfigFile) throws VagrantException;
+    void fetchSshConfig(Path sshConfigFile) throws VagrantException;
 
-    Map<String, VagrantStatus> fetchStatus() throws UncheckedVagrantException;
+    Map<String,VagrantStatus> fetchStatus() throws UncheckedVagrantException;
 
-    Map<String, VagrantStatus> fetchStatus(boolean refresh) throws VagrantException;
+    Map<String,VagrantStatus> fetchStatus(boolean refresh) throws VagrantException;
 
-    File workingDirectory();
+    Path workingDirectory();
     
     
     static public class Builder {
         
-        private File workingDirectory;
+        private Path workingDirectory;
 
         public Builder() {
         }
 
-        public Builder workingDirectory(File workingDirectory) {
+        public Builder workingDirectory(Path workingDirectory) {
             this.workingDirectory = workingDirectory;
             return this;
         }
