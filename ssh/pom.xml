@@ -68,12 +68,15 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>crux-vagrant</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-core</artifactId>
-            <version>1.0.0</version>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>
