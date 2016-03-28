@@ -6,11 +6,12 @@ Blaze by Fizzed
  - Support for placing default script in  `.blaze` sub directory.  From your
    working directory, Blaze will now automatically search `blaze.[ext]` then 
    `blaze/blaze.[ext]` then `.blaze/blaze.[ext]`
- - Added vagrant for true integration junit testing on various operating systems.
+ - Contexts withBaseDir and withUserDir return normalized paths
  - Fixed issue with file paths for scripts using `blaze-ssh` from windows to
    remote non-windows operating systems.
+ - Fixed issue with null default charset on LineAction
+ - Added vagrant for true integration junit testing on various operating systems.
  - Refactored project to have each module in a prefixed dir (e.g. blaze-ssh)
- - Contexts withBaseDir and withUserDir return normalized paths
 
 #### 0.8.0 - 2015-11-20
 

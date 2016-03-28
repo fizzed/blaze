@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.apache.commons.io.Charsets;
 
 abstract public class LineAction<A extends LineAction, R extends com.fizzed.blaze.core.Result<?,V,R>,V> extends Action<R,V> implements PipeMixin<A> {
     
@@ -40,6 +41,7 @@ abstract public class LineAction<A extends LineAction, R extends com.fizzed.blaz
     public LineAction(Context context) {
         super(context);
         this.count = 10;
+        this.charset = Charsets.UTF_8;
     }
     
     public A charset(Charset charset) {
