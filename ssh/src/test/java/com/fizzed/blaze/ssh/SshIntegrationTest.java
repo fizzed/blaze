@@ -60,7 +60,7 @@ public class SshIntegrationTest {
     
     @Parameters(name = "{index}: vagrant={0}")
     public static Collection<String> data() {
-        return Arrays.asList("jessie64", "centos7", "freebsd102");
+        return Arrays.asList("debian8", "ubuntu1404", "centos7", "centos6", "freebsd102");
     }
     
     @Before

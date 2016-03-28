@@ -37,7 +37,7 @@ invoke blaze, it does the following:
     - Or write your own (examples [here](core/src/main/java/com/fizzed/blaze/jdk), [here](core/src/main/java/com/fizzed/blaze/nashorn), [here](kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](groovy/src/main/java/com/fizzed/blaze/groovy))
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
- - IDE support
+ - [IDE support](https://github.com/fizzed/blaze-netbeans)
  - Small size so you can commit `blaze.jar` to your repository
  - Careful defaults and intuitive conventions are used to minimize typing to 
    run your scripts.
