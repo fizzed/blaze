@@ -79,7 +79,7 @@ public class ContextImpl implements Context {
     @Override
     public Path withBaseDir(Path path) {
         Objects.requireNonNull(path, "path cannot be null");
-        return this.baseDir().resolve(path);
+        return this.baseDir().resolve(path).normalize();
     }
     
     @Override
@@ -112,7 +112,7 @@ public class ContextImpl implements Context {
     @Override
     public Path withUserDir(Path path) {
         Objects.requireNonNull(path, "path cannot be null");
-        return this.userDir().resolve(path);
+        return this.userDir().resolve(path).normalize();
     }
     
     @Override

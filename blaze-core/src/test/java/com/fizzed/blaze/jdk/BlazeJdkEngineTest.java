@@ -21,6 +21,7 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
+import static com.fizzed.blaze.internal.FileHelper.resourceAsPath;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,7 +66,7 @@ public class BlazeJdkEngineTest {
     public void hello() throws Exception {
         Blaze blaze
             = Blaze.builder()
-                .file(resourceAsFile("/jdk/hello.java"))
+                .file(resourceAsPath("/jdk/hello.java"))
                 .build();
         
         systemOutRule.clearLog();
@@ -79,7 +80,7 @@ public class BlazeJdkEngineTest {
     public void tasks() throws Exception {
         Blaze blaze
             = Blaze.builder()
-                .file(resourceAsFile("/jdk/only_public.java"))
+                .file(resourceAsPath("/jdk/only_public.java"))
                 .build();
         
         systemOutRule.clearLog();
@@ -94,7 +95,7 @@ public class BlazeJdkEngineTest {
     public void defaultBlazeInWorkingDir() throws Exception {
         Blaze blaze
             = Blaze.builder()
-                .directory(resourceAsFile("/jdk/project0"))
+                .directory(resourceAsPath("/jdk/project0"))
                 .build();
         
         systemOutRule.clearLog();
@@ -103,15 +104,16 @@ public class BlazeJdkEngineTest {
         
         assertThat(systemOutRule.getLog(), containsString("worked"));
         
-        assertThat(blaze.context().scriptFile(), is(resourceAsFile("/jdk/project0/blaze.java").toPath()));
-        assertThat(blaze.context().baseDir(), is(resourceAsFile("/jdk/project0").toPath()));
+        assertThat(blaze.context().scriptFile(), is(resourceAsPath("/jdk/project0/blaze.java")));
+        assertThat(blaze.context().baseDir(), is(resourceAsPath("/jdk/project0")));
+        assertThat(blaze.context().withBaseDir("test"), is(resourceAsPath("/jdk/project0").resolve("test")));
     }
     
     @Test
     public void defaultBlazeInSubBlazeDir() throws Exception {
         Blaze blaze
             = Blaze.builder()
-                .directory(resourceAsFile("/jdk/project1"))
+                .directory(resourceAsPath("/jdk/project1"))
                 .build();
         
         systemOutRule.clearLog();
@@ -120,8 +122,27 @@ public class BlazeJdkEngineTest {
         
         assertThat(systemOutRule.getLog(), containsString("worked"));
         
-        assertThat(blaze.context().scriptFile(), is(resourceAsFile("/jdk/project1/blaze/blaze.js").toPath()));
-        assertThat(blaze.context().baseDir(), is(resourceAsFile("/jdk/project1/blaze").toPath()));
+        assertThat(blaze.context().scriptFile(), is(resourceAsPath("/jdk/project1/blaze/blaze.js")));
+        assertThat(blaze.context().baseDir(), is(resourceAsPath("/jdk/project1/blaze")));
+        assertThat(blaze.context().withBaseDir("../test"), is(resourceAsPath("/jdk/project1").resolve("test")));
+    }
+    
+    @Test
+    public void defaultBlazeInSubDotBlazeDir() throws Exception {
+        Blaze blaze
+            = Blaze.builder()
+                .directory(resourceAsPath("/jdk/project2"))
+                .build();
+        
+        systemOutRule.clearLog();
+        
+        blaze.execute();
+        
+        assertThat(systemOutRule.getLog(), containsString("worked"));
+        
+        assertThat(blaze.context().scriptFile(), is(resourceAsPath("/jdk/project2/.blaze/blaze.js")));
+        assertThat(blaze.context().baseDir(), is(resourceAsPath("/jdk/project2/.blaze")));
+        assertThat(blaze.context().withBaseDir("../test"), is(resourceAsPath("/jdk/project2").resolve("test")));
     }
     
 }

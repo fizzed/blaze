@@ -47,7 +47,8 @@ public class Blaze {
     static private final Logger log = LoggerFactory.getLogger(Blaze.class);
     
     static public final List<Path> SEARCH_RELATIVE_DIRECTORIES = Arrays.asList(
-        Paths.get("blaze")
+        Paths.get("blaze"),
+        Paths.get(".blaze")
     );
     
     static public class Builder {
