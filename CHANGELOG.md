@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ===============
 
+#### 0.8.1 - xxx
+
+ - Added vagrant for true integration junit testing on various operating systems.
+ - Fixed issue with file paths for scripts using `blaze-ssh` from windows to
+   remote non-windows operating systems. 
+
 #### 0.8.0 - 2015-11-20
 
  - Refactored actions to return a concrete Result.  run() returns the primary
