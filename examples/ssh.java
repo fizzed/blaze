@@ -3,7 +3,6 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.prompt;
 import com.fizzed.blaze.util.MutableUri;
-import com.fizzed.blaze.ssh.SshExecResult;
 import com.fizzed.blaze.ssh.SshSession;
 import org.slf4j.Logger;
 import static com.fizzed.blaze.SecureShells.sshConnect;
@@ -39,7 +38,6 @@ public class ssh {
                 .command("pwd")
                 .pipeOutput(capture)
                 .run();
-            
             log.info("Remote working dir is {}", capture.toString().trim());
             
             // who are we logged in as?
@@ -55,13 +53,13 @@ public class ssh {
             log.info("Listing current directory...");
             
             // list directory to stdout
-            SshExecResult result2
+            Integer exitValue
                 = sshExec(session)
                     .command("ls")
                     .arg("-la")
                     .run();
             
-            log.info("Last exec exited with {}", result2.exitValue());
+            log.info("Last exec exited with {}", exitValue);
         }
     }
     
