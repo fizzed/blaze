@@ -1,7 +1,7 @@
 Blaze by Fizzed
 ===============
 
-#### 0.8.1 - xxx
+#### 0.8.1 - 2016-03-28
 
  - Support for placing default script in  `.blaze` sub directory.  From your
    working directory, Blaze will now automatically search `blaze.[ext]` then 
