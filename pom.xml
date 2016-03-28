@@ -27,12 +27,12 @@
     </scm>
     
     <modules>
-        <module>core</module>
-        <module>http</module>
-        <module>ssh</module>
-        <module>groovy</module>
-        <module>kotlin</module>
-        <module>lite</module>
+        <module>blaze-core</module>
+        <module>blaze-http</module>
+        <module>blaze-ssh</module>
+        <module>blaze-groovy</module>
+        <module>blaze-kotlin</module>
+        <module>blaze-lite</module>
     </modules>
     
     <dependencyManagement>
