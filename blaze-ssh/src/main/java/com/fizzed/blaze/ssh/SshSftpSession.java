@@ -93,4 +93,12 @@ public abstract class SshSftpSession implements SshSupport {
     
     abstract public void symlink(Path target, Path link);
     
+    abstract public Path readlink(String target);
+    
+    abstract public Path readlink(Path target);
+    
+    abstract public Path realpath(String target);
+    
+    abstract public Path realpath(Path target);
+    
 }

@@ -316,7 +316,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     @Override
     public void mv(Path source, Path target) {
         try {
-            this.channel.rename(source.toString(), target.toString());
+            this.channel.rename(PathHelper.toString(source), PathHelper.toString(target));
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
@@ -330,7 +330,35 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     @Override
     public void symlink(Path target, Path link) {
         try {
-            this.channel.symlink(target.toString(), link.toString());
+            this.channel.symlink(PathHelper.toString(target), PathHelper.toString(link));
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
+    }
+    
+    @Override
+    public Path readlink(String target) {
+        return readlink(Paths.get(target));
+    }    
+    
+    @Override
+    public Path readlink(Path target) {
+        try {
+            return Paths.get(this.channel.readlink(PathHelper.toString(target)));
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
+    }
+    
+    @Override
+    public Path realpath(String target) {
+        return realpath(Paths.get(target));
+    }    
+    
+    @Override
+    public Path realpath(Path target) {
+        try {
+            return Paths.get(this.channel.realpath(PathHelper.toString(target)));
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
