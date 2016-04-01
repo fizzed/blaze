@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.util;
 
-import com.fizzed.blaze.core.WrappedBlazeException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;

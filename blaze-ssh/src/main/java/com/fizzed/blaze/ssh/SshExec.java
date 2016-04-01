@@ -43,6 +43,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import com.fizzed.blaze.core.ExecMixin;
 import com.fizzed.blaze.ssh.impl.PathHelper;
+import com.fizzed.blaze.util.WrappedInputStream;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 
 public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
@@ -170,6 +173,7 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
         ObjectHelper.requireNonNull(command, "ssh command cannot be null");
         
         ChannelExec channel = null;
+        final AtomicReference<Thread> execThreadRef = new AtomicReference<>();
         try {
             channel = (ChannelExec)jschSession.openChannel("exec");
             
@@ -181,8 +185,35 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
                 }
             }
             
-            // do not close input
-            channel.setInputStream(this.pipeInput.stream(), true);
+            // inputstream.read() will block jsch's exec thread from exiting
+            // forever unless the actual underlying stream is closed -- which
+            // we don't actually want to happen.  We'll workaround this issue
+            // a hacky read that will timeout every X milliseconds
+            channel.setInputStream(new WrappedInputStream(this.pipeInput.stream()) {
+                @Override @SuppressWarnings("SleepWhileInLoop")
+                public int read(byte[] b, int off, int len) throws IOException {
+                    // sneaky :-) only thread to call this method is the thread
+                    // we'll want to interrupt when we disconnect the session later
+                    execThreadRef.compareAndSet(null, Thread.currentThread());
+                    
+                    // make this read interruptable by using Thread.sleep
+                    do {
+                        // non-blocking, how many bytes available
+                        int available = this.available();
+                        if (available == 0) {
+                            try {
+                                // read would definitely block waiting for data
+                                Thread.sleep(50L);
+                            } catch (InterruptedException ex) {
+                                throw new IOException("Interrupted while blocked on read()");
+                            }
+                        } else {
+                            // read will not block
+                            return input.read(b, off, len);
+                        }
+                    } while (true);
+                }
+            });
             
             // both streams closing signals exec is finished
             CountDownLatch outputStreamClosedSignal = new CountDownLatch(1);
@@ -249,6 +280,13 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
         } finally {
             if (channel != null) {
                 channel.disconnect();
+            }
+            if (execThreadRef.get() != null) {
+                Thread execThread = execThreadRef.get();
+                log.info("{}", Arrays.asList(execThread.getStackTrace()));
+                log.info("Interrupting {}", execThread.getName());
+                execThread.interrupt();
+                log.info("{}", Arrays.asList(execThread.getStackTrace()));
             }
         }
     }

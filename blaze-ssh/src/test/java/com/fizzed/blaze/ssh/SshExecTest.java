@@ -18,6 +18,10 @@ package com.fizzed.blaze.ssh;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.Streamables;
+import com.fizzed.blaze.util.WrappedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
@@ -202,5 +206,47 @@ public class SshExecTest extends SshBaseTest {
                 .run();
         
         assertThat(exitValue, is(0));
+    }
+    
+    @Test
+    public void verifyInputStreamNotBlockingJschExecThreadFromExiting() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("hello")) {
+                command.out.println("Hello World!");
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+        
+        // due to an issue with JSCH, if you request the input
+        // stream to not be closed, it results in exec threads sticking around
+        // a hack to verify if the input stream is still in the "read" blocking
+        // call even after the sshexec command has finished.  if it is then there
+        // will definitely be a thread hanging around
+        final AtomicBoolean inRead = new AtomicBoolean();
+        InputStream is = new WrappedInputStream(System.in) {
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                try {
+                    inRead.set(true);
+                    return input.read(b, off, len);
+                } finally {
+                    inRead.set(false);
+                }
+            }
+        };
+        
+        SshSession session = startAndConnect();
+
+        Integer exitValue
+            = new SshExec(context, session)
+                .command("hello")
+                .pipeInput(is)
+                .run();
+        
+        assertThat(exitValue, is(0));
+        assertThat(inRead.get(), is(false));
     }
 }
