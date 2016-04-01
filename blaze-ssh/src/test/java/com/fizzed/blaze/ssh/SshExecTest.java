@@ -180,4 +180,27 @@ public class SshExecTest extends SshBaseTest {
         
         assertThat(exitValue, is(0));
     }
+    
+    @Test
+    public void commandRetainsSlashes() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("/path/to/exec a=1 b=2")) {
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+        
+        SshSession session = startAndConnect();
+
+        Integer exitValue
+            = new SshExec(context, session)
+                .command("/path/to/exec")
+                .arg("a=1")
+                .args("b=2")
+                .run();
+        
+        assertThat(exitValue, is(0));
+    }
 }

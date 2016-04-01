@@ -42,6 +42,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import com.fizzed.blaze.core.ExecMixin;
+import com.fizzed.blaze.ssh.impl.PathHelper;
 
 public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
@@ -209,7 +210,7 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
             }, false);
             
             // building the command may be a little tricky, not sure about spaces...
-            final StringBuilder sb = new StringBuilder(command.toString());
+            final StringBuilder sb = new StringBuilder(PathHelper.toString(command));
             
             arguments.stream().forEach((arg) -> {
                 sb.append(" ");
@@ -225,7 +226,7 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
             
             String finalCommand = sb.toString();
             
-            log.debug("Sending command via ssh session: {}", finalCommand);
+            log.debug("ssh-exec [{}]", finalCommand);
             
             channel.setCommand(finalCommand);
             
@@ -242,12 +243,8 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
                 throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, exitValue);
             }
             
-            // success!
             return new Result(this, exitValue);
-        } catch (JSchException e) {
-            
-            throw new SshException(e.getMessage(), e);
-        } catch (InterruptedException e) {
+        } catch (JSchException | InterruptedException e) {
             throw new SshException(e.getMessage(), e);
         } finally {
             if (channel != null) {
