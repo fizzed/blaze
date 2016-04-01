@@ -27,23 +27,24 @@ import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity;
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
-import org.jetbrains.kotlin.cli.jvm.compiler.CommandLineScriptUtils;
+//import org.jetbrains.kotlin.cli.jvm.compiler.CommandLineScriptUtils;
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler;
 import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
-import org.jetbrains.kotlin.resolve.AnalyzerScriptParameter;
+//import org.jetbrains.kotlin.resolve.AnalyzerScriptParameter;
 import org.jetbrains.kotlin.utils.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.intellij.openapi.Disposable;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.jetbrains.kotlin.cli.jvm.config.JvmContentRootsKt.addJvmClasspathRoots;
 import static org.jetbrains.kotlin.config.ContentRootsKt.addKotlinSourceRoot;
-import org.jetbrains.kotlin.parsing.JetScriptDefinitionProvider;
+//import org.jetbrains.kotlin.parsing.JetScriptDefinitionProvider;
 //import com.xafero.dynkt.util.ReflUtils;
 
 public class KotlinCompiler implements MessageCollector, Disposable {
@@ -68,12 +69,12 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         KotlinCoreEnvironment env = KotlinCoreEnvironment.createForProduction(this, configuration, configPaths);
         
         // marking it as a script dramatically changes what is produced
-        if (isScript) {
-            JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
-        }
+        //if (isScript) {
+        //    JetScriptDefinitionProvider.getInstance(env.getProject()).markFileAsScript(env.getSourceFiles().get(0));
+        //}
         
         boolean compiled = 
-            KotlinToJVMBytecodeCompiler.compileBunchOfSources(env, null, classesDir.toFile(), false);
+            KotlinToJVMBytecodeCompiler.INSTANCE.compileBunchOfSources(env, null, classesDir.toFile(), new ArrayList<>(), false);
         
         if (!compiled) {
             throw new CompilationException("Unable to compile with " + this.compileErrors.get()
@@ -86,11 +87,11 @@ public class KotlinCompiler implements MessageCollector, Disposable {
         config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, this);
         
         // Put arguments as field
-        List<AnalyzerScriptParameter> scriptParams = new LinkedList<>();
-        scriptParams.addAll(CommandLineScriptUtils.scriptParameters());
+        //List<AnalyzerScriptParameter> scriptParams = new LinkedList<>();
+        //scriptParams.addAll(CommandLineScriptUtils.scriptParameters());
         
         config.put(JVMConfigurationKeys.MODULE_NAME, "");
-        config.put(JVMConfigurationKeys.SCRIPT_PARAMETERS, scriptParams);
+        //config.put(JVMConfigurationKeys.SCRIPT_PARAMETERS, scriptParams);
         
         addJvmClasspathRoots(config, PathUtil.getJdkClassesRoots());
         
