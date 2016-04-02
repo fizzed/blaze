@@ -185,37 +185,45 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
                 }
             }
             
-            // inputstream.read() will block jsch's exec thread from exiting
-            // forever unless the actual underlying stream is closed -- which
-            // we don't actually want to happen.  We'll workaround this issue
-            // a hacky read that will timeout every X milliseconds - Thread.sleep
-            // will unblock on a thread interrupt, unlike an inputstream.read()
-            // which will only unblock on a true inputstream.close()
-            channel.setInputStream(new WrappedInputStream(this.pipeInput.stream()) {
-                @Override @SuppressWarnings("SleepWhileInLoop")
-                public int read(byte[] b, int off, int len) throws IOException {
-                    // sneaky :-) only thread to call this method is the thread
-                    // we'll want to interrupt when we disconnect the session later
-                    execThreadRef.compareAndSet(null, Thread.currentThread());
-                    
-                    // make this read interruptable by using Thread.sleep
-                    do {
-                        // non-blocking, how many bytes available
-                        int available = this.available();
-                        if (available == 0) {
-                            try {
-                                // read would definitely block waiting for data
-                                Thread.sleep(50L);
-                            } catch (InterruptedException ex) {
-                                throw new IOException("Interrupted while blocked on read()");
+            // NOTE: In order for JSCH to pump the inputstream to its outputstream
+            // it starts an "exec thread" for every channel-exec it creates
+            // that also includes non-null inputstream. The problem is that
+            // JSCH's exec thread will block forever on the inputstream.read()
+            // call unless the inputstream is actually closed.  Since we don't
+            // want that behavior, we'll sneakily introduce a wrapped inputstream
+            // that will supply an interruptible read() call. This is done in
+            // 2 steps:  1) our read() method will use a combo of Thread.sleep()
+            // and available() to provide a non-blocking read() that will also
+            // response to a Thread.interrupt() call.  and 2) we'll capture
+            // a reference to JSCH's exec thread by saving it when it actually
+            // enters the read() method.
+            if (this.pipeInput != null) {
+                channel.setInputStream(new WrappedInputStream(this.pipeInput.stream()) {
+                    @Override @SuppressWarnings("SleepWhileInLoop")
+                    public int read(byte[] b, int off, int len) throws IOException {
+                        // sneaky :-) only thread to call this method is the thread
+                        // we'll want to interrupt when we disconnect the session later
+                        execThreadRef.compareAndSet(null, Thread.currentThread());
+
+                        // make this read interruptable by using Thread.sleep
+                        do {
+                            // non-blocking, how many bytes available
+                            int available = this.available();
+                            if (available == 0) {
+                                try {
+                                    // read would definitely block waiting for data
+                                    Thread.sleep(50L);
+                                } catch (InterruptedException ex) {
+                                    throw new IOException("Interrupted while blocked on read()");
+                                }
+                            } else {
+                                // read will not block
+                                return input.read(b, off, len);
                             }
-                        } else {
-                            // read will not block
-                            return input.read(b, off, len);
-                        }
-                    } while (true);
-                }
-            });
+                        } while (true);
+                    }
+                });
+            }
             
             // both streams closing signals exec is finished
             CountDownLatch outputStreamClosedSignal = new CountDownLatch(1);
@@ -283,6 +291,7 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
             if (channel != null) {
                 channel.disconnect();
             }
+            // cleanup JSCH exec thread if it exists
             Thread execThread = execThreadRef.get();
             if (execThread != null) {
                 log.trace("Interrupting thread [{}]", execThread.getName());
