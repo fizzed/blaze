@@ -54,9 +54,10 @@ import static org.junit.Assume.assumeTrue;
 public class SshIntegrationTest {
     static private final Logger log = LoggerFactory.getLogger(SshIntegrationTest.class);
 
+    private final String host;
     private final MutableUri uri;
     private final Context context;
-    private final Path sshConfigFile;
+    private Path sshConfigFile;
     
     @Parameters(name = "{index}: vagrant={0}")
     public static Collection<String> data() {
@@ -65,16 +66,18 @@ public class SshIntegrationTest {
     
     @Before
     public void onlyIfAllVagrantMachinesRunning() {
-        assumeTrue("Is vagrant running?", TestHelper.VAGRANT.areAllMachinesRunning());
+        assumeTrue("Is vagrant host running?",
+            TestHelper.VAGRANT_CLIENT.machinesRunning().contains(host));
+        this.sshConfigFile = TestHelper.VAGRANT_CLIENT.sshConfig(host);
     }
     
-    public SshIntegrationTest(String hostname) {
-        this.uri = MutableUri.of("ssh://{}", hostname);
+    public SshIntegrationTest(String host) {
+        this.host = host;
+        this.uri = MutableUri.of("ssh://{}", host);
+        // required before any blaze methods called...
         Config config = ConfigHelper.create(null);
         this.context = new ContextImpl(null, null, null, config);
         ContextHolder.set(this.context);
-        this.sshConfigFile = Optional.ofNullable(TestHelper.VAGRANT.fetchSshConfig())
-            .orElse(null);
     }
     
     @Test

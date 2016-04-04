@@ -16,16 +16,16 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.crux.vagrant.VagrantClient;
-import java.nio.file.Paths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fizzed.crux.vagrant.VagrantClients;
+import java.util.Arrays;
+import java.util.List;
 
 public class TestHelper {
-    static private final Logger log = LoggerFactory.getLogger(TestHelper.class);
+
+    static public final VagrantClient VAGRANT_CLIENT
+        = VagrantClients.cachingOrEmptyClient();
     
-    static public final VagrantClient VAGRANT
-        = new VagrantClient.Builder()
-            .workingDirectory(Paths.get("."))
-            .safeLoad();
+    static public final List<String> VAGRANT_HOSTS
+        = Arrays.asList("debian8", "ubuntu1404", "centos7", "centos6", "freebsd102");
     
 }
