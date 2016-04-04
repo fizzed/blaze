@@ -201,8 +201,10 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
                 channel.setInputStream(new WrappedInputStream(this.pipeInput.stream()) {
                     @Override @SuppressWarnings("SleepWhileInLoop")
                     public int read(byte[] b, int off, int len) throws IOException {
-                        // sneaky :-) only thread to call this method is the thread
-                        // we'll want to interrupt when we disconnect the session later
+                        // sneaky way of getting access to JSCH's internal
+                        // exec thread since its the only thread to call read()
+                        // on this input stream.  This is the thread we'll need
+                        // to interrupt when we want to close the exec run.
                         execThreadRef.compareAndSet(null, Thread.currentThread());
 
                         // make this read interruptable by using Thread.sleep
