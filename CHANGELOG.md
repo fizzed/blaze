@@ -1,6 +1,15 @@
 Blaze by Fizzed
 ===============
 
+#### 0.8.2 - 2016-04-04
+
+ - blaze-ssh underlying jsch exec would never terminate threads that pumped
+   the InputStream to the remote host -- implemented workaround using wrapped
+   streams
+ - blaze-ssh now supports readlink and realpath via sftp.
+ - blaze-ssh sshExec commands correct path delimiter when running on windows
+ - Bump to crux-vagrant v0.3.2 for unit testing w/ real ssh virt machines
+
 #### 0.8.1 - 2016-03-28
 
  - Support for placing default script in  `.blaze` sub directory.  From your
