@@ -255,15 +255,13 @@ public class Blaze {
                 } else if (dependencies.size() == resolvedDependencies.size()) {
                     log.info("We already have the dependencies we need (skipping resolver)");
                 } else {
-                    if (!dependencies.isEmpty()) {
-                        try {
-                            // resolve dependencies against collected dependencies
-                            dependencyJarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
-                        } catch (DependencyResolveException e) {
-                            throw e;
-                        } catch (IOException | ParseException e) {
-                            throw new BlazeException("Unable to cleanly resolve dependencies", e);
-                        }
+                    try {
+                        // resolve dependencies against collected dependencies
+                        dependencyJarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
+                    } catch (DependencyResolveException e) {
+                        throw e;
+                    } catch (IOException | ParseException e) {
+                        throw new BlazeException("Unable to cleanly resolve dependencies", e);
                     }
                 }
             } finally {

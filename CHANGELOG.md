@@ -3,6 +3,10 @@ Blaze by Fizzed
 
 #### x.x.x
 
+ - Dependency resolver skipped if all dependencies already resolved.  Huge
+   speedup in execution for scripts that don't use additional dependencies.
+ - Blaze can execute objects as scripts w/o requiring an engine. Useful for
+   embedding blaze in other java projects and/or unit tests.
  - Refactored how System.in, System.out, and System.err is handled by both
    Systems.exec and SecureShells.sshExec.
  - New utility classes for guarding streams against being closed and 
