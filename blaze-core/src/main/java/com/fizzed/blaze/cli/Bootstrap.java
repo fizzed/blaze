@@ -35,12 +35,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Bootstrap {
+    
+    static public void main(String[] args) throws IOException {
+        new Bootstrap().run(args);
+    }
 
     @SuppressWarnings("ThrowableResultIgnored")
-    static public void main(String[] args) throws IOException {
-        JdkLoggerHelper.configure();
+    public void run(String[] args) throws IOException {
+        //JdkLoggerHelper.configure();
         
-        Thread.currentThread().setName("blaze");
+        Thread.currentThread().setName(getName());
         
         // process command line args
         ArrayDeque<String> argString = new ArrayDeque(Arrays.asList(args));
@@ -63,9 +67,7 @@ public class Bootstrap {
                     System.setProperty(tokens[0], tokens[1]);
                 }
             } else if (arg.equals("-v") || arg.equals("--version")) {
-                System.out.println("blaze: v" + Version.getLongVersion());
-                System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
-                System.out.println(" at https://github.com/fizzed/blaze");
+                printVersion();
                 System.exit(0);
             } else if (arg.equals("-q") || arg.equals("-qq") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
                 String level = "info";
@@ -208,7 +210,19 @@ public class Bootstrap {
         log.info("Blazed in {} ms", timer.stop().millis());
     }
     
-    static private void logTasks(Logger log, Blaze blaze) {
+    // all overrideable by subclasses
+    public String getName() {
+        return "blaze";
+    }
+    
+    public void printVersion() {
+        System.out.println(getName() + ": v" + Version.getLongVersion());
+        System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
+        System.out.println(" at https://github.com/fizzed/blaze");
+    }
+    
+    
+    public void logTasks(Logger log, Blaze blaze) {
         System.out.println(blaze.context().scriptFile() + " tasks =>");
         List<String> ts = blaze.script().tasks();
         ts.stream().forEach((t) -> {
