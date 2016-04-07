@@ -79,6 +79,8 @@ public class InterruptibleInputStream extends WrappedInputStream {
 
     @Override
     public void close() throws IOException {
+        // close the input then interrupt the thread waiting on it
+        super.close();
         // atomically get thread if blocked in read, interrupt it, then set to null
         this.readThreadRef.getAndUpdate((Thread readThread) -> {
             if (readThread != null) {
@@ -87,7 +89,6 @@ public class InterruptibleInputStream extends WrappedInputStream {
             }
             return null;
         });
-        super.close();
     }
     
 }
