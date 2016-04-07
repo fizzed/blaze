@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.ssh;
 
+import com.fizzed.blaze.util.Streamables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -89,13 +90,9 @@ public class SshCommand implements Command {
 
     @Override
     public void destroy() {
-        try {
-            this.in.close();
-            this.out.close();
-            this.err.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        Streamables.close(in);
+        Streamables.close(out);
+        Streamables.close(err);
     }
     
 }

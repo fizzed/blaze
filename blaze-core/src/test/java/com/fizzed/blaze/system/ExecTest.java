@@ -21,20 +21,24 @@ import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
 public class ExecTest {
     private static final Logger log = LoggerFactory.getLogger(ExecTest.class);
     
@@ -65,23 +69,40 @@ public class ExecTest {
         assertThat(exitValue, is(0));
     }
     
-    /**
     @Test
-    public void outputSetupBad() throws Exception {
-        try {
-            ExecResult r = new Exec(context)
+    public void nullInputAndOutputs() throws Exception {
+        Integer exitValue
+            = new Exec(context)
                 .command("hello-world-test")
                 .path(getBinDirAsResource())
+                .pipeInput((StreamableInput)null)
+                .pipeOutput((StreamableOutput)null)
+                .pipeError((StreamableOutput)null)
                 .run();
-            
-            r.output();
-            
-            fail();
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), containsString("readOutput"));
-        }
+        
+        assertThat(exitValue, is(0));
     }
-    */
+    
+    @Test
+    public void standardInputAndOutputs() throws Exception {
+        // mimic standard input and outputs
+        InputStream in = spy(new ByteArrayInputStream(new byte[0]));
+        OutputStream out = spy(new ByteArrayOutputStream());
+        OutputStream err = spy(new ByteArrayOutputStream());
+        
+        new Exec(context)
+            .command("hello-world-test")
+            .path(getBinDirAsResource())
+            .pipeInput(in)
+            .pipeOutput(out)
+            .pipeError(err)
+            .run();
+        
+        // verify all streams were closed
+        verify(in).close();
+        verify(out).close();
+        verify(err).close();
+    }
     
     @Test
     public void captureOutput() throws Exception {
@@ -90,6 +111,7 @@ public class ExecTest {
         new Exec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
+            .pipeInput(Streamables.standardInput())
             .pipeOutput(capture)
             .run();
             

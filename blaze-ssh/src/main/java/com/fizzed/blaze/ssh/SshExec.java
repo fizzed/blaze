@@ -43,9 +43,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import com.fizzed.blaze.core.ExecMixin;
 import com.fizzed.blaze.ssh.impl.PathHelper;
-import com.fizzed.blaze.util.WrappedInputStream;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
+import com.fizzed.blaze.util.InterruptibleInputStream;
+import java.io.InputStream;
+import org.apache.commons.io.output.NullOutputStream;
 
 public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin<SshExec> {
     static private final Logger log = LoggerFactory.getLogger(SshExec.class);
@@ -173,7 +173,6 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
         ObjectHelper.requireNonNull(command, "ssh command cannot be null");
         
         ChannelExec channel = null;
-        final AtomicReference<Thread> execThreadRef = new AtomicReference<>();
         try {
             channel = (ChannelExec)jschSession.openChannel("exec");
             
@@ -197,60 +196,45 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
             // response to a Thread.interrupt() call.  and 2) we'll capture
             // a reference to JSCH's exec thread by saving it when it actually
             // enters the read() method.
-            if (this.pipeInput != null) {
-                channel.setInputStream(new WrappedInputStream(this.pipeInput.stream()) {
-                    @Override @SuppressWarnings("SleepWhileInLoop")
-                    public int read(byte[] b, int off, int len) throws IOException {
-                        // sneaky way of getting access to JSCH's internal
-                        // exec thread since its the only thread to call read()
-                        // on this input stream.  This is the thread we'll need
-                        // to interrupt when we want to close the exec run.
-                        execThreadRef.compareAndSet(null, Thread.currentThread());
-
-                        // make this read interruptable by using Thread.sleep
-                        do {
-                            // non-blocking, how many bytes available
-                            int available = this.available();
-                            if (available == 0) {
-                                try {
-                                    // read would definitely block waiting for data
-                                    Thread.sleep(50L);
-                                } catch (InterruptedException ex) {
-                                    throw new IOException("Interrupted while blocked on read()");
-                                }
-                            } else {
-                                // read will not block
-                                return input.read(b, off, len);
-                            }
-                        } while (true);
-                    }
-                });
+            
+            // setup in/out streams
+            final InputStream is = (pipeInput != null ? new InterruptibleInputStream(pipeInput.stream()) : null);
+            final OutputStream os = (pipeOutput != null ? pipeOutput.stream() : new NullOutputStream());
+            final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : new NullOutputStream()));
+            
+            if (is != null) {
+                channel.setInputStream(is, false);
             }
             
             // both streams closing signals exec is finished
-            CountDownLatch outputStreamClosedSignal = new CountDownLatch(1);
-            CountDownLatch errorStreamClosedSignal = new CountDownLatch(1);
+            final CountDownLatch outputStreamClosedSignal = new CountDownLatch(1);
+            final CountDownLatch errorStreamClosedSignal = new CountDownLatch(1);
             
             // determine final ouput and then wrap to monitor for close events
-            //OutputStream finalPipeOutput = (this.captureOutputStream != null ? this.captureOutputStream : this.pipeOutput.stream());
-            OutputStream finalPipeOutput = this.pipeOutput.stream();
-            
-            channel.setOutputStream(new WrappedOutputStream(finalPipeOutput) {
-                @Override
-                public void close() throws IOException {
-                    outputStreamClosedSignal.countDown();
-                }
-            }, false);
+            if (os != null) {
+                channel.setOutputStream(new WrappedOutputStream(os) {
+                    @Override
+                    public void close() throws IOException {
+                        outputStreamClosedSignal.countDown();
+                        super.close();
+                    }
+                }, false);
+            } else {
+                outputStreamClosedSignal.countDown();
+            }
             
             // determine final error and then wrap to monitor for close events
-            OutputStream finalPipeError = (this.pipeErrorToOutput ? finalPipeOutput : this.pipeError.stream());
-            
-            channel.setErrStream(new WrappedOutputStream(finalPipeError) {
-                @Override
-                public void close() throws IOException {
-                    errorStreamClosedSignal.countDown();
-                }
-            }, false);
+            if (es != null) {
+                channel.setErrStream(new WrappedOutputStream(es) {
+                    @Override
+                    public void close() throws IOException {
+                        errorStreamClosedSignal.countDown();
+                        super.close();
+                    }
+                }, false);
+            } else {
+                errorStreamClosedSignal.countDown();
+            }
             
             // building the command may be a little tricky, not sure about spaces...
             final StringBuilder sb = new StringBuilder(PathHelper.toString(command));
@@ -293,12 +277,15 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
             if (channel != null) {
                 channel.disconnect();
             }
+            
+            /**
             // cleanup JSCH exec thread if it exists
             Thread execThread = execThreadRef.get();
             if (execThread != null) {
                 log.trace("Interrupting thread [{}]", execThread.getName());
                 execThread.interrupt();
             }
+            */
         }
     }
     

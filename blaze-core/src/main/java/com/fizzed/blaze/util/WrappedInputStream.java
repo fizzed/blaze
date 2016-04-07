@@ -35,6 +35,10 @@ public class WrappedInputStream extends InputStream {
         this.input = input;
     }
 
+    public InputStream wrappedStream() {
+        return this.input;
+    }
+    
     @Override
     public boolean markSupported() {
         return input.markSupported();

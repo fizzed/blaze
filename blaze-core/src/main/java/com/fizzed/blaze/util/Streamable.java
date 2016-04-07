@@ -22,20 +22,18 @@ import java.util.Objects;
 
 public abstract class Streamable<T extends Closeable> implements Closeable {
     
-    private final T stream;
-    private final String name;
-    private final Path path;
-    private final Long size;
-    private final boolean closeable;
+    protected final T stream;
+    protected final String name;
+    protected final Path path;
+    protected final Long size;
     
-    public Streamable(T stream, String name, Path path, Long size, boolean closeable) {
+    public Streamable(T stream, String name, Path path, Long size) {
         Objects.requireNonNull(stream, "stream cannot be null");
         Objects.requireNonNull(name, "name cannot be null");
         this.stream = stream;
         this.name = name;
         this.path = path;
         this.size = size;
-        this.closeable = closeable;
     }
 
     public T stream() {
@@ -54,15 +52,9 @@ public abstract class Streamable<T extends Closeable> implements Closeable {
         return size;
     }
     
-    public boolean closeable() {
-        return closeable;
-    }
-    
     @Override
     public void close() throws IOException {
-        if (closeable()) {
-            stream.close();
-        }
+        stream.close();
     }
     
 }

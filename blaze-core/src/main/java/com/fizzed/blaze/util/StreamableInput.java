@@ -20,8 +20,18 @@ import java.nio.file.Path;
 
 public class StreamableInput extends Streamable<InputStream> {
 
-    public StreamableInput(InputStream stream, String name, Path path, Long size, boolean closeable) {
-        super(stream, name, path, size, closeable);
+    public StreamableInput(InputStream stream, String name, Path path, Long size) {
+        super(stream, name, path, size);
     }
     
+    /**
+    static private InputStream maybeWrap(final InputStream stream, final boolean closeable) {
+        if (closeable) {
+            return stream;
+        } else {
+            return new CloseGuardedInputStream(stream);
+        }
+    }
+    */
+
 }

@@ -79,8 +79,8 @@ public class Pipeline extends Action<Pipeline.Result,Void> implements PipeMixin<
             log.debug("Connecting {} output -> {} input", lastPipable.getClass(), pipable.getClass());
                 
             BytePipe pipe = new BytePipe();
-            lastPipable.pipeOutput(Streamables.output(pipe.getOutputStream(), "<pipe>", true, true));
-            pipable.pipeInput(Streamables.input(pipe.getInputStream(), "<pipe>", true));
+            lastPipable.pipeOutput(Streamables.output(pipe.getOutputStream(), "<pipe>"));
+            pipable.pipeInput(Streamables.input(pipe.getInputStream(), "<pipe>"));
         }
         
         this.pipables.add(pipable);

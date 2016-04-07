@@ -16,11 +16,17 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.core.UnexpectedExitValueException;
+import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import com.fizzed.blaze.util.WrappedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -28,6 +34,8 @@ import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import org.junit.Test;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,6 +214,57 @@ public class SshExecTest extends SshBaseTest {
                 .run();
         
         assertThat(exitValue, is(0));
+    }
+    
+    @Test
+    public void nullInputAndOutputs() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            command.exit.onExit(1);
+        };
+        
+        SshSession session = startAndConnect();
+        
+        Integer exitValue
+            = new SshExec(context, session)
+                .command("hello")
+                .exitValue(1)
+                .pipeInput((StreamableInput)null)
+                .pipeOutput((StreamableOutput)null)
+                .pipeError((StreamableOutput)null)
+                .run();
+        
+        assertThat(exitValue, is(1));
+    }
+    
+    @Test
+    public void standardInputAndOutputs() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            command.exit.onExit(0);
+        };
+        
+        // mimic standard input and outputs
+        InputStream in = spy(new ByteArrayInputStream(new byte[0]));
+        OutputStream out = spy(new ByteArrayOutputStream());
+        OutputStream err = spy(new ByteArrayOutputStream());
+        
+        SshSession session = startAndConnect();
+        
+        Integer exitValue
+            = new SshExec(context, session)
+                .command("hello")
+                .pipeInput(in)
+                .pipeOutput(out)
+                .pipeError(err)
+                .run();
+        
+        assertThat(exitValue, is(0));
+        
+        // verify all streams were closed
+        verify(in).close();
+        verify(out).close();
+        verify(err).close();
     }
     
     @Test

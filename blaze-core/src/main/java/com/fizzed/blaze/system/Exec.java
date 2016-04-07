@@ -33,17 +33,23 @@ import java.util.concurrent.TimeoutException;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
+import com.fizzed.blaze.util.InterruptibleInputStream;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
+import java.io.InputStream;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.PumpStreamHandler;
 
 /**
  *
  * @author joelauer
  */
 public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec>, ExecMixin<Exec> {
+    private final static Logger log = LoggerFactory.getLogger(Exec.class);
 
     final private Which which;
     final private ProcessExecutor executor;
@@ -192,13 +198,24 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
         
         command.addAll(arguments);
         
-        OutputStream os = pipeOutput.stream();
+        // use a custom streampumper so we can more accuratly handle inputstream
+        final InputStream is = (pipeInput != null ? new InterruptibleInputStream(pipeInput.stream()) : null);
+        final OutputStream os = (pipeOutput != null ? pipeOutput.stream() : null);
+        final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : null));
+        
+        PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
+            @Override
+            public void stop() {
+                //log.info("Closing inputstream...");
+                // when streams need to be stopped, we want to close our input
+                try { is.close(); } catch (Exception e) {}
+                super.stop();
+            }
+        };
         
         this.executor
             .command(command)
-            .redirectInput(pipeInput.stream())
-            .redirectOutput(os)
-            .redirectError((pipeErrorToOutput ? os : pipeError.stream()));
+            .streams(streams);
         
         try {
             ProcessResult processResult = this.executor.execute();
@@ -207,6 +224,10 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
             throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
         } catch (IOException | InterruptedException | TimeoutException e) {
             throw new BlazeException("Unable to cleanly execute process", e);
+        } finally {
+            // close all the output streams (input stream closed above)
+            Streamables.close(os);
+            Streamables.close(es);
         }
     }
     

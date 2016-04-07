@@ -21,27 +21,53 @@ import java.nio.file.Path;
 
 public class StreamableOutput extends Streamable<OutputStream> {
 
-    private final boolean flushable;
+    //protected final boolean flushable;
     
-    public StreamableOutput(OutputStream stream, String name, Path path, Long size, boolean closeable, boolean flushable) {
-        super(stream, name, path, size, closeable);
-        this.flushable = flushable;
+    public StreamableOutput(OutputStream stream, String name, Path path, Long size) {
+        super(stream, name, path, size);
+        //this.flushable = flushable;
     }
     
+    /**
+    static private OutputStream maybeWrap(final OutputStream stream, final boolean closeable, final boolean flushable) {
+        if (closeable && flushable) {
+            return stream;
+        } else {
+            return new WrappedOutputStream(stream) {
+                @Override
+                public void flush() throws IOException {
+                    if (flushable) {
+                        stream.flush();
+                    }
+                }
+                
+                @Override
+                public void close() throws IOException {
+                    if (closeable) {
+                        stream.close();
+                    }
+                }
+            };
+        }
+    }
+    */
+    
+    /**
     public boolean flushable() {
         return flushable;
     }
 
     public void flush() throws IOException {
-        if (flushable()) {
-            stream().flush();
-        }
+        stream.flush();
     }
+    */
     
+    /**
     @Override
     public void close() throws IOException {
         flush();
         super.close();
     }
+    */
     
 }

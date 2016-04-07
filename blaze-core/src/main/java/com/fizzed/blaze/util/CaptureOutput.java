@@ -34,7 +34,7 @@ public class CaptureOutput extends StreamableOutput {
     }
     
     private CaptureOutput(ByteArrayOutputStream baos) {
-        super(baos, "<capture>", null, null, true, true);
+        super(baos, "<capture>", null, null);
         this.baos = baos;
     }
     
