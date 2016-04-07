@@ -206,9 +206,11 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
         PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
             @Override
             public void stop() {
-                //log.info("Closing inputstream...");
-                // when streams need to be stopped, we want to close our input
-                try { is.close(); } catch (Exception e) {}
+                // make sure any input, output, and error streams are closed
+                // before the superclass stop() is triggered
+                Streamables.closeQuietly(is);
+                Streamables.closeQuietly(os);
+                Streamables.closeQuietly(es);
                 super.stop();
             }
         };

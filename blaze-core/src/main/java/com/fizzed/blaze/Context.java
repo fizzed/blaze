@@ -16,6 +16,7 @@
 package com.fizzed.blaze;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import org.slf4j.Logger;
 

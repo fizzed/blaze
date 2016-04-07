@@ -29,17 +29,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -103,9 +99,9 @@ public class ExecTest {
             .run();
         
         // verify all streams were closed
-        verify(in).close();
-        verify(out).close();
-        verify(err).close();
+        verify(in, atLeast(1)).close();
+        verify(out, atLeast(1)).close();
+        verify(err, atLeast(1)).close();
     }
     
     @Test
@@ -121,7 +117,7 @@ public class ExecTest {
             
         String output = capture.asString();
         
-        assertThat(output.trim(), is("Hello World"));
+        assertThat(output.trim(), is("Hello World 7586930100"));
     }
     
 }
