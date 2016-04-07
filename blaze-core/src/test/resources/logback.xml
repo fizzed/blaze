@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <!--<logger name="org.zeroturnaround" level="TRACE"/>-->
+    <logger name="org.zeroturnaround" level="TRACE"/>
 
     <root level="debug">
         <appender-ref ref="STDOUT" />

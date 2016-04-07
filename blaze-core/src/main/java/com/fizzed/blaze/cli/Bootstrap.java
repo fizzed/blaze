@@ -62,58 +62,17 @@ public class Bootstrap {
                 // strip -D then split on =
                 String[] tokens = arg.substring(2).split("=");
                 if (tokens.length == 1) {
-                    System.setProperty(tokens[0], "");
+                    systemProperty(tokens[0], "");
                 } else {
-                    System.setProperty(tokens[0], tokens[1]);
+                    systemProperty(tokens[0], tokens[1]);
                 }
             } else if (arg.equals("-v") || arg.equals("--version")) {
                 printVersion();
                 System.exit(0);
             } else if (arg.equals("-q") || arg.equals("-qq") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
-                String level = "info";
-                String scriptLevel = "info";
-                
-                if (arg.equals("-q")) {
-                    level = "warn";
-                } else if (arg.equals("-qq")) {
-                    level = scriptLevel = "warn";
-                } else if (arg.equals("-x")) {
-                    level = scriptLevel = "debug";
-                } else if (arg.equals("-xx")) {
-                    level = scriptLevel = "trace";
-                } else if (arg.equals("-xxx")) {
-                    level = scriptLevel = "trace";
-                    // but also set another system property which really turns on even MORE debugging
-                    System.setProperty("blaze.superdebug", "true");
-                }
-                
-                JdkLoggerHelper.setRootLevel(level);
-                JdkLoggerHelper.setLevel("script", scriptLevel);
-                
-                System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
-                System.setProperty("org.slf4j.simpleLogger.log.script", scriptLevel);
-
-                // if using logback
-                //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-                /**
-                Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-                if (arg.length() == 2) {
-                root.setLevel(Level.DEBUG);
-                } else {
-                root.setLevel(Level.INFO);
-                }
-                 */
+                configureLogging(arg);
             } else if (arg.equals("-h") || arg.equals("--help")) {
-                System.out.println("blaze: [options] <task> [<task> ...]");
-                System.out.println("-f|--file <file>   Use this blaze file instead of default");
-                System.out.println("-d|--dir <dir>     Search this dir for blaze file instead of default (-f supercedes)");
-                System.out.println("-l|--list          Display list of available tasks");
-                System.out.println("-q                 Only log blaze warnings to stdout (script logging is still info level)");
-                System.out.println("-qq                Only log warnings to stdout (including script logging)");
-                System.out.println("-x[x...]           Increases verbosity of logging to stdout");
-                System.out.println("-v|--version       Display version and then exit");
-                System.out.println("-Dname=value       Sets a System property as name=value");
-                System.out.println("-i|--install <dir> Install blaze or blaze.bat to directory");
+                printHelp();
                 System.exit(0);
             } else if (arg.equals("-f") || arg.equals("--file")) {
                 if (argString.isEmpty()) {
@@ -221,6 +180,58 @@ public class Bootstrap {
         System.out.println(" at https://github.com/fizzed/blaze");
     }
     
+    public void printHelp() {
+        System.out.println("blaze: [options] <task> [<task> ...]");
+        System.out.println("-f|--file <file>   Use this blaze file instead of default");
+        System.out.println("-d|--dir <dir>     Search this dir for blaze file instead of default (-f supercedes)");
+        System.out.println("-l|--list          Display list of available tasks");
+        System.out.println("-q                 Only log blaze warnings to stdout (script logging is still info level)");
+        System.out.println("-qq                Only log warnings to stdout (including script logging)");
+        System.out.println("-x[x...]           Increases verbosity of logging to stdout");
+        System.out.println("-v|--version       Display version and then exit");
+        System.out.println("-Dname=value       Sets a System property as name=value");
+        System.out.println("-i|--install <dir> Install blaze or blaze.bat to directory");
+    }
+    
+    public void systemProperty(String name, String value) {
+        System.setProperty(name, value);
+    }
+    
+    public void configureLogging(String arg) {
+        String level = "info";
+        String scriptLevel = "info";
+
+        if (arg.equals("-q")) {
+            level = "warn";
+        } else if (arg.equals("-qq")) {
+            level = scriptLevel = "warn";
+        } else if (arg.equals("-x")) {
+            level = scriptLevel = "debug";
+        } else if (arg.equals("-xx")) {
+            level = scriptLevel = "trace";
+        } else if (arg.equals("-xxx")) {
+            level = scriptLevel = "trace";
+            // but also set another system property which really turns on even MORE debugging
+            System.setProperty("blaze.superdebug", "true");
+        }
+
+        JdkLoggerHelper.setRootLevel(level);
+        JdkLoggerHelper.setLevel("script", scriptLevel);
+
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
+        System.setProperty("org.slf4j.simpleLogger.log.script", scriptLevel);
+
+        // if using logback
+        //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        /**
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        if (arg.length() == 2) {
+        root.setLevel(Level.DEBUG);
+        } else {
+        root.setLevel(Level.INFO);
+        }
+         */
+    }
     
     public void logTasks(Logger log, Blaze blaze) {
         System.out.println(blaze.context().scriptFile() + " tasks =>");
