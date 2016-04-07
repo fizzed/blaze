@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,17 +38,12 @@ import org.slf4j.LoggerFactory;
 public class Bootstrap {
     
     static public void main(String[] args) throws IOException {
-        new Bootstrap().run(args);
+        new Bootstrap().run(new ArrayDeque(Arrays.asList(args)));
     }
 
     @SuppressWarnings("ThrowableResultIgnored")
-    public void run(String[] args) throws IOException {
-        //JdkLoggerHelper.configure();
-        
+    public void run(Deque<String> args) throws IOException {
         Thread.currentThread().setName(getName());
-        
-        // process command line args
-        ArrayDeque<String> argString = new ArrayDeque(Arrays.asList(args));
 
         Path blazeFile = null;
         Path blazeDir = null;
@@ -55,8 +51,12 @@ public class Bootstrap {
 
         boolean listTasks = false;
 
-        while (!argString.isEmpty()) {
-            String arg = argString.remove();
+        while (!args.isEmpty()) {
+            String arg = args.remove();
+            
+            if (this.interceptArgument(arg, args)) {
+                continue;       // move on
+            }
             
             if (arg.startsWith("-D")) {
                 // strip -D then split on =
@@ -75,23 +75,23 @@ public class Bootstrap {
                 printHelp();
                 System.exit(0);
             } else if (arg.equals("-f") || arg.equals("--file")) {
-                if (argString.isEmpty()) {
+                if (args.isEmpty()) {
                     System.err.println("[ERROR] -f|--file parameter requires next arg to be file");
                     System.exit(1);
                 }
-                blazeFile = Paths.get(argString.remove());
+                blazeFile = Paths.get(args.remove());
             } else if (arg.equals("-d") || arg.equals("--dir")) {
-                if (argString.isEmpty()) {
+                if (args.isEmpty()) {
                     System.err.println("[ERROR] -d|--dir parameter requires next arg to be directory");
                     System.exit(1);
                 }
-                blazeDir = Paths.get(argString.remove());
+                blazeDir = Paths.get(args.remove());
             } else if (arg.equals("-i") || arg.equals("--install")) {
-                if (argString.isEmpty()) {
+                if (args.isEmpty()) {
                     System.err.println("[ERROR] -i|--install parameter requires next arg to be directory");
                     System.exit(1);
                 }
-                Path installDir = Paths.get(argString.remove());
+                Path installDir = Paths.get(args.remove());
                 
                 try {
                     List<Path> installedFiles = InstallHelper.installBlazeBinaries(installDir);
@@ -195,6 +195,11 @@ public class Bootstrap {
     
     public void systemProperty(String name, String value) {
         System.setProperty(name, value);
+    }
+    
+    public boolean interceptArgument(String arg, Deque<String> args) {
+        // really meant for subclasses to be able to handl the argument
+        return false;
     }
     
     public void configureLogging(String arg) {
