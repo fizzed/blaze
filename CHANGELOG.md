@@ -11,6 +11,8 @@ Blaze by Fizzed
    Systems.exec and SecureShells.sshExec.
  - New utility classes for guarding streams against being closed and 
    non-blocking InputStreams.
+ - Blaze command-line `Bootstrap` class can be easily subclassed so that most
+   of its functionality can be reused in a Blaze-based script app.
 
 #### 0.8.2 - 2016-04-04
 
