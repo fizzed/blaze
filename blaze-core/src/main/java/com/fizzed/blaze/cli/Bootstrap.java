@@ -38,16 +38,24 @@ import org.slf4j.LoggerFactory;
 public class Bootstrap {
     
     static public void main(String[] args) throws IOException {
-        new Bootstrap().run(new ArrayDeque(Arrays.asList(args)));
+        new Bootstrap().run(args);
+    }
+    
+    protected Path blazeFile = null;
+    protected Path blazeDir = null;
+    protected List<String> tasks;
+    
+    public Bootstrap() {
+        this.tasks = new ArrayList<>();
     }
 
+    public void run(String[] args) throws IOException {
+        run(new ArrayDeque(Arrays.asList(args)));
+    }
+    
     @SuppressWarnings("ThrowableResultIgnored")
     public void run(Deque<String> args) throws IOException {
         Thread.currentThread().setName(getName());
-
-        Path blazeFile = null;
-        Path blazeDir = null;
-        List<String> tasks = new ArrayList<>();
 
         boolean listTasks = false;
 
@@ -75,23 +83,14 @@ public class Bootstrap {
                 printHelp();
                 System.exit(0);
             } else if (arg.equals("-f") || arg.equals("--file")) {
-                if (args.isEmpty()) {
-                    System.err.println("[ERROR] -f|--file parameter requires next arg to be file");
-                    System.exit(1);
-                }
-                blazeFile = Paths.get(args.remove());
+                String nextArg = nextArg(args, arg, "<file>");
+                blazeFile = Paths.get(nextArg);
             } else if (arg.equals("-d") || arg.equals("--dir")) {
-                if (args.isEmpty()) {
-                    System.err.println("[ERROR] -d|--dir parameter requires next arg to be directory");
-                    System.exit(1);
-                }
-                blazeDir = Paths.get(args.remove());
+                String nextArg = nextArg(args, arg, "<dir>");
+                blazeDir = Paths.get(nextArg);
             } else if (arg.equals("-i") || arg.equals("--install")) {
-                if (args.isEmpty()) {
-                    System.err.println("[ERROR] -i|--install parameter requires next arg to be directory");
-                    System.exit(1);
-                }
-                Path installDir = Paths.get(args.remove());
+                String nextArg = nextArg(args, arg, "<dir>");
+                Path installDir = Paths.get(nextArg);
                 
                 try {
                     List<Path> installedFiles = InstallHelper.installBlazeBinaries(installDir);
@@ -106,7 +105,7 @@ public class Bootstrap {
             } else if (arg.equals("-l") || arg.equals("--list")) {
                 listTasks = true;
             } else if (arg.startsWith("-")) {
-                System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; blaze -h for more info");
+                System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; " + getName() + " -h for more info");
                 System.exit(1);
             } else {
                 // this may be a task to run - special case for first occurrence
@@ -126,15 +125,10 @@ public class Bootstrap {
         // trigger logger to be bound!
         Logger log = LoggerFactory.getLogger(Bootstrap.class);
         
-        // create but do not build yet
-        Blaze.Builder blazeBuilder = new Blaze.Builder()
-            .file(blazeFile)
-            .directory(blazeDir);
-        
         Timer timer = new Timer();
         try {
             // build blaze
-            Blaze blaze = blazeBuilder.build();
+            Blaze blaze = this.buildBlaze();
 
             if (listTasks) {
                 logTasks(log, blaze);
@@ -174,6 +168,14 @@ public class Bootstrap {
         return "blaze";
     }
     
+    public String nextArg(Deque<String> args, String arg, String valueDescription) {
+        if (args.isEmpty()) {
+            System.err.println("[ERROR] " + arg + " argument requires next arg to be a " + valueDescription);
+            System.exit(1);
+        }
+        return args.remove();
+    }
+    
     public void printVersion() {
         System.out.println(getName() + ": v" + Version.getLongVersion());
         System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
@@ -181,16 +183,23 @@ public class Bootstrap {
     }
     
     public void printHelp() {
-        System.out.println("blaze: [options] <task> [<task> ...]");
-        System.out.println("-f|--file <file>   Use this blaze file instead of default");
-        System.out.println("-d|--dir <dir>     Search this dir for blaze file instead of default (-f supercedes)");
+        System.out.println(getName() + ": [options] <task> [<task> ...]");
+        System.out.println("-f|--file <file>   Use this " + getName() + " file instead of default");
+        System.out.println("-d|--dir <dir>     Search this dir for " + getName() + " file instead of default (-f supercedes)");
         System.out.println("-l|--list          Display list of available tasks");
-        System.out.println("-q                 Only log blaze warnings to stdout (script logging is still info level)");
+        System.out.println("-q                 Only log " + getName() + " warnings to stdout (script logging is still info level)");
         System.out.println("-qq                Only log warnings to stdout (including script logging)");
         System.out.println("-x[x...]           Increases verbosity of logging to stdout");
         System.out.println("-v|--version       Display version and then exit");
         System.out.println("-Dname=value       Sets a System property as name=value");
         System.out.println("-i|--install <dir> Install blaze or blaze.bat to directory");
+    }
+    
+    public Blaze buildBlaze() {
+        return new Blaze.Builder()
+            .file(blazeFile)
+            .directory(blazeDir)
+            .build();
     }
     
     public void systemProperty(String name, String value) {
@@ -239,7 +248,7 @@ public class Bootstrap {
     }
     
     public void logTasks(Logger log, Blaze blaze) {
-        System.out.println(blaze.context().scriptFile() + " tasks =>");
+        System.out.println("tasks =>");
         List<String> ts = blaze.script().tasks();
         ts.stream().forEach((t) -> {
             System.out.println("  " + t);

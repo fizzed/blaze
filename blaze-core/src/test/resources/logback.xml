@@ -8,6 +8,7 @@
     </appender>
 
     <logger name="org.zeroturnaround" level="TRACE"/>
+    <logger name="com.fizzed" level="TRACE"/>
 
     <root level="debug">
         <appender-ref ref="STDOUT" />

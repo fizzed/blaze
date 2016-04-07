@@ -214,7 +214,7 @@ public class Blaze {
             context = new ContextImpl(
                 (detectedBaseDir != null ? detectedBaseDir : null),
                 null,    
-                (detectedScriptFile != null ? detectedScriptFile : Paths.get("blaze")),
+                detectedScriptFile,
                 config);
             
             ContextHolder.set(context);
@@ -365,12 +365,14 @@ public class Blaze {
             task = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
         }
         
-        log.info("Executing {}:{}...", context.scriptFile(), task);
+        String scriptName = (context.scriptFile() != null ? context.scriptFile().toString() : "");
+        
+        log.info("Executing {}:{}...", scriptName, task);
         Timer executeTimer = new Timer();
         
         this.script.execute(task);
         
-        log.info("Executed {}:{} in {} ms", context.scriptFile(), task, executeTimer.stop().millis());
+        log.info("Executed {}:{} in {} ms", scriptName, task, executeTimer.stop().millis());
     }
     
     public void executeAll(List<String> tasks) throws Exception {

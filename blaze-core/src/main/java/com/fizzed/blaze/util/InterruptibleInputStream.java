@@ -18,6 +18,7 @@ package com.fizzed.blaze.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,11 +81,13 @@ public class InterruptibleInputStream extends WrappedInputStream {
     @Override
     public void close() throws IOException {
         // close the input then interrupt the thread waiting on it
+        log.trace("Closing wrapped inputstream()");
         super.close();
         // atomically get thread if blocked in read, interrupt it, then set to null
         this.readThreadRef.getAndUpdate((Thread readThread) -> {
             if (readThread != null) {
                 log.trace("Interrupting thread {}", readThread);
+                log.trace("Current stacktrace: {}", Arrays.asList(readThread.getStackTrace()));
                 readThread.interrupt();
             }
             return readThread;
