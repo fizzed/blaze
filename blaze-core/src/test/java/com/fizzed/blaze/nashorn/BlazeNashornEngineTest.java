@@ -58,11 +58,10 @@ public class BlazeNashornEngineTest {
     @Test
     public void noDefaultBlazeFile() throws Exception {
         try {
-            Blaze blaze
-                = Blaze.builder()
-                    // bin directory exists but does not have a blaze script in it
-                    .directory(resourceAsFile("/globber"))
-                    .build();
+            Blaze blaze = new Blaze.Builder()
+                // bin directory exists but does not have a blaze script in it
+                .directory(resourceAsFile("/globber"))
+                .build();
             fail();
         } catch (BlazeException e) {
             assertThat(e.getMessage(), containsString("Unable to find a blaze file"));
@@ -72,10 +71,9 @@ public class BlazeNashornEngineTest {
     @Test
     public void blazeFileDoesNotExist() throws Exception {
         try {
-            Blaze blaze
-                = Blaze.builder()
-                    .file(new File("thisdoesnotexist"))
-                    .build();
+            Blaze blaze = new Blaze.Builder()
+                .file(new File("thisdoesnotexist"))
+                .build();
             fail();
         } catch (BlazeException e) {
             assertThat(e.getMessage(), containsString("Blaze file thisdoesnotexist not found"));
@@ -85,10 +83,9 @@ public class BlazeNashornEngineTest {
     @Test
     public void noEngineForFileExt() throws Exception {
         try {
-            Blaze blaze
-                = Blaze.builder()
-                    .file(resourceAsFile("/nashorn/noengine.txt"))
-                    .build();
+            Blaze blaze = new Blaze.Builder()
+                .file(resourceAsFile("/nashorn/noengine.txt"))
+                .build();
             fail();
         } catch (BlazeException e) {
             assertThat(e.getMessage(), containsString("Unable to find script engine for file extension"));
@@ -97,10 +94,9 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void defaultFileName() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .directory(resourceAsFile("/nashorn"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .directory(resourceAsFile("/nashorn"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -111,10 +107,9 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void empty() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/empty.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/empty.js"))
+            .build();
         
         try {
             blaze.execute();
@@ -126,10 +121,9 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void hello() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/hello.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/hello.js"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -141,10 +135,9 @@ public class BlazeNashornEngineTest {
     @Test
     public void confFileLoaded() throws Exception {
         // this should find the corrosponding conf file and change the default task
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/new_default_task.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/new_default_task.js"))
+            .build();
         
         assertThat(blaze.context().config().value(Config.KEY_DEFAULT_TASK).get(), is("blaze"));
         
@@ -158,10 +151,9 @@ public class BlazeNashornEngineTest {
     @Test
     public void executeTwoTasks() throws Exception {
         // this should find the corrosponding conf file and change the default task
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/two_tasks.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/two_tasks.js"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -173,10 +165,9 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void tasks() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/two_tasks.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/two_tasks.js"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -193,10 +184,9 @@ public class BlazeNashornEngineTest {
     public void dependency() throws Exception {
         systemOutRule.clearLog();
 
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/dependency.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/dependency.js"))
+            .build();
         
         assertThat(blaze.dependencies(), hasItem(Dependency.parse("com.google.guava:guava:18.0")));
         
@@ -214,10 +204,9 @@ public class BlazeNashornEngineTest {
     public void logInBindings() throws Exception {
         systemOutRule.clearLog();
 
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/log.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/log.js"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -230,10 +219,9 @@ public class BlazeNashornEngineTest {
     public void captureOutputDisablesLoggingToStdout() throws Exception {
         systemOutRule.clearLog();
 
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsFile("/nashorn/capture_output.js"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsFile("/nashorn/capture_output.js"))
+            .build();
         
         blaze.execute("main");
         

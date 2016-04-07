@@ -1,6 +1,13 @@
 Blaze by Fizzed
 ===============
 
+#### x.x.x
+
+ - Refactored how System.in, System.out, and System.err is handled by both
+   Systems.exec and SecureShells.sshExec.
+ - New utility classes for guarding streams against being closed and 
+   non-blocking InputStreams.
+
 #### 0.8.2 - 2016-04-04
 
  - blaze-ssh underlying jsch exec would never terminate threads that pumped

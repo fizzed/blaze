@@ -20,7 +20,6 @@ import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
-import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsPath;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -64,10 +63,9 @@ public class BlazeJdkEngineTest {
     
     @Test
     public void hello() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsPath("/jdk/hello.java"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsPath("/jdk/hello.java"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -78,10 +76,9 @@ public class BlazeJdkEngineTest {
     
     @Test
     public void tasks() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .file(resourceAsPath("/jdk/only_public.java"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .file(resourceAsPath("/jdk/only_public.java"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -93,10 +90,9 @@ public class BlazeJdkEngineTest {
     
     @Test
     public void defaultBlazeInWorkingDir() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .directory(resourceAsPath("/jdk/project0"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .directory(resourceAsPath("/jdk/project0"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -111,10 +107,9 @@ public class BlazeJdkEngineTest {
     
     @Test
     public void defaultBlazeInSubBlazeDir() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .directory(resourceAsPath("/jdk/project1"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .directory(resourceAsPath("/jdk/project1"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -129,10 +124,9 @@ public class BlazeJdkEngineTest {
     
     @Test
     public void defaultBlazeInSubDotBlazeDir() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .directory(resourceAsPath("/jdk/project2"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .directory(resourceAsPath("/jdk/project2"))
+            .build();
         
         systemOutRule.clearLog();
         

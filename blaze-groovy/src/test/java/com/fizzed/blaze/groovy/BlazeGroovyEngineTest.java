@@ -35,10 +35,6 @@ import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
 public class BlazeGroovyEngineTest {
     static final private Logger log = LoggerFactory.getLogger(BlazeGroovyEngineTest.class);
     
@@ -47,12 +43,11 @@ public class BlazeGroovyEngineTest {
     
     @Test
     public void empty() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                // to prevent tests failing on new version not being installed locally yet
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/groovy/empty.groovy"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            // to prevent tests failing on new version not being installed locally yet
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/groovy/empty.groovy"))
+            .build();
         
         try {
             blaze.execute(null);
@@ -64,11 +59,10 @@ public class BlazeGroovyEngineTest {
     
     @Test
     public void hello() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/groovy/hello.groovy"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/groovy/hello.groovy"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -79,11 +73,10 @@ public class BlazeGroovyEngineTest {
     
     @Test
     public void taskNotFound() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/groovy/hello.groovy"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/groovy/hello.groovy"))
+            .build();
         
         try {
             blaze.execute("doesnotexist");
@@ -95,11 +88,10 @@ public class BlazeGroovyEngineTest {
     
     @Test
     public void tasks() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/groovy/two_tasks.groovy"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/groovy/two_tasks.groovy"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -116,11 +108,10 @@ public class BlazeGroovyEngineTest {
     public void scriptInitiliazed() throws Exception {
         systemOutRule.clearLog();
         
-        Blaze blaze
-            = Blaze.builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/groovy/script_initialized.groovy"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/groovy/script_initialized.groovy"))
+            .build();
         
         // script should have been initialized
         assertThat(systemOutRule.getLog(), containsString("Groovy run() called"));
@@ -137,11 +128,10 @@ public class BlazeGroovyEngineTest {
     @Test
     public void exceptionsNotWrappedDuringExecution() throws Exception {
         try {
-            Blaze blaze
-                = Blaze.builder()
-                    .dependencyResolver(new NoopDependencyResolver())
-                    .file(resourceAsFile("/groovy/message_only_exception.groovy"))
-                    .build();
+            Blaze blaze = new Blaze.Builder()
+                .dependencyResolver(new NoopDependencyResolver())
+                .file(resourceAsFile("/groovy/message_only_exception.groovy"))
+                .build();
 
             blaze.execute();
             
@@ -154,11 +144,10 @@ public class BlazeGroovyEngineTest {
     @Test
     public void compileFailNotWrappedExecution() throws Exception {
         try {
-            Blaze blaze
-                = Blaze.builder()
-                    .dependencyResolver(new NoopDependencyResolver())
-                    .file(resourceAsFile("/groovy/compile_fail.groovy"))
-                    .build();
+            Blaze blaze = new Blaze.Builder()
+                .dependencyResolver(new NoopDependencyResolver())
+                .file(resourceAsFile("/groovy/compile_fail.groovy"))
+                .build();
 
             blaze.execute();
             

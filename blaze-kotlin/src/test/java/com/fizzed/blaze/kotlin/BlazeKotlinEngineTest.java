@@ -55,12 +55,11 @@ public class BlazeKotlinEngineTest {
     
     @Test
     public void hello() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                // to prevent tests failing on new version not being installed locally yet
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/kotlin/hello.kts"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            // to prevent tests failing on new version not being installed locally yet
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/kotlin/hello.kts"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -71,11 +70,10 @@ public class BlazeKotlinEngineTest {
     
     @Test @Ignore("Not sure we should support this style")
     public void noclazz() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/kotlin/noclazz.kt"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/kotlin/noclazz.kt"))
+            .build();
         
         systemOutRule.clearLog();
         
@@ -87,11 +85,11 @@ public class BlazeKotlinEngineTest {
     @Test
     public void nocompile() throws Exception {
         try {
-            Blaze blaze
-                = Blaze.builder()
-                    .dependencyResolver(new NoopDependencyResolver())
-                    .file(resourceAsFile("/kotlin/nocompile.kts"))
-                    .build();
+            Blaze blaze = new Blaze.Builder()
+                .dependencyResolver(new NoopDependencyResolver())
+                .file(resourceAsFile("/kotlin/nocompile.kts"))
+                .build();
+            
             fail();
         } catch (CompilationException e) {
             assertThat(e.getMessage(), containsString("Unable to compile"));
@@ -100,11 +98,10 @@ public class BlazeKotlinEngineTest {
     
     @Test
     public void tasks() throws Exception {
-        Blaze blaze
-            = Blaze.builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/kotlin/only_public.kt"))
-                .build();
+        Blaze blaze = new Blaze.Builder()
+            .dependencyResolver(new NoopDependencyResolver())
+            .file(resourceAsFile("/kotlin/only_public.kt"))
+            .build();
         
         systemOutRule.clearLog();
         

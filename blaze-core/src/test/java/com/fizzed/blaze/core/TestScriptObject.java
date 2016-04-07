@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Fizzed, Inc.
+ * Copyright 2016 Fizzed, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,10 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.Context;
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.List;
+public class TestScriptObject {
 
-/**
- * Resolves a list of dependencies to a list of Files (jars) that need to be
- * available locally on the filesystem.
- * 
- * @author jjlauer
- */
-public interface DependencyResolver {
-
-    List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException;
+    public void main() {
+        // do nothing
+    }
     
 }

@@ -22,9 +22,11 @@ import com.fizzed.blaze.internal.DependencyHelper;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
 import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
 import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.internal.DefaultScriptFileLocator;
 import com.fizzed.blaze.internal.IvyDependencyResolver;
 import com.fizzed.blaze.internal.EngineHelper;
 import com.fizzed.blaze.internal.FileHelper;
+import com.fizzed.blaze.jdk.TargetObjectScript;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
 import java.io.IOException;
@@ -35,12 +37,12 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * The main Blaze builder and runtime environment.
+ * 
  * @author joelauer
  */
 public class Blaze {
@@ -55,10 +57,14 @@ public class Blaze {
         
         private Path directory;
         private Path file;
+        private Object scriptObject;
         private List<Dependency> collectedDependencies;
+        private ScriptFileLocator scriptFileLocator;
         private DependencyResolver dependencyResolver;
         
-        private Builder() {
+        
+        public Builder() {
+            this.scriptFileLocator = new DefaultScriptFileLocator();
             this.dependencyResolver = new IvyDependencyResolver();
         }
         
@@ -99,6 +105,24 @@ public class Blaze {
         public Path getFile() {
             return this.file;
         }
+
+        public Builder scriptObject(Object scriptObject) {
+            this.scriptObject = scriptObject;
+            return this;
+        }
+        
+        public Object getScriptObject() {
+            return scriptObject;
+        }
+        
+        public Builder scriptFileLocator(ScriptFileLocator scriptFileLocator) {
+            this.scriptFileLocator = scriptFileLocator;
+            return this;
+        }
+
+        public ScriptFileLocator getScriptFileLocator() {
+            return scriptFileLocator;
+        }
         
         public Builder dependencyResolver(DependencyResolver dependencyResolver) {
             this.dependencyResolver = dependencyResolver;
@@ -138,60 +162,17 @@ public class Blaze {
         }
         
         public void locate() {
+            // no need to resolve a script if a target object is already provided
+            if (this.scriptObject != null) {
+                return;
+            }
+            
             if (this.file != null) {
                 detectedScriptFile = this.file;
             } else {
-                Path dir = (this.directory != null ? this.directory : Paths.get("."));
-                
-                List<Path> searchDirs = new ArrayList<>();
-                
-                searchDirs.add(dir);
-                
-                // add extra search directories
-                for (Path d : SEARCH_RELATIVE_DIRECTORIES) {
-                    searchDirs.add(dir.resolve(d));
-                }
-                
-                List<Path> blazeFiles = null;
-                
-                for (Path searchDir : searchDirs) {
-                    // skip directories that do not exist
-                    if (Files.notExists(searchDir) || !Files.isDirectory(searchDir)) {
-                        continue;
-                    }
-
-                    try {
-                        // search for file named "blaze.<ext>" (but not blaze.conf or blaze.jar)
-                        blazeFiles 
-                            = Files.list(searchDir)
-                                .filter((path) -> {
-                                    String name = path.getFileName().toString();
-                                    return name.startsWith("blaze.")
-                                            && !name.endsWith(".conf")
-                                            && !name.endsWith(".jar");
-                                })
-                                .collect(Collectors.toList());
-                        
-                        if (blazeFiles.size() > 0) {
-                            // stop searching
-                            break;
-                        }
-                    } catch (IOException e) {
-                        throw new BlazeException(e.getMessage(), e);
-                    }
-                }
-                
-                if (blazeFiles == null || blazeFiles.isEmpty()) {
-                    throw new MessageOnlyException("Unable to find a blaze file (e.g. blaze.java). Perhaps this is not a Blaze project?");
-                }
-                
-                if (blazeFiles.size() > 1) {
-                    throw new MessageOnlyException("More than one blaze file found. Either delete the extra files use -f parameter");
-                }
-                
-                detectedScriptFile = blazeFiles.get(0);
-            }
-            
+                detectedScriptFile = this.scriptFileLocator.locate(this.directory);
+            } 
+             
             // at this point we should have a file - verify it exists and works
             if (Files.notExists(detectedScriptFile)) {
                 throw new MessageOnlyException("Blaze file " + detectedScriptFile + " not found. Perhaps this is not a Blaze project?");
@@ -219,16 +200,21 @@ public class Blaze {
                 locate();
             }
             
-            Path configFile = ConfigHelper.path(detectedBaseDir, detectedScriptFile);
+            Path configFile = null;
             
-            config = ConfigHelper.create(configFile.toFile());
+            // a script may not actually have been detected
+            if (this.detectedScriptFile != null) {
+                configFile = ConfigHelper.path(detectedBaseDir, detectedScriptFile);
+                
+                scriptExtension = FileHelper.fileExtension(detectedScriptFile);
+            }
             
-            scriptExtension = FileHelper.fileExtension(detectedScriptFile);
-            
+            config = ConfigHelper.create(configFile);
+
             context = new ContextImpl(
                 (detectedBaseDir != null ? detectedBaseDir : null),
                 null,    
-                detectedScriptFile,
+                (detectedScriptFile != null ? detectedScriptFile : Paths.get("blaze")),
                 config);
             
             ContextHolder.set(context);
@@ -262,18 +248,27 @@ public class Blaze {
             DependencyHelper.collect(dependencies, wellKnownEngineDependencies);
             DependencyHelper.collect(dependencies, applicationDependencies);
             
-            if (!dependencies.isEmpty()) {
-                try {
-                    // resolve dependencies against collected dependencies
-                    dependencyJarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
-                } catch (DependencyResolveException e) {
-                    throw e;
-                } catch (IOException | ParseException e) {
-                    throw new BlazeException("Unable to cleanly resolve dependencies", e);
+            // smart resolving...
+            try {
+                if (dependencies.isEmpty()) {
+                    log.info("No dependencies to resolve (skipping resolver)");
+                } else if (dependencies.size() == resolvedDependencies.size()) {
+                    log.info("We already have the dependencies we need (skipping resolver)");
+                } else {
+                    if (!dependencies.isEmpty()) {
+                        try {
+                            // resolve dependencies against collected dependencies
+                            dependencyJarFiles = dependencyResolver.resolve(context, resolvedDependencies, dependencies);
+                        } catch (DependencyResolveException e) {
+                            throw e;
+                        } catch (IOException | ParseException e) {
+                            throw new BlazeException("Unable to cleanly resolve dependencies", e);
+                        }
+                    }
                 }
+            } finally {
+                log.info("Resolved dependencies in {} ms", dependencyTimer.stop().millis());
             }
-            
-            log.info("Resolved dependencies in {} ms", dependencyTimer.stop().millis());
         }
         
         public void loadDependencies() {
@@ -293,6 +288,12 @@ public class Blaze {
         }
         
         public void compileScript() {
+            // if we are simply wrapping an object, no need to compile
+            if (this.scriptObject != null) {
+                script = new TargetObjectScript(this.scriptObject);
+                return;
+            }
+            
             //
             // find and prepare by extension
             //
@@ -323,10 +324,6 @@ public class Blaze {
             
             return new Blaze(context, dependencies, engine, script);
         }
-    }
-    
-    static public Builder builder() {
-        return new Builder();
     }
     
     final private Context context;

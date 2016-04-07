@@ -166,7 +166,7 @@ public class Bootstrap {
         Logger log = LoggerFactory.getLogger(Bootstrap.class);
         
         // create but do not build yet
-        Blaze.Builder blazeBuilder = Blaze.builder()
+        Blaze.Builder blazeBuilder = new Blaze.Builder()
             .file(blazeFile)
             .directory(blazeDir);
         

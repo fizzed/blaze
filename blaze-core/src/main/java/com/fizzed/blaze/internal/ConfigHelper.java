@@ -65,16 +65,16 @@ public class ConfigHelper {
         }
     }
     
-    static public Config create(File file) {
+    static public Config create(Path file) {
         //
         // configuration
         //
         com.typesafe.config.Config typesafeConfig = null;
 
         // build a typesafe config that we'll wrap w/ our interface (just in case we swap out down the road)
-        if (file != null && file.exists()) {
+        if (file != null && Files.exists(file)) {
             log.debug("Configuring with {}", file);
-            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(file);
+            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(file.toFile());
         } else {
             typesafeConfig = com.typesafe.config.ConfigFactory.empty();
         }

@@ -38,6 +38,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 public class ExecTest {
     private static final Logger log = LoggerFactory.getLogger(ExecTest.class);

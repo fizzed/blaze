@@ -32,7 +32,7 @@ import java.util.function.Predicate;
  * 
  * @author joelauer
  */
-abstract public class TargetObjectScript implements Script {
+public class TargetObjectScript implements Script {
     
     static final public Predicate<Method> FILTER_PUBLIC_INSTANCE_METHOD = (Method m) -> {
         return !Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers());
