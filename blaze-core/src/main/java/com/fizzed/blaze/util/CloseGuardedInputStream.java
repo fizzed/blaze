@@ -17,6 +17,7 @@ package com.fizzed.blaze.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Guards against a close, but still supports returning -1 or IOExceptions as
@@ -24,41 +25,41 @@ import java.io.InputStream;
  */
 public class CloseGuardedInputStream extends WrappedInputStream {
     
-    private boolean closed;
+    private AtomicBoolean closed;
         
     public CloseGuardedInputStream(InputStream input) {
         super(input);
-        this.closed = false;
+        this.closed = new AtomicBoolean(false);
     }
 
     @Override
     public int read() throws IOException {
-        if (closed) return -1;
+        if (closed.get()) return -1;
         return super.read();
     }
 
     @Override
     public int read(byte[] b) throws IOException {
-        if (closed) return -1;
+        if (closed.get()) return -1;
         return super.read(b);
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        if (closed) return -1;
+        if (closed.get()) return -1;
         return super.read(b, off, len);
     }
 
     @Override
     public int available() throws IOException {
-        if (closed) throw new IOException("stream closed");
+        if (closed.get()) throw new IOException("stream closed");
         return super.available();
     }
 
     @Override
     public void close() throws IOException {
         // do not close underlying stream, but mark us as closed
-        this.closed = true;
+        this.closed.compareAndSet(false, true);
     }
     
 }

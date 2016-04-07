@@ -87,7 +87,7 @@ public class InterruptibleInputStream extends WrappedInputStream {
                 log.trace("Interrupting thread {}", readThread);
                 readThread.interrupt();
             }
-            return null;
+            return readThread;
         });
     }
     
