@@ -1,6 +1,13 @@
 Blaze by Fizzed
 ===============
 
+#### x.x.x
+
+ - Convenience disablePipeInput, disablePipeOutput, and disablePipeError added
+   for Systems.exec and SecureShells.exec to simplify syntax of disabling any
+   of those particular inputs/outputs.
+ - 
+
 #### 0.9.1 - 2016-04-08
 
  - zt-exec now included with blaze-lite jar by default. Allows for faster

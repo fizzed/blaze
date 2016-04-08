@@ -45,4 +45,8 @@ public interface PipeErrorMixin<T> extends PipeMixin<T> {
         return pipeError(Streamables.output(file));
     }
     
+    default public T disablePipeError() {
+        return pipeError((StreamableOutput)null);
+    }
+    
 }

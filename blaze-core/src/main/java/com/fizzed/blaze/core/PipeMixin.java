@@ -47,6 +47,10 @@ public interface PipeMixin<T> {
         return pipeInput(Streamables.input(file));
     }
     
+    default public T disablePipeInput() {
+        return pipeInput((StreamableInput)null);
+    }
+    
     StreamableOutput getPipeOutput();
     
     T pipeOutput(StreamableOutput pipeOutput);
@@ -61,6 +65,10 @@ public interface PipeMixin<T> {
     
     default public T pipeOutput(File file) {
         return pipeOutput(Streamables.output(file));
+    }
+    
+    default public T disablePipeOutput() {
+        return pipeOutput((StreamableOutput)null);
     }
     
 }
