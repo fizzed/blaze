@@ -18,12 +18,15 @@ package com.fizzed.blaze.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Guards against a close, but still supports returning -1 or IOExceptions as
  * if the underlying stream was closed.
  */
 public class CloseGuardedInputStream extends WrappedInputStream {
+    private static final Logger log = LoggerFactory.getLogger(CloseGuardedInputStream.class);
     
     private AtomicBoolean closed;
         
@@ -58,6 +61,7 @@ public class CloseGuardedInputStream extends WrappedInputStream {
 
     @Override
     public void close() throws IOException {
+        log.trace("Closing guarded inputstream");
         // do not close underlying stream, but mark us as closed
         this.closed.compareAndSet(false, true);
     }

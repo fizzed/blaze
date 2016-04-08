@@ -206,6 +206,8 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
         PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
             @Override
             public void stop() {
+                Thread.yield();
+                
                 // make sure any input, output, and error streams are closed
                 // before the superclass stop() is triggered
                 Streamables.closeQuietly(is);
