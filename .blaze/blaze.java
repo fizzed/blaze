@@ -35,7 +35,7 @@ public class blaze {
     
     public void try_all() throws Exception {
         // boom -- execute another blaze script in this jvm
-        Blaze.builder()
+        new Blaze.Builder()
             .file(withBaseDir("../examples/try_all.java"))
             .build()
             .execute();
@@ -77,7 +77,7 @@ public class blaze {
         exec("git", "push", "origin").run();
     }
     
-    public void update_readme() throws IOException {
+    private void update_readme() throws IOException {
         Path readmeFile = withBaseDir("../README.md");
         Path newReadmeFile = withBaseDir("../README.md.new");
         
