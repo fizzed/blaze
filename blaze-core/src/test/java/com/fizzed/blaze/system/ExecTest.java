@@ -53,6 +53,14 @@ public class ExecTest {
         context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
     }
     
+    @Before
+    public void doNotRunOnTravisCI() {
+        // NOTE: travis-ci has an issue w/ this unit test that never happens
+        // on a real system. Until an upstream issue with zt-exec is resolved
+        // we are going to give up trying to make this work on travis-ci
+        assumeTrue("Not running on travis-ci", !Objects.equals(System.getenv("TRAVIS"), "true"));
+    }
+    
     @Test(expected=ExecutableNotFoundException.class)
     public void notFind() throws Exception {
         new Exec(context)
@@ -86,8 +94,8 @@ public class ExecTest {
     }
     
     @Test
-    public void standardInputAndOutputs() throws Exception {
-        // mimic standard input and outputs
+    public void customInputAndOutputs() throws Exception {
+        // custom input and outputs
         InputStream in = spy(new ByteArrayInputStream(new byte[0]));
         OutputStream out = spy(new ByteArrayOutputStream());
         OutputStream err = spy(new ByteArrayOutputStream());
@@ -108,11 +116,6 @@ public class ExecTest {
     
     @Test
     public void captureOutput() throws Exception {
-        // NOTE: travis-ci has an issue w/ this unit test that never happens
-        // on a real system. Until an upstream issue with zt-exec is resolved
-        // we are going to give up trying to make this work on travis-ci
-        assumeTrue("Not running on travis-ci", !Objects.equals(System.getenv("TRAVIS"), "true"));
-        
         CaptureOutput capture = Streamables.captureOutput();
         
         new Exec(context)

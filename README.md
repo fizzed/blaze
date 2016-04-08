@@ -21,7 +21,6 @@ invoke blaze, it does the following:
  - Sets up console logging
  - Loads your optional configuration file(s)
  - Downloads runtime dependencies (e.g. jars from Maven central)
- - Adds dependencies to the classpath
  - Loads and compiles your script(s)
  - Executes "tasks" (methods your script defines)
 
