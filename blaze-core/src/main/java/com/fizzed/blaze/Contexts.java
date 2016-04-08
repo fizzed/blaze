@@ -15,16 +15,10 @@
  */
 package com.fizzed.blaze;
 
-import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.core.MessageOnlyException;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 
 /**

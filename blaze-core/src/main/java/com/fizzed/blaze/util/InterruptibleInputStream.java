@@ -83,21 +83,22 @@ public class InterruptibleInputStream extends WrappedInputStream {
     @Override
     public void close() throws IOException {
         // close the input then interrupt the thread waiting on it
-        log.trace("Closing wrapped inputstream()");
+        //log.trace("Closing wrapped inputstream()");
         super.close();
         
         // atomically get thread if blocked in read, interrupt it, then set to null
         this.readThreadRef.getAndUpdate((Thread readThread) -> {
-            // just for debugging travis...
+            /** just for debugging travis...
             Map<Thread, StackTraceElement[]> threads = Thread.getAllStackTraces();
             threads.forEach((Thread t, StackTraceElement[] ste) -> {
                 String dump = Arrays.asList(ste).stream().map((s) -> s.toString()).collect(Collectors.joining("\n    "));
                 log.trace("{}: {}", t, dump);
             });
+            */
             
             if (readThread != null) {
                 log.trace("Interrupting thread {}", readThread);
-                log.trace("Current stacktrace: {}", Arrays.asList(readThread.getStackTrace()));
+                //log.trace("Current stacktrace: {}", Arrays.asList(readThread.getStackTrace()));
                 readThread.interrupt();
             } else {
                 log.trace("readThread was null, unable to interrupt");

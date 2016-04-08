@@ -251,9 +251,9 @@ public class Blaze {
             // smart resolving...
             try {
                 if (dependencies.isEmpty()) {
-                    log.info("No dependencies to resolve (skipping resolver)");
+                    log.debug("No dependencies to resolve (skipping resolver)");
                 } else if (dependencies.size() == resolvedDependencies.size()) {
-                    log.info("We already have the dependencies we need (skipping resolver)");
+                    log.debug("We already have the dependencies we need (skipping resolver)");
                 } else {
                     try {
                         // resolve dependencies against collected dependencies

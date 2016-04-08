@@ -51,7 +51,7 @@ public class Systems {
     }
     
     /**
-     * Prepares an action to find `which` executable to use for a command.  Similiar to a Unix `which`
+     * Prepares an action to find `which` executable to use for a command.  Similar to a Unix `which`
      * command.  Platform-specific executable extensions do not need to included
      * (e.g. `.bat` on windows).  Will search for an executable base do on 
      * the environment PATH variable as well as any user-defined paths.

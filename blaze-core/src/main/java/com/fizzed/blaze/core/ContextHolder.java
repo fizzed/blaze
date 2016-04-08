@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.internal.ContextImpl;
 import org.slf4j.Logger;
@@ -31,8 +30,8 @@ public class ContextHolder {
     private static final ThreadLocal<Context> CONTEXT =
          new ThreadLocal<Context>() {
              @Override protected ContextImpl initialValue() {
-                 log.info("Creating new context for thread " + Thread.currentThread().getName());
-                 return null;
+                 log.info("Creating default context for thread " + Thread.currentThread().getName());
+                 return new DefaultContext();
          }
     };
     

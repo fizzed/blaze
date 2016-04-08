@@ -1,7 +1,7 @@
 Blaze by Fizzed
 ===============
 
-#### x.x.x
+#### 0.9.0 - 2016-04-08
 
  - Dependency resolver skipped if all dependencies already resolved.  Huge
    speedup in execution for scripts that don't use additional dependencies.
@@ -13,6 +13,8 @@ Blaze by Fizzed
    non-blocking InputStreams.
  - Blaze command-line `Bootstrap` class can be easily subclassed so that most
    of its functionality can be reused in a Blaze-based script app.
+ - A `DefaultContext` is now bound by default so users of Blaze as a dependency
+   in other projects do not need to bind one.
 
 #### 0.8.2 - 2016-04-04
 
