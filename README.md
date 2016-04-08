@@ -96,7 +96,7 @@ can run it like so
 If no task is supplied on the command line, Blaze will attempt to run the `main`
 task by default.
 
-## Yeah but I can do that in a shell script
+## Why not just do that in a shell script?
 
 Let's do a more useful example of how we use Blaze in many cases.  Let's say
 you had a Maven project and wanted to execute a class with a main method. The
@@ -124,6 +124,110 @@ public class blaze {
 ```
 
 You can now just run these with `java -jar blaze.jar demo1` or `java -jar blaze.jar demo2`
+
+## But I can still do your previous example in a shell script?
+
+Yeah, I suppose so.  But you'd probably use two shell scripts to define the
+separate tasks and if you cared about platform portability, you'd be nice to
+also include `.bat` scripts for Windows users.  However, when you want to do
+anything else that's remotely advanced, you'll start to appreciate having a
+more advanced environment.  Here's an example where we query git for the 
+latest tag and use it to update a README file with it.  We use this as a way
+to maintain a README file with the latest version pushed to Maven central
+
+```java
+import com.fizzed.blaze.Contexts;
+import static com.fizzed.blaze.Contexts.withBaseDir;
+import static com.fizzed.blaze.Contexts.fail;
+import static com.fizzed.blaze.Systems.exec;
+import com.fizzed.blaze.core.Actions;
+import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.util.Streamables;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.slf4j.Logger;
+
+public class blaze {
+    static private final Logger log = Contexts.logger();
+    
+    private String latest_tag() {
+        // get latest tag and trim off "v"
+        String latestTag
+            = exec("git", "describe", "--abbrev=0", "--tags")
+                .pipeOutput(Streamables.captureOutput())
+                .runResult()
+                .map(Actions::toCaptureOutput)
+                .toString()
+                .trim()
+                .substring(1);
+        
+        return latestTag;
+    }
+    
+    public void update_readme() throws IOException {
+        Path readmeFile = withBaseDir("../README.md");
+        Path newReadmeFile = withBaseDir("../README.md.new");
+        
+        // find latest version via git tag
+        String latestVersion = latest_tag();
+        
+        log.info("Latest version in git {}", latestVersion);
+        
+        // find current version in readme
+        final Pattern versionPattern = Pattern.compile(".*lite-(\\d+\\.\\d+\\.\\d+)\\.jar.*");
+        
+        String currentVersion
+            = Files.lines(readmeFile)
+                .map((l) -> {
+                    Matcher matcher = versionPattern.matcher(l);
+                    if (matcher.matches()) {
+                        return matcher.group(1);
+                    } else {
+                        return null;
+                    }
+                })
+                .filter((l) -> l != null)
+                .findFirst()
+                .get();
+        
+        log.info("Current version in README {}", currentVersion);
+        
+        if (currentVersion.equals(latestVersion)) {
+            log.info("Versions match (no need to update README)");
+            return;
+        }
+        
+        final Pattern replacePattern = Pattern.compile(currentVersion);
+        
+        try (BufferedWriter writer = Files.newBufferedWriter(newReadmeFile)) {
+            Files.lines(readmeFile)
+                .forEach((l) -> {
+                    Matcher matcher = replacePattern.matcher(l);
+                    String newLine = matcher.replaceAll(latestVersion);
+                    try {
+                        writer.append(newLine);
+                        writer.append("\n");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e.getMessage(), e);
+                    }
+                });
+            writer.flush();
+        }
+        
+        // replace readme with updated version
+        Files.move(newReadmeFile, readmeFile, StandardCopyOption.REPLACE_EXISTING);
+    }
+}
+```
+
+Good luck doing that with a shell script w/o probably really locking yourself
+down to many external dependencies and potentially the versions that are only
+on your system.
 
 ## Optionally install blaze on your PATH
 
