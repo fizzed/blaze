@@ -129,14 +129,6 @@
         <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-core</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <!-- add any dependencies we don't need with a bootstrapping version of blaze -->
-                <exclusion>
-                    <groupId>org.zeroturnaround</groupId>
-                    <artifactId>zt-exec</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
                 
         <!-- logback is suprisingly huge -->

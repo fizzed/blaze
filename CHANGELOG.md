@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 0.9.1 - 2016-04-08
+
+ - zt-exec now included with blaze-lite jar by default. Allows for faster
+   execution by skipping resolver.
+
 #### 0.9.0 - 2016-04-08
 
  - Dependency resolver skipped if all dependencies already resolved.  Huge
