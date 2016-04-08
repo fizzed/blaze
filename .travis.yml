@@ -2,3 +2,5 @@ language: java
 sudo: false
 jdk:
   - oraclejdk8
+env:
+ - TRAVIS=true
