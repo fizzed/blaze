@@ -1,13 +1,15 @@
 Blaze by Fizzed
 ===============
 
-#### x.x.x
+#### 0.9.2 - 2016-04-08
 
  - Systems.exec and SecureShells.exec support a convenient `runCaptureOutput`
    method to simplify the use-case of capturing the output of a process.
  - Convenience disablePipeInput, disablePipeOutput, and disablePipeError added
    for Systems.exec and SecureShells.exec to simplify syntax of disabling any
    of those particular inputs/outputs.
+ - Streamables now supports lines() and matchedLines() that produce a Stream
+   of Strings.  Useful for grep-like replacement.
 
 #### 0.9.1 - 2016-04-08
 

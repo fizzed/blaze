@@ -156,64 +156,50 @@ public class blaze {
     static private final Logger log = Contexts.logger();
     
     private String latest_tag() {
-        // get latest tag and trim off "v"
-        String latestTag
-            = exec("git", "describe", "--abbrev=0", "--tags")
-                .pipeOutput(Streamables.captureOutput())
-                .runResult()
-                .map(Actions::toCaptureOutput)
-                .toString()
-                .trim()
-                .substring(1);
-        
-        return latestTag;
+        // get latest tag from git
+        return exec("git", "describe", "--abbrev=0", "--tags")
+            .runCaptureOutput()
+            .toString()
+            .trim();
     }
     
     public void update_readme() throws IOException {
         Path readmeFile = withBaseDir("../README.md");
         Path newReadmeFile = withBaseDir("../README.md.new");
         
-        // find latest version via git tag
-        String latestVersion = latest_tag();
+        // find latest version via git tag, trim off leading 'v'
+        String taggedVersion = latest_tag().substring(1);
         
-        log.info("Latest version in git {}", latestVersion);
+        log.info("Tagged version: {}", taggedVersion);
         
-        // find current version in readme
-        final Pattern versionPattern = Pattern.compile(".*lite-(\\d+\\.\\d+\\.\\d+)\\.jar.*");
-        
-        String currentVersion
-            = Files.lines(readmeFile)
-                .map((l) -> {
-                    Matcher matcher = versionPattern.matcher(l);
-                    if (matcher.matches()) {
-                        return matcher.group(1);
-                    } else {
-                        return null;
-                    }
-                })
-                .filter((l) -> l != null)
+        // find current version in readme using a regex to match
+        // then apply a mapping function to return the first group of each match
+        // then we only need to get the first matched group
+        String versionRegex = ".*lite-(\\d+\\.\\d+\\.\\d+)\\.jar.*";
+        String readmeVersion
+            = Streamables.matchedLines(input(readmeFile), versionRegex, (m) -> m.group(1))
                 .findFirst()
                 .get();
         
-        log.info("Current version in README {}", currentVersion);
+        log.info("Readme version: {}", readmeVersion);
         
-        if (currentVersion.equals(latestVersion)) {
+        if (readmeVersion.equals(taggedVersion)) {
             log.info("Versions match (no need to update README)");
             return;
         }
         
-        final Pattern replacePattern = Pattern.compile(currentVersion);
-        
+        // replace version in file and write a new version
+        final Pattern replacePattern = Pattern.compile(readmeVersion);
         try (BufferedWriter writer = Files.newBufferedWriter(newReadmeFile)) {
             Files.lines(readmeFile)
                 .forEach((l) -> {
                     Matcher matcher = replacePattern.matcher(l);
-                    String newLine = matcher.replaceAll(latestVersion);
+                    String newLine = matcher.replaceAll(taggedVersion);
                     try {
                         writer.append(newLine);
                         writer.append("\n");
                     } catch (IOException e) {
-                        throw new RuntimeException(e.getMessage(), e);
+                        throw new UncheckedIOException(e);
                     }
                 });
             writer.flush();
