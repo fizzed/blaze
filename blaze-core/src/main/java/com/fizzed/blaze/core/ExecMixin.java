@@ -15,6 +15,9 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.StreamableOutput;
+import com.fizzed.blaze.util.Streamables;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
@@ -71,5 +74,30 @@ public interface ExecMixin<T> extends PipeErrorMixin<T> {
     }
     
     T pipeErrorToOutput(boolean pipeErrorToOutput);
+    
+    // this will exist on any impl
+    Object run();
+    
+    /**
+     * Helper method to make it easier to exec a program and capture its output.
+     * @return The captured output
+     * @throws BlazeException 
+     */
+    default public CaptureOutput runCaptureOutput() throws BlazeException {
+        CaptureOutput captureOutput = null;
+        StreamableOutput output = getPipeOutput();
+        
+        // already set as capture output?
+        if (output != null && output instanceof CaptureOutput) {
+            captureOutput = (CaptureOutput)output;
+        } else {
+            captureOutput = Streamables.captureOutput();
+            this.pipeOutput(captureOutput);
+        }
+        
+        this.run();
+        
+        return captureOutput;
+    }
     
 }

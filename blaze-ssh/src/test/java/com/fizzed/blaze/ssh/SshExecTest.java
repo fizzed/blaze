@@ -16,7 +16,6 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.core.UnexpectedExitValueException;
-import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
@@ -112,6 +111,54 @@ public class SshExecTest extends SshBaseTest {
         
         assertThat(exitValue, is(0));
         assertThat(capture.toString(), is("Hello World!"));
+    }
+    
+    @Test
+    public void runCaptureOutput() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("hello")) {
+                command.outMessage("Hello World!");
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+        
+        SshSession session = startAndConnect();
+
+        String output
+            = new SshExec(context, session)
+                .command("hello")
+                .runCaptureOutput()
+                .toString();
+
+        assertThat(output, is("Hello World!"));
+    }
+    
+    @Test
+    public void disableInputAndOutputs() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("hello")) {
+                command.outMessage("Hello World!");
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+        
+        SshSession session = startAndConnect();
+
+        String output
+            = new SshExec(context, session)
+                .command("hello")
+                .disablePipeInput()
+                .disablePipeError()
+                .runCaptureOutput()
+                .toString();
+
+        assertThat(output, is("Hello World!"));
     }
     
     @Test

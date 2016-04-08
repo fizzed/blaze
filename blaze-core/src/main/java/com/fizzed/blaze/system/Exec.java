@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
+import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.InterruptibleInputStream;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
