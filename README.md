@@ -96,6 +96,35 @@ can run it like so
 If no task is supplied on the command line, Blaze will attempt to run the `main`
 task by default.
 
+## Yeah but I can do that in a shell script
+
+Let's do a more useful example of how we use Blaze in many cases.  Let's say
+you had a Maven project and wanted to execute a class with a main method. The
+syntax to do that in Maven becomes difficult to remember and communicate to
+other developers.  Blaze lets you simplify the entry points to your project
+by exposing everything as named tasks.
+
+```java
+import static com.fizzed.blaze.Systems.exec;
+
+public class blaze {
+
+    public void demo1() {
+        exec(
+           "mvn", "compile", "exec:java", "-Dexec.classpathScope=runtime",
+           "-Dexec.mainClass=com.example.Demo1").run();
+    }
+
+    public void demo2() {
+        exec(
+           "mvn", "compile", "exec:java", "-Dexec.classpathScope=runtime",
+           "-Dexec.mainClass=com.example.Demo2").run();
+    }
+}
+```
+
+You can now just run these with `java -jar blaze.jar demo1` or `java -jar blaze.jar demo2`
+
 ## Optionally install blaze on your PATH
 
 While you can invoke `blaze.jar` as an executable jar by running
