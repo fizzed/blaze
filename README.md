@@ -37,15 +37,9 @@ invoke blaze, it does the following:
    you or others can run it with `java -jar blaze.jar`.
  - [IDE support](https://github.com/fizzed/blaze-netbeans)
  - Small size so you can commit `blaze.jar` to your repository
- - Careful defaults and intuitive conventions are used to minimize typing to 
-   run your scripts.
- - Heavy use of statically accessible methods for simple cross-language access
-   to Blaze-supplied utilities.
- - Fluent-style method calls for elegant looking scripts
- - APIs encourage use of modern Java APIs (e.g. `java.nio.file.Path` instead of `java.io.File`)
  - Excellent framework support for executing processes, modifying the filesystem,
    user interaction, http, and ssh.
- - Easily include in any Java library as a dependency to accomplish whatever
+ - Easily use any Java library as a dependency to accomplish whatever
    the framework doesn't provide.
 
 ## More documentation
@@ -78,7 +72,31 @@ If you have `curl` available
 Or simply [download the file in your web browser](http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.9.1/blaze-lite-0.9.1.jar)
 and save it to your project directory with a name of `blaze.jar`
 
-## Optionally install blaze on PATH
+## Write hello world blaze script in .java
+
+Create `blaze.java` file
+
+```java
+public class blaze {
+    
+    public void main() {
+        System.out.println("Hello World!");
+    }
+    
+}
+```
+
+## Run blaze script
+
+Since you named your file `blaze.java`, Blaze will find it automatically.  You
+can run it like so
+
+    java -jar blaze.jar
+
+If no task is supplied on the command line, Blaze will attempt to run the `main`
+task by default.
+
+## Optionally install blaze on your PATH
 
 While you can invoke `blaze.jar` as an executable jar by running
 
@@ -102,9 +120,13 @@ the following in your shell
 
     blaze
 
-## Write your first script
+## IDE support
 
-### Where to create your script
+A Netbeans-certified plugin is available for Nebeans 8.1+.  You can find it
+in Netbeans 8.1 -> Tools > Plugins > Available Plugins > Blaze.  The source
+code and project are [here](https://github.com/fizzed/blaze-netbeans)
+
+## Where to save your script(s)
 
 Blaze is designed to play nicely with other popular JVM build tools such as Maven,
 Gradle, Ant, SBT, etc.  Blaze is also designed to play nicely with your favorite
@@ -120,51 +142,22 @@ The `[ext]` would be whatever JVM language you'd like to write your script in.
 So java would be `.java`, groovy would be `.groovy`, etc.
 
 However, if you are using another build tool such as Maven, we'd suggest creating
-a sub-directory called `blaze` and placing your `blaze.[ext]` script in there.
+a sub-directory called `.blaze` or `blaze` and placing your `blaze.[ext]` script in there.
 Most Java IDEs compute classpaths for auto completion based on directory paths
 and placing your script in the root directory doesn't work very well with IDEs like
 Netbeans.  So a maven project + blaze would be
 
     <project directory>/
-        blaze.jar
-        blaze/
+        .blaze/
             blaze.[ext]
+        blaze.jar
         pom.xml
 
 In either setup, you'd run your script identically.  That's because blaze will
-first search the current directory for `blaze.[ext]` followed by `blaze/blaze.[ext]`
+first search the current directory for `blaze.[ext]` then `.blaze/blaze.[ext]`
+then `blaze/blaze.[ext]`
 
 If you'd like to have more than one script, you can supply it on the command-line
 like so
 
     java -jar blaze.jar path/to/script.[ext]
-
-### Write hello world script in .java
-
-Create `blaze.java` file
-
-```java
-public class blaze {
-    
-    public void main() {
-        System.out.println("Hello World!");
-    }
-    
-}
-```
-
-### Run script
-
-Since you named your file `blaze.java`, Blaze will find it automatically.  You
-can run it like so
-
-    java -jar blaze.jar
-
-If no task is supplied on the command line, Blaze will attempt to run the `main`
-task by default.
-
-## IDE support
-
-A Netbeans-certified plugin is available for Nebeans 8.1+.  You can find it
-in Netbeans 8.1 -> Tools > Plugins > Available Plugins > Blaze.  The source
-code and project are [here](https://github.com/fizzed/blaze-netbeans)
