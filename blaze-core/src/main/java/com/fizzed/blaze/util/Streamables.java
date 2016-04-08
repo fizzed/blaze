@@ -18,15 +18,23 @@ package com.fizzed.blaze.util;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.core.WrappedBlazeException;
+import static com.fizzed.blaze.internal.ConfigHelper.path;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.io.output.NullOutputStream;
 
@@ -70,6 +78,61 @@ public class Streamables {
         }
         
         return new StreamableInput(new DeferredFileInputStream(path), path.getFileName().toString(), path, size);
+    }
+    
+    static private Runnable asUncheckedRunnable(Closeable c) {
+        return () -> {
+            try {
+                c.close();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
+    
+    static public Stream<String> lines(StreamableInput input) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(input.stream));
+        try {
+            return br.lines().onClose(asUncheckedRunnable(br));
+        } catch (Error|RuntimeException e) {
+            try {
+                br.close();
+            } catch (IOException ex) {
+                try {
+                    e.addSuppressed(ex);
+                } catch (Throwable ignore) {}
+            }
+            throw e;
+        }
+    }
+    
+    static public Stream<String> matchedLines(StreamableInput input, String pattern) throws IOException {
+        return matchedLines(input, Pattern.compile(pattern), null);
+    }
+    
+    static public Stream<String> matchedLines(StreamableInput input, String pattern, Function<Matcher,String> mapper) throws IOException {
+        return matchedLines(input, Pattern.compile(pattern), mapper);
+    }
+    
+    static public Stream<String> matchedLines(StreamableInput input, Pattern pattern) throws IOException {
+        return matchedLines(input, pattern, null);
+    }
+    
+    static public Stream<String> matchedLines(StreamableInput input, Pattern pattern, Function<Matcher,String> mapper) throws IOException {
+        return lines(input)
+            .map((line) -> {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.matches()) {
+                    if (mapper == null) {
+                        return line;
+                    } else {
+                        return mapper.apply(matcher);
+                    }
+                } else {
+                    return null;
+                }
+            })
+            .filter((line) -> line != null);
     }
     
     static public StreamableOutput nullOutput() {
