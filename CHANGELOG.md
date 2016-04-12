@@ -1,8 +1,11 @@
 Blaze by Fizzed
 ===============
 
-#### x.x.x
+#### 0.10.0 - 2016-04-12
 
+ - Bump to zt-exec v1.9 (for an issue we reported and fixed with a PR)
+ - Bump to groovy v2.4.6
+ - Bump to slf4j v1.7.20
  - Fixed bug with Systems.which() where it would locate a directory that matched an
    executable name.  Since Systems.requireExec() and Systems.exec() uses this 
    under-the-hood, this also fixes the same issue with them. 
