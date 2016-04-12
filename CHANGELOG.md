@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ===============
 
+#### x.x.x
+
+ - Fixed bug with Systems.which() where it would locate a directory that matched an
+   executable name.  Since Systems.requireExec() and Systems.exec() uses this 
+   under-the-hood, this also fixes the same issue with them. 
+
 #### 0.9.2 - 2016-04-08
 
  - Systems.exec and SecureShells.exec support a convenient `runCaptureOutput`

@@ -122,4 +122,19 @@ public class WhichTest {
         assertThat(f.toFile(), is(exeFile));
     }
     
+    @Test
+    public void excludeDirs() throws Exception {
+        Path exeFile = FileHelper.resourceAsPath("/bin/hello-world-test.bat");
+        Path binDir = exeFile.getParent();
+        Path resourcesDir = binDir.getParent();
+        
+        Path f = new Which(context)
+            .path(resourcesDir)
+            .command("bin")
+            .run();
+        
+        // nothing should have been found here
+        assertThat(f, is(nullValue()));
+    }
+    
 }

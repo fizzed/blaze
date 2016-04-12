@@ -79,9 +79,13 @@ public class Which extends Action<Which.Result,Path> implements PathsMixin<Which
         return new Result(this, path);
     }
     
+    static public boolean isExecutableFile(Path file) {
+        return Files.exists(file) && Files.isRegularFile(file) && Files.isExecutable(file);
+    }
+    
     static public Path find(Context context, List<Path> paths, Path command) throws BlazeException {
         // first, check if the command is already an absolute file
-        if (Files.exists(command)) {
+        if (isExecutableFile(command)) {
             return command;
         }
         
@@ -95,12 +99,9 @@ public class Which extends Action<Which.Result,Path> implements PathsMixin<Which
                 //File commandFile = new File(path.toFile(), commandWithExt);
                 Path exeFile = path.resolve(commandWithExt);
                 
-                //logger.trace("commandFile: {}", commandFile);
-                //File f = commandFile;
-                
                 log.trace("Trying file: {}", exeFile);
                 if (Files.exists(exeFile)) {
-                    if (Files.isExecutable(exeFile)) {
+                    if (Files.isRegularFile(exeFile) && Files.isExecutable(exeFile)) {
                         return exeFile;
                     } else {
                         log.warn("Command '" + exeFile + "' found but it isn't executable! (continuing search...)");
