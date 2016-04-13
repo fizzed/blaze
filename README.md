@@ -63,13 +63,13 @@ JVM languages.
 
 Download `blaze.jar` to your project directory.  If you have `wget` available
 
-    wget -O blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.9.2/blaze-lite-0.9.2.jar'
+    wget -O blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.10.0/blaze-lite-0.10.0.jar'
 
 If you have `curl` available
 
-    curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.9.2/blaze-lite-0.9.2.jar'
+    curl -o blaze.jar 'http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.10.0/blaze-lite-0.10.0.jar'
 
-Or simply [download the file in your web browser](http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.9.2/blaze-lite-0.9.2.jar)
+Or simply [download the file in your web browser](http://repo1.maven.org/maven2/com/fizzed/blaze-lite/0.10.0/blaze-lite-0.10.0.jar)
 and save it to your project directory with a name of `blaze.jar`
 
 ## Write hello world blaze script in .java
