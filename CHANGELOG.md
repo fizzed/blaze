@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 0.11.0 - 2016-05-27
+
+ - Bump to kotlin 1.0.2 for blaze-kotlin
+ - Support for kotlin v1!
+
 #### 0.10.0 - 2016-04-12
 
  - Bump to zt-exec v1.9 (for an issue we reported and fixed with a PR)
