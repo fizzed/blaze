@@ -85,14 +85,14 @@ public class BlazeKotlinEngineTest {
     @Test
     public void nocompile() throws Exception {
         try {
-            Blaze blaze = new Blaze.Builder()
-                .dependencyResolver(new NoopDependencyResolver())
-                .file(resourceAsFile("/kotlin/nocompile.kts"))
-                .build();
-            
+            Blaze blaze
+                = Blaze.builder()
+                    .dependencyResolver(new NoopDependencyResolver())
+                    .file(resourceAsFile("/kotlin/nocompile.kt"))
+                    .build();
             fail();
         } catch (CompilationException e) {
-            assertThat(e.getMessage(), containsString("Unable to compile"));
+            assertThat(e.getMessage(), containsString("Unable to cleanly compile"));
         }
     }
     

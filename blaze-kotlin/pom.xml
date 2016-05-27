@@ -20,20 +20,19 @@
         <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-core</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-compiler-embeddable</artifactId>
-            <version>1.0.0-beta-1038</version>
+            <version>1.0.2</version>
         </dependency>
         
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-runtime</artifactId>
-            <version>1.0.0-beta-1038</version>
+            <version>1.0.1-2</version>
         </dependency>
         
         <!-- testing -->
