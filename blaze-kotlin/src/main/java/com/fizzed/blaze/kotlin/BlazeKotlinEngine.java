@@ -23,6 +23,7 @@ import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextCl
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.FileHelper;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,7 +83,7 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         if (!compile) {
             log.debug("Script has not changed, using previous compiled version");
         } else {
-            KotlinCompiler compiler = new KotlinCompiler(classLoader);
+            Kotlin1Compiler compiler = new Kotlin1Compiler(classLoader);
             compiler.compile(context.scriptFile(), classesDir, sourceFile.isScript());
             
             try {
@@ -109,11 +110,16 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
             
             Class<?> type = classLoader.loadClass(className);
             
-            //log.trace("{}", Arrays.asList(type.getConstructors()));
-            //log.trace("{}", Arrays.asList(type.getDeclaredMethods()));
+            Object targetObject;
             
-            Object targetObject = type.getConstructor().newInstance();
-
+            // kotlin scripts require string[] args as constructor
+            if (sourceFile.isScript()) {
+                Constructor<?> constructor = type.getConstructor(String[].class);
+                targetObject = constructor.newInstance(new Object[]{new String[]{}});
+            } else {
+                targetObject = type.getConstructor().newInstance();
+            }
+            
             return new BlazeKotlinScript(targetObject);
         } catch (ClassNotFoundException | InstantiationException | IllegalArgumentException |
                 IllegalAccessException | NoSuchMethodException | InvocationTargetException | SecurityException e) {

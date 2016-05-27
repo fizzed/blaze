@@ -32,7 +32,7 @@ public class TryIt {
     
     static public void main(String[] args) throws Exception {
         //File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");
-        File scriptFile = new File("hello.kt");  
+        File scriptFile = new File("src/test/resources/kotlin/hello.kts");  
         
         Context context = new ContextImpl(null, null, scriptFile.toPath(), null);
         ContextHolder.set(context);
@@ -48,34 +48,6 @@ public class TryIt {
         log.info("Compiled in {} ms", timer.stop().millis());
         
         script.execute("main");
-        
-        
-        /**
-        KotlinCompiler compiler = new KotlinCompiler();
-
-        Timer timer = new Timer();
-        
-        Class<?> scriptClass = compiler.compileScript(new File("hello.kt"));
-        
-        System.out.println("class " + scriptClass.getCanonicalName());
-        
-        System.out.println("Compiled in " + timer.stop().millis() + " ms");
-        
-        
-        //Object script = scriptClass.getConstructor().newInstance(new Object[0]);
-        Object script = scriptClass
-                .getConstructor()
-                .newInstance();
-   
-        Method[] declaredMethods = script.getClass().getDeclaredMethods();
-        
-        for (Method m : declaredMethods) {
-            System.out.println(m);
-        }
-        
-        Method  method = script.getClass().getDeclaredMethod("main");
-        method.invoke(script, null);
-        */
     }
     
 }
