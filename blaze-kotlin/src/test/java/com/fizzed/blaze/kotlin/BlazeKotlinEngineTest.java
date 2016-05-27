@@ -86,7 +86,7 @@ public class BlazeKotlinEngineTest {
     public void nocompile() throws Exception {
         try {
             Blaze blaze
-                = Blaze.builder()
+                = new Blaze.Builder()
                     .dependencyResolver(new NoopDependencyResolver())
                     .file(resourceAsFile("/kotlin/nocompile.kt"))
                     .build();
