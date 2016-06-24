@@ -58,6 +58,7 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
     private StreamableOutput pipeError;
     private boolean pipeErrorToOutput;
     private Map<String,String> environment;
+    private boolean pty;
     private long timeout;
     final private List<Integer> exitValues;
     
@@ -69,6 +70,7 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
         this.pipeErrorToOutput = false;
         this.session = session;
         this.arguments = new ArrayList<>();
+        this.pty = false;
         this.exitValues = new ArrayList<>(Arrays.asList(0));
     }
     
@@ -165,6 +167,11 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
         this.exitValues.addAll(Arrays.asList(exitValues));
         return this;
     }
+    
+    public SshExec pty(boolean value) {
+        this.pty = value;
+        return this;
+    }
 
     @Override
     protected Result doRun() throws BlazeException {
@@ -175,6 +182,10 @@ public class SshExec extends Action<SshExec.Result,Integer> implements ExecMixin
         ChannelExec channel = null;
         try {
             channel = (ChannelExec)jschSession.openChannel("exec");
+            
+            if (pty) {
+                channel.setPty(true);
+            }
             
             // setup environment
             if (this.environment != null) {
