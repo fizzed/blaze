@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 0.11.1 - 2016-06-24
+
+ - Support for enabling a pty on SshExec (which helps run certain commands
+   execute as you'd expect, but not always needed, so its false by default)
+
 #### 0.11.0 - 2016-05-27
 
  - Bump to kotlin 1.0.2 for blaze-kotlin
