@@ -16,6 +16,7 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.core.UnexpectedExitValueException;
+import com.fizzed.blaze.ssh.impl.JschExec;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
@@ -60,7 +61,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .run();
         
@@ -77,7 +78,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         try {
-            new SshExec(context, session)
+            new JschExec(context, session)
                 .command("hello")
                 .run();
             fail();
@@ -104,7 +105,7 @@ public class SshExecTest extends SshBaseTest {
         CaptureOutput capture = Streamables.captureOutput();
         
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .pipeOutput(capture)
                 .run();
@@ -128,7 +129,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         String output
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .runCaptureOutput()
                 .toString();
@@ -151,7 +152,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         String output
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .disablePipeInput()
                 .disablePipeError()
@@ -178,7 +179,7 @@ public class SshExecTest extends SshBaseTest {
         CaptureOutput capture = Streamables.captureOutput();
         
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("error")
                 .pipeOutput(capture)
                 .pipeErrorToOutput()
@@ -207,7 +208,7 @@ public class SshExecTest extends SshBaseTest {
         CaptureOutput capture = Streamables.captureOutput();
         
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("echo")
                 .env("JAVA_HOME", "/usr/java/default")
                 .pipeOutput(capture)
@@ -231,7 +232,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("arg")
                 .arg("a=1")
                 .args("b=2")
@@ -254,7 +255,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("/path/to/exec")
                 .arg("a=1")
                 .args("b=2")
@@ -273,7 +274,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
         
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .exitValue(1)
                 .pipeInput((StreamableInput)null)
@@ -299,7 +300,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
         
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .pipeInput(in)
                 .pipeOutput(out)
@@ -347,7 +348,7 @@ public class SshExecTest extends SshBaseTest {
         SshSession session = startAndConnect();
 
         Integer exitValue
-            = new SshExec(context, session)
+            = new JschExec(context, session)
                 .command("hello")
                 .pipeInput(is)
                 .run();

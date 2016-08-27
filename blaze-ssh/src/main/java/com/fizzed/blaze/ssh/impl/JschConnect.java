@@ -40,13 +40,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.ssh.SshConnect;
+import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.util.ObjectHelper;
+import com.jcraft.jsch.Proxy;
 import java.nio.file.attribute.PosixFileAttributeView;
 
-/**
- *
- * @author joelauer
- */
 public class JschConnect extends SshConnect {
     static private final Logger log = LoggerFactory.getLogger(JschConnect.class);
 
@@ -58,6 +56,7 @@ public class JschConnect extends SshConnect {
     private Path knownHostsFile;
     private List<Path> identityFiles;
     private boolean hostChecking;
+    private Proxy proxy;
     
     public JschConnect(Context context) {
         this(context, new MutableUri("ssh:/"));
@@ -123,6 +122,12 @@ public class JschConnect extends SshConnect {
     public MutableUri getUri() {
         return this.uri;
     }
+
+    @Override
+    public SshConnect proxy(SshSession session, boolean autoclose) {
+        this.proxy = JschProxy.of(session, autoclose);
+        return this;
+    }
     
     @Override
     protected Result doRun() throws BlazeException {
@@ -146,17 +151,20 @@ public class JschConnect extends SshConnect {
             // mimic openssh ~.ssh/config
             //
             try {
-                log.info("Using ssh config {}", configFile);
+                log.debug("Using ssh config {}", configFile);
                 
                 ConfigRepository configRepository =
                     com.jcraft.jsch.OpenSSHConfig.parseFile(configFile.toAbsolutePath().toString());
-
+                
                 jsch.setConfigRepository(configRepository);
             
                 // is there a config for this host?
                 Config config = configRepository.getConfig(uri.getHost());
                 
                 if (config != null) {
+                    String proxyCommand = config.getValue("ProxyCommand");
+                    log.info("proxyCommand! {}", proxyCommand);
+                    
                     // were we provided with an actual forced username?
                     if (uri.getUsername() != null) {
                         // TODO: seems like we are not able to override the username in the config repo
@@ -180,7 +188,6 @@ public class JschConnect extends SshConnect {
             if (uri.getPort() != null) {
                 jschSession.setPort(uri.getPort());
             }
-            
             
             jschSession.setDaemonThread(true);
             jschSession.setUserInfo(new BlazeJschUserInfo(jschSession));
@@ -281,20 +288,29 @@ public class JschConnect extends SshConnect {
             
             //jschSession.setConfig("PreferredAuthentications", "publickey,password");
             
-            log.info("Trying to open ssh session to {}@{}:{}...",
-                    jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
+            String proxyInfo = "";
+            if (this.proxy != null) {
+                jschSession.setProxy(this.proxy);
+                // via hostname
+                proxyInfo = " via " + this.proxy;
+            }
+            
+            log.info("Open ssh://{}@{}:{}{}...",
+                jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo);
+            
+            long start = System.currentTimeMillis();
             
             jschSession.connect((int)this.connectTimeout);
-            
-            HostKey hk = jschSession.getHostKey();
             
             // update uri with the connection info
             uri.username(jschSession.getUserName());
             uri.host(jschSession.getHost());
             uri.port(jschSession.getPort());
             
-            log.info("Connected ssh session to {}@{}:{}!",
-                    jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
+            long stop = System.currentTimeMillis();
+            
+            log.info("Connected ssh://{}@{}:{}{} in {} ms",
+                jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo, (stop-start));
             
             return createResult(new JschSession(this.context, this.uri.toImmutableUri(), jsch, jschSession));
         } catch (JSchException e) {

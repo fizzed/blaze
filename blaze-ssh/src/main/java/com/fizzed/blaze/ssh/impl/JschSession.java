@@ -76,5 +76,5 @@ public class JschSession implements SshSession {
     public Session getJschSession() {
         return jschSession;
     }
-    
+
 }

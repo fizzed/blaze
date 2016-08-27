@@ -36,6 +36,11 @@ abstract public class SshConnect extends Action<SshConnect.Result,SshSession> im
     
     abstract public SshConnect disableHostChecking();
     
+    public SshConnect proxy(SshSession session) {
+        return proxy(session, false);
+    }
+    
+    abstract public SshConnect proxy(SshSession session, boolean autoclose);
     
     protected Result createResult(SshSession value) {
         return new Result(this, value);
