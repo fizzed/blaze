@@ -92,7 +92,12 @@ public class JschConnect extends SshConnect {
 
     @Override
     public SshConnect disableHostChecking() {
-        this.hostChecking = false;
+        return hostChecking(false);
+    }
+    
+    @Override
+    public SshConnect hostChecking(boolean hostChecking) {
+        this.hostChecking = hostChecking;
         return this;
     }
 

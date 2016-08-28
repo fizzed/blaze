@@ -36,7 +36,7 @@ public class SshChainedConnect extends SshConnect {
     
     @Override
     public SshConnect configFile(Path configFile) {
-        this.chain.stream().forEach((connect) -> {
+        this.chain.forEach((connect) -> {
             connect.configFile(configFile);
         });
         return this;
@@ -44,7 +44,7 @@ public class SshChainedConnect extends SshConnect {
 
     @Override
     public SshConnect identityFile(Path identityFile) {
-        this.chain.stream().forEach((connect) -> {
+        this.chain.forEach((connect) -> {
             connect.identityFile(identityFile);
         });
         return this;
@@ -52,7 +52,7 @@ public class SshChainedConnect extends SshConnect {
 
     @Override
     public SshConnect keepAliveInterval(long keepAliveInterval) {
-        this.chain.stream().forEach((connect) -> {
+        this.chain.forEach((connect) -> {
             connect.keepAliveInterval(keepAliveInterval);
         });
         return this;
@@ -60,15 +60,23 @@ public class SshChainedConnect extends SshConnect {
 
     @Override
     public SshConnect knownHostsFile(Path knownHostsFile) {
-        this.chain.stream().forEach((connect) -> {
+        this.chain.forEach((connect) -> {
             connect.knownHostsFile(knownHostsFile);
         });
         return this;
     }
     
     @Override
+    public SshConnect hostChecking(boolean hostChecking) {
+        this.chain.forEach((connect) -> {
+            connect.hostChecking(hostChecking);
+        });
+        return this;
+    }
+    
+    @Override
     public SshConnect disableHostChecking() {
-        this.chain.stream().forEach((connect) -> {
+        this.chain.forEach((connect) -> {
             connect.disableHostChecking();
         });
         return this;
@@ -106,5 +114,4 @@ public class SshChainedConnect extends SshConnect {
         // we return the last session in the list
         return super.createResult(session);
     }
-    
 }
