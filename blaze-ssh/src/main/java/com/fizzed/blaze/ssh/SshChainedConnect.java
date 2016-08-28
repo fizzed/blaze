@@ -75,6 +75,11 @@ public class SshChainedConnect extends SshConnect {
     }
     
     @Override
+    public SshConnect newConnect(MutableUri uri) {
+        throw new UnsupportedOperationException("A chain of ssh connects cannot create new connects!");
+    }
+    
+    @Override
     public SshConnect proxy(SshSession session, boolean autoclose) {
         throw new UnsupportedOperationException("A chain of ssh connects cannot have their proxy set!");
     }

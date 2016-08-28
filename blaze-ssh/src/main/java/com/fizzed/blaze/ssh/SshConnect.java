@@ -19,6 +19,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import java.nio.file.Path;
 import com.fizzed.blaze.core.UriMixin;
+import com.fizzed.blaze.util.MutableUri;
 
 abstract public class SshConnect extends Action<SshConnect.Result,SshSession> implements UriMixin<SshConnect> {
 
@@ -26,6 +27,8 @@ abstract public class SshConnect extends Action<SshConnect.Result,SshSession> im
         super(context);
     }
 
+    abstract public SshConnect newConnect(MutableUri uri);
+    
     abstract public SshConnect configFile(Path configFile);
 
     abstract public SshConnect identityFile(Path identityFile);

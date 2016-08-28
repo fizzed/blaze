@@ -41,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.ssh.SshConnect;
 import com.fizzed.blaze.ssh.SshSession;
+import com.fizzed.blaze.ssh.util.ProxyCommand;
+import com.fizzed.blaze.ssh.util.SshCommand;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.jcraft.jsch.Proxy;
 import java.nio.file.attribute.PosixFileAttributeView;
@@ -73,6 +75,19 @@ public class JschConnect extends SshConnect {
         this.identityFiles.add(context.withUserDir(".ssh/id_rsa"));
         this.identityFiles.add(context.withUserDir(".ssh/id_dsa"));
         this.hostChecking = true;
+    }
+    
+    // for setting up proxies with the exact same settings by default
+    @Override
+    public SshConnect newConnect(MutableUri uri) {
+        JschConnect connect = new JschConnect(this.context, uri);
+        connect.connectTimeout = this.connectTimeout;
+        connect.keepAliveInterval = this.keepAliveInterval;
+        connect.configFile = this.configFile;
+        connect.knownHostsFile = this.knownHostsFile;
+        connect.identityFiles = new ArrayList<>(this.identityFiles);
+        connect.hostChecking = this.hostChecking;
+        return connect;
     }
 
     @Override
@@ -125,7 +140,8 @@ public class JschConnect extends SshConnect {
 
     @Override
     public SshConnect proxy(SshSession session, boolean autoclose) {
-        this.proxy = JschProxy.of(session, autoclose);
+        // NOTE: this defaults to using "nc %h %p"
+        this.proxy = JschExecProxy.of(session, autoclose);
         return this;
     }
     
@@ -136,7 +152,7 @@ public class JschConnect extends SshConnect {
         ObjectHelper.requireNonNull(uri.getHost(), "uri host is required for ssh");
         
         if (!uri.getScheme().equals("ssh")) {
-            throw new IllegalArgumentException("Only a uri with a schem of ssh is support (e.g. ssh://user@host)");
+            throw new IllegalArgumentException("Uri scheme invalid (e.g. ssh://user@host) (actual = " + uri.getScheme() + ")");
         }
         
         Integer port = (uri.getPort() != null ? uri.getPort() : 22);
@@ -155,15 +171,32 @@ public class JschConnect extends SshConnect {
                 
                 ConfigRepository configRepository =
                     com.jcraft.jsch.OpenSSHConfig.parseFile(configFile.toAbsolutePath().toString());
-                
-                jsch.setConfigRepository(configRepository);
             
                 // is there a config for this host?
                 Config config = configRepository.getConfig(uri.getHost());
                 
+                jsch.setConfigRepository(configRepository);
+            
                 if (config != null) {
+                    
+                    // has proxy command?
                     String proxyCommand = config.getValue("ProxyCommand");
-                    log.info("proxyCommand! {}", proxyCommand);
+                    if (proxyCommand != null) {
+                        if (this.proxy != null) {
+                            log.debug("Session proxy set but host has ProxyCommand");
+                        } else {
+                            // "ssh jump.example.com nc %h %p" -> a structured command
+                            SshCommand command = ProxyCommand.parse(proxyCommand).getSshCommand();
+                            SshConnect connect = this.newConnect(command.toUri());
+                            try {
+                                // connect and then use that session as our proxy
+                                this.proxy = JschExecProxy.of(
+                                    connect.run(), true, command.toCommand());
+                            } catch (Exception e) {
+                                throw e;
+                            }
+                        }
+                    }
                     
                     // were we provided with an actual forced username?
                     if (uri.getUsername() != null) {
@@ -191,7 +224,6 @@ public class JschConnect extends SshConnect {
             
             jschSession.setDaemonThread(true);
             jschSession.setUserInfo(new BlazeJschUserInfo(jschSession));
-            
             
             // configure way more ciphers by default????
             //jschSession.setConfig("cipher.s2c", "aes128-cbc,3des-cbc,blowfish-cbc");
@@ -246,7 +278,7 @@ public class JschConnect extends SshConnect {
                 if (hks != null) {
                     log.debug("Host keys in {}", hkr.getKnownHostsRepositoryID());
                     for (HostKey hk : hks) {
-                        log.debug("Loaded host key {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
+                        log.trace("Loaded host key {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
                     }
                 }
             }

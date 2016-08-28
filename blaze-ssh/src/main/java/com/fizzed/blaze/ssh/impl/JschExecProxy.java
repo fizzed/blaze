@@ -16,6 +16,7 @@
 package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.ssh.SshSession;
+import com.jcraft.jsch.ChannelDirectTCPIP;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.Proxy;
 import com.jcraft.jsch.Session;
@@ -29,40 +30,53 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JschProxy implements Proxy {
-    static private final Logger log = LoggerFactory.getLogger(JschProxy.class);
+public class JschExecProxy implements Proxy {
+    static private final Logger log = LoggerFactory.getLogger(JschExecProxy.class);
 
     private final SshSession session;
     private final Session jschSession;
     private final boolean autoclose;
+    private final String command;
     private ChannelExec channel;
     
-
-    static public JschProxy of(SshSession session, boolean autoclose) {
+    static public JschExecProxy of(SshSession session, boolean autoclose) {
+        // default command is netcat
+        return of(session, autoclose, null);
+    }
+    
+    static public JschExecProxy of(SshSession session, boolean autoclose, String command) {
         Objects.requireNonNull(session);
         if (session instanceof JschSession) {
             // unwrap jsch session
-            return new JschProxy(session, ((JschSession)session).getJschSession(), autoclose);
+            return new JschExecProxy(session, ((JschSession)session).getJschSession(), autoclose,
+                (command != null ? command : "nc %h %p"));
         }
         throw new IllegalArgumentException("SshSession was not an instanceof " + JschSession.class.getCanonicalName()
             + " (actual = " + session.getClass().getCanonicalName() + ")");
     }
     
-    private JschProxy(SshSession session, Session jschSession,boolean autoclose) {
+    private JschExecProxy(SshSession session, Session jschSession, boolean autoclose, String command) {
         Objects.requireNonNull(session);
         Objects.requireNonNull(jschSession);
         this.session = session;
         this.jschSession = jschSession;
         this.autoclose = autoclose;
+        this.command = command;
     }
 
     @Override
     public void connect(final SocketFactory socketFactory, final String host, final int port, final int timeout) throws Exception {
         log.debug("ssh proxy connect(host={}, port={}, timeout={})", host, port, timeout);
+        
+        // replace command with values
+        String finalCommand = command
+            .replace("%h", host)
+            .replace("%p", Integer.toString(port));
+        
+        log.debug("ssh proxy will exec({})", finalCommand);
+        
         channel = (ChannelExec)jschSession.openChannel("exec");
-        String command = String.format("nc %s %d", host, port);
-        channel.setCommand(command);
-        //log.info("Executing command on proxy host: {}", command);
+        channel.setCommand(finalCommand);
         channel.connect(timeout);
     }
 
@@ -98,10 +112,12 @@ public class JschProxy implements Proxy {
         if (channel != null) {
             channel.disconnect();
         }
-        try {
-            this.session.close();
-        } catch (IOException e) {
-            log.error("Unable to cleanly close proxy ssh session", e);
+        if (autoclose) {
+            try {
+                this.session.close();
+            } catch (IOException e) {
+                log.error("Unable to cleanly close proxy ssh session", e);
+            }
         }
     }
     
