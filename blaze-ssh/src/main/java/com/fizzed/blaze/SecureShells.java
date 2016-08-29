@@ -17,14 +17,21 @@ package com.fizzed.blaze;
 
 import com.fizzed.blaze.ssh.SshConnect;
 import com.fizzed.blaze.util.MutableUri;
-import com.fizzed.blaze.ssh.impl.JschConnect;
 import com.fizzed.blaze.ssh.SshExec;
 import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.ssh.SshSftp;
+import com.fizzed.blaze.ssh.impl.JschConnect;
+import com.fizzed.blaze.ssh.impl.JschExec;
+import com.fizzed.blaze.ssh.impl.JschSftp;
+import java.net.URI;
 
 public class SecureShells {
     
     static public SshConnect sshConnect(String uri) {
+        return sshConnect(MutableUri.of(uri));
+    }
+    
+    static public SshConnect sshConnect(URI uri) {
         return sshConnect(new MutableUri(uri));
     }
     
@@ -33,17 +40,17 @@ public class SecureShells {
     }
     
     static public SshExec sshExec(SshSession session) {
-        return new SshExec(Contexts.currentContext(), session);
+        return new JschExec(Contexts.currentContext(), session);
     }
     
     static public SshExec sshExec(SshSession session, String command, Object ... arguments) {
-        return new SshExec(Contexts.currentContext(), session)
+        return new JschExec(Contexts.currentContext(), session)
             .command(command)
             .args(arguments);
     }
     
     static public SshSftp sshSftp(SshSession session) {
-        return new SshSftp(Contexts.currentContext(), session);
+        return new JschSftp(Contexts.currentContext(), session);
     }
     
 }

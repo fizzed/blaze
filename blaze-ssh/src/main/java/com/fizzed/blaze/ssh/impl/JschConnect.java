@@ -40,13 +40,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.ssh.SshConnect;
+import com.fizzed.blaze.ssh.SshSession;
+import com.fizzed.blaze.ssh.util.ProxyCommand;
+import com.fizzed.blaze.ssh.util.SshCommand;
 import com.fizzed.blaze.util.ObjectHelper;
+import com.jcraft.jsch.Proxy;
 import java.nio.file.attribute.PosixFileAttributeView;
 
-/**
- *
- * @author joelauer
- */
 public class JschConnect extends SshConnect {
     static private final Logger log = LoggerFactory.getLogger(JschConnect.class);
 
@@ -58,6 +58,7 @@ public class JschConnect extends SshConnect {
     private Path knownHostsFile;
     private List<Path> identityFiles;
     private boolean hostChecking;
+    private Proxy proxy;
     
     public JschConnect(Context context) {
         this(context, new MutableUri("ssh:/"));
@@ -75,10 +76,28 @@ public class JschConnect extends SshConnect {
         this.identityFiles.add(context.withUserDir(".ssh/id_dsa"));
         this.hostChecking = true;
     }
+    
+    // for setting up proxies with the exact same settings by default
+    @Override
+    public SshConnect newConnect(MutableUri uri) {
+        JschConnect connect = new JschConnect(this.context, uri);
+        connect.connectTimeout = this.connectTimeout;
+        connect.keepAliveInterval = this.keepAliveInterval;
+        connect.configFile = this.configFile;
+        connect.knownHostsFile = this.knownHostsFile;
+        connect.identityFiles = new ArrayList<>(this.identityFiles);
+        connect.hostChecking = this.hostChecking;
+        return connect;
+    }
 
     @Override
     public SshConnect disableHostChecking() {
-        this.hostChecking = false;
+        return hostChecking(false);
+    }
+    
+    @Override
+    public SshConnect hostChecking(boolean hostChecking) {
+        this.hostChecking = hostChecking;
         return this;
     }
 
@@ -123,6 +142,13 @@ public class JschConnect extends SshConnect {
     public MutableUri getUri() {
         return this.uri;
     }
+
+    @Override
+    public SshConnect proxy(SshSession session, boolean autoclose) {
+        // NOTE: this defaults to using "nc %h %p"
+        this.proxy = JschExecProxy.of(session, autoclose);
+        return this;
+    }
     
     @Override
     protected Result doRun() throws BlazeException {
@@ -131,7 +157,7 @@ public class JschConnect extends SshConnect {
         ObjectHelper.requireNonNull(uri.getHost(), "uri host is required for ssh");
         
         if (!uri.getScheme().equals("ssh")) {
-            throw new IllegalArgumentException("Only a uri with a schem of ssh is support (e.g. ssh://user@host)");
+            throw new IllegalArgumentException("Uri scheme invalid (e.g. ssh://user@host) (actual = " + uri.getScheme() + ")");
         }
         
         Integer port = (uri.getPort() != null ? uri.getPort() : 22);
@@ -146,17 +172,37 @@ public class JschConnect extends SshConnect {
             // mimic openssh ~.ssh/config
             //
             try {
-                log.info("Using ssh config {}", configFile);
+                log.debug("Using ssh config {}", configFile);
                 
                 ConfigRepository configRepository =
                     com.jcraft.jsch.OpenSSHConfig.parseFile(configFile.toAbsolutePath().toString());
-
-                jsch.setConfigRepository(configRepository);
             
                 // is there a config for this host?
                 Config config = configRepository.getConfig(uri.getHost());
                 
+                jsch.setConfigRepository(configRepository);
+            
                 if (config != null) {
+                    
+                    // has proxy command?
+                    String proxyCommand = config.getValue("ProxyCommand");
+                    if (proxyCommand != null) {
+                        if (this.proxy != null) {
+                            log.debug("Session proxy set but host has ProxyCommand");
+                        } else {
+                            // "ssh jump.example.com nc %h %p" -> a structured command
+                            SshCommand command = ProxyCommand.parse(proxyCommand).getSshCommand();
+                            SshConnect connect = this.newConnect(command.toUri());
+                            try {
+                                // connect and then use that session as our proxy
+                                this.proxy = JschExecProxy.of(
+                                    connect.run(), true, command.toCommand());
+                            } catch (Exception e) {
+                                throw e;
+                            }
+                        }
+                    }
+                    
                     // were we provided with an actual forced username?
                     if (uri.getUsername() != null) {
                         // TODO: seems like we are not able to override the username in the config repo
@@ -181,10 +227,8 @@ public class JschConnect extends SshConnect {
                 jschSession.setPort(uri.getPort());
             }
             
-            
             jschSession.setDaemonThread(true);
             jschSession.setUserInfo(new BlazeJschUserInfo(jschSession));
-            
             
             // configure way more ciphers by default????
             //jschSession.setConfig("cipher.s2c", "aes128-cbc,3des-cbc,blowfish-cbc");
@@ -239,7 +283,7 @@ public class JschConnect extends SshConnect {
                 if (hks != null) {
                     log.debug("Host keys in {}", hkr.getKnownHostsRepositoryID());
                     for (HostKey hk : hks) {
-                        log.debug("Loaded host key {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
+                        log.trace("Loaded host key {} {} {}", hk.getHost(), hk.getType(), hk.getFingerPrint(jsch));
                     }
                 }
             }
@@ -281,20 +325,29 @@ public class JschConnect extends SshConnect {
             
             //jschSession.setConfig("PreferredAuthentications", "publickey,password");
             
-            log.info("Trying to open ssh session to {}@{}:{}...",
-                    jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
+            String proxyInfo = "";
+            if (this.proxy != null) {
+                jschSession.setProxy(this.proxy);
+                // via hostname
+                proxyInfo = " via " + this.proxy;
+            }
+            
+            log.info("Open ssh://{}@{}:{}{}...",
+                jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo);
+            
+            long start = System.currentTimeMillis();
             
             jschSession.connect((int)this.connectTimeout);
-            
-            HostKey hk = jschSession.getHostKey();
             
             // update uri with the connection info
             uri.username(jschSession.getUserName());
             uri.host(jschSession.getHost());
             uri.port(jschSession.getPort());
             
-            log.info("Connected ssh session to {}@{}:{}!",
-                    jschSession.getUserName(), jschSession.getHost(), jschSession.getPort());
+            long stop = System.currentTimeMillis();
+            
+            log.info("Connected ssh://{}@{}:{}{} in {} ms",
+                jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo, (stop-start));
             
             return createResult(new JschSession(this.context, this.uri.toImmutableUri(), jsch, jschSession));
         } catch (JSchException e) {
@@ -382,8 +435,15 @@ public class JschConnect extends SshConnect {
 
         @Override
         public String[] promptKeyboardInteractive(String destination, String name, String instruction, String[] prompt, boolean[] echo) {
-            log.info("promptKeyboardInteractive: {}, {}, {}, {}", destination, name, instruction, prompt);
-            log.error("We do not support this yet in Blaze!");
+            log.debug("promptKeyboardInteractive: {}, {}, {}, {}", destination, name, instruction, prompt);
+            
+            // some systems prompt for password via this method
+            if (prompt != null && prompt.length == 1 && prompt[0].toLowerCase().contains("password for")) {
+                String pw = getPassword();
+                return new String[] { pw };
+            }
+            
+            log.error("We do not support promptKeyboardInteractive in Blaze quite yet!");
             return null;
         }
         
