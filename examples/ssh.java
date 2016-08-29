@@ -40,15 +40,15 @@ public class ssh {
                 .run();
             log.info("Remote working dir is {}", capture.toString().trim());
             
-            // who are we logged in as?
-            capture = Streamables.captureOutput();
+            // who are we logged in as? (optimized capture example since its
+            // a common pattern)
+            String whoami 
+                = sshExec(session)
+                    .command("whoami")
+                    .runCaptureOutput()
+                    .toString();
             
-            sshExec(session)
-                .command("whoami")
-                .pipeOutput(capture)
-                .run();
-            
-            log.info("Logged in as {}", capture.toString().trim());
+            log.info("Logged in as {}", whoami.trim());
             
             log.info("Listing current directory...");
             

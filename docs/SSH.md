@@ -3,16 +3,14 @@ Blaze by Fizzed
 
 ## SSH
 
-Add the following to your `blaze.conf` file to include rich support for SSH
+Add the following to your `blaze.conf` file to include extensive support for SSH
 with Blaze wrappers around the stable pure Java JSch library.
 You do not want to specify a version so Blaze will resolve the identical version
 to whatever `blaze-core` you're running with.
 
-```
-blaze.dependencies = [
-    "com.fizzed:blaze-ssh"
-]
-```
+    blaze.dependencies = [
+        "com.fizzed:blaze-ssh"
+    ]
 
 A session (connection) must be established before you can execute remote commands
 or transfer files.  By default, Blaze will configure the session like OpenSSH --
@@ -29,6 +27,33 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
 }
 ```
 
+As of v0.12.0 support for connecting thru 1 or more bastion/jump/proxy hosts is
+supported.  Proxy support can be enabled using two different methods.  First,
+your ssh config file (e.g. `.ssh/config`) may contain a `ProxyCommand` value
+that Blaze will honor (with Java, btw!).  Using the following `.ssh/config` file:
+
+    Host jump1
+        HostName jump1.example.com
+        Port 2222
+        IdentityFile ~/.ssh/my-jump-identity.pem
+
+    Host internal1
+        IdentityFile ~/.ssh/my-internal-identity.pem
+        ProxyCommand ssh jump1 nc %h %p
+
+In Blaze you will simply connect to host `internal1` and Blaze will detect
+you actually need to get to it via a proxy server and will first connect to
+host `jump1`, then execute the command `nc %h %p`, then connect your SSH session.
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+
+// ... other code
+
+try (SshSession session = sshConnect("ssh://user@internal1").run()) {
+    // ... use session
+}
+```
 Once a session is established you can create channels to execute commands or
 transfer files via sftp.  These channels all tap into the existing session and
 do not require re-establishing a connection.  Much better than using `ssh` from
@@ -44,17 +69,21 @@ import static com.fizzed.blaze.SecureShells.sshExec;
 
 try (SshSession session = sshConnect("ssh://user@host").run()) {
 
-    SshExecResult result
+    String result
         = sshExec(session)
             .command("which")
             .arg("java")
-            .captureOutput()
-            .run();
+            .runCaptureOutput()
+            .toString();
     
-    log.info("java is at {}", result.output());
+    log.info("java is at {}", result);
 
 }
 ```
+
+There are other ways to `run()` the SshExec command. The one above shows capturing
+the `stdout` stream, but you can also use the alternative `run()` method to
+get the exit value or `runResult()` to get an even more detailed result.
 
 Working with the remote filesystem with sftp is also supported.
 
