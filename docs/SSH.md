@@ -12,6 +12,8 @@ to whatever `blaze-core` you're running with.
         "com.fizzed:blaze-ssh"
     ]
 
+### Connect
+
 A session (connection) must be established before you can execute remote commands
 or transfer files.  By default, Blaze will configure the session like OpenSSH --
 it will load defaults from ~/.ssh/config, ~/.ssh/known_hosts, and your ~/.ssh/id_rsa
@@ -26,6 +28,8 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
     // ... use session
 }
 ```
+
+### Connect via proxy (e.g. a bastion or jump host)
 
 As of v0.12.0 support for connecting thru 1 or more bastion/jump/proxy hosts is
 supported.  Proxy support can be enabled using two different methods.  First,
@@ -74,6 +78,8 @@ One advantage to using this approach is your session to the jump/bastion/proxy
 host is established once and can be reused over and over again if you are 
 automating working with many internal hosts.
 
+### Executing commands
+
 Once a session is established you can create channels to execute commands or
 transfer files via sftp.  These channels all tap into the existing session and
 do not require re-establishing a connection.  Much better than using `ssh` from
@@ -105,6 +111,8 @@ There are other ways to `run()` the SshExec command. The one above shows capturi
 the `stdout` stream, but you can also use the alternative `run()` method to
 get the exit value or `runResult()` to get an even more detailed result.
 
+### Secure FTP
+
 Working with the remote filesystem with sftp is also supported.
 
 ```java
@@ -127,10 +135,9 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
         log.info("{} with permissions {}", pwd, PosixFilePermissions.toString(attrs.permissions()));
 
         sftp.ls(pwd)
-            .stream()
-                .forEach((file) -> {
-                    log.info("{} {} at {}", file.attributes().lastModifiedTime(), file.path(), file.attributes().size());
-                });
+            .forEach((file) -> {
+                log.info("{} {} at {}", file.attributes().lastModifiedTime(), file.path(), file.attributes().size());
+            });
 
         sftp.put()
             .source("my/source/file.txt")
@@ -147,7 +154,7 @@ try (SshSession session = sshConnect("ssh://user@host").run()) {
 }
 ```
 
-### Passwordless authentication not working
+### Passwordless authentication not working?
 
 Verify authentication works via openssh without prompting for password
 
@@ -159,5 +166,7 @@ and password authentication.
 
 ### Why doesn't setting environment variables work?
 
-Most likley your SSHD server is filtering them out.  OpenSSH has an `AcceptEnv`
+Most likely your SSHD server is filtering them out.  OpenSSH has an `AcceptEnv`
 configuration file that determines which environment variables are allowed.
+By default, almost every operating systems set this to an extremely strict 
+setting.
