@@ -1,6 +1,22 @@
 Blaze by Fizzed
 ===============
 
+#### 0.12.0 - 2016-08-29
+
+ - Support for SSH proxy/bastion/jump hosts. SSH connects will do a best
+   effort at using the `ProxyCommand` value from your ssh config file.  Or you
+   can set one programmatically with the `SshConnect.proxy()` method.
+ - Support for password auth via keyboard-interface method.
+ - Improved testing w/ real systems for SSH.  Tests are now run against
+   Ubuntu 16.04, Ubuntu 14.04, Debian 8, Centos 6, Centos 7, FreeBSD 10.2,
+   and OpenBSD 5.8.
+ - Moved all remaining `Jsch` specific implementation code from package
+   `com.fizzed.blaze.ssh`.
+ - slf4j from v1.7.20 to v1.7.21
+ - commons-io from v2.4 to v2.5
+ - groovy from v2.4.6 to v2.4.7
+ - kotlin from v1.0.1-2 to v1.0.2
+
 #### 0.11.1 - 2016-06-24
 
  - Support for enabling a pty on SshExec (which helps run certain commands

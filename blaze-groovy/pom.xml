@@ -20,7 +20,6 @@
         <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-core</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         

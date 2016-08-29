@@ -20,7 +20,6 @@
         <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-core</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         
@@ -29,7 +28,7 @@
             <artifactId>fluent-hc</artifactId>
         </dependency>
 
-        <!-- apache uses their stupid commons-logging -->
+        <!-- apache unfortunately uses commons-logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
