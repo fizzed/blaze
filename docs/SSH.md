@@ -54,6 +54,26 @@ try (SshSession session = sshConnect("ssh://user@internal1").run()) {
     // ... use session
 }
 ```
+
+Alternatively, you can programmatically define proxy hosts instead of relying
+on an outside config file.
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+
+// ... other code
+
+try (SshSession proxy = sshConnect("ssh://user@jump1").run()) {
+    try (SshSession session = sshConnect("ssh://user@internal1").proxy(proxy).run()) {
+        // ... use session
+    }
+}
+```
+
+One advantage to using this approach is your session to the jump/bastion/proxy
+host is established once and can be reused over and over again if you are 
+automating working with many internal hosts.
+
 Once a session is established you can create channels to execute commands or
 transfer files via sftp.  These channels all tap into the existing session and
 do not require re-establishing a connection.  Much better than using `ssh` from
