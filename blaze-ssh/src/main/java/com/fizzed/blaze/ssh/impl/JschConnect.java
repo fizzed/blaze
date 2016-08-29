@@ -435,8 +435,15 @@ public class JschConnect extends SshConnect {
 
         @Override
         public String[] promptKeyboardInteractive(String destination, String name, String instruction, String[] prompt, boolean[] echo) {
-            log.info("promptKeyboardInteractive: {}, {}, {}, {}", destination, name, instruction, prompt);
-            log.error("We do not support this yet in Blaze!");
+            log.debug("promptKeyboardInteractive: {}, {}, {}, {}", destination, name, instruction, prompt);
+            
+            // some systems prompt for password via this method
+            if (prompt != null && prompt.length == 1 && prompt[0].toLowerCase().contains("password for")) {
+                String pw = getPassword();
+                return new String[] { pw };
+            }
+            
+            log.error("We do not support promptKeyboardInteractive in Blaze quite yet!");
             return null;
         }
         
