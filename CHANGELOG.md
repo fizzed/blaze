@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ===============
 
+#### 0.13.0 - 2016-09-06
+
+ - New `blaze-vagrant` module
+ - Support for new `vagrant+ssh` scheme to connect via SSH to vagrant
+   instances. Simply add the `blaze-vagrant` module to your config.
+
 #### 0.12.0 - 2016-08-29
 
  - Support for SSH proxy/bastion/jump hosts. SSH connects will do a best
