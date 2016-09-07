@@ -110,7 +110,6 @@
             </dependency>
             
             <!-- blaze-vagrant dependencies -->
-            
             <dependency>
                 <groupId>com.fizzed</groupId>
                 <artifactId>crux-vagrant</artifactId>
@@ -156,42 +155,36 @@
                 <groupId>org.hamcrest</groupId>
                 <artifactId>java-hamcrest</artifactId>
                 <version>2.0.0.0</version>
-                <scope>test</scope>
             </dependency>
             
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.12</version>
-                <scope>test</scope>
             </dependency>
             
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>2.0.101-beta</version>
-                <scope>test</scope>
             </dependency>
             
             <dependency>
                 <groupId>com.github.stefanbirkner</groupId>
                 <artifactId>system-rules</artifactId>
                 <version>1.16.0</version>
-                <scope>test</scope>
             </dependency>
             
             <dependency>
                 <groupId>org.apache.sshd</groupId>
                 <artifactId>sshd-core</artifactId>
                 <version>1.0.0</version>
-                <scope>test</scope>
             </dependency>
             
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>1.1.7</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

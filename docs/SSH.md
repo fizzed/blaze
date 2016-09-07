@@ -78,6 +78,37 @@ One advantage to using this approach is your session to the jump/bastion/proxy
 host is established once and can be reused over and over again if you are 
 automating working with many internal hosts.
 
+### Connect to vagrant
+
+As of v0.13.0 blaze supports connecting to vagrant instances via ssh.  Simply
+enable the `blaze-vagrant` module in your config:
+
+    blaze.dependencies = [
+        "com.fizzed:blaze-ssh",
+        "com.fizzed:blaze-vagrant"
+    ]
+
+This enables support for the new `vagrant+ssh` scheme.  To connect to a default
+vagrant instance via ssh:
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+
+try (SshSession session = sshConnect("vagrant+ssh://default").run()) {
+    // ... use session
+}
+```
+
+To connect to a vagrant instance named `ubuntu16`:
+
+```java
+import static com.fizzed.blaze.SecureShells.sshConnect;
+
+try (SshSession session = sshConnect("vagrant+ssh://ubuntu16").run()) {
+    // ... use session
+}
+```
+
 ### Executing commands
 
 Once a session is established you can create channels to execute commands or
