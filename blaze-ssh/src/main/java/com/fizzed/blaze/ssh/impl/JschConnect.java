@@ -156,9 +156,11 @@ public class JschConnect extends SshConnect {
         ObjectHelper.requireNonNull(uri.getScheme(), "uri scheme is required for ssh (e.g. ssh://user@host)");
         ObjectHelper.requireNonNull(uri.getHost(), "uri host is required for ssh");
         
+        /*
         if (!uri.getScheme().equals("ssh")) {
             throw new IllegalArgumentException("Uri scheme invalid (e.g. ssh://user@host) (actual = " + uri.getScheme() + ")");
         }
+        */
         
         Integer port = (uri.getPort() != null ? uri.getPort() : 22);
         String username = (uri.getUsername() != null ? uri.getUsername() : System.getProperty("user.name"));
