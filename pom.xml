@@ -28,6 +28,7 @@
     
     <modules>
         <module>blaze-core</module>
+        <module>blaze-ivy</module>
         <module>blaze-http</module>
         <module>blaze-ssh</module>
         <module>blaze-vagrant</module>
@@ -41,6 +42,12 @@
             <dependency>
                 <groupId>com.fizzed</groupId>
                 <artifactId>blaze-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.fizzed</groupId>
+                <artifactId>blaze-ivy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             

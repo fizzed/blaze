@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.internal;
+package com.fizzed.blaze.ivy;
 
 import com.fizzed.blaze.core.Dependency;
 import com.fizzed.blaze.core.DependencyResolveException;
 import com.fizzed.blaze.core.DependencyResolver;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.internal.DependencyHelper;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -53,7 +55,6 @@ public class IvyDependencyResolver implements DependencyResolver {
     
     @Override
     public List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException {
-
         log.trace("Already resolved dependencies {}", resolvedDependencies);
         log.trace("Dependencies to resolve {}", dependencies);
         
@@ -140,7 +141,6 @@ public class IvyDependencyResolver implements DependencyResolver {
         String[] confs = new String[] { "default" };
         
         ResolveOptions resolveOptions = new ResolveOptions().setConfs(confs);
-        
         
         //resolveOptions.setCheckIfChanged(true);
         //resolveOptions.setRefresh(true);
