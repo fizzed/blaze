@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -352,8 +353,13 @@ public class Blaze {
         return script;
     }
     
-    public List<String> tasks() throws BlazeException {
-        return this.script.tasks();
+    public List<BlazeTask> tasks() throws BlazeException {
+        List<BlazeTask> tasks = this.script.tasks();
+        
+        // sort strategy (alphabetical by default)
+        Collections.sort(tasks);
+        
+        return tasks;
     }
     
     public void execute() throws Exception {

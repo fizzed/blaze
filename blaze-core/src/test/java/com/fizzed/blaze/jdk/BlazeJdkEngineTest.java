@@ -17,6 +17,7 @@ package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
@@ -82,10 +83,10 @@ public class BlazeJdkEngineTest {
         
         systemOutRule.clearLog();
         
-        List<String> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.tasks();
         
         assertThat(tasks, hasSize(1));
-        assertThat(tasks, contains("main"));
+        assertThat(tasks.get(0).getName(), is("main"));
     }
     
     @Test

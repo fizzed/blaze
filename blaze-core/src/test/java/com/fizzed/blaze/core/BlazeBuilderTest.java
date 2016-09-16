@@ -15,18 +15,20 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.Task;
 import com.fizzed.blaze.internal.NoopDependencyResolver;
 import com.fizzed.blaze.jdk.TargetObjectScript;
 import java.util.Arrays;
+import java.util.List;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -67,7 +69,115 @@ public class BlazeBuilderTest {
         blazeBuilder.resolveDependencies();
         
         assertThat(blazeBuilder, is(not(nullValue())));
-        verify(dr, never()).resolve(anyObject(), anyObject(), anyObject());
+        verify(dr, never()).resolve(any(), any(), any());
+    }
+    
+    @Test
+    public void tasks() throws Exception {
+        TestScriptObject scriptObject = new TestScriptObject();
+        
+        Blaze.Builder blazeBuilder = new Blaze.Builder()
+            .scriptObject(scriptObject);
+        
+        Blaze blaze = blazeBuilder.build();
+        
+        assertThat(blaze, is(not(nullValue())));
+        
+        List<BlazeTask> tasks = blaze.tasks();
+        
+        assertThat(tasks, hasSize(1));
+        assertThat(tasks.get(0).getName(), is("main"));
+    }
+    
+    static public class Script1 {
+        
+        public void a1() { }
+        
+        public void b2() { } 
+        
+        public void c3() { }
+        
+    }
+    
+    @Test
+    public void tasksInAlphabeticalOrder() throws Exception {
+        Script1 script = new Script1();
+        
+        Blaze.Builder blazeBuilder = new Blaze.Builder()
+            .scriptObject(script);
+        
+        Blaze blaze = blazeBuilder.build();
+        
+        // should be in alphabetical order
+        List<BlazeTask> tasks = blaze.tasks();
+        
+        assertThat(tasks, hasSize(3));
+        assertThat(tasks.get(0).getName(), is("a1"));
+        assertThat(tasks.get(1).getName(), is("b2"));
+        assertThat(tasks.get(2).getName(), is("c3"));
+    }
+    
+    static public class Script2 {
+        
+        @Task("this is a1")
+        public void a1() { }
+        
+        @Task("this is b2")
+        public void b2() { } 
+        
+        @Task("this is c3")
+        public void c3() { }
+        
+    }
+    
+    @Test
+    public void tasksWithDescriptions() throws Exception {
+        Script2 script = new Script2();
+        
+        Blaze.Builder blazeBuilder = new Blaze.Builder()
+            .scriptObject(script);
+        
+        Blaze blaze = blazeBuilder.build();
+        
+        // should be in alphabetical order
+        List<BlazeTask> tasks = blaze.tasks();
+        
+        assertThat(tasks, hasSize(3));
+        assertThat(tasks.get(0).getDescription(), is("this is a1"));
+        assertThat(tasks.get(1).getDescription(), is("this is b2"));
+        assertThat(tasks.get(2).getDescription(), is("this is c3"));
+    }
+    
+    static public class Script3 {
+        
+        @Task(order = 3)
+        public void a1() { }
+        
+        @Task(order = 2)
+        public void b2() { } 
+        
+        @Task(order = 1)
+        public void c3() { }
+        
+    }
+    
+    @Test
+    public void tasksWithOrdering() throws Exception {
+        Script3 script = new Script3();
+        
+        Blaze.Builder blazeBuilder = new Blaze.Builder()
+            .scriptObject(script);
+        
+        Blaze blaze = blazeBuilder.build();
+        
+        // should be in alphabetical order
+        List<BlazeTask> tasks = blaze.tasks();
+        
+        assertThat(tasks, hasSize(3));
+        assertThat(tasks.get(0).getName(), is("c3"));
+        assertThat(tasks.get(1).getName(), is("b2"));
+        assertThat(tasks.get(2).getName(), is("a1"));
+        
     }
     
 }

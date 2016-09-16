@@ -16,12 +16,10 @@
 package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.NoSuchTaskException;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.jdk.TargetObjectScript;
 import groovy.lang.Script;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import org.slf4j.Logger;
@@ -44,7 +42,7 @@ public class BlazeGroovyScript extends TargetObjectScript {
     }
     
     @Override
-    public List<String> tasks() throws BlazeException {
+    public List<BlazeTask> tasks() throws BlazeException {
         return findTasks(FILTER_PUBLIC_INSTANCE_METHOD, FILTER_EXCLUDE_RUN_METHOD);
     }
 

@@ -17,6 +17,7 @@ package com.fizzed.blaze.cli;
 
 import com.fizzed.blaze.Version;
 import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.DependencyResolveException;
@@ -249,9 +250,34 @@ public class Bootstrap {
     
     public void logTasks(Logger log, Blaze blaze) {
         System.out.println("tasks =>");
-        List<String> ts = blaze.script().tasks();
-        ts.stream().forEach((t) -> {
-            System.out.println("  " + t);
-        });
+        
+        List<BlazeTask> ts = blaze.tasks();
+        
+        // max width of task name
+        int width = 0;
+        for (BlazeTask t : ts) {
+            width =  Math.max(t.getName().length(), width);
+        }
+        
+        // output task name & description w/ padding
+        for (BlazeTask t : ts) {
+            if (t.getDescription() != null) {
+                System.out.println(" " + padRight(t.getName(), width+10) + t.getDescription());
+            } else {
+                System.out.println(" " + t.getName());
+            }
+        }
+    }
+    
+    private static String padRight(String value, int width) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append(value);
+        
+        for (int i = 0; i < (width - value.length()); i++) {
+            sb.append(' ');
+        }
+        
+        return sb.toString();
     }
 }

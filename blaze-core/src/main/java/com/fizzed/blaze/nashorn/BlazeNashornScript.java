@@ -18,11 +18,13 @@ package com.fizzed.blaze.nashorn;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.Script;
+import com.fizzed.blaze.core.BlazeTask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.script.Bindings;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -30,10 +32,6 @@ import javax.script.ScriptException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
 public class BlazeNashornScript implements Script {
     static private final Logger log = LoggerFactory.getLogger(BlazeNashornScript.class);
     
@@ -50,15 +48,18 @@ public class BlazeNashornScript implements Script {
     }
 
     @Override
-    public List<String> tasks() throws BlazeException {
-        List<String> scriptFunctions = BlazeNashornEngine.queryScriptFunctions(scriptEngine, bindings);
+    public List<BlazeTask> tasks() throws BlazeException {
+        List<String> scriptFunctions = BlazeNashornEngine
+            .queryScriptFunctions(scriptEngine, bindings);
         
         // filter out standard nashorn functions
         Set<String> tasks = new HashSet<>(scriptFunctions);
 
         tasks.removeAll(engine.getDefaultNashornFunctions());
 
-        return new ArrayList<>(tasks);
+        return tasks.stream()
+            .map((t) -> new BlazeTask(t, null))
+            .collect(Collectors.toList());
     }
 
     @Override

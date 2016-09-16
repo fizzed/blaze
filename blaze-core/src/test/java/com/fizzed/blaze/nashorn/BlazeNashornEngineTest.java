@@ -18,6 +18,7 @@ package com.fizzed.blaze.nashorn;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Config;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.core.Dependency;
@@ -172,13 +173,13 @@ public class BlazeNashornEngineTest {
         
         systemOutRule.clearLog();
         
-        List<String> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.tasks();
         
         log.debug("tasks: {}", tasks);
         
         assertThat(tasks, hasSize(2));
-        assertThat(tasks, hasItem("main"));
-        assertThat(tasks, hasItem("blaze"));
+        assertThat(tasks, hasItem(new BlazeTask("main", null)));
+        assertThat(tasks, hasItem(new BlazeTask("blaze", null)));
     }
     
     @Test @Ignore("Moving ivy dependency out requires changes to this...")

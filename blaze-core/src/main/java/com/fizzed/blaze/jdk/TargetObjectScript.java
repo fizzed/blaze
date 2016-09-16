@@ -15,9 +15,11 @@
  */
 package com.fizzed.blaze.jdk;
 
+import com.fizzed.blaze.Task;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import com.fizzed.blaze.core.Script;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.WrappedBlazeException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -44,8 +46,8 @@ public class TargetObjectScript implements Script {
         this.targetObject = targetObject;
     }
 
-    public List<String> findTasks(Predicate<Method>... filters) throws BlazeException {
-        List<String> tasks = new ArrayList<>();
+    public List<BlazeTask> findTasks(Predicate<Method>... filters) throws BlazeException {
+        List<BlazeTask> tasks = new ArrayList<>();
         
         try {
             Method[] methods = targetObject.getClass().getDeclaredMethods();
@@ -58,7 +60,20 @@ public class TargetObjectScript implements Script {
                         continue FIND_METHODS;
                     }
                 }
-                tasks.add(m.getName());
+                
+                // defaults
+                String name = m.getName();
+                String description = null;
+                int order = 0;
+                
+                // task annotation present?
+                Task task = m.getAnnotation(Task.class);
+                if (task != null) {
+                    description = (task.value() != null ? task.value() : null);
+                    order = task.order();
+                }
+                
+                tasks.add(new BlazeTask(name, description, order));
             }
         } catch (SecurityException e) {
             throw new BlazeException("Unable to detect script tasks", e);
@@ -98,7 +113,7 @@ public class TargetObjectScript implements Script {
     }
     
     @Override
-    public List<String> tasks() throws BlazeException {
+    public List<BlazeTask> tasks() throws BlazeException {
         return findTasks(FILTER_PUBLIC_INSTANCE_METHOD);
     }
 

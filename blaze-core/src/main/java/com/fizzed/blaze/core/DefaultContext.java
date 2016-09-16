@@ -18,10 +18,6 @@ package com.fizzed.blaze.core;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 
-/**
- *
- * @author jjlauer
- */
 public class DefaultContext extends ContextImpl {
     
     public DefaultContext() {

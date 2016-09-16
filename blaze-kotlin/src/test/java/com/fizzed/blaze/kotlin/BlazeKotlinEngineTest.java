@@ -17,6 +17,7 @@ package com.fizzed.blaze.kotlin;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.CompilationException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
@@ -28,13 +29,13 @@ import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -105,10 +106,10 @@ public class BlazeKotlinEngineTest {
         
         systemOutRule.clearLog();
         
-        List<String> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.tasks();
         
         assertThat(tasks, hasSize(1));
-        assertThat(tasks, contains("main"));
+        assertThat(tasks.get(0), is(new BlazeTask("main")));
     }
     
 }

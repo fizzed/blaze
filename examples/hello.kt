@@ -1,16 +1,17 @@
+#!/usr/bin/env blaze
 
-import com.fizzed.blaze.Task;
+import com.fizzed.blaze.Task
 
-public class hello {
-    
+class hello {
+
     @Task(order=2, value="Prints hello world")
-    public void main() {
+    fun main() {
         System.out.println("Hello World!");
     }
     
     @Task(order=1, value="Prints java version")
-    public void version() {
+    fun version() {
         System.out.println(System.getProperty("java.version"));
     }
-    
+
 }

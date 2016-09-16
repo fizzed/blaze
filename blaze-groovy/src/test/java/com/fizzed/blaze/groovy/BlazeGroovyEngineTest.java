@@ -16,6 +16,7 @@
 package com.fizzed.blaze.groovy;
 
 import com.fizzed.blaze.core.Blaze;
+import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.NoSuchTaskException;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
@@ -95,13 +96,13 @@ public class BlazeGroovyEngineTest {
         
         systemOutRule.clearLog();
         
-        List<String> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.tasks();
         
         log.debug("tasks: {}", tasks);
         
         assertThat(tasks, hasSize(2));
-        assertThat(tasks, hasItem("main"));
-        assertThat(tasks, hasItem("blaze"));
+        assertThat(tasks.get(0), is(new BlazeTask("blaze")));
+        assertThat(tasks.get(1), is(new BlazeTask("main")));
     }
     
     @Test
