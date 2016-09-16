@@ -38,8 +38,7 @@ public interface DependencyResolvers {
         }
         
         if (resolver == null) {
-            //log.debug("No dependency resolver on classpath");
-            //throw new IllegalStateException("No dependency resolver on classpath!");
+            // fallback to resolver that does nothing
             return new NoopDependencyResolver();
         }
         

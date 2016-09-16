@@ -24,11 +24,15 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.DependencyHelper;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.module.descriptor.Artifact;
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor;
@@ -38,6 +42,7 @@ import org.apache.ivy.core.report.ArtifactDownloadReport;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.settings.IvySettings;
+import org.apache.ivy.plugins.matcher.PatternMatcher;
 import org.apache.ivy.plugins.resolver.ChainResolver;
 import org.apache.ivy.plugins.resolver.FileSystemResolver;
 import org.apache.ivy.plugins.resolver.IBiblioResolver;
@@ -48,14 +53,16 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Dependency resolver implemented with Ivy.
- * 
- * @author joelauer
  */
 public class IvyDependencyResolver implements DependencyResolver {
     static private final Logger log = LoggerFactory.getLogger(IvyDependencyResolver.class);
     
     @Override
     public List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException {
+        Objects.requireNonNull(context, "context may not be null");
+        Objects.requireNonNull(resolvedDependencies, "resolvedDependencies may not be null");
+        Objects.requireNonNull(dependencies, "dependencies may not be null");
+        
         log.trace("Already resolved dependencies {}", resolvedDependencies);
         log.trace("Dependencies to resolve {}", dependencies);
         
@@ -73,6 +80,22 @@ public class IvyDependencyResolver implements DependencyResolver {
             log.info("Cleaning dependency cache...");
             ivy.getResolutionCacheManager().clean();
         }
+        
+        // remove any SNAPSHOT artifacts from cache
+        dependencies.stream().forEach((d) -> {
+            // cache pattern ~/.ivy2/cache/com.fizzed/blaze-ssh/jars/blaze-ssh-0.13.1-SNAPSHOT.jar
+            if (d.getVersion().endsWith("-SNAPSHOT")) {
+                Path cachedFile = context.userDir().resolve(".ivy2/cache/" + d.getGroupId() + "/" + d.getArtifactId() + "/jars/" + d.getArtifactId() + "-" + d.getVersion() + ".jar");
+                if (Files.exists(cachedFile)) {
+                    log.trace("Deleting cached snapshot dependency {}", cachedFile);
+                    try {
+                        Files.delete(cachedFile);
+                    } catch (IOException e) {
+                        log.trace("Unable to delete", e.getMessage());
+                    }
+                }
+            }
+        });
         
         /**
         DefaultRepositoryCacheManager cacheManager = new DefaultRepositoryCacheManager();
@@ -132,8 +155,11 @@ public class IvyDependencyResolver implements DependencyResolver {
 
         // build list of transitive dependencies to resolve
         dependencies.stream()
-            .map((d) -> new DefaultDependencyDescriptor(md,
-                ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), false, true, true))
+            .map((d) -> {
+                boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
+                return new DefaultDependencyDescriptor(md,
+                    ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), false, isChanging, true);
+            })
             .forEach((dd) -> {
                 dd.addDependencyConfiguration("default", "default");
                 md.addDependency(dd);
@@ -143,6 +169,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         
         ResolveOptions resolveOptions = new ResolveOptions().setConfs(confs);
         
+        //resolveOptions.setValidate(true);
         //resolveOptions.setCheckIfChanged(true);
         //resolveOptions.setRefresh(true);
         //resolveOptions.setValidate(true);

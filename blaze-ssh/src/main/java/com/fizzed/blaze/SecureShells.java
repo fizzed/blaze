@@ -21,14 +21,10 @@ import com.fizzed.blaze.ssh.SshExec;
 import com.fizzed.blaze.ssh.SshProvider;
 import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.ssh.SshSftp;
-import com.fizzed.blaze.ssh.impl.JschConnect;
 import com.fizzed.blaze.ssh.impl.JschExec;
 import com.fizzed.blaze.ssh.impl.JschSftp;
 import com.fizzed.blaze.util.SchemeProvider;
 import java.net.URI;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.ServiceLoader;
 
 public class SecureShells {
     
@@ -41,6 +37,7 @@ public class SecureShells {
     }
     
     static public SshConnect sshConnect(MutableUri uri) {
+        System.out.println("THIS IS A SNAPSHOT! DUDE!");
         // load provider
         SshProvider provider = SchemeProvider.load(uri.getScheme(), SshProvider.class);
         return provider.connect(Contexts.currentContext(), uri);

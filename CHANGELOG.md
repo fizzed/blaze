@@ -1,6 +1,14 @@
 Blaze by Fizzed
 ===============
 
+#### 0.14.0 - 2016-09-16
+
+ - Moved ivy dependency resolver from `blaze-core` to `blaze-ivy` module.  Ivy
+   is no longer a dependency of `blaze-core` so other projects using `blaze-core`
+   don't need to specifically exclude it.
+ - `blaze-ivy` now resolves "-SNAPSHOT" dependencies on every run.
+   
+
 #### 0.13.0 - 2016-09-06
 
  - New `blaze-vagrant` module

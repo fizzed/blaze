@@ -28,8 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author joelauer
+ * Default implementation of a <code>Context</code>.
  */
 public class ContextImpl implements Context {
     static private final Logger log = LoggerFactory.getLogger(ContextImpl.class);
