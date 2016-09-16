@@ -130,6 +130,11 @@
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-core</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>blaze-ivy</artifactId>
+        </dependency>
                 
         <!-- logback is suprisingly huge -->
         <dependency>

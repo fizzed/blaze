@@ -47,7 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Dependency resolver implemented with Ivy.
+ * 
  * @author joelauer
  */
 public class IvyDependencyResolver implements DependencyResolver {

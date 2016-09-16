@@ -23,7 +23,6 @@ import com.fizzed.blaze.internal.ClassLoaderHelper;
 import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.DefaultScriptFileLocator;
-import com.fizzed.blaze.internal.IvyDependencyResolver;
 import com.fizzed.blaze.internal.EngineHelper;
 import com.fizzed.blaze.internal.FileHelper;
 import com.fizzed.blaze.jdk.TargetObjectScript;
@@ -36,6 +35,7 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class Blaze {
         
         public Builder() {
             this.scriptFileLocator = new DefaultScriptFileLocator();
-            this.dependencyResolver = new IvyDependencyResolver();
+            this.dependencyResolver = DependencyResolvers.load();
         }
         
         public Builder directory(Path directory) {

@@ -27,15 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author Joe Lauer
+ * Dependency resolver that does nothing.
  */
 public class NoopDependencyResolver implements DependencyResolver {
     private static final Logger log = LoggerFactory.getLogger(NoopDependencyResolver.class);
     
     @Override
     public List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException {
-        log.debug("Noop resolving in effect (doing nothing)");
+        log.trace("Noop resolving in effect (doing nothing)");
         return null;
     }
     
