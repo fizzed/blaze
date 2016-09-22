@@ -21,9 +21,14 @@ import com.fizzed.blaze.core.ConsolePrompter;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.Prompter;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,17 +148,30 @@ public class ContextImpl implements Context {
 
     static Path findUserDir() {
         // environment var is better than java "user.home"
-        String home = System.getenv("HOME");
+        Optional<Path> dir = dirIfExists(System.getenv("HOME"));
         
-        if (home == null) {
-            // try HOMEPATH (windows)
-            home = System.getenv("HOMEPATH");
+        if (!dir.isPresent()) {
+            dir = dirIfExists(System.getenv("HOMEDRIVE") + System.getenv("HOMEPATH"));
             
-            if (home == null) {
-                home = System.getProperty("user.home");
+            if (!dir.isPresent()) {
+                dir = dirIfExists(System.getProperty("user.home"));
             }
         }
         
-        return Paths.get(home);
-    }    
+        try {
+            return dir.orElseThrow(() -> new IOException("Unable to find user home dir!"));
+        } catch (IOException e){
+            throw new UncheckedIOException(e);
+        }
+    }
+    
+    static Optional<Path> dirIfExists(String path) {
+        Path dir = Paths.get(path);
+        
+        if (Files.isDirectory(dir)) {
+            return Optional.of(dir);
+        } else {
+            return Optional.empty();
+        }
+    } 
 }
