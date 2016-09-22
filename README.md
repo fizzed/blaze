@@ -96,7 +96,7 @@ can run it like so
 If no task is supplied on the command line, Blaze will attempt to run the `main`
 task by default.
 
-## Why not just do that in a shell script?
+## Write script that executes a process
 
 Let's do a more useful example of how we use Blaze in many cases.  Let's say
 you had a Maven project and wanted to execute a class with a main method. The
@@ -210,10 +210,6 @@ public class blaze {
     }
 }
 ```
-
-Good luck doing that with a shell script w/o probably really locking yourself
-down to many external dependencies and potentially the versions that are only
-on your system.
 
 ## Optionally install blaze on your PATH
 
