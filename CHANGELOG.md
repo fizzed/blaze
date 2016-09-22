@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+#### 0.14.1 - 2016-09-21
+
+ - Improve user home dir locator for windows
+
 #### 0.14.0 - 2016-09-16
 
  - New `@Task` annotation can be added to blaze methods to declare descriptions
@@ -9,7 +13,8 @@ Blaze by Fizzed
  - Moved ivy dependency resolver from `blaze-core` to `blaze-ivy` module.  Ivy
    is no longer a dependency of `blaze-core` so other projects using `blaze-core`
    don't need to specifically exclude it.
- - `blaze-ivy` now resolves "-SNAPSHOT" dependencies on every run.
+ - `blaze-ivy` no longer uses cache for depdendencies with a version ending
+   with "-SNAPSHOT".
  - Blaze tasks() returns a `ScriptTask` rather than `String`
 
 #### 0.13.0 - 2016-09-06
