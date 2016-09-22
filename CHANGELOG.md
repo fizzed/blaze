@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+#### 0.15.x - xxxx-xx-xx
+
+ - Exec.workingDir no longer tries to resolve against project base dir.
+
 #### 0.14.1 - 2016-09-21
 
  - Improve user home dir locator for windows

@@ -40,6 +40,7 @@ import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
@@ -117,17 +118,20 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
     }
     
     public Exec workingDir(Path path) {
-        this.executor.directory(context.withBaseDir(path).toFile());
+        Objects.requireNonNull(path, "path cannot be null");
+        this.executor.directory(path.toFile());
         return this;
     }
     
     public Exec workingDir(File path) {
-        this.executor.directory(context.withBaseDir(path).toFile());
+        Objects.requireNonNull(path, "path cannot be null");
+        this.executor.directory(path);
         return this;
     }
     
-    public Exec workingDir(String dir) {
-        this.executor.directory(context.withBaseDir(Paths.get(dir)).toFile());
+    public Exec workingDir(String path) {
+        Objects.requireNonNull(path, "path cannot be null");
+        this.executor.directory(Paths.get(path).toFile());
         return this;
     }
     
