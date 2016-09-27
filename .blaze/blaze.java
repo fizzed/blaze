@@ -18,6 +18,7 @@ import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.withBaseDir;
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
+import com.fizzed.blaze.Task;
 import com.fizzed.blaze.core.Actions;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.util.Streamables;
@@ -35,14 +36,16 @@ import org.slf4j.Logger;
 public class blaze {
     static private final Logger log = Contexts.logger();
     
+    @Task(order=1, value="Try all scripts in examples/ dir")
     public void try_all() throws Exception {
-        // boom -- execute another blaze script in this jvm
+        // execute another blaze script in this jvm
         new Blaze.Builder()
             .file(withBaseDir("../examples/try_all.java"))
             .build()
             .execute();
     }
     
+    @Task(order=2, value="For maintainers only. Update project version.")
     public void update_version() {
         String newVersion = Contexts.prompt("New version? ");
         exec("mvn", "versions:set", "-DnewVersion=" + newVersion).run();
@@ -57,6 +60,7 @@ public class blaze {
             .trim();
     }
     
+    @Task(order=3, value="For maintainers only. Update readme files with latest git version tag.")
     public void after_release() throws IOException {
         Integer exitValue
             = exec("git", "diff-files", "--quiet")
