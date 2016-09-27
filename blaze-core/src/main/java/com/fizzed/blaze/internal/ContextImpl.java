@@ -146,12 +146,14 @@ public class ContextImpl implements Context {
         return this.prompter.passwordPrompt(prompt, args);
     }
 
-    static Path findUserDir() {
+    static public Path findUserDir() {
         // environment var is better than java "user.home"
         Optional<Path> dir = dirIfExists(System.getenv("HOME"));
         
         if (!dir.isPresent()) {
-            dir = dirIfExists(System.getenv("HOMEDRIVE") + System.getenv("HOMEPATH"));
+            String homeDrive = System.getenv("HOMEDRIVE");
+            String homePath = System.getenv("HOMEPATH");
+            dir = dirIfExists((homeDrive != null ? homeDrive : "") + (homePath != null ? homePath : ""));
             
             if (!dir.isPresent()) {
                 dir = dirIfExists(System.getProperty("user.home"));
@@ -165,12 +167,20 @@ public class ContextImpl implements Context {
         }
     }
     
-    static Optional<Path> dirIfExists(String path) {
-        Path dir = Paths.get(path);
-        
-        if (Files.isDirectory(dir)) {
-            return Optional.of(dir);
-        } else {
+    static public Optional<Path> dirIfExists(String path) {
+        try {
+            if (path == null || path.length() == 0) {
+                return Optional.empty();
+            }
+            
+            Path dir = Paths.get(path);
+
+            if (Files.isDirectory(dir)) {
+                return Optional.of(dir);
+            } else {
+                return Optional.empty();
+            }
+        } catch (Throwable t) {
             return Optional.empty();
         }
     } 
