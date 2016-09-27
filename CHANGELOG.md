@@ -1,9 +1,10 @@
 Blaze by Fizzed
 ===============
 
-#### 0.15.x - xxxx-xx-xx
+#### 0.15.0 - 2016-09-27
 
  - Exec.workingDir no longer tries to resolve against project base dir.
+ - More defensive code while searching for homedrive on windows
 
 #### 0.14.1 - 2016-09-21
 
