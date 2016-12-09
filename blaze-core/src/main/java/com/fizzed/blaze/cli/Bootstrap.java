@@ -68,12 +68,13 @@ public class Bootstrap {
             }
             
             if (arg.startsWith("-D")) {
-                // strip -D then split on =
-                String[] tokens = arg.substring(2).split("=");
-                if (tokens.length == 1) {
-                    systemProperty(tokens[0], "");
+                // strip -D then split on first equals char
+                String nv = arg.substring(2);
+                int equalsPos = nv.indexOf('=');
+                if (equalsPos < 0) {
+                    systemProperty(nv, "");
                 } else {
-                    systemProperty(tokens[0], tokens[1]);
+                    systemProperty(nv.substring(0, equalsPos), nv.substring(equalsPos+1));
                 }
             } else if (arg.equals("-v") || arg.equals("--version")) {
                 printVersion();
