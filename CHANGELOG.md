@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+#### 0.15.1 - 2016-12-09
+
+ - Fix issue parsing system properties w/ an equals char
+
 #### 0.15.0 - 2016-09-27
 
  - Exec.workingDir no longer tries to resolve against project base dir.
