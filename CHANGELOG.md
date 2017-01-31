@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ===============
 
+#### 0.16.0 - 2017-01-30
+
+ - Bump jsch from v0.1.53 to v0.1.54
+ - blaze-ssh: Remove debug output indicating jar was a snapshot
+ - blaze-ssh: Fix random connect timeouts when via bastion/jump host
+
 #### 0.15.1 - 2016-12-09
 
  - Fix issue parsing system properties w/ an equals char
