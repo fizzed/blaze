@@ -37,7 +37,6 @@ public class SecureShells {
     }
     
     static public SshConnect sshConnect(MutableUri uri) {
-        System.out.println("THIS IS A SNAPSHOT! DUDE!");
         // load provider
         SshProvider provider = SchemeProvider.load(uri.getScheme(), SshProvider.class);
         return provider.connect(Contexts.currentContext(), uri);

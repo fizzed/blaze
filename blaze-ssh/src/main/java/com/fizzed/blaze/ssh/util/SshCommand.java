@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.ssh.util;
 
-import com.fizzed.blaze.Context;
 import com.fizzed.blaze.ssh.SshConnect;
 import com.fizzed.blaze.util.MutableUri;
 import java.util.Deque;

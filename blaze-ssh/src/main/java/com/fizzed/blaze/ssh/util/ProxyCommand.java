@@ -15,8 +15,6 @@
  */
 package com.fizzed.blaze.ssh.util;
 
-import com.fizzed.blaze.ssh.SshConnect;
-
 /**
  * Helps working with an OpenSSH ProxyCommand.  Examples:
  * 

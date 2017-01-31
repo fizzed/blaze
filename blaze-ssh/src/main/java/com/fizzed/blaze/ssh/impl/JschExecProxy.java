@@ -16,8 +16,8 @@
 package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.ssh.SshSession;
-import com.jcraft.jsch.ChannelDirectTCPIP;
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Proxy;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SocketFactory;
@@ -66,18 +66,21 @@ public class JschExecProxy implements Proxy {
 
     @Override
     public void connect(final SocketFactory socketFactory, final String host, final int port, final int timeout) throws Exception {
-        log.debug("ssh proxy connect(host={}, port={}, timeout={})", host, port, timeout);
+        log.debug("ssh proxy connect (host={}, port={}, timeout={})", host, port, timeout);
         
         // replace command with values
         String finalCommand = command
             .replace("%h", host)
             .replace("%p", Integer.toString(port));
         
-        log.debug("ssh proxy will exec({})", finalCommand);
+        log.debug("ssh proxy will exec ({})", finalCommand);
         
         channel = (ChannelExec)jschSession.openChannel("exec");
         channel.setCommand(finalCommand);
-        channel.connect(timeout);
+        
+        // channel.connect(timeout) actually causes connections to hang MANY times in a row
+        // by not using a timeout the connections reliably connect
+        channel.connect();
     }
 
     @Override
