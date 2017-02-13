@@ -6,6 +6,13 @@ Blaze by Fizzed
 
 [Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
 
+## Sponsored by
+
+Blaze is proudly sponsored by <a href="https://www.greenback.com">Greenback</a>.  We love the service and think you would too.
+
+<a href="https://www.greenback.com" title="Greenback - Expenses made simple"><img src="https://www.greenback.com/assets/images/logo-greenback.png" height="48" width="166" alt="Greenback"></a>
+
+<a href="https://www.greenback.com" title="Greenback - Expenses made simple">More engineering. Less paperwork. Expenses made simple.</a>
 
 ## Overview
 
