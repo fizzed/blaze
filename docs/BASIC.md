@@ -17,6 +17,27 @@ blaze: [options] <task> [<task> ...]
 -Dname=value      Sets a System property as name=value
 ```
 
+## Running on a JRE
+
+If you are using `.java` scripts then those will need to be compiled.  As long
+as you're running a JDK or a Server JRE then you'll be okay.  However, if you 
+do need to run on a JRE or ensure you're script always runs regardless then
+simply adding the Eclipse compiler as a runtime dependency will work.  There
+are two ways.  First, you can create a `blaze.conf` file in the same directory
+as your `blaze.java` file and add it:
+
+```
+blaze.dependencies = [
+  "org.eclipse.jdt.core.compiler:ecj:4.6.1"
+]
+```
+
+Alternatively, you could supply it from the command-line:
+
+```
+java -jar blaze.jar -Dblaze.dependencies.0=org.eclipse.jdt.core.compiler:ecj:4.6.1
+```
+
 ## Globbing
 
 Finding and working with files and directories is one of the most common scripting
