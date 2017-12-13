@@ -136,6 +136,7 @@ public class ExecTest {
         
         new Exec(context)
             .command("tee")
+            .path(getBinDirAsResource())
             .pipeInput(Streamables.input("hello dude"))
             .pipeOutput(capture)
             .run();
