@@ -21,6 +21,7 @@ import com.fizzed.blaze.util.Streamables;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 /**
@@ -45,6 +46,14 @@ public interface PipeMixin<T> {
     
     default public T pipeInput(File file) {
         return pipeInput(Streamables.input(file));
+    }
+    
+    default public T pipeInput(String text) {
+        return pipeInput(Streamables.input(text));
+    }
+    
+    default public T pipeInput(String text, Charset charset) {
+        return pipeInput(Streamables.input(text, charset));
     }
     
     default public T disablePipeInput() {

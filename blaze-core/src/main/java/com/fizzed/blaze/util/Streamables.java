@@ -18,9 +18,8 @@ package com.fizzed.blaze.util;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.core.WrappedBlazeException;
-import static com.fizzed.blaze.internal.ConfigHelper.path;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -29,9 +28,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -47,8 +46,32 @@ public class Streamables {
     }
     
     static public StreamableInput standardInput() {
-        InputStream is = new CloseGuardedInputStream(System.in);
-        return new StreamableInput(is, "<stdin>", null, null);
+        // zt-exec will hang forever if you don't explicitly use System.in :-(
+        //InputStream is = new CloseGuardedInputStream(System.in);
+        return new StreamableInput(System.in, "<stdin>", null, null);
+    }
+    
+    /**
+     * Creates an input stream of text as UTF-8 bytes.
+     * @param text The text which will be treated as UTF-8 bytes
+     * @return The new input
+     */
+    static public StreamableInput input(String text) {
+        return input(text, StandardCharsets.UTF_8);
+    }
+    
+    /**
+     * Creates an input stream of text as specified bytes.
+     * @param text The text which will be treated as specified bytes
+     * @param charset The charset to use when creating the input stream bytes
+     * @return The new input
+     */
+    static public StreamableInput input(String text, Charset charset) {
+        Objects.requireNonNull(text, "text cannot be null");
+        Objects.requireNonNull(charset, "charset cannot be null");
+        byte[] bytes = text.getBytes(charset);
+        InputStream stream = new ByteArrayInputStream(bytes);
+        return new StreamableInput(stream, "<text(" + bytes.length + " bytes>", null, (long)bytes.length);
     }
     
     static public StreamableInput input(InputStream stream) {
@@ -57,7 +80,7 @@ public class Streamables {
     
     static public StreamableInput input(InputStream stream, String name) {
         Objects.requireNonNull(stream, "stream cannot be null");
-        return new StreamableInput(stream, (name != null ? name : "<stream"), null, null);
+        return new StreamableInput(stream, (name != null ? name : "<stream>"), null, null);
     }
     
     static public StreamableInput input(File file) {

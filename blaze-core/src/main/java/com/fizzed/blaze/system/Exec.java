@@ -204,11 +204,12 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
         command.addAll(arguments);
         
         // use a custom streampumper so we can more accuratly handle inputstream
-        final InputStream is = (pipeInput != null ? new InterruptibleInputStream(pipeInput.stream()) : null);
+        final InputStream is = (pipeInput != null ? pipeInput.stream() : null);
         final OutputStream os = (pipeOutput != null ? pipeOutput.stream() : null);
         final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : null));
         
         PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
+            
             @Override
             public void stop() {
                 // NOTE: travis ci deadlocks unless we add this -- never happens

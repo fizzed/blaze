@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 0.17.0 - 2017-12-13
+
+ - Fix issue with Streamables.input not passing EOF thru in some cases.
+ - Added Streamables.input for text
+
 #### 0.16.0 - 2017-01-30
 
  - Bump jsch from v0.1.53 to v0.1.54

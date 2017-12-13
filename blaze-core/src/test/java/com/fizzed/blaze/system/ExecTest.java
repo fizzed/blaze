@@ -130,4 +130,19 @@ public class ExecTest {
         assertThat(output.trim(), is("Hello World 7586930100"));
     }
     
+    @Test
+    public void customInput() throws Exception {
+        CaptureOutput capture = Streamables.captureOutput();
+        
+        new Exec(context)
+            .command("tee")
+            .pipeInput(Streamables.input("hello dude"))
+            .pipeOutput(capture)
+            .run();
+            
+        String output = capture.asString();
+        
+        assertThat(output.trim(), is("hello dude"));
+    }
+    
 }
