@@ -1,7 +1,14 @@
 Blaze by Fizzed
 ===============
 
-#### 0.17.0 - 2017-12-13
+#### 0.18.0 - 2017-12-13
+
+ - Blaze .java engine automatically adds Eclipse compiler to dependency resolution
+   if running on JRE
+ - Custom zt-exec InputStreamPumper fixes unnecessary aggressive error logging
+ - Eclipse compiler now omits compile warnings from stdout (matches JDK compiler)
+
+#### 0.17.0 - 2017-12-12
 
  - Fix issue with Streamables.input not passing EOF thru in some cases.
  - Added Streamables.input for text
