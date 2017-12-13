@@ -33,8 +33,7 @@ import java.util.concurrent.TimeoutException;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
-import com.fizzed.blaze.util.CaptureOutput;
-import com.fizzed.blaze.util.InterruptibleInputStream;
+import com.fizzed.blaze.util.InputStreamPumper;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
@@ -209,6 +208,13 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
         final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : null));
         
         PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
+            @Override
+            protected Thread createSystemInPump(InputStream is, OutputStream os) {
+                InputStreamPumper pumper = new InputStreamPumper(is, os);
+                final Thread result = new Thread(pumper);
+                result.setDaemon(true);
+                return result;
+            }
             
             @Override
             public void stop() {

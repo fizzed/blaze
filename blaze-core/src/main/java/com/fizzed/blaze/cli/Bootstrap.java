@@ -59,6 +59,7 @@ public class Bootstrap {
         Thread.currentThread().setName(getName());
 
         boolean listTasks = false;
+        boolean loggingConfigured = false;
 
         while (!args.isEmpty()) {
             String arg = args.remove();
@@ -81,6 +82,7 @@ public class Bootstrap {
                 System.exit(0);
             } else if (arg.equals("-q") || arg.equals("-qq") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
                 configureLogging(arg);
+                loggingConfigured = true;
             } else if (arg.equals("-h") || arg.equals("--help")) {
                 printHelp();
                 System.exit(0);
@@ -122,6 +124,11 @@ public class Bootstrap {
                 // otherwise this is a task to run
                 tasks.add(arg);
             }
+        }
+        
+        // configure logging if not yet configured
+        if (!loggingConfigured) {
+            this.configureLogging("");
         }
         
         // trigger logger to be bound!
