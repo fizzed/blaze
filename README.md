@@ -1,7 +1,6 @@
 Blaze by Fizzed
 =======================================
 
-[![Build Status](https://travis-ci.org/fizzed/blaze.svg?branch=master)](https://travis-ci.org/fizzed/blaze)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fizzed/blaze/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fizzed/blaze)
 
 [Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
