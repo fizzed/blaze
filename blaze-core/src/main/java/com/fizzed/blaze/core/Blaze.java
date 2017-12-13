@@ -25,6 +25,7 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.DefaultScriptFileLocator;
 import com.fizzed.blaze.internal.EngineHelper;
 import com.fizzed.blaze.internal.FileHelper;
+import com.fizzed.blaze.jdk.BlazeJdkEngine;
 import com.fizzed.blaze.jdk.TargetObjectScript;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
@@ -238,6 +239,9 @@ public class Blaze {
             // any well known engines to include?
             List<Dependency> wellKnownEngineDependencies = DependencyHelper.wellKnownEngineDependencies(scriptExtension);
             
+            // do we need the ecj compiler?
+            List<Dependency> javaCompilerDependencies = BlazeJdkEngine.compilerDependencies(scriptExtension);
+            
             // did script declare any dependencies we need to include?
             List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(config);
             
@@ -246,6 +250,7 @@ public class Blaze {
             
             DependencyHelper.collect(dependencies, resolvedDependencies);
             DependencyHelper.collect(dependencies, wellKnownEngineDependencies);
+            DependencyHelper.collect(dependencies, javaCompilerDependencies);
             DependencyHelper.collect(dependencies, applicationDependencies);
             
             // smart resolving...

@@ -19,6 +19,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.MessageOnlyException;
 import com.fizzed.blaze.core.AbstractEngine;
+import com.fizzed.blaze.core.Dependency;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
 import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
 import com.fizzed.blaze.internal.ConfigHelper;
@@ -124,27 +125,27 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         // runtime classpath (not what we started with, but current one)
         String classpath = ClassLoaderHelper.buildClassPathAsString(classLoader);
 
-        List<String> javacOptions = new ArrayList<>();
+        List<String> options = new ArrayList<>();
 
-        javacOptions.add("-source");
-        javacOptions.add("1.8");
-        javacOptions.add("-target");
-        javacOptions.add("1.8");
+        options.add("-source");
+        options.add("1.8");
+        options.add("-target");
+        options.add("1.8");
         
         // classpath to compile java file with
-        javacOptions.add("-cp");
-        javacOptions.add(classpath);
+        options.add("-cp");
+        options.add(classpath);
 
         // directory to output compiles classes
-        javacOptions.add("-d");
-        javacOptions.add(classesDir.toString());
+        options.add("-d");
+        options.add(classesDir.toString());
 
-        javacOptions.add("-Xlint:unchecked");
+        options.add("-Xlint:unchecked");
         
         //
         // java -> class
         //
-        JavaCompiler compiler = loadJavaCompiler(classLoader, context);
+        JavaCompiler compiler = loadJavaCompiler(classLoader, context, options);
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
@@ -154,7 +155,7 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
                 fileManager.getJavaFileObjectsFromFiles(Arrays.asList(context.scriptFile().toFile()));
 
         JavaCompiler.CompilationTask task
-                = compiler.getTask(null, null, diagnostics, javacOptions, null, compilationUnits);
+                = compiler.getTask(null, null, diagnostics, options, null, compilationUnits);
 
         boolean success = task.call();
         
@@ -185,7 +186,8 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
                     break;
                 case MANDATORY_WARNING:
                 case WARNING:
-                    log.warn(diagnosticMessage);
+                    // warnings really aren't meaninful for blaze scripts
+                    log.trace(diagnosticMessage);
                     break;
                 case OTHER:
                 case NOTE:
@@ -199,7 +201,25 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         }
     }
     
-    static public JavaCompiler loadJavaCompiler(ClassLoader classLoader, Context context) {
+    static public boolean isSystemCompilerAvailable() {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        return compiler != null;
+    }
+    
+    static public List<Dependency> compilerDependencies(String fileExtension) {
+        // will we be used?
+        if (EXTS.contains(fileExtension)) {
+            // is there a system compiler?
+            if (!isSystemCompilerAvailable()) {
+                // we need the eclipse compiler
+                log.debug("System compiler missing (running on JRE?). Adding eclipse compiler");
+                return Arrays.asList(new Dependency("org.eclipse.jdt.core.compiler", "ecj", "4.6.1"));
+            }
+        }
+        return null;
+    }
+    
+    static public JavaCompiler loadJavaCompiler(ClassLoader classLoader, Context context,List<String> options) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         
         if (compiler == null) {
@@ -209,9 +229,15 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
                 eclipseJavaCompilerClass = classLoader.loadClass("org.eclipse.jdt.internal.compiler.tool.EclipseCompiler");
 
                 compiler = (JavaCompiler)eclipseJavaCompilerClass.newInstance();
+                
+                // add on special options just for ecj
+                options.add("-warn:none");
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 // do nothing
             }
+        } else {
+            // java compiler
+            options.add("-Xlint:none");
         }
         
         if (compiler == null) {
