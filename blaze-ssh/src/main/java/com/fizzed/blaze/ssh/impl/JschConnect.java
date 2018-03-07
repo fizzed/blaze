@@ -34,6 +34,7 @@ import com.jcraft.jsch.UserInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
@@ -180,12 +181,13 @@ public class JschConnect extends SshConnect {
                     com.jcraft.jsch.OpenSSHConfig.parseFile(configFile.toAbsolutePath().toString());
             
                 // is there a config for this host?
+                log.debug("Checking for config for given host "+uri.getHost());
                 Config config = configRepository.getConfig(uri.getHost());
                 
                 jsch.setConfigRepository(configRepository);
             
                 if (config != null) {
-                    
+                    log.debug("Config exists");
                     // has proxy command?
                     String proxyCommand = config.getValue("ProxyCommand");
                     if (proxyCommand != null) {
@@ -214,6 +216,12 @@ public class JschConnect extends SshConnect {
                     } else {
                         jschSession = jsch.getSession(uri.getHost());
                     }
+
+                    if(config.getValue("IdentityFile") != null) {
+                        log.debug("IdentityFile found "+config.getValue("IdentityFile"));
+                        identityFiles.add(Paths.get(config.getValue("IdentityFile")));
+                    }
+
                 }
             } catch (java.io.FileNotFoundException e) {
                 // OpenSSH would fallback if it didn't exist so we will too
