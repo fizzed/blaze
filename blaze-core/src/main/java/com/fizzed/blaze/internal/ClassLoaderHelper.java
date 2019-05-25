@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.internal;
 
+import com.fizzed.blaze.core.BlazeClassLoader;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,9 +25,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +42,15 @@ public class ClassLoaderHelper {
         return Thread.currentThread().getContextClassLoader();
     }
     
-    static public URLClassLoader requireURLClassLoader(ClassLoader classLoader) {
-        if (!(classLoader instanceof URLClassLoader)) {
-            throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
+    static public BlazeClassLoader requireURLClassLoader(ClassLoader classLoader) {
+//        if (!(classLoader instanceof URLClassLoader)) {
+//            throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
+//        }
+        if (!(classLoader instanceof BlazeClassLoader)) {
+            throw new IllegalArgumentException("Only classloaders of type BlazeClassLoader supported");
         }
         
-        return (URLClassLoader)classLoader;
+        return (BlazeClassLoader)classLoader;
     }
     
     static public boolean addClassPath(ClassLoader classLoader, File file) {
@@ -58,7 +62,8 @@ public class ClassLoaderHelper {
     }
 
     static public boolean addClassPath(ClassLoader classLoader, URI uri) {
-        URLClassLoader urlClassLoader = requireURLClassLoader(classLoader);
+//        URLClassLoader urlClassLoader = requireURLClassLoader(classLoader);
+        BlazeClassLoader urlClassLoader = requireURLClassLoader(classLoader);
         boolean isJar = uri.getScheme().startsWith("jar:");
         File file = new File(uri);
         
@@ -83,10 +88,12 @@ public class ClassLoaderHelper {
             }
             
             // add url via reflection (to workaround private access)
-            invokeDeclared(URLClassLoader.class, classLoader, "addURL", new Class[] { URL.class }, new Object[] { uri.toURL() });
+//            invokeDeclared(URLClassLoader.class, classLoader, "addURL", new Class[] { URL.class }, new Object[] { uri.toURL() });
+            
+            urlClassLoader.addURL(uri.toURL());
             
             return true;
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | URISyntaxException | MalformedURLException e) {
+        } catch (Exception e) {
             throw new IllegalArgumentException("Unable to add " + uri + " to classpath", e);
         }
     }
@@ -139,6 +146,37 @@ public class ClassLoaderHelper {
         return java.util.Arrays.asList(urlClassLoader.getURLs());
     }
     
+    static public List<File> buildJvmClassPath() {
+        final String javaClassPath = System.getProperty("java.class.path");
+        
+        final List<File> jars = new ArrayList<>();
+        
+        if (javaClassPath != null) {
+            String[] files = javaClassPath.split(File.pathSeparator);
+            for (String f : files) {
+                f = f.trim();
+                jars.add(new File(f));
+            }
+        }
+        
+        return jars;
+    }
+    
+    static public List<File> buildClassPathAsFiles(ClassLoader classLoader) {
+        List<URL> classloaderUrls = buildClassPath(classLoader);
+        List<File> jvmFiles = buildJvmClassPath();
+
+        for (URL u : classloaderUrls) {
+            try {
+                jvmFiles.add(new File(u.toURI()));
+            } catch (Exception e) {
+                // do nothing...
+            }
+        }
+        
+        return jvmFiles;
+    }
+    
     static public String buildClassPathAsString(ClassLoader classLoader) {
         List<File> files = buildClassPathAsFiles(classLoader);
         
@@ -153,21 +191,5 @@ public class ClassLoaderHelper {
         }
         
         return cp.toString();
-    }
-    
-    static public List<File> buildClassPathAsFiles(ClassLoader classLoader) {
-        List<URL> urls = buildClassPath(classLoader);
-        
-        List<File> files = new ArrayList<>();
-        
-        for (URL u : urls) {
-            try {
-                files.add(new File(u.toURI()));
-            } catch (Exception e) {
-                // do nothing...
-            }
-        }
-        
-        return files;
     }
 }

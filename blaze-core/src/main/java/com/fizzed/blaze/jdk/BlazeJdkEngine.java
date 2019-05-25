@@ -157,6 +157,8 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         JavaCompiler.CompilationTask task
                 = compiler.getTask(null, null, diagnostics, options, null, compilationUnits);
 
+        log.trace("javac options: {}", options);
+        
         boolean success = task.call();
         
         if (!success) {
