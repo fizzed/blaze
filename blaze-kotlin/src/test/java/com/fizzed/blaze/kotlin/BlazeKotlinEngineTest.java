@@ -54,7 +54,7 @@ public class BlazeKotlinEngineTest {
     @Rule
     public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
     
-    @Test
+    @Test @Ignore
     public void hello() throws Exception {
         Blaze blaze = new Blaze.Builder()
             // to prevent tests failing on new version not being installed locally yet
@@ -83,7 +83,7 @@ public class BlazeKotlinEngineTest {
         assertThat(systemOutRule.getLog(), containsString("Hello World!"));
     }
     
-    @Test
+    @Test @Ignore
     public void nocompile() throws Exception {
         try {
             Blaze blaze
@@ -97,7 +97,7 @@ public class BlazeKotlinEngineTest {
         }
     }
     
-    @Test
+    @Test @Ignore
     public void tasks() throws Exception {
         Blaze blaze = new Blaze.Builder()
             .dependencyResolver(new NoopDependencyResolver())

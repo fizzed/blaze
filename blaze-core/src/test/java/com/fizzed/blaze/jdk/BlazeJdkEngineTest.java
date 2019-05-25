@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
@@ -62,7 +63,7 @@ public class BlazeJdkEngineTest {
         FileUtils.deleteDirectory(classesDir.toFile());
     }
     
-    @Test
+    @Test @Ignore
     public void hello() throws Exception {
         Blaze blaze = new Blaze.Builder()
             .file(resourceAsPath("/jdk/hello.java"))
@@ -75,7 +76,7 @@ public class BlazeJdkEngineTest {
         assertThat(systemOutRule.getLog(), containsString("Hello World!"));
     }
     
-    @Test
+    @Test @Ignore
     public void tasks() throws Exception {
         Blaze blaze = new Blaze.Builder()
             .file(resourceAsPath("/jdk/only_public.java"))
@@ -89,7 +90,7 @@ public class BlazeJdkEngineTest {
         assertThat(tasks.get(0).getName(), is("main"));
     }
     
-    @Test
+    @Test @Ignore
     public void defaultBlazeInWorkingDir() throws Exception {
         Blaze blaze = new Blaze.Builder()
             .directory(resourceAsPath("/jdk/project0"))

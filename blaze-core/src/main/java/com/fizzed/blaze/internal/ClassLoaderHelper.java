@@ -138,7 +138,8 @@ public class ClassLoaderHelper {
     
     static public List<URL> buildClassPath(ClassLoader classLoader) {
         if (!(classLoader instanceof URLClassLoader)) {
-            throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
+            //throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
+            return null;
         }
         
         URLClassLoader urlClassLoader = (URLClassLoader)classLoader;
@@ -166,11 +167,13 @@ public class ClassLoaderHelper {
         List<URL> classloaderUrls = buildClassPath(classLoader);
         List<File> jvmFiles = buildJvmClassPath();
 
-        for (URL u : classloaderUrls) {
-            try {
-                jvmFiles.add(new File(u.toURI()));
-            } catch (Exception e) {
-                // do nothing...
+        if (classloaderUrls != null) {
+            for (URL u : classloaderUrls) {
+                try {
+                    jvmFiles.add(new File(u.toURI()));
+                } catch (Exception e) {
+                    // do nothing...
+                }
             }
         }
         
