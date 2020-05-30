@@ -24,6 +24,7 @@ import com.fizzed.blaze.ssh.SshSftpGet;
 import com.fizzed.blaze.ssh.SshSftpNoSuchFileException;
 import com.fizzed.blaze.ssh.SshSftpPut;
 import com.fizzed.blaze.ssh.SshSftpSession;
+import com.fizzed.blaze.util.HumanReadables;
 import com.fizzed.blaze.util.Streamable;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
@@ -38,10 +39,12 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,7 +185,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
             }
             
             try {
-                this.channel.get(source.toString(), target.stream(), new DefaultProgressMonitor(), ChannelSftp.OVERWRITE, 0);
+                this.channel.get(source.toString(), target.stream(), new TermProgressMonitor(null), ChannelSftp.OVERWRITE, 0);
             } finally {
                 IOUtils.closeQuietly(target);
             }  
@@ -209,9 +212,9 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
                     System.out.print("[INFO] Uploading " + source.path() + " -> " + target);
                 }
             }
-                    
+
             OutputStream output
-                = this.channel.put(target, new DefaultProgressMonitor(), ChannelSftp.OVERWRITE, 0);
+                = this.channel.put(target, new TermProgressMonitor(source.size()), ChannelSftp.OVERWRITE, 0);
             
             try {
                 // copy streams input -> output
@@ -387,6 +390,97 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
         @Override
         public void end() {
             System.out.println("!");
+        }
+    }
+
+    static public class TermProgressMonitor implements SftpProgressMonitor {
+        
+        private final long startTime;
+        private long totalBytes;
+        private long processedBytes;
+        private int maxPrintLen;
+
+        public TermProgressMonitor(Long totalBytes) {
+            this.startTime = System.currentTimeMillis();
+            this.totalBytes = totalBytes != null ? totalBytes : -1;
+        }
+        
+        @Override
+        public void init(int op, String src, String dest, long max) {
+            if (this.totalBytes < 0) {
+                this.totalBytes = max;
+            }
+            System.out.println("");
+        }
+
+        @Override
+        public boolean count(long count) {
+            this.processedBytes += count;
+            
+            if (this.totalBytes <= 0) {
+                System.out.print(".");
+            } else {
+//                double progress = (double)this.processedBytes / (double)totalBytes;
+                // 25%[=============>______________________________________] 25,000 100.0K/s
+                //System.out.print("\r"+(progress*100d));
+                this.printProgress(startTime, this.totalBytes, this.processedBytes);
+            }
+            
+            return true;
+        }
+
+        @Override
+        public void end() {
+            System.out.println("");
+        }
+        
+        private void printProgress(long startTime, long total, long current) {
+            
+            long elapsedMillis = (System.currentTimeMillis() - startTime);
+            
+            long eta = current == 0 ? 0
+                : (total - current) * elapsedMillis / current;
+
+            // bytes per second...
+            double bytesPerSec = (double)current / (elapsedMillis/1000);
+            double kilobytesPerSec = HumanReadables.kilobytes(bytesPerSec);
+            
+            String speed = String.format("%.0f KiB/s", kilobytesPerSec);
+            
+            int seconds = (int) (eta / 1000) % 60 ;
+            int minutes = (int) ((eta / (1000*60)) % 60);
+            int hours   = (int) ((eta / (1000*60*60)) % 24);
+            
+            double totalKilobytes = HumanReadables.kilobytes(total);
+            double currentKilobytes = HumanReadables.kilobytes(current);
+            
+            String etaHms = current == 0 ? "N/A"
+                : String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+            StringBuilder sb = new StringBuilder(140);
+            int percent = (int) (current * 100 / total);
+            sb
+                .append('\r')
+                .append(String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), " ")))
+                .append(String.format(" %d%% [", percent))
+                .append(String.join("", Collections.nCopies(percent, "=")))
+                .append('>')
+                .append(String.join("", Collections.nCopies(100 - percent, " ")))
+                .append(']')
+                .append(String.join("", Collections.nCopies((int) (Math.log10(totalKilobytes)) - (int) (Math.log10(currentKilobytes)), " ")))
+                .append(String.format(" %.0f/%.0f KiB, %s, %s ", currentKilobytes, totalKilobytes, etaHms, speed));
+
+            if (sb.length() > maxPrintLen) {
+                maxPrintLen = sb.length();
+            }
+            
+            // pad spaces if needed
+            for (int i = 0; i < (maxPrintLen - sb.length()); i++) {
+                sb.append(" ");
+            }
+            
+            System.out.print(sb);
+//            System.out.println(new String(new char[70]).replace("\0", "\r\n"));
         }
     }
     

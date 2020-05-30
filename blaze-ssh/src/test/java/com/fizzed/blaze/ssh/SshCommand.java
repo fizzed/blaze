@@ -20,9 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import org.apache.sshd.server.Command;
+import org.apache.sshd.server.command.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
+import org.apache.sshd.server.channel.ChannelSession;
 
 /**
  *
@@ -81,15 +82,26 @@ public class SshCommand implements Command {
     public void setExitCallback(ExitCallback ec) {
         this.exit = ec;
     }
+//
+//    public void start(Environment e) throws IOException {
+//        this.env = e;
+//        this.handler.handle(this);
+//    }
+//
+//    public void destroy() {
+//        Streamables.close(in);
+//        Streamables.close(out);
+//        Streamables.close(err);
+//    }
 
     @Override
-    public void start(Environment e) throws IOException {
+    public void start(ChannelSession cs, Environment e) throws IOException {
         this.env = e;
         this.handler.handle(this);
     }
 
     @Override
-    public void destroy() {
+    public void destroy(ChannelSession cs) throws Exception {
         Streamables.close(in);
         Streamables.close(out);
         Streamables.close(err);

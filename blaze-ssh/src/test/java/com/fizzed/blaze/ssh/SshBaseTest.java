@@ -26,8 +26,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PublicKey;
 import org.apache.commons.io.FileUtils;
 import org.apache.sshd.server.SshServer;
+import org.apache.sshd.server.auth.AsyncAuthException;
+import org.apache.sshd.server.auth.pubkey.PublickeyAuthenticator;
+import org.apache.sshd.server.channel.ChannelSession;
+import org.apache.sshd.server.command.Command;
+import org.apache.sshd.server.command.CommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
 import static org.hamcrest.CoreMatchers.is;
@@ -73,7 +79,14 @@ public class SshBaseTest {
             log.info("Authenticate {} with {}", username, password);
             return "blaze".equals(username) && "test".equals(password);
         });
-        sshd.setCommandFactory((String line) -> {
+//        sshd.setPublickeyAuthenticator((String string, PublicKey pk, ServerSession ss) -> {
+//            log.info("Auth with public key? {}", string);
+//            return true;
+//        });
+//        sshd.setCommandFactory((String line) -> {
+//            return new SshCommand(commandHandler, line);
+//        });
+        sshd.setCommandFactory((ChannelSession cs, String line) -> {
             return new SshCommand(commandHandler, line);
         });
     }
