@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+#### 0.21.0 - 2020-06-01
+
+ - Improved SFTP put/get progress meter (uses single line of text e.g. wget)
+
 #### 0.20.0 - 2019-05-24
 
  - Support for Java 9, 10, 11, and up
