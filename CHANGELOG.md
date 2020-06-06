@@ -1,6 +1,16 @@
 Blaze by Fizzed
 ===============
 
+#### 1.0.0 - 2020-06-06
+
+ - Improved argument handling.  Allowing --arg to also be equivalent of -Darg
+ - New prompt() with lots of options to help with input
+ - Fix issue of ssh session close causing stdin to close
+ - Bump commons-io to v2.7
+ - Bump slf4j to v1.7.30
+ - zt-turnaround to v1.11
+ - Bump ivy to v2.5.0
+
 #### 0.21.0 - 2020-06-01
 
  - Improved SFTP put/get progress meter (uses single line of text e.g. wget)
