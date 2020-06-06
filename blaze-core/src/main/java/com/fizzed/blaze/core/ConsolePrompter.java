@@ -31,8 +31,7 @@ public class ConsolePrompter implements Prompter {
             return System.console().readLine(prompt, args);
         }
         System.out.print(String.format(prompt, args));
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                System.in));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         try {
             return reader.readLine();
         } catch (IOException e) {

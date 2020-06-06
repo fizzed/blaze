@@ -15,8 +15,10 @@
  */
 package com.fizzed.blaze;
 
+import com.fizzed.blaze.core.ConsolePrompter;
 import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.core.MessageOnlyException;
+import com.fizzed.blaze.system.Prompt;
 import java.io.File;
 import java.nio.file.Path;
 import org.slf4j.Logger;
@@ -134,18 +136,43 @@ public class Contexts {
     }
     
     /**
-     * Fails a script with a supplied message to be logged.  Does not trigger
-     * a stacktrace to be logged!
-     * @param message The message
+     * Fails a script with a supplied message to be logged. Does not trigger
+        a stacktrace to be logged!
+     * @param message The message to fail with. The arguments are the same
+     *  as String.format.
+     * @param args The arguments to replace in the message
      */
-    static public void fail(String message) {
-        throw new MessageOnlyException(message);
+    static public void fail(String message, Object... args) {
+        String m = String.format(message, args);
+        throw new MessageOnlyException(m);
     }
     
+    /**
+     * Reads a single line of text from the console.
+     * @param prompt The message to prompt with.  The arguments are String.format
+     *  style such as "Hello %s"
+     * @param args The arguments to replace in the prompt
+     * @return A string containing the line read from the console, not including
+     *  any line-termination characters, or null if an end of stream has been
+     *  reached.
+     */
     static public String prompt(String prompt, Object... args) {
         return ContextHolder.get().prompt(prompt, args);
     }
     
+    static public Prompt prompt() {
+        return new Prompt(Contexts.currentContext(), new ConsolePrompter());
+    }
+    
+    /**
+     * Reads a single line of text from the console, with masked input!
+     * @param prompt The message to prompt with.  The arguments are String.format
+     *  style such as "Hello %s"
+     * @param args The arguments to replace in the prompt
+     * @return A string containing the line read from the console, not including
+     *  any line-termination characters, or null if an end of stream has been
+     *  reached.
+     */
     static public char[] passwordPrompt(String prompt, Object... args) {
         return ContextHolder.get().passwordPrompt(prompt, args);
     }

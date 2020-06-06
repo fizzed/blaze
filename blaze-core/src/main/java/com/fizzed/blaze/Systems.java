@@ -18,6 +18,7 @@ package com.fizzed.blaze;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.Head;
 import com.fizzed.blaze.system.Pipeline;
+import com.fizzed.blaze.system.Prompt;
 import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
 import com.fizzed.blaze.system.Tail;
@@ -376,6 +377,5 @@ public class Systems {
         return new Tail(Contexts.currentContext())
             .count(count);
     }
-    
     
 }
