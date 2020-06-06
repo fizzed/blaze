@@ -99,11 +99,21 @@ public interface Config {
             this.value = value;
         }
         
+        @Deprecated
         public boolean absent() {
+            return this.isAbsent();
+        }
+        
+        public boolean isAbsent() {
             return this.value == null;
         }
         
+        @Deprecated
         public boolean present() {
+            return this.isPresent();
+        }
+        
+        public boolean isPresent() {
             return this.value != null;
         }
         
@@ -115,11 +125,22 @@ public interface Config {
          *      instead of an exception thrown.
          */
         public T get() throws NoSuchElementException {
-            if (value == null) {
-                throw new NoSuchElementException("Value for key '" + key + "' is missing");
+            if (this.value == null) {
+                throw new NoSuchElementException("Value for key '" + key + "' is missing. Try running with '--" + key + " <value>' parameter!");
             } else {
-                return value;
+                return this.value;
             }
+        }
+        
+        /**
+         * Gets the value if its present or will return the supplied default.
+         * @param defaultValue The default if the value is missing
+         * @return The value or the default
+         * @see #orElse() 
+         */
+        @Deprecated
+        public T getOr(T defaultValue) {
+            return this.orElse(defaultValue);
         }
         
         /**
@@ -128,7 +149,7 @@ public interface Config {
          * @return The value or the default
          * @see #getOrNull() 
          */
-        public T getOr(T defaultValue) {
+        public T orElse(T defaultValue) {
             if (value == null) {
                 return defaultValue;
             } else {
@@ -140,8 +161,17 @@ public interface Config {
          * Gets the value if its present or returns null.
          * @return The value or null if its absent.
          */
+        @Deprecated
         public T getOrNull() {
-            return value;
+            return this.value;
+        }
+        
+        /**
+         * Gets the value if its present or returns null.
+         * @return The value or null if its absent.
+         */
+        public T orNull() {
+            return this.value;
         }
 
         /**

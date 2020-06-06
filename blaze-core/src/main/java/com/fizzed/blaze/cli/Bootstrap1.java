@@ -106,6 +106,16 @@ public class Bootstrap1 {
                 }
             } else if (arg.equals("-l") || arg.equals("--list")) {
                 listTasks = true;
+            } else if (arg.startsWith("--")) {
+                // treat this like an argument...
+                // strip -- then split on first equals char
+                String key = arg.substring(2);
+                String val = args.peek();
+                if (val == null || val.startsWith("-")) {
+                    systemProperty(key, "");
+                } else {
+                    systemProperty(key, args.remove());
+                }
             } else if (arg.startsWith("-")) {
                 System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; " + getName() + " -h for more info");
                 System.exit(1);
@@ -174,7 +184,7 @@ public class Bootstrap1 {
     public String getName() {
         return "blaze";
     }
-    
+
     public String nextArg(Deque<String> args, String arg, String valueDescription) {
         if (args.isEmpty()) {
             System.err.println("[ERROR] " + arg + " argument requires next arg to be a " + valueDescription);
