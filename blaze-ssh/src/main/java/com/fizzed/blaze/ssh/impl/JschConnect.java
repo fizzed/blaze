@@ -433,7 +433,11 @@ public class JschConnect extends SshConnect {
                 prompt += " (yes/no)?";
             }
             
-            String answer = Contexts.prompt(prompt + " ");
+            String answer =  Contexts.prompt()
+                .defaultOption("no")
+                .options("yes", "no")
+                .prompt(prompt + " ");
+            
             return answer.equalsIgnoreCase("yes");
         }
 

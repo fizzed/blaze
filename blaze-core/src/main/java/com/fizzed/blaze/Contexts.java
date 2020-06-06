@@ -18,6 +18,7 @@ package com.fizzed.blaze;
 import com.fizzed.blaze.core.ConsolePrompter;
 import com.fizzed.blaze.core.ContextHolder;
 import com.fizzed.blaze.core.MessageOnlyException;
+import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.system.Prompt;
 import java.io.File;
 import java.nio.file.Path;
@@ -161,7 +162,7 @@ public class Contexts {
     }
     
     static public Prompt prompt() {
-        return new Prompt(Contexts.currentContext(), new ConsolePrompter());
+        return new Prompt(ContextHolder.get(), ((ContextImpl)ContextHolder.get()).getPrompter());
     }
     
     /**

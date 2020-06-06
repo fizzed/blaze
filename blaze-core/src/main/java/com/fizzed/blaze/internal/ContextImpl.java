@@ -52,6 +52,10 @@ public class ContextImpl implements Context {
         this.logger = LoggerFactory.getLogger("script");
         this.prompter = new ConsolePrompter();
     }
+
+    public Prompter getPrompter() {
+        return prompter;
+    }
     
     public void prompter(Prompter prompter) {
         this.prompter = prompter;

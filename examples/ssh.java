@@ -26,7 +26,7 @@ public class ssh {
         MutableUri uri = config.value("ssh.uri", MutableUri.class).getOrNull();
         
         if (uri == null) {
-            String s = prompt("Enter ssh uri (e.g. ssh://user@host)> ");
+            String s = prompt().allowBlank(false).prompt("Enter ssh uri (e.g. ssh://user@host)> ");
             uri = MutableUri.of(s);
         }
         
