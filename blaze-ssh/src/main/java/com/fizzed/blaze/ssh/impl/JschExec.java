@@ -83,7 +83,7 @@ public class JschExec extends SshExec implements ExecMixin<SshExec> {
             final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : new NullOutputStream()));
             
             if (is != null) {
-                channel.setInputStream(is, false);
+                channel.setInputStream(is, true);
             }
             
             // both streams closing signals exec is finished
