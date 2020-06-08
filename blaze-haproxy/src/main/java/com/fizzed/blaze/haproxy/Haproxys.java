@@ -20,8 +20,8 @@ import com.fizzed.blaze.system.ExecSession;
 
 public class Haproxys {
  
-    static public Haproxy haproxy(ExecSession execOn) {
-        return new HaproxyImpl(execOn);
+    static public Haproxy haproxy(ExecSession execSession) {
+        return new HaproxyImpl(execSession);
     } 
     
 }

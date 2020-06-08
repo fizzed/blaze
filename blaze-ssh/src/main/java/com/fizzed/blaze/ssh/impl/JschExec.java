@@ -32,6 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import com.fizzed.blaze.util.InterruptibleInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.io.output.NullOutputStream;
 
@@ -121,12 +122,39 @@ public class JschExec extends SshExec {
                 errorStreamClosedSignal.countDown();
             }
             
-            // building the command may be a little tricky, not sure about spaces...
-            final StringBuilder sb = new StringBuilder(PathHelper.toString(command));
             
-            this.arguments.stream().forEach((arg) -> {
-                sb.append(" ");
-                // TODO: should we actually escape instead such as " " -> "\ "???
+            // build command line arguments
+            final List<String> c = new ArrayList<>();
+            
+            if (this.sudo) {
+//            if (commands.containsKey("doas")) {
+//                arguments.add("doas");
+//            } else {
+                // man sudo
+                // -S  The -S (stdin) option causes sudo to read the password from the
+                //     standard input instead of the terminal device.
+                c.add("sudo");
+                c.add("-S");
+//            }
+            }
+
+            if (this.shell) {
+                c.add("sh");
+                c.add("-c");
+            }
+            
+            c.add(PathHelper.toString(command));
+            
+            c.addAll(this.arguments);
+            
+            
+            // building the command may be a little tricky, not sure about spaces...
+            final StringBuilder sb = new StringBuilder();
+            
+            c.stream().forEach((arg) -> {
+                if (sb.length() > 0) {
+                    sb.append(" ");
+                }
                 if (arg.contains(" ")) {
                     sb.append("'");
                     sb.append(arg);

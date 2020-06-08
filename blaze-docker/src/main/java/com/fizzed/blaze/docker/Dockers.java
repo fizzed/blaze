@@ -13,33 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.haproxy;
+package com.fizzed.blaze.docker;
 
-public interface Haproxy {
-    
-    default Haproxy useSudo() {
-        return this.sudo(true);
+import com.fizzed.blaze.Contexts;
+import com.fizzed.blaze.util.MutableUri;
+import java.net.URI;
+
+public class Dockers {
+ 
+    static public DockerConnect dockerConnect(String uri) {
+        return dockerConnect(MutableUri.of(uri));
     }
     
-    Haproxy sudo(boolean sudo);
+    static public DockerConnect dockerConnect(URI uri) {
+        return dockerConnect(new MutableUri(uri));
+    }
     
-    Haproxy adminSocket(String path);
-    
-    String sendCommand(String command);
-    
-    HaproxyStats getStats();
-    
-    void setServerState(
-            String backend,
-            String server,
-            String state);
-    
-    boolean isServerDrained(
-            String backend,
-            String server);
-    
-    boolean isServerUp(
-            String backend,
-            String server);
+    static public DockerConnect dockerConnect(MutableUri uri) {
+        return new DockerConnect(Contexts.currentContext(), uri);
+    }
     
 }

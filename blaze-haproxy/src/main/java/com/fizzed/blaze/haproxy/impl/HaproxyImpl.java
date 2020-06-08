@@ -26,16 +26,24 @@ import com.fizzed.blaze.system.ExecSession;
 public class HaproxyImpl implements Haproxy {
     static private final Logger log = LoggerFactory.getLogger(HaproxyImpl.class);
     
-    private final ExecSession execOn;
-    private String adminSocket;
+    protected final ExecSession execSession;
+    protected boolean sudo;
+    protected String adminSocket;
 
-    public HaproxyImpl(ExecSession execOn) {
-        this.execOn = execOn;
+    public HaproxyImpl(ExecSession execSession) {
+        this.execSession = execSession;
         this.adminSocket = "/run/haproxy/admin.sock";
+        this.sudo = false;
     }
 
     @Override
-    public HaproxyImpl setAdminSocket(String adminSocket) {
+    public HaproxyImpl sudo(boolean sudo) {
+        this.sudo = sudo;
+        return this;
+    }
+    
+    @Override
+    public HaproxyImpl adminSocket(String adminSocket) {
         this.adminSocket = adminSocket;
         return this;
     }
@@ -46,13 +54,16 @@ public class HaproxyImpl implements Haproxy {
 
         log.debug("Running haproxy admin command: {}", command);
         
-        String result = Systems.execOn(execOn)
-            .command("sudo")
-            .args("socat", "stdio", this.adminSocket)
+        String result = Systems.execOn(execSession)
+            .command("socat")
+            .args("stdio", this.adminSocket)
+            .sudo(this.sudo)
             .pipeInput(command + "\r\n")
             .runCaptureOutput()
             .asString()
             .trim();
+        
+        log.trace("Result was:\n{}", result);
         
         if (result.startsWith("Unknown command.")) {
             throw new RuntimeException("Invalid haproxy command!");
@@ -133,7 +144,7 @@ public class HaproxyImpl implements Haproxy {
             .filter(v -> server.equals(v.getServerName()))
             .map(v -> v.getSessionsCurrent())
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Backend not found!"));
+            .orElseThrow(() -> new IllegalArgumentException("Backend server '" + backend + "/" + server + "' not found!"));
         
 //        final Integer sessionCurrent = Integer.valueOf(s);
         
@@ -153,7 +164,7 @@ public class HaproxyImpl implements Haproxy {
             .filter(v -> server.equals(v.getServerName()))
             .map(v -> v.getStatus())
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Backend not found!"));
+            .orElseThrow(() -> new IllegalArgumentException("Backend server '" + backend + "/" + server + "' not found!"));
         
         return "UP".equalsIgnoreCase(s);
     }

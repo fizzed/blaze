@@ -2,7 +2,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.fizzed</groupId>
-    <artifactId>blaze-haproxy</artifactId>
+    <artifactId>blaze-docker</artifactId>
     <packaging>jar</packaging>
  
     <parent>
@@ -12,7 +12,7 @@
     </parent>
     
     <properties>
-        <main.java.package>com.fizzed.blaze.haproxy</main.java.package>
+        <main.java.package>com.fizzed.blaze.docker</main.java.package>
     </properties>
     
     <dependencies>
@@ -27,19 +27,7 @@
         
         <dependency>
             <groupId>com.fizzed</groupId>
-            <artifactId>blaze-docker</artifactId>
-            <scope>test</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.fizzed</groupId>
             <artifactId>blaze-ssh</artifactId>
-            <scope>test</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.fizzed</groupId>
-            <artifactId>blaze-vagrant</artifactId>
             <scope>test</scope>
         </dependency>
         

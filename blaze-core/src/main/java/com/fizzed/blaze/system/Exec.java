@@ -62,6 +62,8 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
     protected boolean pipeErrorToOutput;
     final protected List<Integer> exitValues;
     protected long timeoutMillis = -1L;
+    protected boolean sudo;
+    protected boolean shell;
     
     public Exec(Context context) {
         super(context);
@@ -71,8 +73,20 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         this.pipeOutput = Streamables.standardOutput();
         this.pipeError = Streamables.standardError();
         this.exitValues = new ArrayList<>();
-        this.exitValues.add(0);  
+        this.exitValues.add(0);
+        this.sudo = false;
+        this.shell = false;
     }    
+
+    public T sudo(boolean sudo) {
+        this.sudo = sudo;
+        return (T)this;
+    }
+
+    public T shell(boolean shell) {
+        this.shell = shell;
+        return (T)this;
+    }
     
     @Override
     public T command(Path command) {

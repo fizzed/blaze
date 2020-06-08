@@ -38,7 +38,7 @@ import org.zeroturnaround.exec.stream.PumpStreamHandler;
 
 public class LocalExec extends Exec<LocalExec> {
     
-    final private Which which;
+    final protected Which which;
     
     public LocalExec(Context context) {
         super(context);
@@ -78,7 +78,7 @@ public class LocalExec extends Exec<LocalExec> {
         
 
         final ProcessExecutor executor = new ProcessExecutor();
-        
+
         
         if (this.environment.size() > 0) {
             this.environment.forEach((k,v) -> executor.environment(k, v));
@@ -100,14 +100,31 @@ public class LocalExec extends Exec<LocalExec> {
         // build final list of command to execute (executable first then args)
         final List<String> finalCommand = new ArrayList<>();
         
+        if (this.sudo) {
+//            if (commands.containsKey("doas")) {
+//                arguments.add("doas");
+//            } else {
+                // man sudo
+                // -S  The -S (stdin) option causes sudo to read the password from the
+                //     standard input instead of the terminal device.
+                finalCommand.add("sudo");
+                finalCommand.add("-S");
+//            }
+        }
+
+        if (this.shell) {
+            finalCommand.add("sh");
+            finalCommand.add("-c");
+        }
+        
         finalCommand.add(exeFile.toAbsolutePath().toString());
         
-        finalCommand.addAll(arguments);
+        finalCommand.addAll(this.arguments);
         
         // use a custom streampumper so we can more accuratly handle inputstream
-        final InputStream is = (pipeInput != null ? pipeInput.stream() : null);
-        final OutputStream os = (pipeOutput != null ? pipeOutput.stream() : null);
-        final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : null));
+        final InputStream is = (this.pipeInput != null ? this.pipeInput.stream() : null);
+        final OutputStream os = (this.pipeOutput != null ? this.pipeOutput.stream() : null);
+        final OutputStream es = (this.pipeErrorToOutput ? os : (this.pipeError != null ? this.pipeError.stream() : null));
         
         PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
             @Override
