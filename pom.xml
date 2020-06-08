@@ -31,6 +31,7 @@
         <module>blaze-ivy</module>
         <module>blaze-http</module>
         <module>blaze-ssh</module>
+        <module>blaze-haproxy</module>
         <module>blaze-vagrant</module>
         <module>blaze-groovy</module>
         <module>blaze-kotlin</module>
@@ -54,6 +55,12 @@
             <dependency>
                 <groupId>com.fizzed</groupId>
                 <artifactId>blaze-ssh</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.fizzed</groupId>
+                <artifactId>blaze-vagrant</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
