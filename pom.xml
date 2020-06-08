@@ -29,13 +29,14 @@
     <modules>
         <module>blaze-core</module>
         <module>blaze-ivy</module>
+        <module>blaze-groovy</module>
+        <module>blaze-kotlin</module>
         <module>blaze-http</module>
         <module>blaze-ssh</module>
         <module>blaze-docker</module>
         <module>blaze-haproxy</module>
         <module>blaze-vagrant</module>
-        <module>blaze-groovy</module>
-        <module>blaze-kotlin</module>
+        <module>blaze-mysql</module>
         <module>blaze-lite</module>
     </modules>
     
