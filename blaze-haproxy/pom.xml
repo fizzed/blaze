@@ -29,19 +29,22 @@
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-docker</artifactId>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
         
-        <dependency>
+<!--        <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-ssh</artifactId>
             <scope>test</scope>
-        </dependency>
+            <optional>true</optional>
+        </dependency>-->
         
-        <dependency>
+<!--        <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-vagrant</artifactId>
             <scope>test</scope>
-        </dependency>
+            <optional>true</optional>
+        </dependency>-->
         
         <dependency>
             <groupId>org.hamcrest</groupId>

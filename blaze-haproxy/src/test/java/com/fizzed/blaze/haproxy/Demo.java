@@ -15,11 +15,9 @@
  */
 package com.fizzed.blaze.haproxy;
 
-import com.fizzed.blaze.SecureShells;
 import com.fizzed.blaze.docker.DockerSession;
 import com.fizzed.blaze.docker.Dockers;
 import static com.fizzed.blaze.haproxy.Haproxys.haproxy;
-import com.fizzed.blaze.ssh.SshSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +26,13 @@ public class Demo {
     
     static public void main(String[] args) throws InterruptedException {
         
-        SshSession target = SecureShells.sshConnect("ssh://us-chi1-stg-slb1").run();
-        boolean sudo = true;
+//        SshSession target = SecureShells.sshConnect("ssh://us-chi1-stg-slb1").run();
+//        boolean sudo = true;
 
         // docker build -t blaze-haproxy:latest -f src/main/docker/Dockerfile .
         // docker run -it -d --name blaze-haproxy blaze-haproxy:latest
-//        DockerSession target = Dockers.dockerConnect("docker://blaze-haproxy").run();
-//        boolean sudo = false;
+        DockerSession target = Dockers.dockerConnect("docker://blaze-haproxy").run();
+        boolean sudo = false;
 
         
         Haproxy haproxy = haproxy(target).sudo(sudo);

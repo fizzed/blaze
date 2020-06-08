@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.mysql;
 
-import java.io.Closeable;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.ImmutableUri;
@@ -26,7 +25,7 @@ import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MysqlSession implements Closeable {
+public class MysqlSession implements AutoCloseable {
     static private final Logger log = LoggerFactory.getLogger(MysqlSession.class);
 
     private final Context context;
@@ -50,7 +49,7 @@ public class MysqlSession implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (this.connection != null) {
             try {
                 this.connection.close();

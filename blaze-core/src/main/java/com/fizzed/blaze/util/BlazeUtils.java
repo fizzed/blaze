@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.haproxy;
+package com.fizzed.blaze.util;
 
 import com.fizzed.blaze.core.BlazeException;
-import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
-public class HaproxyStats extends ArrayList<HaproxyStat> {
+public class BlazeUtils {
     
-    public HaproxyStat findServer(
-            String backend,
-            String server) {
-        
-        return this.stream()
-            .filter(v -> backend.equals(v.getPrimaryName()))
-            .filter(v -> server.equals(v.getServerName()))
-            .findFirst()
-            .orElseThrow(() -> new BlazeException("Backend server '" + backend + "/" + server + "' not found!"));
+    static public void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new BlazeException(e.getMessage(), e);
+        }
+    }
+    
+    static public void sleep(long timeout, TimeUnit timeUnit) {
+        try {
+            Thread.sleep(timeUnit.toMillis(timeout));
+        } catch (InterruptedException e) {
+            throw new BlazeException(e.getMessage(), e);
+        }
     }
     
 }

@@ -139,14 +139,7 @@ public class HaproxyImpl implements Haproxy {
         final HaproxyStats stats = this.getStats();
             
         // find the backend server stats we want
-        final Long sessionCurrent = stats.stream()
-            .filter(v -> backend.equals(v.getPrimaryName()))
-            .filter(v -> server.equals(v.getServerName()))
-            .map(v -> v.getSessionsCurrent())
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Backend server '" + backend + "/" + server + "' not found!"));
-        
-//        final Integer sessionCurrent = Integer.valueOf(s);
+        final Long sessionCurrent = stats.findServer(backend, server).getSessionsCurrent();
         
         return sessionCurrent <= 0;
     }
@@ -159,12 +152,7 @@ public class HaproxyImpl implements Haproxy {
         final HaproxyStats stats = this.getStats();
             
         // find the backend server stats we want
-        final String s = stats.stream()
-            .filter(v -> backend.equals(v.getPrimaryName()))
-            .filter(v -> server.equals(v.getServerName()))
-            .map(v -> v.getStatus())
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Backend server '" + backend + "/" + server + "' not found!"));
+        final String s = stats.findServer(backend, server).getStatus();
         
         return "UP".equalsIgnoreCase(s);
     }
