@@ -13,28 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.haproxy;
+package com.fizzed.blaze.haproxy.impl;
 
-import static com.fizzed.blaze.SecureShells.sshExec;
-import com.fizzed.blaze.ssh.SshSession;
+import com.fizzed.blaze.Systems;
+import com.fizzed.blaze.haproxy.Haproxy;
+import com.fizzed.blaze.haproxy.HaproxyStat;
+import com.fizzed.blaze.haproxy.HaproxyStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fizzed.blaze.system.ExecSession;
 
-public class HaproxyClient {
-    static private final Logger log = LoggerFactory.getLogger(HaproxyClient.class);
+public class HaproxyImpl implements Haproxy {
+    static private final Logger log = LoggerFactory.getLogger(HaproxyImpl.class);
     
-    private final SshSession ssh;
+    private final ExecSession execOn;
+    private String adminSocket;
 
-    public HaproxyClient(SshSession ssh) {
-        this.ssh = ssh;
+    public HaproxyImpl(ExecSession execOn) {
+        this.execOn = execOn;
+        this.adminSocket = "/run/haproxy/admin.sock";
     }
 
+    @Override
+    public HaproxyImpl setAdminSocket(String adminSocket) {
+        this.adminSocket = adminSocket;
+        return this;
+    }
+    
+    @Override
     public String sendCommand(
             String command) {
 
         log.debug("Running haproxy admin command: {}", command);
         
-        String result = sshExec(ssh, "sudo", "socat", "stdio", "/run/haproxy/admin.sock")
+        String result = Systems.execOn(execOn)
+            .command("sudo")
+            .args("socat", "stdio", this.adminSocket)
             .pipeInput(command + "\r\n")
             .runCaptureOutput()
             .asString()
@@ -51,6 +65,7 @@ public class HaproxyClient {
         return result;
     }
     
+    @Override
     public HaproxyStats getStats() {
         
         // build command
@@ -93,6 +108,7 @@ public class HaproxyClient {
         return stats;
     }
     
+    @Override
     public void setServerState(
             String backend,
             String server,
@@ -104,6 +120,7 @@ public class HaproxyClient {
         this.sendCommand(command);
     }
     
+    @Override
     public boolean isServerDrained(
             String backend,
             String server) {
@@ -123,6 +140,7 @@ public class HaproxyClient {
         return sessionCurrent <= 0;
     }
     
+    @Override
     public boolean isServerUp(
             String backend,
             String server) {

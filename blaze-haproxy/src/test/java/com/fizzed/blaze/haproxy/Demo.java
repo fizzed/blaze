@@ -16,6 +16,7 @@
 package com.fizzed.blaze.haproxy;
 
 import com.fizzed.blaze.SecureShells;
+import static com.fizzed.blaze.haproxy.Haproxys.haproxy;
 import com.fizzed.blaze.ssh.SshSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,11 @@ public class Demo {
         
         SshSession ssh = SecureShells.sshConnect("ssh://us-chi1-stg-slb1").run();
         
-        HaproxyClient haproxy = new HaproxyClient(ssh);
+        
+        
+        
+        
+        Haproxy haproxy = haproxy(ssh);
         
         HaproxyStats stats = haproxy.getStats();
         

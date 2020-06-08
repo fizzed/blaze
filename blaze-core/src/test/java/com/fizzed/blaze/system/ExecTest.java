@@ -20,6 +20,7 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.internal.ContextImpl;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.local.LocalExec;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
@@ -63,7 +64,7 @@ public class ExecTest {
     
     @Test(expected=ExecutableNotFoundException.class)
     public void notFind() throws Exception {
-        new Exec(context)
+        new LocalExec(context)
             .command("thisdoesnotexist")
             .run();
     }
@@ -71,7 +72,7 @@ public class ExecTest {
     @Test
     public void works() throws Exception {
         Integer exitValue
-            = new Exec(context)
+            = new LocalExec(context)
                 .command("hello-world-test")
                 .path(getBinDirAsResource())
                 .run();
@@ -82,7 +83,7 @@ public class ExecTest {
     @Test
     public void nullInputAndOutputs() throws Exception {
         Integer exitValue
-            = new Exec(context)
+            = new LocalExec(context)
                 .command("hello-world-test")
                 .path(getBinDirAsResource())
                 .pipeInput((StreamableInput)null)
@@ -100,7 +101,7 @@ public class ExecTest {
         OutputStream out = spy(new ByteArrayOutputStream());
         OutputStream err = spy(new ByteArrayOutputStream());
         
-        new Exec(context)
+        new LocalExec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
             .pipeInput(in)
@@ -118,7 +119,7 @@ public class ExecTest {
     public void captureOutput() throws Exception {
         CaptureOutput capture = Streamables.captureOutput();
         
-        new Exec(context)
+        new LocalExec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
             .pipeInput(Streamables.standardInput())
@@ -134,7 +135,7 @@ public class ExecTest {
     public void customInput() throws Exception {
         CaptureOutput capture = Streamables.captureOutput();
         
-        new Exec(context)
+        new LocalExec(context)
             .command("tee")
             .path(getBinDirAsResource())
             .pipeInput(Streamables.input("hello dude"))

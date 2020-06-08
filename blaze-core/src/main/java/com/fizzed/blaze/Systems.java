@@ -15,10 +15,10 @@
  */
 package com.fizzed.blaze;
 
+import com.fizzed.blaze.local.LocalExec;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.Head;
 import com.fizzed.blaze.system.Pipeline;
-import com.fizzed.blaze.system.Prompt;
 import com.fizzed.blaze.system.Remove;
 import com.fizzed.blaze.system.RequireExec;
 import com.fizzed.blaze.system.Tail;
@@ -26,6 +26,8 @@ import com.fizzed.blaze.system.Which;
 import com.fizzed.blaze.util.Globber;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Objects;
+import com.fizzed.blaze.system.ExecSession;
 
 public class Systems {
     
@@ -222,6 +224,12 @@ public class Systems {
             .message(message);
     }
     
+    static public Exec execOn(ExecSession execOn) {
+        Objects.requireNonNull(execOn, "execOn was null");
+        
+        return execOn.newExec();
+    }
+    
     /**
      * Prepares an executable to be spawned off in an external process with
      * the supplied arguments.
@@ -242,7 +250,7 @@ public class Systems {
      * @return A new Exec action bound to current context
      */
     static public Exec exec(String command, Object ... arguments) {
-        return new Exec(Contexts.currentContext())
+        return new LocalExec(Contexts.currentContext())
             .command(command)
             .args(arguments);
     }
@@ -267,7 +275,7 @@ public class Systems {
      * @return A new Exec action bound to current context
      */
     static public Exec exec(Path command, Object ... arguments) {
-        return new Exec(Contexts.currentContext())
+        return new LocalExec(Contexts.currentContext())
             .command(command)
             .args(arguments);
     }
@@ -292,7 +300,7 @@ public class Systems {
      * @return A new Exec action bound to current context
      */
     static public Exec exec(File command, Object ... arguments) {
-        return new Exec(Contexts.currentContext())
+        return new LocalExec(Contexts.currentContext())
             .command(command)
             .args(arguments);
     }

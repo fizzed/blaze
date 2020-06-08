@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Fizzed, Inc.
+ * Copyright 2020 Fizzed, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze.local;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.system.Exec;
+import com.fizzed.blaze.system.ExecSession;
 
-public abstract class Action<R extends Result<?,V,R>,V> {
-    
-    protected final Context context;
-    protected volatile boolean used;
-    
-    public Action(Context context) {
+public class LocalSession implements ExecSession {
+
+    private final Context context;
+
+    public LocalSession(Context context) {
         this.context = context;
     }
-    
-    public R runResult() throws BlazeException {
-        if (used) {
-            throw new BlazeException("Can only run once");
-        }
-        R result = this.doRun();
-        used = true;
-        return result;
+
+    @Override
+    public Exec newExec() {
+        return new LocalExec(context);
     }
-    
-    public V run() throws BlazeException {
-        return runResult().get();
-    }
-    
-    abstract protected R doRun() throws BlazeException;
-    
+
 }

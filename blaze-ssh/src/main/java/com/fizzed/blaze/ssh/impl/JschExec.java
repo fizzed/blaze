@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Fizzed, Inc.
+ * Copyright 2020 Fizzed, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.fizzed.blaze.ssh.*;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
@@ -28,23 +29,27 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.fizzed.blaze.core.ExecMixin;
 import com.fizzed.blaze.util.InterruptibleInputStream;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.commons.io.output.NullOutputStream;
 
-public class JschExec extends SshExec implements ExecMixin<SshExec> {
-    static private final Logger log = LoggerFactory.getLogger(JschExec.class);
+public class JschExec extends SshExec {
     
     public JschExec(Context context, SshSession session) {
         super(context, session);
     }
     
     @Override
-    protected Result doRun() throws BlazeException {
+    public List<Path> getPaths() {
+        throw new UnsupportedOperationException("getPaths() not supported in SSH exec");
+    }
+    
+    @Override
+    protected Exec.Result doRun() throws BlazeException {
         Session jschSession = ((JschSession)session).getJschSession();
+        
         ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
         ObjectHelper.requireNonNull(command, "ssh command cannot be null");
         
@@ -52,7 +57,7 @@ public class JschExec extends SshExec implements ExecMixin<SshExec> {
         try {
             channel = (ChannelExec)jschSession.openChannel("exec");
             
-            if (pty) {
+            if (this.pty) {
                 channel.setPty(true);
             }
             
@@ -119,7 +124,7 @@ public class JschExec extends SshExec implements ExecMixin<SshExec> {
             // building the command may be a little tricky, not sure about spaces...
             final StringBuilder sb = new StringBuilder(PathHelper.toString(command));
             
-            arguments.stream().forEach((arg) -> {
+            this.arguments.stream().forEach((arg) -> {
                 sb.append(" ");
                 // TODO: should we actually escape instead such as " " -> "\ "???
                 if (arg.contains(" ")) {

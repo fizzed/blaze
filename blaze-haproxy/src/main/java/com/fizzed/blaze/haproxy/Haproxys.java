@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Fizzed, Inc.
+ * Copyright 2020 Fizzed, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh;
+package com.fizzed.blaze.haproxy;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.ssh.impl.SshSupport;
-import com.fizzed.blaze.util.ImmutableUri;
+import com.fizzed.blaze.haproxy.impl.HaproxyImpl;
 import com.fizzed.blaze.system.ExecSession;
 
-public interface SshSession extends SshSupport, ExecSession {
-
-    Context context();
-    
-    ImmutableUri uri();
+public class Haproxys {
+ 
+    static public Haproxy haproxy(ExecSession execOn) {
+        return new HaproxyImpl(execOn);
+    } 
     
 }

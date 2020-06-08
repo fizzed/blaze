@@ -16,6 +16,7 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.core.DefaultContext;
+import com.fizzed.blaze.local.LocalExec;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.Streamables;
@@ -32,7 +33,7 @@ public class ExecCaptureOutputTest {
     @Test
     public void runCaptureOutput() throws Exception {
         String output =
-            new Exec(new DefaultContext())
+            new LocalExec(new DefaultContext())
                 .command("hello-world-test")
                 .path(getBinDirAsResource())
                 .disablePipeInput()
@@ -47,7 +48,7 @@ public class ExecCaptureOutputTest {
     public void runCaptureOutputUseExistingCaptureOutputIfSupplied() throws Exception {
         CaptureOutput captureOutput = Streamables.captureOutput();
         CaptureOutput output =
-            new Exec(new DefaultContext())
+            new LocalExec(new DefaultContext())
                 .command("hello-world-test")
                 .path(getBinDirAsResource())
                 .disablePipeInput()

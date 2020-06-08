@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Fizzed, Inc.
+ * Copyright 2020 Fizzed, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.ssh;
+package com.fizzed.blaze.haproxy;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.ssh.impl.SshSupport;
-import com.fizzed.blaze.util.ImmutableUri;
-import com.fizzed.blaze.system.ExecSession;
-
-public interface SshSession extends SshSupport, ExecSession {
-
-    Context context();
+public interface Haproxy {
     
-    ImmutableUri uri();
+    Haproxy setAdminSocket(String path);
+    
+    String sendCommand(String command);
+    
+    HaproxyStats getStats();
+    
+    void setServerState(
+            String backend,
+            String server,
+            String state);
+    
+    boolean isServerDrained(
+            String backend,
+            String server);
+    
+    boolean isServerUp(
+            String backend,
+            String server);
     
 }

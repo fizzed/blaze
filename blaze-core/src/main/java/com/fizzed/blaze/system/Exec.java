@@ -16,136 +16,139 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.core.ExecMixin;
-import com.fizzed.blaze.core.ExecutableNotFoundException;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.ObjectHelper;
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.zeroturnaround.exec.InvalidExitValueException;
-import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.core.PathsMixin;
-import com.fizzed.blaze.util.InputStreamPumper;
+import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.PumpStreamHandler;
 
-/**
- *
- * @author joelauer
- */
-public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec>, ExecMixin<Exec> {
-    private final static Logger log = LoggerFactory.getLogger(Exec.class);
+abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer> implements PathsMixin<T>, ExecMixin<T> {
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    final private Which which;
-    final private ProcessExecutor executor;
-    final private List<String> arguments;
-    private StreamableInput pipeInput;
-    private StreamableOutput pipeOutput;
-    private StreamableOutput pipeError;
-    private boolean pipeErrorToOutput;
-    final private List<Integer> exitValues;
+    static public class Result<R extends Exec> extends com.fizzed.blaze.core.Result<R,Integer,Result<R>> {
+        
+        public Result(R action, Integer value) {
+            super(action, value);
+        }
+        
+    }
+    
+    protected final Map<String,String> environment;
+    protected Path command;
+    protected Path workingDirectory;
+    final protected List<String> arguments;
+    protected StreamableInput pipeInput;
+    protected StreamableOutput pipeOutput;
+    protected StreamableOutput pipeError;
+    protected boolean pipeErrorToOutput;
+    final protected List<Integer> exitValues;
+    protected long timeoutMillis = -1L;
     
     public Exec(Context context) {
         super(context);
-        // which will be used to locate the executable
-        this.which = new Which(context);
+        this.environment = new LinkedHashMap<>();
         this.arguments = new ArrayList<>();
-        this.executor = new ProcessExecutor()
-            .exitValueNormal();
         this.pipeInput = Streamables.standardInput();
         this.pipeOutput = Streamables.standardOutput();
         this.pipeError = Streamables.standardError();
         this.exitValues = new ArrayList<>();
         this.exitValues.add(0);  
-    }
+    }    
     
     @Override
-    public Exec command(Path command) {
-        this.which.command(command);
-        return this;
+    public T command(Path command) {
+        Objects.requireNonNull(command, "command was null");
+        this.command = command;
+        return (T)this;
     }
 
     @Override
-    public Exec command(File command) {
-        this.which.command(command);
-        return this;
+    public T command(File command) {
+        Objects.requireNonNull(command, "command was null");
+        this.command = command.toPath();
+        return (T)this;
     }
     
     @Override
-    public Exec command(String command) {
-        this.which.command(command);
-        return this;
+    public T command(String command) {
+        Objects.requireNonNull(command, "command was null");
+        this.command = Paths.get(command);
+        return (T)this;
     }
     
     @Override
-    public Exec arg(Object argument) {
+    public T arg(Object argument) {
         this.arguments.add(ObjectHelper.nonNullToString(argument));
-        return this;
+        return (T)this;
     }
 
     @Override
-    public Exec args(Object... arguments) {
+    public T args(Object... arguments) {
         this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
-        return this;
+        return (T)this;
     }
     
     @Override
-    public List<Path> getPaths() {
-        return this.which.getPaths();
-    }
-
-    @Override
-    public Exec env(String name, String value) {
-        this.executor.environment(name, value);
-        return this;
+    public T env(String name, String value) {
+        this.environment.put(name, value);
+        return (T)this;
     }
     
-    public Exec workingDir(Path path) {
+    public T workingDir(Path path) {
         Objects.requireNonNull(path, "path cannot be null");
-        this.executor.directory(path.toFile());
-        return this;
+//        this.executor.directory(path.toFile());
+        this.workingDirectory = path;
+        return (T)this;
     }
     
-    public Exec workingDir(File path) {
+    public T workingDir(File path) {
         Objects.requireNonNull(path, "path cannot be null");
-        this.executor.directory(path);
-        return this;
+//        this.executor.directory(path);
+        this.workingDirectory = path.toPath();
+        return (T)this;
     }
     
-    public Exec workingDir(String path) {
+    public T workingDir(String path) {
         Objects.requireNonNull(path, "path cannot be null");
-        this.executor.directory(Paths.get(path).toFile());
-        return this;
+//        this.executor.directory(Paths.get(path).toFile());
+        this.workingDirectory = Paths.get(path);
+        return (T)this;
     }
     
     @Override
-    public Exec exitValues(Integer... exitValues) {
-        this.executor.exitValues(exitValues);
+    public T exitValues(Integer... exitValues) {
         this.exitValues.clear();
         this.exitValues.addAll(Arrays.asList(exitValues));
-        return this;
+//        this.executor.exitValues(exitValues);
+//        this.exitValues.clear();
+//        this.exitValues.addAll(Arrays.asList(exitValues));
+        return (T)this;
     }
 
     @Override
-    public Exec timeout(long timeoutInMillis) {
-        this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
-        return this;
+    public T timeout(long timeoutInMillis) {
+//        this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
+        this.timeoutMillis = timeoutInMillis;
+        return (T)this;
     }
     
     @Override
@@ -154,9 +157,9 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
     }
 
     @Override
-    public Exec pipeInput(StreamableInput pipeInput) {
+    public T pipeInput(StreamableInput pipeInput) {
         this.pipeInput = pipeInput;
-        return this;
+        return (T)this;
     }
 
     @Override
@@ -165,9 +168,9 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
     }
     
     @Override
-    public Exec pipeOutput(StreamableOutput pipeOutput) {
+    public T pipeOutput(StreamableOutput pipeOutput) {
         this.pipeOutput = pipeOutput;
-        return this;
+        return (T)this;
     }
     
     @Override
@@ -176,86 +179,107 @@ public class Exec extends Action<Exec.Result,Integer> implements PathsMixin<Exec
     }
     
     @Override
-    public Exec pipeError(StreamableOutput pipeError) {
+    public T pipeError(StreamableOutput pipeError) {
         this.pipeError = pipeError;
-        return this;
+        return (T)this;
     }
     
     @Override
-    public Exec pipeErrorToOutput(boolean pipeErrorToOutput) {
+    public T pipeErrorToOutput(boolean pipeErrorToOutput) {
         this.pipeErrorToOutput = pipeErrorToOutput;
-        return this;
+        return (T)this;
     }
+ 
+    // TO FIX CODE COMPLETION, THESE MIXINS NEED SOME CONCRETE IMPLS...
     
     @Override
-    protected Result doRun() throws BlazeException {
-        Path exeFile = this.which.run();
-        
-        if (exeFile == null) {
-            throw new ExecutableNotFoundException("Executable '" + this.which.getCommand() + "' not found");
-        }
-        
-        // build final list of command to execute (executable first then args)
-        List<String> command = new ArrayList<>();
-        
-        command.add(exeFile.toAbsolutePath().toString());
-        
-        command.addAll(arguments);
-        
-        // use a custom streampumper so we can more accuratly handle inputstream
-        final InputStream is = (pipeInput != null ? pipeInput.stream() : null);
-        final OutputStream os = (pipeOutput != null ? pipeOutput.stream() : null);
-        final OutputStream es = (pipeErrorToOutput ? os : (pipeError != null ? pipeError.stream() : null));
-        
-        PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
-            @Override
-            protected Thread createSystemInPump(InputStream is, OutputStream os) {
-                InputStreamPumper pumper = new InputStreamPumper(is, os);
-                final Thread result = new Thread(pumper);
-                result.setDaemon(true);
-                return result;
-            }
-            
-            @Override
-            public void stop() {
-                // NOTE: travis ci deadlocks unless we add this -- never happens
-                // on a real system so its pretty odd
-                Thread.yield();
-                
-                // make sure any input, output, and error streams are closed
-                // before the superclass stop() is triggered
-                Streamables.closeQuietly(is);
-                //Streamables.closeQuietly(os);
-                //Streamables.closeQuietly(es);
-                
-                super.stop();
-            }
-        };
-        
-        this.executor
-            .command(command)
-            .streams(streams);
-        
-        try {
-            ProcessResult processResult = this.executor.execute();
-            return new Result(this, processResult.getExitValue());
-        } catch (InvalidExitValueException e) {
-            throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            throw new BlazeException("Unable to cleanly execute process", e);
-        } finally {
-            // close all the output streams (input stream closed above)
-            Streamables.close(os);
-            Streamables.close(es);
-        }
+    public CaptureOutput runCaptureOutput() throws BlazeException {
+        return ExecMixin.super.runCaptureOutput();
     }
-    
-    static public class Result extends com.fizzed.blaze.core.Result<Exec,Integer,Result> {
-        
-        Result(Exec action, Integer value) {
-            super(action, value);
-        }
-        
+
+    @Override
+    public T pipeErrorToOutput() {
+        return ExecMixin.super.pipeErrorToOutput();
     }
-    
+
+    @Override
+    public T exitValue(Integer exitValue) {
+        return ExecMixin.super.exitValue(exitValue);
+    }
+
+    @Override
+    public T timeout(long timeout, TimeUnit units) {
+        return ExecMixin.super.timeout(timeout, units);
+    }
+
+    @Override
+    public T disablePipeOutput() {
+        return ExecMixin.super.disablePipeOutput(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeOutput(File file) {
+        return ExecMixin.super.pipeOutput(file); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeOutput(Path path) {
+        return ExecMixin.super.pipeOutput(path); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeOutput(OutputStream stream) {
+        return ExecMixin.super.pipeOutput(stream); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T disablePipeInput() {
+        return ExecMixin.super.disablePipeInput(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeInput(String text, Charset charset) {
+        return ExecMixin.super.pipeInput(text, charset); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeInput(String text) {
+        return ExecMixin.super.pipeInput(text); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeInput(File file) {
+        return ExecMixin.super.pipeInput(file); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeInput(Path path) {
+        return ExecMixin.super.pipeInput(path); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeInput(InputStream stream) {
+        return ExecMixin.super.pipeInput(stream); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T disablePipeError() {
+        return ExecMixin.super.disablePipeError(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeError(File file) {
+        return ExecMixin.super.pipeError(file); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeError(Path path) {
+        return ExecMixin.super.pipeError(path); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public T pipeError(OutputStream stream) {
+        return ExecMixin.super.pipeError(stream); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }
