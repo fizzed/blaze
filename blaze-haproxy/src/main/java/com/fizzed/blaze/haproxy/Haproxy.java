@@ -15,9 +15,6 @@
  */
 package com.fizzed.blaze.haproxy;
 
-import static com.fizzed.blaze.util.BlazeUtils.sleep;
-import java.util.concurrent.TimeUnit;
-
 public interface Haproxy {
     
     default Haproxy useSudo() {
@@ -41,39 +38,39 @@ public interface Haproxy {
         String backend,
         String server);
     
-    default boolean waitTillServerDrained(
-            String backend,
-            String server,
-            long timeout,
-            long pollEvery,
-            TimeUnit timeUnit) {
-        
-        long started = System.currentTimeMillis();
-        long timeoutAt = started + timeUnit.toMillis(timeout);
-        int count = 0;
-        
-        System.out.print("Waiting for " + timeout + " " + timeUnit + " till drained...");
-        
-        while (timeoutAt > System.currentTimeMillis()) {
-            if (count > 0) {
-                sleep(pollEvery, timeUnit);
-            }
-            
-            final HaproxyStats stats = this.getStats();
-            
-            final HaproxyStat stat = stats.findServer(backend, server);
-            
-            if (stat.getSessionsCurrent() <= 0) {
-                System.out.println("ok!");
-                return true;
-            }
-            
-            System.out.print("\rWaiting for " + timeout + " " + timeUnit + " till drained... (" + stat.getSessionsCurrent() + " current sessions)");
-        }
-        
-        System.out.println("timed out!");
-        return false;
-    }
+//    default boolean waitTillServerDrained(
+//            String backend,
+//            String server,
+//            long timeout,
+//            long pollEvery,
+//            TimeUnit timeUnit) {
+//        
+//        long started = System.currentTimeMillis();
+//        long timeoutAt = started + timeUnit.toMillis(timeout);
+//        int count = 0;
+//        
+//        System.out.print("Waiting for " + timeout + " " + timeUnit + " till drained...");
+//        
+//        while (timeoutAt > System.currentTimeMillis()) {
+//            if (count > 0) {
+//                sleep(pollEvery, timeUnit);
+//            }
+//            
+//            final HaproxyStats stats = this.getStats();
+//            
+//            final HaproxyStat stat = stats.findServer(backend, server);
+//            
+//            if (stat.getSessionsCurrent() <= 0) {
+//                System.out.println("ok!");
+//                return true;
+//            }
+//            
+//            System.out.print("\rWaiting for " + timeout + " " + timeUnit + " till drained... (" + stat.getSessionsCurrent() + " current sessions)");
+//        }
+//        
+//        System.out.println("timed out!");
+//        return false;
+//    }
     
     boolean isServerUp(
         String backend,
