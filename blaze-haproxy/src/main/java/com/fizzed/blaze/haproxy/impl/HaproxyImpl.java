@@ -17,6 +17,7 @@ package com.fizzed.blaze.haproxy.impl;
 
 import com.fizzed.blaze.Systems;
 import com.fizzed.blaze.haproxy.Haproxy;
+import com.fizzed.blaze.haproxy.HaproxyInfo;
 import com.fizzed.blaze.haproxy.HaproxyStat;
 import com.fizzed.blaze.haproxy.HaproxyStats;
 import org.slf4j.Logger;
@@ -74,6 +75,36 @@ public class HaproxyImpl implements Haproxy {
         }
             
         return result;
+    }
+    
+    @Override
+    public HaproxyInfo getInfo() {
+        
+        // build command
+        String command = "show info";
+        
+        String s = this.sendCommand(command);
+        
+//        Name: HAProxy
+//        Version: 2.1.5-1ppa1~focal
+//        Release_date: 2020/06/01
+        
+        // split into lines
+        String[] lines = s.split("\n");
+        
+        final HaproxyInfo info = new HaproxyInfo();
+        
+        for (int i = 1; i < lines.length; i++) {
+            String[] values = lines[i].split(":");
+            
+            if (values.length != 2) {
+                throw new RuntimeException("Invalid tokens for info");
+            }
+            
+            info.put(values[0].trim(), values[1].trim());
+        }
+        
+        return info;
     }
     
     @Override

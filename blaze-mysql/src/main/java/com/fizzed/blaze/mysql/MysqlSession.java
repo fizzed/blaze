@@ -18,10 +18,10 @@ package com.fizzed.blaze.mysql;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.ImmutableUri;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +32,14 @@ public class MysqlSession implements AutoCloseable {
     private final ImmutableUri uri;
     private final ImmutableUri redactedUri;
     private final Connection connection;
+    private final MysqlInfo info;
 
-    public MysqlSession(Context context, ImmutableUri uri, ImmutableUri redactedUri, Connection connection) {
+    public MysqlSession(Context context, ImmutableUri uri, ImmutableUri redactedUri, Connection connection, MysqlInfo info) {
         this.context = context;
         this.uri = uri;
         this.redactedUri = redactedUri;
         this.connection = connection;
+        this.info = info;
     }
 
     public Context context() {
@@ -46,6 +48,10 @@ public class MysqlSession implements AutoCloseable {
     
     public ImmutableUri uri() {
         return this.redactedUri;
+    }
+    
+    public MysqlInfo info() {
+        return this.info;
     }
 
     @Override
@@ -64,6 +70,10 @@ public class MysqlSession implements AutoCloseable {
         this.createDatabase(name, false);
     }
     
+    public void createDatabases(Collection<String> names, boolean ifNotExists) {
+        names.forEach(v -> this.createDatabase(v, ifNotExists));
+    }
+    
     public void createDatabase(String name, boolean ifNotExists) {
         try {
             try (Statement stmt = this.connection.createStatement()) {
@@ -79,6 +89,10 @@ public class MysqlSession implements AutoCloseable {
     
     public void dropDatabase(String name) {
         this.dropDatabase(name, false);
+    }
+    
+    public void dropDatabases(Collection<String> names, boolean ifExists) {
+        names.forEach(v -> this.dropDatabase(v, ifExists));
     }
     
     public void dropDatabase(String name, boolean ifExists) {

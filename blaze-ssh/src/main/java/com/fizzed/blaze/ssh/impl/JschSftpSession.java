@@ -24,6 +24,7 @@ import com.fizzed.blaze.ssh.SshSftpGet;
 import com.fizzed.blaze.ssh.SshSftpNoSuchFileException;
 import com.fizzed.blaze.ssh.SshSftpPut;
 import com.fizzed.blaze.ssh.SshSftpSession;
+import com.fizzed.blaze.util.DurationFormatter;
 import com.fizzed.blaze.util.HumanReadables;
 import com.fizzed.blaze.util.Streamable;
 import com.jcraft.jsch.ChannelSftp;
@@ -442,20 +443,22 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
                 : (total - current) * elapsedMillis / current;
 
             // bytes per second...
-            double bytesPerSec = (double)current / (elapsedMillis/1000);
-            double kilobytesPerSec = HumanReadables.kilobytes(bytesPerSec);
+            final double bytesPerSec = (double)current / (elapsedMillis/1000);
+            final double kilobytesPerSec = HumanReadables.kilobytes(bytesPerSec);
             
-            String speed = String.format("%.0f KiB/s", kilobytesPerSec);
+            final String speed = String.format("%.0f KiB/s", kilobytesPerSec);
             
-            int seconds = (int) (eta / 1000) % 60 ;
-            int minutes = (int) ((eta / (1000*60)) % 60);
-            int hours   = (int) ((eta / (1000*60*60)) % 24);
+//            int seconds = (int) (eta / 1000) % 60 ;
+//            int minutes = (int) ((eta / (1000*60)) % 60);
+//            int hours   = (int) ((eta / (1000*60*60)) % 24);
+            
+            final String etaHms = current == 0 ? "N/A" : DurationFormatter.format(eta);
             
             double totalKilobytes = HumanReadables.kilobytes(total);
             double currentKilobytes = HumanReadables.kilobytes(current);
             
-            String etaHms = current == 0 ? "N/A"
-                : String.format("%02d:%02d:%02d", hours, minutes, seconds);
+//            String etaHms = current == 0 ? "N/A"
+//                : String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
             StringBuilder sb = new StringBuilder(140);
             int percent = (int) (current * 100 / total);

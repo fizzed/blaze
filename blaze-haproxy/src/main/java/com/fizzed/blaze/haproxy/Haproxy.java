@@ -27,6 +27,8 @@ public interface Haproxy {
     
     String sendCommand(String command);
     
+    HaproxyInfo getInfo();
+    
     HaproxyStats getStats();
     
     void setServerState(

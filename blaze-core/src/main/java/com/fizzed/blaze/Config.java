@@ -30,6 +30,7 @@ public interface Config {
     static String KEY_COMMAND_EXTS = "blaze.command.exts";
     static String KEY_DEFAULT_TASK = "blaze.default.task";
     static String KEY_DEPENDENCIES = "blaze.dependencies";
+    static String KEY_REPOSITORIES = "blaze.repositories";
     static String KEY_DEPENDENCY_CLEAN = "blaze.dependency.clean";
     
     static String DEFAULT_TASK = "main";

@@ -22,6 +22,7 @@ import com.fizzed.blaze.core.UriMixin;
 import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.util.ObjectHelper;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.slf4j.Logger;
@@ -99,9 +100,16 @@ public class MysqlConnect extends Action<MysqlConnect.Result,MysqlSession> imple
             
             final Connection connection = DriverManager.getConnection(jdbcUrl.toString());
 
-            log.info("Connected to {} (in {} ms)", redactedJdbcUrl, (System.currentTimeMillis() - start));
+            final DatabaseMetaData meta = connection.getMetaData();
             
-            return new Result(this, new MysqlSession(this.context, this.uri.toImmutableUri(), redactedJdbcUrl.toImmutableUri(), connection));
+            final String name = meta.getDatabaseProductName();
+            final String version = meta.getDatabaseProductVersion();
+            
+            final MysqlInfo info = new MysqlInfo(name, version);
+            
+            log.info("Connected to {} ({} v{}) (in {} ms)", redactedJdbcUrl, name, version, (System.currentTimeMillis() - start));
+            
+            return new Result(this, new MysqlSession(this.context, this.uri.toImmutableUri(), redactedJdbcUrl.toImmutableUri(), connection, info));
             
         }
         catch (SQLException e) {

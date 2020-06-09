@@ -33,19 +33,35 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.ivy.Ivy;
+import org.apache.ivy.core.cache.ArtifactOrigin;
+import org.apache.ivy.core.cache.CacheDownloadOptions;
+import org.apache.ivy.core.cache.CacheMetadataOptions;
+import org.apache.ivy.core.cache.CacheResourceOptions;
+import org.apache.ivy.core.cache.DefaultRepositoryCacheManager;
+import org.apache.ivy.core.cache.ModuleDescriptorWriter;
+import org.apache.ivy.core.cache.RepositoryCacheManager;
 import org.apache.ivy.core.module.descriptor.Artifact;
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor;
 import org.apache.ivy.core.module.descriptor.DefaultModuleDescriptor;
+import org.apache.ivy.core.module.descriptor.DependencyDescriptor;
+import org.apache.ivy.core.module.descriptor.ModuleDescriptor;
 import org.apache.ivy.core.module.id.ModuleRevisionId;
 import org.apache.ivy.core.report.ArtifactDownloadReport;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
+import org.apache.ivy.core.resolve.ResolvedModuleRevision;
 import org.apache.ivy.core.settings.IvySettings;
+import org.apache.ivy.plugins.repository.ArtifactResourceResolver;
+import org.apache.ivy.plugins.repository.Repository;
+import org.apache.ivy.plugins.repository.Resource;
+import org.apache.ivy.plugins.repository.ResourceDownloader;
 import org.apache.ivy.plugins.resolver.ChainResolver;
 import org.apache.ivy.plugins.resolver.FileSystemResolver;
 import org.apache.ivy.plugins.resolver.IBiblioResolver;
+import org.apache.ivy.plugins.resolver.util.ResolvedResource;
 import org.apache.ivy.util.DefaultMessageLogger;
 import org.apache.ivy.util.Message;
+import org.apache.ivy.util.url.CredentialsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +83,11 @@ public class IvyDependencyResolver implements DependencyResolver {
         // customize logging (ivy uses a terrible approach)
         Message.setDefaultLogger(new FilteringIvyLogger());
 
+        
+        // this actually works...
+//        CredentialsStore.INSTANCE.addCredentials("Realm", "example.com", "user", "pw");
+
+        
         // creates an Ivy instance with settings
         Ivy ivy = Ivy.newInstance();
         IvySettings ivySettings = ivy.getSettings();
@@ -103,19 +124,42 @@ public class IvyDependencyResolver implements DependencyResolver {
         
         ivySettings.addRepositoryCacheManager(cacheManager);
         */
-        /**
-        DefaultRepositoryCacheManager cacheManager
-                = (DefaultRepositoryCacheManager)ivySettings.getRepositoryCacheManagers()[0];
-        */
-        
+//        DefaultRepositoryCacheManager cacheManager
+//            = (DefaultRepositoryCacheManager)ivySettings.getRepositoryCacheManagers()[0];
+//        cacheManager.clean();
         
         // maven central resolver
         IBiblioResolver mavenCentralResolver = new IBiblioResolver();
         mavenCentralResolver.setM2compatible(true);
         mavenCentralResolver.setName("mavenCentral");
         mavenCentralResolver.setUseMavenMetadata(true);
-        //mavenCentralResolver.addArtifactPattern(
-        //    "http://repo1.maven.org/maven2/[organisation]/[module]/[revision]/[artifact](-[revision]).[ext]");
+        
+        // any additional upstream repositories?
+        final List<IBiblioResolver> additionalResolvers = new ArrayList<>();
+        
+        final List<String> repositories = context.config().valueList(Config.KEY_REPOSITORIES).orNull();
+        
+        if (repositories != null) {
+            for (String repository : repositories) {
+                String[] tokens = repository.split(",");
+                String id = null;
+                String root = null;
+                if (tokens.length == 2) {
+                    id = tokens[0];
+                    root = tokens[1];
+                } else {
+                    root = tokens[0];
+                    id = root;
+                }
+                log.debug("Adding extra maven repo {}", root);
+                IBiblioResolver additionalResolver = new IBiblioResolver();
+                additionalResolver.setM2compatible(true);
+                additionalResolver.setName(id);
+                additionalResolver.setUseMavenMetadata(true);
+                additionalResolver.setRoot(root);
+                additionalResolvers.add(additionalResolver);
+            }
+        }
         
         // maven local resolver
         FileSystemResolver mavenLocalResolver = new FileSystemResolver();
@@ -139,6 +183,10 @@ public class IvyDependencyResolver implements DependencyResolver {
         chainResolver.setName("default");
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
+        additionalResolvers.forEach(v -> {
+            chainResolver.add(v);
+        });
+        
         //chainResolver.setChangingMatcher(PatternMatcher.REGEXP);
         //chainResolver.setChangingPattern(".*-SNAPSHOT");
         //chainResolver.setCheckmodified(true);
@@ -164,8 +212,10 @@ public class IvyDependencyResolver implements DependencyResolver {
             });
 
         String[] confs = new String[] { "default" };
-        
+
         ResolveOptions resolveOptions = new ResolveOptions().setConfs(confs);
+
+        resolveOptions.setRefresh(true);
         
         //resolveOptions.setValidate(true);
         //resolveOptions.setCheckIfChanged(true);

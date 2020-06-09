@@ -152,6 +152,27 @@ public class Globber {
         return scan().stream();
     }
     
+    public Path scanOne() throws IOException {
+        final List<Path> paths = this.scan();
+        
+        if (paths.size() > 1) {
+            throw new IOException("Too many files scanned (wanted 1 but got " + paths.size() + ")");
+        }
+        
+        return paths.get(0);
+    }
+    
+    public Path scanOne(boolean required) throws IOException {
+        
+        final Path path = this.scanOne();
+        
+        if (required && path == null) {
+            throw new IOException("No files scanned (wanted 1 but got 0)");
+        }
+        
+        return path;
+    }
+    
     public List<Path> scan() throws IOException {
         ArrayList<Path> paths = new ArrayList<>();
         
