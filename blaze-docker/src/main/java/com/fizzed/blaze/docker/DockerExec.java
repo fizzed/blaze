@@ -32,6 +32,14 @@ public class DockerExec extends LocalExec {
     @Override
     protected Exec.Result doRun() throws BlazeException {
         
+        final String containerName = this.session.uri().getHost();
+        
+        final boolean running = Dockers.isContainerRunning(containerName);
+        
+        if (!running) {
+            throw new BlazeException("Docker container " + containerName + " is not running");
+        }
+        
         // we need to run a docker command locally, which is what we'll do!
         final LocalExec localExec = new LocalExec(this.context);
         
@@ -39,8 +47,7 @@ public class DockerExec extends LocalExec {
         
         localExec.arg("exec");
         localExec.args("-i");
-
-        localExec.arg(this.session.uri().getHost());
+        localExec.arg(containerName);
         
         if (this.which.getCommand() != null) {
             localExec.arg(this.which.getCommand());
@@ -49,13 +56,10 @@ public class DockerExec extends LocalExec {
         // now include all arguments really submitted...
         this.arguments.forEach(v -> localExec.arg(v));
         
-        
         localExec.pipeInput(this.pipeInput);
         localExec.pipeOutput(this.pipeOutput);
         localExec.pipeError(this.pipeError);
         localExec.pipeErrorToOutput(this.pipeErrorToOutput);
-        
-        
         
         return localExec.runResult();
     }

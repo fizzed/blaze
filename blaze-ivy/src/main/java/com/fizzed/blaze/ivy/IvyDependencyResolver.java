@@ -168,7 +168,8 @@ public class IvyDependencyResolver implements DependencyResolver {
         // any additional upstream repositories?
         final List<IBiblioResolver> additionalResolvers = new ArrayList<>();
         
-        final List<String> repositoryUrls = context.config().valueList(Config.KEY_REPOSITORIES).orNull();
+        final List<String> repositoryUrls = context != null && context.config() != null
+            ? context.config().valueList(Config.KEY_REPOSITORIES).orNull() : null;
         
         if (repositoryUrls != null) {
             for (String repositoryUrl : repositoryUrls) {

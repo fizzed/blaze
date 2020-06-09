@@ -45,6 +45,7 @@ public class IvyDependencyResolverTest {
         config = mock(Config.class);
         context = new ContextImpl(null, null, null, config);
         when(config.value(anyString(), any())).thenReturn(Value.of("", Boolean.FALSE));
+        when(config.valueList(anyString())).thenReturn(Value.of("", null));
     }
     
     @Test

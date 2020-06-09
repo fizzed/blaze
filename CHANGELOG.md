@@ -1,8 +1,15 @@
 Blaze by Fizzed
 ===============
 
-#### 1.0.0 - 2020-06-06
+#### 1.0.0 - 2020-06-09
 
+ - New blaze-haproxy module
+ - New blaze-docker module to simplify executing on docker containers
+ - New blaze-mysql module
+ - Ability to configure additional Maven repositories (including private)
+ - Credentials are pulled from ~/.m2/settings.xml for additional repos
+ - Fix bug with SSH sessions sometimes closing stdin of executing blaze app
+ - Major changes to under-the-hood on ivy resolver.
  - Improved argument handling.  Allowing --arg to also be equivalent of -Darg
  - New prompt() with lots of options to help with input
  - Fix issue of ssh session close causing stdin to close

@@ -17,11 +17,15 @@ package com.fizzed.blaze.docker;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.local.LocalExec;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.ExecSession;
 import com.fizzed.blaze.util.ImmutableUri;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DockerSession implements ExecSession {
+    static private final Logger log = LoggerFactory.getLogger(DockerSession.class);
 
     private final Context context;
     private final ImmutableUri uri;
