@@ -21,6 +21,7 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.UriMixin;
 import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.util.ObjectHelper;
+import com.fizzed.blaze.util.Timer;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -82,21 +83,22 @@ public class MysqlConnect extends Action<MysqlConnect.Result,MysqlSession> imple
                 jdbcUrl.path(this.uri.getPath());
             }
             
+            MutableUri redactedJdbcUrl = new MutableUri(jdbcUrl);
+            // cleanup the "jdbc" on front too
+            redactedJdbcUrl.scheme("mysql");
+            
+            
             if (this.uri.getUsername() != null) {
                 jdbcUrl.query("user", this.uri.getUsername());
             }
             
-            
-            MutableUri redactedJdbcUrl = new MutableUri(jdbcUrl);
-            
-            
             if (this.uri.getPassword() != null) {
                 jdbcUrl.query("password", this.uri.getPassword());
-                redactedJdbcUrl.query("password", "*redacted-pw*");
             }
             
-            final long start = System.currentTimeMillis();
-            log.info("Connecting to {}", redactedJdbcUrl);
+            final Timer timer = new Timer();
+            
+            log.info("Connecting to {} (as {})", redactedJdbcUrl, this.uri.getUsername());
             
             final Connection connection = DriverManager.getConnection(jdbcUrl.toString());
 
@@ -107,7 +109,7 @@ public class MysqlConnect extends Action<MysqlConnect.Result,MysqlSession> imple
             
             final MysqlInfo info = new MysqlInfo(name, version);
             
-            log.info("Connected to {} ({} v{}) (in {} ms)", redactedJdbcUrl, name, version, (System.currentTimeMillis() - start));
+            log.info("Connected to {} (as {}) ({} v{}) (in {})", redactedJdbcUrl, this.uri.getUsername(), name, version, timer);
             
             return new Result(this, new MysqlSession(this.context, this.uri.toImmutableUri(), redactedJdbcUrl.toImmutableUri(), connection, info));
             

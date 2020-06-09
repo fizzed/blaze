@@ -15,8 +15,12 @@
  */
 package com.fizzed.blaze.system;
 
+import com.fizzed.blaze.util.ImmutableUri;
+
 public interface ExecSession {
  
+    public ImmutableUri uri();
+    
     public Exec newExec();
     
 }

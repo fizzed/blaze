@@ -15,13 +15,13 @@
  */
 package com.fizzed.blaze.haproxy;
 
-import com.fizzed.blaze.haproxy.impl.HaproxyImpl;
+import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.system.ExecSession;
 
 public class Haproxys {
  
-    static public Haproxy haproxy(ExecSession execSession) {
-        return new HaproxyImpl(execSession);
+    static public HaproxyConnect haproxyConnect(ExecSession execSession) {
+        return new HaproxyConnect(Contexts.currentContext(), execSession);
     } 
     
 }

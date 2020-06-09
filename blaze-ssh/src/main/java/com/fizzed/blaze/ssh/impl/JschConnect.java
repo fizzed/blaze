@@ -45,6 +45,7 @@ import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.ssh.util.ProxyCommand;
 import com.fizzed.blaze.ssh.util.SshCommand;
 import com.fizzed.blaze.util.ObjectHelper;
+import com.fizzed.blaze.util.Timer;
 import com.jcraft.jsch.Proxy;
 import java.nio.file.attribute.PosixFileAttributeView;
 
@@ -344,7 +345,7 @@ public class JschConnect extends SshConnect {
             log.info("Open ssh://{}@{}:{}{}...",
                 jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo);
             
-            long start = System.currentTimeMillis();
+            final Timer timer = new Timer();
             
             jschSession.connect((int)this.connectTimeout);
             
@@ -355,8 +356,8 @@ public class JschConnect extends SshConnect {
             
             long stop = System.currentTimeMillis();
             
-            log.info("Connected ssh://{}@{}:{}{} in {} ms",
-                jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo, (stop-start));
+            log.info("Connected ssh://{}@{}:{}{} (in {})",
+                jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo, timer);
             
             return createResult(new JschSession(this.context, this.uri.toImmutableUri(), jsch, jschSession));
         } catch (JSchException e) {

@@ -16,37 +16,25 @@
 package com.fizzed.blaze.haproxy.impl;
 
 import com.fizzed.blaze.Systems;
-import com.fizzed.blaze.haproxy.Haproxy;
 import com.fizzed.blaze.haproxy.HaproxyInfo;
 import com.fizzed.blaze.haproxy.HaproxyStat;
 import com.fizzed.blaze.haproxy.HaproxyStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.system.ExecSession;
+import com.fizzed.blaze.haproxy.HaproxySession;
 
-public class HaproxyImpl implements Haproxy {
-    static private final Logger log = LoggerFactory.getLogger(HaproxyImpl.class);
+public class HaproxySessionImpl implements HaproxySession {
+    static private final Logger log = LoggerFactory.getLogger(HaproxySessionImpl.class);
     
     protected final ExecSession execSession;
-    protected boolean sudo;
-    protected String adminSocket;
+    protected final boolean sudo;
+    protected final String adminSocket;
 
-    public HaproxyImpl(ExecSession execSession) {
+    public HaproxySessionImpl(ExecSession execSession, boolean sudo, String adminSocket) {
         this.execSession = execSession;
-        this.adminSocket = "/run/haproxy/admin.sock";
-        this.sudo = false;
-    }
-
-    @Override
-    public HaproxyImpl sudo(boolean sudo) {
-        this.sudo = sudo;
-        return this;
-    }
-    
-    @Override
-    public HaproxyImpl adminSocket(String adminSocket) {
         this.adminSocket = adminSocket;
-        return this;
+        this.sudo = sudo;
     }
     
     @Override
@@ -94,7 +82,7 @@ public class HaproxyImpl implements Haproxy {
         
         final HaproxyInfo info = new HaproxyInfo();
         
-        for (int i = 1; i < lines.length; i++) {
+        for (int i = 0; i < lines.length; i++) {
             String[] values = lines[i].split(":");
             
             if (values.length != 2) {

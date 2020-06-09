@@ -13,31 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.local;
+package com.fizzed.blaze.docker;
 
-import com.fizzed.blaze.Context;
-import com.fizzed.blaze.system.Exec;
-import com.fizzed.blaze.system.ExecSession;
-import com.fizzed.blaze.util.ImmutableUri;
+import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.util.MutableUri;
+import org.junit.Test;
 
-public class LocalSession implements ExecSession {
-
-    static private final MutableUri LOCAL_URL = new MutableUri("local://localhost");
-    private final Context context;
-
-    public LocalSession(Context context) {
-        this.context = context;
+public class DockerExecTest {
+ 
+    @Test
+    public void noDockerContainer() {
+        DockerSession session = new DockerSession(Contexts.currentContext(), new MutableUri("docker://nosuchcontainer"));
+        
+        String output = session.newExec()
+            .command("bash")
+            .runCaptureOutput()
+            .asString();
+        
+        
     }
-
-    @Override
-    public Exec newExec() {
-        return new LocalExec(context);
-    }
-
-    @Override
-    public ImmutableUri uri() {
-        return LOCAL_URL;
-    }
-
+    
 }

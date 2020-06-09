@@ -18,7 +18,8 @@ package com.fizzed.blaze.util;
 public class TerminalLine {
  
     private int length;
-    private String line;
+    private String beforePadded;
+    private String finalLine;
     
     public void update(
         String format,
@@ -30,6 +31,8 @@ public class TerminalLine {
         String s = String.format(format, args);
         sb.append(s);
 
+        this.beforePadded = sb.toString();
+        
         if (sb.length() > length) {
             this.length = sb.length();
         }
@@ -39,22 +42,31 @@ public class TerminalLine {
             sb.append(" ");
         }
         
-        this.line = sb.toString();
+        this.finalLine = sb.toString();
         
-        System.out.print(this.line);
+        System.out.print(this.finalLine);
     }
     
     public void done() {
-        this.done(1000L);
+        this.done(500L, null);
     }
     
-    public void done(long millis) {
+    public void done(String message, Object... args) {
+        this.done(500L, message, args);
+    }
+    
+    public void done(long millis, String message, Object... args) {
+        if (message != null) {
+            String joinedMessage = this.beforePadded + message;
+            this.update(joinedMessage, args);
+        }
         if (millis > 0) {
             BlazeUtils.sleep(millis);
         }
         System.out.println();
         this.length = 0;
-        this.line = null;
+        this.beforePadded = null;
+        this.finalLine = null;
     }
     
 }

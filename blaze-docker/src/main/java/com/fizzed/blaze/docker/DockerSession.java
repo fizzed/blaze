@@ -39,6 +39,7 @@ public class DockerSession implements ExecSession {
         return this.context;
     }
     
+    @Override
     public ImmutableUri uri() {
         return this.uri;
     }

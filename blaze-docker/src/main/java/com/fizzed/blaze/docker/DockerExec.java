@@ -56,6 +56,7 @@ public class DockerExec extends LocalExec {
         localExec.pipeErrorToOutput(this.pipeErrorToOutput);
         
         
+        
         return localExec.runResult();
     }
 

@@ -16,7 +16,8 @@
 package com.fizzed.blaze.util;
 
 /**
- *
+ * Simple timing utility.
+ * 
  * @author joelauer
  */
 public class Timer {
@@ -33,8 +34,20 @@ public class Timer {
         return this;
     }
     
+    public long elapsed() {
+        if (this.stop == 0) {
+            return System.currentTimeMillis() - this.start;
+        }
+        return (this.stop - this.start);
+    }
+    
     public long millis() {
         return (this.stop - this.start);
+    }
+
+    @Override
+    public String toString() {
+        return this.elapsed() + " ms";
     }
     
 }
