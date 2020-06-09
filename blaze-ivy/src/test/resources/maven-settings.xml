@@ -1,0 +1,23 @@
+<settings>
+  <servers>
+    <server>
+      <id>gpg.passphrase</id>
+      <passphrase>test</passphrase>
+    </server>
+    <server>
+      <id>example-internal</id>
+      <username>admin</username>
+      <password>123</password>
+    </server>
+    <server>
+      <id>gb-internal</id>
+      <username>yomama</username>
+      <password>testtest</password>
+    </server>
+    <server>
+      <id>sonatype-nexus-staging</id>
+      <username>dude</username>
+      <password>1&amp;3</password>
+    </server>
+  </servers>
+</settings>

@@ -24,6 +24,10 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.DependencyHelper;
 import java.io.File;
 import java.io.IOException;
+import java.net.Authenticator;
+import java.net.InetAddress;
+import java.net.PasswordAuthentication;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -31,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import static java.util.Optional.ofNullable;
 import java.util.Set;
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.cache.ArtifactOrigin;
@@ -51,6 +56,7 @@ import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.resolve.ResolvedModuleRevision;
 import org.apache.ivy.core.settings.IvySettings;
+import org.apache.ivy.plugins.matcher.PatternMatcher;
 import org.apache.ivy.plugins.repository.ArtifactResourceResolver;
 import org.apache.ivy.plugins.repository.Repository;
 import org.apache.ivy.plugins.repository.Resource;
@@ -72,7 +78,11 @@ public class IvyDependencyResolver implements DependencyResolver {
     static private final Logger log = LoggerFactory.getLogger(IvyDependencyResolver.class);
     
     @Override
-    public List<File> resolve(Context context, List<Dependency> resolvedDependencies, List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException {
+    public List<File> resolve(
+            Context context,
+            List<Dependency> resolvedDependencies,
+            List<Dependency> dependencies) throws DependencyResolveException, ParseException, IOException {
+        
         Objects.requireNonNull(context, "context may not be null");
         Objects.requireNonNull(resolvedDependencies, "resolvedDependencies may not be null");
         Objects.requireNonNull(dependencies, "dependencies may not be null");
@@ -84,9 +94,30 @@ public class IvyDependencyResolver implements DependencyResolver {
         Message.setDefaultLogger(new FilteringIvyLogger());
 
         
-        // this actually works...
-//        CredentialsStore.INSTANCE.addCredentials("Realm", "example.com", "user", "pw");
-
+        //
+        // maven settings file?
+        //
+        
+        MavenSettings mavenSettings = null;
+        Path mavenSettingsFile = context.userDir().resolve(".m2/settings.xml");
+        if (Files.exists(mavenSettingsFile)) {
+            try {
+                mavenSettings = MavenSettings.parse(mavenSettingsFile);
+                log.debug("Using maven settings {}", mavenSettingsFile);
+            }
+            catch (Exception e) {
+                log.error("Unable to cleanly parse {}", mavenSettingsFile, e);
+            }
+        }
+        
+        //
+        // load up any credentials?
+        //
+        
+        final IvyAuthenticator authenticator = new IvyAuthenticator();
+        
+        Authenticator.setDefault(authenticator);
+        
         
         // creates an Ivy instance with settings
         Ivy ivy = Ivy.newInstance();
@@ -137,26 +168,32 @@ public class IvyDependencyResolver implements DependencyResolver {
         // any additional upstream repositories?
         final List<IBiblioResolver> additionalResolvers = new ArrayList<>();
         
-        final List<String> repositories = context.config().valueList(Config.KEY_REPOSITORIES).orNull();
+        final List<String> repositoryUrls = context.config().valueList(Config.KEY_REPOSITORIES).orNull();
         
-        if (repositories != null) {
-            for (String repository : repositories) {
-                String[] tokens = repository.split(",");
-                String id = null;
-                String root = null;
-                if (tokens.length == 2) {
-                    id = tokens[0];
-                    root = tokens[1];
-                } else {
-                    root = tokens[0];
-                    id = root;
+        if (repositoryUrls != null) {
+            for (String repositoryUrl : repositoryUrls) {
+                MavenRepositoryUrl mru = MavenRepositoryUrl.parse(repositoryUrl);
+                
+                // are there credentials for this too?
+                MavenServer mavenServer = ofNullable(mavenSettings)
+                    .map(v -> v.findServerById(mru.getId()))
+                    .orElse(null);
+                
+                log.debug("Adding extra maven repo: {}->{}", mru.getId(), mru.getUrl());
+                
+                if (mavenServer != null) {
+                    String host = mru.getUrl().getHost();
+                    log.debug("Using maven settings credentials for id={}, host={}, username={}",
+                        mru.getId(), host, mavenServer.getUsername());
+                    
+                    authenticator.addCredentials(host, mavenServer.getUsername(), mavenServer.getPassword());
                 }
-                log.debug("Adding extra maven repo {}", root);
+                
                 IBiblioResolver additionalResolver = new IBiblioResolver();
                 additionalResolver.setM2compatible(true);
-                additionalResolver.setName(id);
+                additionalResolver.setName(mru.getId());
                 additionalResolver.setUseMavenMetadata(true);
-                additionalResolver.setRoot(root);
+                additionalResolver.setRoot(mru.getUrl().toString());
                 additionalResolvers.add(additionalResolver);
             }
         }
@@ -174,15 +211,16 @@ public class IvyDependencyResolver implements DependencyResolver {
         mavenLocalResolver.addIvyPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision].pom");
         mavenLocalResolver.setM2compatible(true);
         //mavenLocalResolver.setForce(true);
-        //mavenLocalResolver.setChangingMatcher(PatternMatcher.REGEXP);
-        //mavenLocalResolver.setChangingPattern(".*-SNAPSHOT");
-        //mavenLocalResolver.setCheckmodified(true);
+        mavenLocalResolver.setChangingMatcher(PatternMatcher.REGEXP);
+        mavenLocalResolver.setChangingPattern(".*-SNAPSHOT");
+        mavenLocalResolver.setCheckmodified(true);
         
         // chain resolvers together
         ChainResolver chainResolver = new ChainResolver();
         chainResolver.setName("default");
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
+        chainResolver.setDual(true);
         additionalResolvers.forEach(v -> {
             chainResolver.add(v);
         });
