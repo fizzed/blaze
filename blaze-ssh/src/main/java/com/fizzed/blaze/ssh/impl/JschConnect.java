@@ -47,7 +47,14 @@ import com.fizzed.blaze.ssh.util.SshCommand;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.Timer;
 import com.jcraft.jsch.Proxy;
+import com.jcraft.jsch.agentproxy.AgentProxy;
+import com.jcraft.jsch.agentproxy.AgentProxyException;
+import com.jcraft.jsch.agentproxy.RemoteIdentityRepository;
+import com.jcraft.jsch.agentproxy.USocketFactory;
+import com.jcraft.jsch.agentproxy.connector.SSHAgentConnector;
+import com.jcraft.jsch.agentproxy.usocket.JNAUSocketFactory;
 import java.nio.file.attribute.PosixFileAttributeView;
+import java.util.Vector;
 
 public class JschConnect extends SshConnect {
     static private final Logger log = LoggerFactory.getLogger(JschConnect.class);
@@ -321,6 +328,25 @@ public class JschConnect extends SshConnect {
                 });
             }
             
+            // enable ssh-agent connector
+            if (SSHAgentConnector.isConnectorAvailable()) {
+                log.debug("SSH_AUTH_SOCK env detected, will try to load identities...");
+                try {
+                    USocketFactory udsf = new JNAUSocketFactory();
+//                    AgentProxy ap = new AgentProxy(new SSHAgentConnector(udsf));
+                    RemoteIdentityRepository sshAgentRepository = new RemoteIdentityRepository(new SSHAgentConnector(udsf));
+                    
+                    Vector<Identity> identities = sshAgentRepository.getIdentities();
+                    for (Identity identity : identities) {
+                        jsch.addIdentity(identity, null);
+                    }
+                }
+                catch (AgentProxyException e) {
+                    throw new BlazeException("Unable to load identities from ssh-agent", e);
+                }
+            }
+            
+            
             if (log.isDebugEnabled()) {
                 IdentityRepository ir = jsch.getIdentityRepository();
                 @SuppressWarnings("UseOfObsoleteCollectionType")
@@ -332,7 +358,7 @@ public class JschConnect extends SshConnect {
                         log.debug("Identity {} {}", i.getName(), i.getAlgName());
                     });
             }
-            
+
             //jschSession.setConfig("PreferredAuthentications", "publickey,password");
             
             String proxyInfo = "";
@@ -346,7 +372,7 @@ public class JschConnect extends SshConnect {
                 jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo);
             
             final Timer timer = new Timer();
-            
+
             jschSession.connect((int)this.connectTimeout);
             
             // update uri with the connection info

@@ -28,6 +28,21 @@
             <artifactId>jsch</artifactId>
         </dependency>
         
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch.agentproxy.jsch</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch.agentproxy.sshagent</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch.agentproxy.usocket-jna</artifactId>
+        </dependency>
+        
         <!--
         <dependency>
             <groupId>com.jcraft</groupId>
