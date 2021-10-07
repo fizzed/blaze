@@ -63,7 +63,7 @@ public class blaze {
     @Task(order=3, value="For maintainers only. Update readme files with latest git version tag.")
     public void after_release() throws IOException {
         Integer exitValue
-            = exec("git", "diff-files", "--quiet")
+            = (int)exec("git", "diff-files", "--quiet")
                 .exitValues(0,1)
                 .run();
         
