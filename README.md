@@ -1,7 +1,15 @@
 Blaze by Fizzed
 =======================================
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fizzed/blaze/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fizzed/blaze)
+[![Maven Central](https://img.shields.io/maven-central/v/com.fizzed/blaze?color=blue&style=flat-square)](https://mvnrepository.com/artifact/com.fizzed/blaze)
+
+[![Java 8](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java8.yaml?branch=master&label=Java%208&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java8.yaml)
+[![Java 11](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java11.yaml?branch=master&label=Java%2011&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java11.yaml)
+[![Java 17](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java17.yaml?branch=master&label=Java%2017&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java17.yaml)
+
+[![Linux](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java8.yaml?branch=master&label=Linux&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java8.yaml)
+[![MacOS](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/macos-x64.yaml?branch=master&label=MacOS&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/macos-x64.yaml)
+[![Windows](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/windows-x64.yaml?branch=master&label=Windows&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/macos-x64.yaml)
 
 [Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
 
