@@ -31,6 +31,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.mockito.Mockito.spy;
 import org.slf4j.Logger;
@@ -113,7 +114,10 @@ public class WhichTest {
     @Test
     public void worksWithAbsolutePath() throws Exception {
         Path exeFile = FileHelper.resourceAsFile("/bin/hello-world-test.bat").toPath().toAbsolutePath();
-        
+
+        // for some reason, this file is NOT executable in CI
+        exeFile.toFile().setExecutable(true);
+
         Path f = new Which(context)
             .command(exeFile)
             .run();
