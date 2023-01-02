@@ -112,14 +112,14 @@ public class WhichTest {
     
     @Test
     public void worksWithAbsolutePath() throws Exception {
-        File exeFile = FileHelper.resourceAsFile("/bin/hello-world-test.bat");
+        Path exeFile = FileHelper.resourceAsFile("/bin/hello-world-test.bat").toPath().toAbsolutePath();
         
         Path f = new Which(context)
-            .command(exeFile.toString())
+            .command(exeFile)
             .run();
         
         assertThat(f, is(not(nullValue())));
-        assertThat(f.toFile(), is(exeFile));
+        assertThat(f.toAbsolutePath(), is(exeFile));
     }
     
     @Test
