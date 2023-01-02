@@ -105,6 +105,10 @@ public class SshBaseTest {
         Path emptyUserDir = context.userDir().resolve("empty");
         FileUtils.deleteQuietly(emptyUserDir.toFile());
         Files.createDirectories(emptyUserDir);
+        // build empty config file
+        Path sshDir = emptyUserDir.resolve(".ssh");
+        Files.createDirectories(sshDir);
+        Files.createFile(sshDir.resolve("config"));
         context.userDir(emptyUserDir);
     }
     

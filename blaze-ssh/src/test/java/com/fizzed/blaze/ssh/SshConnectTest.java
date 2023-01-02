@@ -84,6 +84,7 @@ public class SshConnectTest extends SshBaseTest {
                     .username("doesnotexist")
                     .run();
         } catch (Exception e) {
+            log.error("", e);
             assertThat(e.getMessage(), containsString("reject HostKey"));
         }
     }
@@ -270,7 +271,7 @@ public class SshConnectTest extends SshBaseTest {
     public void sshConfig() throws Exception {
         contextWithEmptyUserDir();
         
-        Path configFile = context.userDir().resolve("../config/.ssh/config");
+        Path configFile = context.userDir().resolve("../.ssh/config");
         
         sshd.start();
         

@@ -47,7 +47,7 @@ public class ClassLoaderHelper {
 //            throw new IllegalArgumentException("Only classloaders of type URLClassLoader supported");
 //        }
         if (!(classLoader instanceof BlazeClassLoader)) {
-            throw new IllegalArgumentException("Only classloaders of type BlazeClassLoader supported");
+            throw new IllegalArgumentException("Only classloaders of type BlazeClassLoader supported. Used was " + classLoader.getClass());
         }
         
         return (BlazeClassLoader)classLoader;

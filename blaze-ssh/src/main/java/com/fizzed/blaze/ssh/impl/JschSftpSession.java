@@ -148,7 +148,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     public List<SshFile> ls(Path path) throws SshException {
         try {
             @SuppressWarnings("UseOfObsoleteCollectionType")
-            java.util.Vector<Object> fileObjects = this.channel.ls(PathHelper.toString(path));
+            java.util.Vector<LsEntry> fileObjects = this.channel.ls(PathHelper.toString(path));
             
             List<SshFile> files = new ArrayList<>();
             
