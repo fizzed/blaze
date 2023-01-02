@@ -1,4 +1,4 @@
-name: Linux x64
+name: Java 11
 
 on:
   push

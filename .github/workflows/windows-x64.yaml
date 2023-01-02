@@ -1,4 +1,4 @@
-name: MacOS x64
+name: Windows x64
 
 on:
   push
