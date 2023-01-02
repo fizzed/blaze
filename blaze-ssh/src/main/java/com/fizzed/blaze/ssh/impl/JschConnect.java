@@ -252,7 +252,11 @@ public class JschConnect extends SshConnect {
             //jschSession.setConfig("cipher.c2s", "aes128-cbc,3des-cbc,blowfish-cbc");
             //jschSession.setConfig("CheckCiphers", "aes128-cbc"); 
             
-            
+
+            // new JSCH fork -- enable old ssh-rsa
+            jschSession.setConfig("server_host_key", jschSession.getConfig("server_host_key") + ",ssh-rsa");
+            jschSession.setConfig("PubkeyAcceptedAlgorithms", jschSession.getConfig("PubkeyAcceptedAlgorithms") + ",ssh-rsa");
+
             //
             // mimic openssh ~.ssh/known_hosts
             //
@@ -350,7 +354,7 @@ public class JschConnect extends SshConnect {
             if (log.isDebugEnabled()) {
                 IdentityRepository ir = jsch.getIdentityRepository();
                 @SuppressWarnings("UseOfObsoleteCollectionType")
-                java.util.Vector<Object> identities = ir.getIdentities();
+                java.util.Vector<Identity> identities = ir.getIdentities();
                 identities.stream()
                     .filter((identity) -> (identity instanceof Identity))
                     .map((identity) -> (Identity)identity)

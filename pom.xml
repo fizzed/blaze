@@ -126,10 +126,11 @@
             </dependency>
 
             <!-- blaze-ssh dependencies -->
+            <!-- jsch is no longer maintained, this is a compat version -->
             <dependency>
-                <groupId>com.jcraft</groupId>
+                <groupId>com.github.mwiede</groupId>
                 <artifactId>jsch</artifactId>
-                <version>0.1.55</version>
+                <version>0.2.5</version>
             </dependency>
 
             <dependency>
@@ -202,13 +203,13 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.2</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>3.3.3</version>
+                <version>4.11.0</version>
             </dependency>
 
             <dependency>
