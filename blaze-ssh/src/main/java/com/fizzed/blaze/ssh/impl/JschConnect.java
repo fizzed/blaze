@@ -83,6 +83,18 @@ public class JschConnect extends SshConnect {
         this.identityFiles = new ArrayList<>();
         this.identityFiles.add(context.withUserDir(".ssh/id_rsa"));
         this.identityFiles.add(context.withUserDir(".ssh/id_dsa"));
+        this.identityFiles.add(context.withUserDir(".ssh/id_ed25519"));
+        this.identityFiles.add(context.withUserDir(".ssh/id_ecdsa"));
+        this.identityFiles.add(context.withUserDir(".ssh/id_ecdsa_sk"));
+        this.identityFiles.add(context.withUserDir(".ssh/id_ed25519_sk"));
+        this.identityFiles.add(context.withUserDir(".ssh/id_xmss"));
+        /*Will attempt key: /home/jjlauer/.ssh/id_rsa
+        Will attempt key: /home/jjlauer/.ssh/id_ed25519
+        debug1: Will attempt key: /home/jjlauer/.ssh/id_ecdsa
+        debug1: Will attempt key: /home/jjlauer/.ssh/id_ecdsa_sk
+        debug1: Will attempt key: /home/jjlauer/.ssh/id_ed25519_sk
+        debug1: Will attempt key: /home/jjlauer/.ssh/id_xmss
+        debug1: Will attempt key: /home/jjlauer/.ssh/id_dsa*/
         this.hostChecking = true;
     }
     
