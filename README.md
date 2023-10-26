@@ -6,6 +6,7 @@ Blaze by Fizzed
 [![Java 8](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java8.yaml?branch=master&label=Java%208&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java8.yaml)
 [![Java 11](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java11.yaml?branch=master&label=Java%2011&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java11.yaml)
 [![Java 17](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java17.yaml?branch=master&label=Java%2017&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java17.yaml)
+[![Java 21](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java21.yaml?branch=master&label=Java%2021&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java21.yaml)
 
 [![Linux](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java8.yaml?branch=master&label=Linux&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java8.yaml)
 [![MacOS](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/macos-x64.yaml?branch=master&label=MacOS&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/macos-x64.yaml)
