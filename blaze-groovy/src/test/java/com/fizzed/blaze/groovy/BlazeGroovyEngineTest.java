@@ -154,7 +154,7 @@ public class BlazeGroovyEngineTest {
             
             fail();
         } catch (MultipleCompilationErrorsException e) {
-            assertThat(e.getMessage(), containsString("expecting '}'"));
+            assertThat(e.getMessage(), containsString("startup failed"));
         }
     }
     

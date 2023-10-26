@@ -24,9 +24,9 @@
         </dependency>
         
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <classifier>indy</classifier>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+<!--            <classifier>indy</classifier>-->
         </dependency>
         
         <!-- testing -->
