@@ -65,6 +65,16 @@ public class Dependency {
         if (version.equals("")) {
             throw new IllegalArgumentException("Invalid dependency (not in format groupId:artifactId:version)");
         }
+
+        // https://ant.apache.org/ivy/history/2.5.0-rc1/settings/version-matchers.html
+        // https://stackoverflow.com/questions/30571/how-do-i-tell-maven-to-use-the-latest-version-of-a-dependency
+        // convert "latest" into the .ivy2 equivalent
+        if (version.equalsIgnoreCase("latest")) {
+            version = "latest.integration";
+        }
+        if (version.equalsIgnoreCase("release")) {
+            version = "latest.release";
+        }
         
         return new Dependency(groupId, artifactId, version);
     }

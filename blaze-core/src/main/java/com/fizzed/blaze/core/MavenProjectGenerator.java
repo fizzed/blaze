@@ -35,6 +35,16 @@ public class MavenProjectGenerator {
         return this;
     }
 
+    static public String fromIvyToMavenVersion(String ivyVersion) {
+        if (ivyVersion.equalsIgnoreCase("latest.integration")) {
+            return "LATEST";
+        }
+        if (ivyVersion.equalsIgnoreCase("latest.release")) {
+            return "RELEASE";
+        }
+        return ivyVersion;
+    }
+
     static public List<Path> detectProjectToScriptPaths(Path scriptFile) throws IOException {
         final List<Path> paths = new ArrayList<>();
 
@@ -142,7 +152,7 @@ public class MavenProjectGenerator {
             sb.append("    <dependency>\n");
             sb.append("      <groupId>" + dependency.getGroupId() + "</groupId>\n");
             sb.append("      <artifactId>" + dependency.getArtifactId() + "</artifactId>\n");
-            sb.append("      <version>" + dependency.getVersion() + "</version>\n");
+            sb.append("      <version>" + fromIvyToMavenVersion(dependency.getVersion()) + "</version>\n");
             sb.append("    </dependency>\n");
         }
         sb.append("  </dependencies>\n");
