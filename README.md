@@ -50,7 +50,7 @@ invoke blaze, it does the following:
     - Or write your own (examples [here](blaze-core/src/main/java/com/fizzed/blaze/jdk), [here](blaze-core/src/main/java/com/fizzed/blaze/nashorn), [here](blaze-kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](blaze-groovy/src/main/java/com/fizzed/blaze/groovy))
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
- - [IDE support](https://github.com/fizzed/blaze-netbeans)
+ - [IDE support](https://github.com/fizzed/blaze#ide-support)
  - Small size so you can commit `blaze.jar` to your repository
  - Excellent framework support for executing processes, modifying the filesystem,
    user interaction, http, and ssh.
@@ -252,9 +252,23 @@ the following in your shell
 
 ## IDE support
 
-A Netbeans-certified plugin is available for Nebeans 8.1+.  You can find it
-in Netbeans 8.1 -> Tools > Plugins > Available Plugins > Blaze.  The source
-code and project are [here](https://github.com/fizzed/blaze-netbeans)
+Writing your blaze scripts in an IDE is significantly more productive than trying to write them in a text editor. We
+initially tried writing our own IDE plugins to automatically recognize blaze was present, but that proved too difficult
+to maintain over IDE versions.  As of Blaze v1.2.0+, there is a new simple method to enable IDE support across any
+IDE that supports Maven projects.
+
+    java -jar blaze.jar --generate-maven-project
+
+This command will leverage the location of the script currently being executed, calculate the dependencies it needs to
+run, and then create a minimal pom.xml in the same directory.  You can then open that pom.xml in any IDE, and you'll get
+all the full blown features of your IDE to efficiently write and maintain your blaze scripts.
+
+The ```--generate-maven-project``` command will set the target source version to Java 8 by default. If you need to override
+this to something else, you can add a [blaze-script].conf file that is associated with your blaze script, and add the
+following configuration values:
+
+    maven.project.source.version = 11
+    maven.project.target.version = 11
 
 ## Where to save your script(s)
 
