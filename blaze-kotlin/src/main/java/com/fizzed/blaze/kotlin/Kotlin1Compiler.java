@@ -32,9 +32,16 @@ import org.jetbrains.kotlin.utils.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Compiles .kt and .kts files to .class files that are saved on the filesystem
@@ -62,16 +69,37 @@ public class Kotlin1Compiler {
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
         compilerConfiguration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector);
         //compilerConfiguration.put(JVMConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME);
-        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, PathUtil.getJdkClassesRootsFromCurrentJre());
+
+        List<File> jdkClassesRootsFromCurrentJre = PathUtil.getJdkClassesRootsFromCurrentJre();
+        System.out.println("jdkClassesRootsFromCurrentJre: " + jdkClassesRootsFromCurrentJre);
+
+        List<File> jvmClassPath = ClassLoaderHelper.buildJvmClassPath();
+        System.out.println("jvmClassPath: " + jvmClassPath);
+
+        List<File> modFiles;
+        try {
+            modFiles = Files.list(Paths.get("/usr/lib/jvm/current/jmods/"))
+                .map(v -> v.toFile())
+                .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, modFiles);
+
+        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, jdkClassesRootsFromCurrentJre);
         JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, ClassLoaderHelper.buildClassPathAsFiles(classLoader));
+        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, ClassLoaderHelper.buildJvmClassPath());
         ContentRootsKt.addKotlinSourceRoot(compilerConfiguration, file.toAbsolutePath().toString());
         // NOTE: Kotlin v1.0.2+ moved this config key around and will break
         // when we bump up the version down the road. Kotlin is a moving target
         // with changing how its compiler internally is called
         //compilerConfiguration.add(CommonConfigurationKeys.SCRIPT_DEFINITIONS_KEY, StandardScriptDefinition.INSTANCE);
 
+        //List<String> classRoots = PathUtil.getJdkClassesRootsFromCurrentJre().stream().map(v -> v.toString()).collect(Collectors.toList());
+
         compilerConfiguration.put(JVMConfigurationKeys.FRIEND_PATHS, new ArrayList<>());
         compilerConfiguration.put(CommonConfigurationKeys.MODULE_NAME, "blaze");
+        compilerConfiguration.put(JVMConfigurationKeys.OUTPUT_DIRECTORY, classesDir.toFile());
 
         Disposable disposable = Disposer.newDisposable();
         try {
