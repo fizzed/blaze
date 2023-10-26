@@ -202,15 +202,16 @@ public class Bootstrap1 {
     
     public void printHelp() {
         System.out.println(getName() + ": [options] <task> [<task> ...]");
-        System.out.println("-f|--file <file>   Use this " + getName() + " file instead of default");
-        System.out.println("-d|--dir <dir>     Search this dir for " + getName() + " file instead of default (-f supercedes)");
-        System.out.println("-l|--list          Display list of available tasks");
-        System.out.println("-q                 Only log " + getName() + " warnings to stdout (script logging is still info level)");
-        System.out.println("-qq                Only log warnings to stdout (including script logging)");
-        System.out.println("-x[x...]           Increases verbosity of logging to stdout");
-        System.out.println("-v|--version       Display version and then exit");
-        System.out.println("-Dname=value       Sets a System property as name=value");
-        System.out.println("-i|--install <dir> Install blaze or blaze.bat to directory");
+        System.out.println("-f|--file <file>         Use this " + getName() + " file instead of default");
+        System.out.println("-d|--dir <dir>           Search this dir for " + getName() + " file instead of default (-f supercedes)");
+        System.out.println("-l|--list                Display list of available tasks");
+        System.out.println("-q                       Only log " + getName() + " warnings to stdout (script logging is still info level)");
+        System.out.println("-qq                      Only log warnings to stdout (including script logging)");
+        System.out.println("-x[x...]                 Increases verbosity of logging to stdout");
+        System.out.println("-v|--version             Display version and then exit");
+        System.out.println("-Dname=value             Sets a System property as name=value");
+        System.out.println("--generate-maven-project Generate a maven project pom.xml in the same dir as your blaze script for IDE support");
+        System.out.println("-i|--install <dir>       Install blaze or blaze.bat to directory");
     }
     
     public Blaze buildBlaze() {
