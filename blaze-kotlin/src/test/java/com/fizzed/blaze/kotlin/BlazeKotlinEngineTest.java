@@ -49,9 +49,6 @@ public class BlazeKotlinEngineTest {
         FileUtils.deleteDirectory(classesDir.toFile());
     }
     
-    @Rule
-    public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
-    
     @Test
     public void hello() throws Exception {
         final File scriptFile = resourceAsFile("/kotlin/hello.kt");
@@ -59,7 +56,7 @@ public class BlazeKotlinEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("Hello World!\n"));
+        assertThat(result.outputUTF8(), containsString("Hello World!" + System.lineSeparator()));
     }
     
     @Test
@@ -78,7 +75,7 @@ public class BlazeKotlinEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("tasks =>\n" +
+        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() +
             " main"));
     }
     

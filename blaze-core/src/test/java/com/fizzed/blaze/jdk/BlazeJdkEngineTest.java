@@ -20,6 +20,7 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.util.BlazeRunner;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.CoreMatchers;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,7 +71,7 @@ public class BlazeJdkEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("Hello World!\n"));
+        assertThat(result.outputUTF8(), containsString("Hello World!" + System.lineSeparator()));
     }
     
     @Test
@@ -80,8 +81,7 @@ public class BlazeJdkEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("tasks =>\n" +
-            " main"));
+        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() + " main"));
     }
     
     @Test
@@ -92,7 +92,7 @@ public class BlazeJdkEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null, workingDir);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("worked\n"));
+        assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
     
     @Test
@@ -102,7 +102,7 @@ public class BlazeJdkEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("worked\n"));
+        assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
     
     @Test
@@ -112,7 +112,7 @@ public class BlazeJdkEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("worked\n"));
+        assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
     
 }
