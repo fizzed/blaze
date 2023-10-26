@@ -16,12 +16,7 @@
 package com.fizzed.blaze.cli;
 
 import com.fizzed.blaze.Version;
-import com.fizzed.blaze.core.Blaze;
-import com.fizzed.blaze.core.BlazeTask;
-import com.fizzed.blaze.core.MessageOnlyException;
-import com.fizzed.blaze.core.NoSuchTaskException;
-import com.fizzed.blaze.core.DependencyResolveException;
-import com.fizzed.blaze.core.WrappedBlazeException;
+import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.internal.InstallHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.IOException;
@@ -57,6 +52,7 @@ public class Bootstrap1 {
         Thread.currentThread().setName(getName());
 
         boolean listTasks = false;
+        boolean generateMavenProject = false;
         boolean loggingConfigured = false;
 
         while (!args.isEmpty()) {
@@ -90,6 +86,8 @@ public class Bootstrap1 {
             } else if (arg.equals("-d") || arg.equals("--dir")) {
                 String nextArg = nextArg(args, arg, "<dir>");
                 blazeDir = Paths.get(nextArg);
+            } else if (arg.equals("--generate-maven-project")) {
+                generateMavenProject = true;
             } else if (arg.equals("-i") || arg.equals("--install")) {
                 String nextArg = nextArg(args, arg, "<dir>");
                 Path installDir = Paths.get(nextArg);
@@ -147,7 +145,10 @@ public class Bootstrap1 {
             // build blaze
             Blaze blaze = this.buildBlaze();
 
-            if (listTasks) {
+            if (generateMavenProject) {
+                new MavenProjectGenerator().setBlaze(blaze).generate();
+                System.exit(0);
+            } else if (listTasks) {
                 logTasks(log, blaze);
                 System.exit(0);
             } else {
