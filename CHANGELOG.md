@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+#### 1.2.1 - 2023-10-26
+
+ - Prevent maven project installs and deploys in IDE support
+
 #### 1.2.0 - 2023-10-26
 
  - Add additional default ~/.ssh identities that will be loaded: id_ed25519, id_ecdsa, id_ecdsa_sk, id_ed25519_sk, id_xmss
