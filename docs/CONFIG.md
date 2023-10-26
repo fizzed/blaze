@@ -62,3 +62,15 @@ blaze.dependencies = [
 ```
 
 Try `examples/guava.js` or `examples/guava.groovy` to see it in action!
+
+### Latest and Release Versions
+
+As of Blaze v1.2.0+, the version keywords of "latest" and "release" are supported.  These are wildcard versions that
+will pull in either any recent version (including snapshots) or just the most recent released version.
+
+```
+blaze.dependencies = [
+    "com.google.guava:guava:latest"
+    "com.fizzed:crux-util:release"
+]
+```
