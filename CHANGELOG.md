@@ -1,6 +1,21 @@
 Blaze by Fizzed
 ===============
 
+#### 1.2.0
+
+#### 1.1.0 - 2023-01-02
+
+ - Switch to fork of jsch (since jsch is no longer maintained). Improves support for modern ciphers, etc.
+ - Automated testing using github workflows
+
+#### 1.0.2 - 2021-10-07
+
+ - Improved support for ssh-agents in blaze-ssh
+
+#### 1.0.1 - 2021-10-07
+
+ - Support for ssh-agents in blaze-ssh
+
 #### 1.0.0 - 2020-06-09
 
  - New blaze-haproxy module
