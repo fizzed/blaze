@@ -143,6 +143,8 @@ public class MavenProjectGenerator {
         sb.append("  <properties>\n");
         sb.append("    <maven.compiler.source>" + sourceVersion + "</maven.compiler.source>\n");
         sb.append("    <maven.compiler.target>" + targetVersion + "</maven.compiler.target>\n");
+        sb.append("    <maven.install.skip>true</maven.install.skip>\n");
+        sb.append("    <maven.deploy.skip>true</maven.deploy.skip>\n");
         sb.append("  </properties>\n");
         sb.append("  <build>\n");
         sb.append("    <sourceDirectory>${project.basedir}</sourceDirectory>\n");
