@@ -31,9 +31,9 @@ public class EngineHelperTest {
     
     @Test @Ignore("service loader does return same instance")
     public void newInstanceReturned() {
-        Engine engine0 = EngineHelper.findByFileExtension(".js", false);
+        Engine engine0 = EngineHelper.findByFileExtension(".java", false);
         
-        Engine engine1 = EngineHelper.findByFileExtension(".js", false);
+        Engine engine1 = EngineHelper.findByFileExtension(".java", false);
         
         assertThat(engine0, not(sameInstance(engine1)));
     }
