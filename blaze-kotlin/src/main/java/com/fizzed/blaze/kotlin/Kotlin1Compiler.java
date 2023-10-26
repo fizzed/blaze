@@ -17,24 +17,24 @@ package com.fizzed.blaze.kotlin;
 
 import com.fizzed.blaze.core.CompilationException;
 import com.fizzed.blaze.internal.ClassLoaderHelper;
-import com.intellij.openapi.Disposable;
-import com.intellij.openapi.util.Disposer;
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys;
+import org.jetbrains.kotlin.cli.common.config.ContentRootsKt;
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler;
 import org.jetbrains.kotlin.cli.jvm.config.JvmContentRootsKt;
-import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
+import org.jetbrains.kotlin.com.intellij.openapi.Disposable;
+import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer;
+import org.jetbrains.kotlin.config.CommonConfigurationKeys;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
-import org.jetbrains.kotlin.config.ContentRootsKt;
+import org.jetbrains.kotlin.config.JVMConfigurationKeys;
 import org.jetbrains.kotlin.utils.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
-import org.jetbrains.kotlin.config.CommonConfigurationKeys;
-import org.jetbrains.kotlin.load.java.JvmAbi;
-import org.jetbrains.kotlin.script.StandardScriptDefinition;
+import java.util.Collections;
 
 /**
  * Compiles .kt and .kts files to .class files that are saved on the filesystem
@@ -61,23 +61,27 @@ public class Kotlin1Compiler {
         // build kotline compiler configuration
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
         compilerConfiguration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector);
-        compilerConfiguration.put(JVMConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME);
-        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, PathUtil.getJdkClassesRoots());
+        //compilerConfiguration.put(JVMConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME);
+        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, PathUtil.getJdkClassesRootsFromCurrentJre());
         JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, ClassLoaderHelper.buildClassPathAsFiles(classLoader));
         ContentRootsKt.addKotlinSourceRoot(compilerConfiguration, file.toAbsolutePath().toString());
         // NOTE: Kotlin v1.0.2+ moved this config key around and will break
         // when we bump up the version down the road. Kotlin is a moving target
         // with changing how its compiler internally is called
-        compilerConfiguration.add(CommonConfigurationKeys.SCRIPT_DEFINITIONS_KEY, StandardScriptDefinition.INSTANCE);
-        
+        //compilerConfiguration.add(CommonConfigurationKeys.SCRIPT_DEFINITIONS_KEY, StandardScriptDefinition.INSTANCE);
+
+        compilerConfiguration.put(JVMConfigurationKeys.FRIEND_PATHS, new ArrayList<>());
+        compilerConfiguration.put(CommonConfigurationKeys.MODULE_NAME, "blaze");
+
         Disposable disposable = Disposer.newDisposable();
         try {
             KotlinCoreEnvironment env = KotlinCoreEnvironment.createForProduction(
                 disposable, compilerConfiguration, EnvironmentConfigFiles.JVM_CONFIG_FILES);
+
+            env.addKotlinSourceRoots(Collections.singletonList(file.toAbsolutePath().toFile()));
             
             boolean compiled = 
-                KotlinToJVMBytecodeCompiler.INSTANCE.compileBunchOfSources(
-                    env, null, classesDir.toFile(), new ArrayList<>(), false);
+                KotlinToJVMBytecodeCompiler.INSTANCE.compileBunchOfSources(env);
 
             if (!compiled) {
                 throw new CompilationException("Unable to cleanly compile " + file

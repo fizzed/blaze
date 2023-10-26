@@ -181,13 +181,13 @@
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-compiler-embeddable</artifactId>
-                <version>1.0.2</version>
+                <version>1.9.10</version>
             </dependency>
 
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-runtime</artifactId>
-                <version>1.0.2</version>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>1.9.10</version>
             </dependency>
 
             <!-- blaze-groovy dependencies -->
