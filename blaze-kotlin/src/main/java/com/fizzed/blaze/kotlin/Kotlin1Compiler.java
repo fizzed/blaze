@@ -70,13 +70,13 @@ public class Kotlin1Compiler {
         compilerConfiguration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector);
         //compilerConfiguration.put(JVMConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME);
 
-        List<File> jdkClassesRootsFromCurrentJre = PathUtil.getJdkClassesRootsFromCurrentJre();
+        /*List<File> jdkClassesRootsFromCurrentJre = ;
         System.out.println("jdkClassesRootsFromCurrentJre: " + jdkClassesRootsFromCurrentJre);
 
         List<File> jvmClassPath = ClassLoaderHelper.buildJvmClassPath();
-        System.out.println("jvmClassPath: " + jvmClassPath);
+        System.out.println("jvmClassPath: " + jvmClassPath);*/
 
-        List<File> modFiles;
+        /*List<File> modFiles;
         try {
             modFiles = Files.list(Paths.get("/usr/lib/jvm/current/jmods/"))
                 .map(v -> v.toFile())
@@ -85,9 +85,10 @@ public class Kotlin1Compiler {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, modFiles);
+        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, modFiles);*/
 
-        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, jdkClassesRootsFromCurrentJre);
+        // java 8 requires this for its .jars to compile kotlin, for anything else only the "JDK_HOME" set below was key
+        JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, PathUtil.getJdkClassesRootsFromCurrentJre());
         JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, ClassLoaderHelper.buildClassPathAsFiles(classLoader));
         JvmContentRootsKt.addJvmClasspathRoots(compilerConfiguration, ClassLoaderHelper.buildJvmClassPath());
         ContentRootsKt.addKotlinSourceRoot(compilerConfiguration, file.toAbsolutePath().toString());
@@ -101,6 +102,9 @@ public class Kotlin1Compiler {
         compilerConfiguration.put(JVMConfigurationKeys.FRIEND_PATHS, new ArrayList<>());
         compilerConfiguration.put(CommonConfigurationKeys.MODULE_NAME, "blaze");
         compilerConfiguration.put(JVMConfigurationKeys.OUTPUT_DIRECTORY, classesDir.toFile());
+//        compilerConfiguration.put(JVMConfigurationKeys.JDK_HOME, Paths.get("/usr/lib/jvm/current").toFile());
+        // java 9, 11+ this is apparently needed for a "modular" jdk
+        compilerConfiguration.put(JVMConfigurationKeys.JDK_HOME, Paths.get(System.getProperty("java.home")).toFile());
 
         Disposable disposable = Disposer.newDisposable();
         try {
