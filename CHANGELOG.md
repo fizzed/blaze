@@ -1,7 +1,18 @@
 Blaze by Fizzed
 ===============
 
-#### 1.2.0
+#### 1.2.0 - 2023-10-26
+
+ - Add additional default ~/.ssh identities that will be loaded: id_ed25519, id_ecdsa, id_ecdsa_sk, id_ed25519_sk, id_xmss
+ which are on top of existing id_rsa and id_dsa
+ - New general purpose blaze command "--generate-maven-project" to generate a pom.xml file that lives in same directory as 
+as the blaze script for IDE support. Will calculate dependencies specified in your [blaze script].conf file.
+ - Support for maven dependency keywords LATEST and RELEASE for dependency versions. LATEST will pull in most recent
+SNAPSHOT or release version, while RELEASE will only pull in latest released version.
+ - Bump commons-io to v2.11.0
+ - Bump ivy to v2.5.2
+ - Bump jsch fork to v0.2.12
+ - Bump slf4j to v2.0.7
 
 #### 1.1.0 - 2023-01-02
 
