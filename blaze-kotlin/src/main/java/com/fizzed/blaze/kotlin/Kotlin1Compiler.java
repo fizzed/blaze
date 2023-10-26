@@ -81,6 +81,7 @@ public class Kotlin1Compiler {
             modFiles = Files.list(Paths.get("/usr/lib/jvm/current/jmods/"))
                 .map(v -> v.toFile())
                 .collect(Collectors.toList());
+            System.out.println("modFiles: " + modFiles);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
