@@ -31,6 +31,11 @@ public class BlazeGroovyScript extends TargetObjectScript {
     static final public Predicate<Method> FILTER_EXCLUDE_RUN_METHOD = (Method m) -> {
         return !m.getName().equals("run");
     };
+
+    static final public Predicate<Method> FILTER_OTHER_GROOVY_METHODS = (Method m) -> {
+        // skip ANY method declared from groovy classes
+        return !m.getDeclaringClass().equals(groovy.lang.Script.class) && !m.getDeclaringClass().equals(groovy.lang.GroovyObjectSupport.class);
+    };
     
     final private BlazeGroovyEngine engine;
     final private Script script;
@@ -43,7 +48,7 @@ public class BlazeGroovyScript extends TargetObjectScript {
     
     @Override
     public List<BlazeTask> tasks() throws BlazeException {
-        return findTasks(FILTER_PUBLIC_INSTANCE_METHOD, FILTER_EXCLUDE_RUN_METHOD);
+        return findTasks(FILTER_OBJECT_INSTANCE_METHOD, FILTER_PUBLIC_INSTANCE_METHOD, FILTER_EXCLUDE_RUN_METHOD, FILTER_OTHER_GROOVY_METHODS);
     }
 
     @Override

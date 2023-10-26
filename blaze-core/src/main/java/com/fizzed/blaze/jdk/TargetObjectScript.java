@@ -39,6 +39,11 @@ public class TargetObjectScript implements Script {
     static final public Predicate<Method> FILTER_PUBLIC_INSTANCE_METHOD = (Method m) -> {
         return !Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers());
     };
+
+    static final public Predicate<Method> FILTER_OBJECT_INSTANCE_METHOD = (Method m) -> {
+        // skip ANY method declared from Object.class
+        return !m.getDeclaringClass().equals(Object.class);
+    };
     
     final protected Object targetObject;
 
@@ -50,7 +55,7 @@ public class TargetObjectScript implements Script {
         List<BlazeTask> tasks = new ArrayList<>();
         
         try {
-            Method[] methods = targetObject.getClass().getDeclaredMethods();
+            Method[] methods = targetObject.getClass().getMethods();
             
             FIND_METHODS:
             for (Method m : methods) {
@@ -114,7 +119,7 @@ public class TargetObjectScript implements Script {
     
     @Override
     public List<BlazeTask> tasks() throws BlazeException {
-        return findTasks(FILTER_PUBLIC_INSTANCE_METHOD);
+        return findTasks(FILTER_OBJECT_INSTANCE_METHOD, FILTER_PUBLIC_INSTANCE_METHOD);
     }
 
     @Override
