@@ -130,10 +130,13 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         // if we don't include source & target, the script will be evaluated in the java version currently running
         // the key is that we'll want to not use a cached class version if the JVM version changes, we'll add that to
         // the MD5 hash we calculate for cached copies of blaze scripts
-//        options.add("-source");
-//        options.add("1.8");
-//        options.add("-target");
-//        options.add("1.8");
+        int javaMajorVersion = ConfigHelper.getJavaSourceVersion(context);
+        String sourceVersion = javaMajorVersion <= 8 ? "1."+javaMajorVersion : Integer.toString(javaMajorVersion);
+
+        options.add("-source");
+        options.add(sourceVersion);
+        options.add("-target");
+        options.add(sourceVersion);
         
         // classpath to compile java file with
         options.add("-cp");

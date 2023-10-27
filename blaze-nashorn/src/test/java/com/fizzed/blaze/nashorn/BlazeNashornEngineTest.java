@@ -20,7 +20,7 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.NoSuchTaskException;
-import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
+//import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.core.Dependency;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
 import java.io.File;
@@ -41,37 +41,18 @@ import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
-// MOVE NASHORN TO ITS OWN DEPENDENCY SO IT WORKS ON JAVA 14+
-@Ignore
 public class BlazeNashornEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeNashornEngineTest.class);
     
     @Rule
     public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
     
-    @BeforeClass
+    /*@BeforeClass
     static public void forceBinResourceExecutable() throws Exception {
         // this makes the files in the "bin" sample directory executable
-        getBinDirAsResource();
-    }
-    
-    @Test
-    public void noDefaultBlazeFile() throws Exception {
-        try {
-            Blaze blaze = new Blaze.Builder()
-                // bin directory exists but does not have a blaze script in it
-                .directory(resourceAsFile("/globber"))
-                .build();
-            fail();
-        } catch (BlazeException e) {
-            assertThat(e.getMessage(), containsString("Unable to find a blaze file"));
-        }
-    }
-    
+        ShellTestHelper.getBinDirAsResource();
+    }*/
+
     @Test
     public void blazeFileDoesNotExist() throws Exception {
         try {
@@ -184,7 +165,7 @@ public class BlazeNashornEngineTest {
         assertThat(tasks, hasItem(new BlazeTask("blaze", null)));
     }
     
-    @Test @Ignore("Moving ivy dependency out requires changes to this...")
+    /*@Test @Ignore("Moving ivy dependency out requires changes to this...")
     public void dependency() throws Exception {
         systemOutRule.clearLog();
 
@@ -192,7 +173,7 @@ public class BlazeNashornEngineTest {
             .file(resourceAsFile("/nashorn/dependency.js"))
             .build();
         
-        assertThat(blaze.dependencies(), hasItem(Dependency.parse("com.google.guava:guava:18.0")));
+        assertThat(blaze.dependencies(), hasItem(Dependency.parse("com.fizzed:crux-util:release")));
         
         // executing the script will confirm the dependency in on classpath and would work
         // since the script uses the guava library and wouldn't compile without it
@@ -202,7 +183,7 @@ public class BlazeNashornEngineTest {
         blaze.execute("main");
         
         assertThat(systemOutRule.getLog(), containsString("Harry; Ron; Hermione"));
-    }
+    }*/
     
     @Test
     public void logInBindings() throws Exception {
@@ -219,7 +200,7 @@ public class BlazeNashornEngineTest {
         assertThat(systemOutRule.getLog(), containsString("Did this work?"));
     }
     
-    @Test @Ignore("Log output breaks")
+    /*@Test @Ignore("Log output breaks")
     public void captureOutputDisablesLoggingToStdout() throws Exception {
         systemOutRule.clearLog();
 
@@ -236,6 +217,6 @@ public class BlazeNashornEngineTest {
         blaze.execute("output");
         
         assertThat(systemOutRule.getLog(), containsString("Hello World 7586930100"));
-    }
+    }*/
     
 }

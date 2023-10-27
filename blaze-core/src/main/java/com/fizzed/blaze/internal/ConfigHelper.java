@@ -200,5 +200,36 @@ public class ConfigHelper {
             throw new IllegalStateException("MD5 hash failed", e);
         }
     }
+
+    static public int getJavaSourceVersion(Context context) {
+        String configValue = null;
+        try {
+            configValue = context.config().value("java.source.version").orNull();
+            if (configValue != null) {
+                return Integer.parseInt(configValue);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("java.source.version value [" + configValue + "] was not an integer");
+        }
+
+        // otherwise, we need detect the current java major version
+        String javaVersion = System.getProperty("java.version");
+        // e.g. 11.0.1, 12.0.1, 1.8.0, etc
+
+        if (javaVersion.startsWith("1.8")) {
+            return 8;
+        }
+
+        int periodPos = javaVersion.indexOf('.');
+        if (periodPos < 0) {
+            throw new IllegalStateException("java.version [" + javaVersion + "] not of format X.X.X");
+        }
+
+        try {
+            return Integer.parseInt(javaVersion.substring(0, periodPos));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("java.version [" + javaVersion + "] did not start with an integer");
+        }
+    }
     
 }

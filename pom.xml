@@ -30,6 +30,7 @@
     <modules>
         <module>blaze-core</module>
         <module>blaze-ivy</module>
+        <module>blaze-nashorn</module>
         <module>blaze-groovy</module>
         <module>blaze-kotlin</module>
         <module>blaze-http</module>
