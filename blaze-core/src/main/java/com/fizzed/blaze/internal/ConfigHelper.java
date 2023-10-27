@@ -173,6 +173,8 @@ public class ConfigHelper {
             .append(context.baseDir().toFile().getCanonicalPath())
             // version of blaze
             .append(Version.getVersion())
+            // v1.3.0+ -- the version of the JVM currently running (in case the user switches)
+            .append(System.getProperty("java.version"))
             .toString();
         
         String md5hash = md5(key);

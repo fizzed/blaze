@@ -127,10 +127,13 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
 
         List<String> options = new ArrayList<>();
 
-        options.add("-source");
-        options.add("1.8");
-        options.add("-target");
-        options.add("1.8");
+        // if we don't include source & target, the script will be evaluated in the java version currently running
+        // the key is that we'll want to not use a cached class version if the JVM version changes, we'll add that to
+        // the MD5 hash we calculate for cached copies of blaze scripts
+//        options.add("-source");
+//        options.add("1.8");
+//        options.add("-target");
+//        options.add("1.8");
         
         // classpath to compile java file with
         options.add("-cp");
