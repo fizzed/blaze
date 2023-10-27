@@ -147,10 +147,11 @@ public class Globber {
         
         return matched;
     }
-    
-    public Stream<Path> stream() throws IOException {
+
+    // dangerous to expose this since the stream() needs closed!
+    /*public Stream<Path> stream() throws IOException {
         return scan().stream();
-    }
+    }*/
     
     public Path scanOne() throws IOException {
         final List<Path> paths = this.scan();

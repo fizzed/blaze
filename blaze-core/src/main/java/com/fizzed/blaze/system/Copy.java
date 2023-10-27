@@ -18,20 +18,17 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.ExecMixin;
-import com.fizzed.blaze.core.PathsMixin;
 import com.fizzed.blaze.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
-abstract public class Copy extends Action<Copy.Result,Void> {
+public class Copy extends Action<Copy.Result,Void> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     static public class Result extends com.fizzed.blaze.core.Result<Copy,Void,Result> {
@@ -42,8 +39,8 @@ abstract public class Copy extends Action<Copy.Result,Void> {
 
     }
 
-    private List<Path> sources;
-    private Path destination;
+    private final List<Path> sources;
+    private Path target;
     private boolean force;
     private boolean recursive;
 
@@ -56,33 +53,73 @@ abstract public class Copy extends Action<Copy.Result,Void> {
 
     public Copy source(String path) {
         ObjectHelper.requireNonNull(path, "path cannot be null");
-        return source(Paths.get(path));
+        return this.source(Paths.get(path));
     }
 
     public Copy source(File path) {
         ObjectHelper.requireNonNull(path, "path cannot be null");
-        return source(path.toPath());
+        return this.source(path.toPath());
     }
 
     public Copy source(Path path) {
         ObjectHelper.requireNonNull(path, "path cannot be null");
+        this.sources.clear();
         this.sources.add(path);
         return this;
     }
 
-    public Copy destination(String path) {
-        ObjectHelper.requireNonNull(path, "path cannot be null");
-        return destination(Paths.get(path));
+    public Copy sources(Path... paths) {
+        ObjectHelper.requireNonNull(paths, "paths cannot be null");
+        this.sources.clear();
+        for (Path p : paths) {
+            this.sources.add(p);
+        }
+        return this;
     }
 
-    public Copy destination(File path) {
-        ObjectHelper.requireNonNull(path, "path cannot be null");
-        return destination(path.toPath());
+    public Copy sources(Globber globber) {
+        ObjectHelper.requireNonNull(globber, "globber cannot be null");
+        try {
+            List<Path> paths = globber.scan();
+            this.sources.clear();
+            this.sources.addAll(paths);
+            return this;
+        } catch (IOException e) {
+            throw new BlazeException(e.getMessage(), e);
+        }
     }
 
-    public Copy destination(Path path) {
+    public Copy sources(File... files) {
+        ObjectHelper.requireNonNull(files, "files cannot be null");
+        this.sources.clear();
+        for (File f : files) {
+            this.sources.add(f.toPath());
+        }
+        return this;
+    }
+
+    public Copy sources(String... paths) {
+        ObjectHelper.requireNonNull(paths, "paths cannot be null");
+        this.sources.clear();
+        for (String p : paths) {
+            this.sources.add(Paths.get(p));
+        }
+        return this;
+    }
+
+    public Copy target(String path) {
         ObjectHelper.requireNonNull(path, "path cannot be null");
-        this.destination = path;
+        return this.target(Paths.get(path));
+    }
+
+    public Copy target(File path) {
+        ObjectHelper.requireNonNull(path, "path cannot be null");
+        return this.target(path.toPath());
+    }
+
+    public Copy target(Path path) {
+        ObjectHelper.requireNonNull(path, "path cannot be null");
+        this.target = path;
         return this;
     }
 
@@ -108,15 +145,15 @@ abstract public class Copy extends Action<Copy.Result,Void> {
 
     @Override
     protected Copy.Result doRun() throws BlazeException {
-        if (this.sources.isEmpty()) {
-            throw new BlazeException("Copy requires at least 1 source path");
+        if (this.sources.isEmpty() && !this.force) {
+            throw new BlazeException("Copy requires at least 1 source path (and force is disabled)");
         }
 
-        if (this.destination == null) {
-            throw new BlazeException("Copy requires a destination");
+        if (this.target == null) {
+            throw new BlazeException("Copy requires a target");
         }
 
-        // the sources must all exist
+        // the sources must all exist (we should check this first before we do anything)
         for (Path source : this.sources) {
             if (!Files.exists(source)) {
                 throw new BlazeException("Copy source " + source + " does not exist");
@@ -124,45 +161,72 @@ abstract public class Copy extends Action<Copy.Result,Void> {
         }
 
         try {
-            // does the destination exist?
-            if (Files.exists(this.destination)) {
-                // if its a file, we could have issues
-                if (!Files.isDirectory(this.destination) && !this.force) {
-                    throw new BlazeException("Copy destination " + this.destination + " already exists");
-                }
-            } else {
-                // destination does not exist, what to do?
-                if (this.sources.size() > 1) {
-                    // the destination MUST be a directory
-                    Files.createDirectories(this.destination);
-                } else {
-                    // single to single, if the source is a directory, the target must be too
-                    if (Files.isDirectory(this.sources.get(0))) {
-                        Files.createDirectories(this.destination);
-                    }
-                }
-            }
+            for (Path source : this.sources) {
+                log.debug("Copy requested for {} -> {}", source, this.target);
 
-            // single -> single
-            if (this.sources.size() == 1) {
-                final Path source = this.sources.get(0);
-
-                if (!Files.isDirectory(source)) {
-                    // source is a file
-                    if (Files.isDirectory(this.destination)) {
-                        Path target = this.destination.resolve(source.getFileName());
-                        log.info("Copying {} -> {}", source, target);
-                        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                    } else {
-                        log.info("Copying {} -> {}", source, this.destination);
-                        Files.copy(source, this.destination, StandardCopyOption.REPLACE_EXISTING);
+                if (Files.isDirectory(source)) {
+                    // if the source is a directory, does it have stuff in it?
+                    if (hasFiles(source) && !this.recursive) {
+                        throw new BlazeException("Copy source directory " + source + " is not empty (and recursive is disabled)");
                     }
-                } else {
+
                     // source is a directory
-                    if (Files.isDirectory(this.destination)) {
-                        copyDirectory(source, this.destination);
+                    if (Files.exists(this.target)) {
+                        // is it the same dir?
+                        if (Files.isSameFile(source, this.target)) {
+                            throw new BlazeException("Copy source " + source + " and target " + this.target + " are the same directory");
+                        }
+                        // target exists, which may or may not be okay
+                        if (Files.isDirectory(this.target)) {
+                            // target exists, but is a directory, we can simply copy the source dir to it
+                            Path relativeTarget = this.target.resolve(source.getFileName());
+                            copyDirectory(source, relativeTarget);
+                        } else {
+                            // target exists, but is a file!
+                            throw new BlazeException("Cannot copy source directory " + source + " to an existing file " + this.target);
+                        }
                     } else {
-                        throw new BlazeException("Cannot copy source directory " + source + " a file " + this.destination);
+                        // build a new relative target we will perform the copy to
+                        log.info("Creating directory {}", this.target);
+                        copyDirectory(source, this.target);
+                    }
+                } else {
+                    // source is a file
+                    if (Files.isDirectory(this.target)) {
+                        // target is a directory
+                        Path t = this.target.resolve(source.getFileName());
+
+                        if (Files.exists(t)) {
+                            // is it the same file?
+                            if (Files.isSameFile(source, t)) {
+                                throw new BlazeException("Copy source " + source + " and target " + t + " are the same file");
+                            }
+                            if (!force) {
+                                throw new BlazeException("Copy target " + t + " already exists (and force is disabled)");
+                            }
+                            log.info("Overwriting {} -> {}", source, t);
+                            Files.copy(source, t, StandardCopyOption.REPLACE_EXISTING);
+                        } else {
+                            log.info("Copying {} -> {}", source, t);
+                            Files.copy(source, t, StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    } else {
+                        // target is a file
+                        if (Files.exists(this.target)) {
+                            // is it the same file?
+                            if (source.toAbsolutePath().equals(this.target.toAbsolutePath())) {
+                                throw new BlazeException("Copy source " + source + " and target " + this.target + " are the same file");
+                            }
+                            // we know its not the same file, but is it forced?
+                            if (!this.force) {
+                                throw new BlazeException("Copy target " + this.target + " already exists (and force is disabled)");
+                            }
+                            log.info("Overwriting {} -> {}", source, this.target);
+                            Files.copy(source, this.target, StandardCopyOption.REPLACE_EXISTING);
+                        } else {
+                            log.info("Copying {} -> {}", source, this.target);
+                            Files.copy(source, this.target, StandardCopyOption.REPLACE_EXISTING);
+                        }
                     }
                 }
             }
@@ -175,60 +239,62 @@ abstract public class Copy extends Action<Copy.Result,Void> {
         return new Copy.Result(this, null);
     }
 
-    /*private void copyDirectory(Path sourceDir, Path destinationDir) throws IOException {
-        Files.walk(sourceDir)
-            .forEach(sourcePath -> {
-                try {
-                    Path targetPath = destinationDir.resolve(sourceDir.relativize(sourcePath));
-                    log.info("Copying {} -> {}", sourcePath, targetPath);
-                    Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Unable to copy", e);
+    static private boolean hasFiles(Path dir) throws IOException {
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.findFirst().isPresent();
+        }
+    }
+
+    private void copyDirectory(Path sourceDir, Path targetDir) throws IOException {
+
+
+        Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+//                log.trace("preVisitDirectory: dir={}", dir);
+                Path relativeDir = sourceDir.relativize(dir);
+//                log.trace("preVisitDirectory: relativeDir={}", relativeDir);
+//                Path resolved = targetDir.resolve(relativeDir).resolve(dir.getFileName());
+                Path resolved = targetDir.resolve(relativeDir);
+//                log.trace("preVisitDirectory: resolved={}", resolved);
+                if (Files.exists(resolved)) {
+                    if (!Copy.this.force) {
+                        throw new BlazeException("Copy target " + resolved + " already exists (and force is disabled)");
+                    }
+                } else {
+                    log.info("Creating directory {}", resolved);
+                    Files.createDirectories(resolved);
                 }
-            });
-    }*/
 
-    private void copyDirectory(Path sourceDir, Path destinationDir) throws IOException {
-        CopyFileVisitor fileVisitor = new CopyFileVisitor(sourceDir, destinationDir);
-        Files.walkFileTree(sourceDir, fileVisitor);
-
-    }
-
-    private class CopyFileVisitor extends SimpleFileVisitor<Path> {
-
-        private final Path source;
-        private final Path target;
-
-        public CopyFileVisitor(Path source, Path target) {
-            this.source = source;
-            this.target = target;
-        }
-
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-            Path resolve = target.resolve(source.relativize(dir));
-            if (Files.notExists(resolve)) {
-                log.info("Creating directory {}", resolve);
-                Files.createDirectories(resolve);
+                return FileVisitResult.CONTINUE;
             }
-            return FileVisitResult.CONTINUE;
 
-        }
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                log.trace("visitFile: file={}", file);
+                Path relativeFile = sourceDir.relativize(file);
+//                log.trace("visitFile: relativeFile={}", relativeFile);
+                Path resolved = targetDir.resolve(relativeFile);
+//                log.trace("visitFile: resolved={}", resolved);
+                if (Files.exists(resolved)) {
+                    if (!Copy.this.force) {
+                        throw new BlazeException("Copy target " + resolved + " already exists (and force is disabled)");
+                    }
+                    log.info("Overwriting {} -> {}", file, resolved);
+                    Files.copy(file, resolved, StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    log.info("Copying {} -> {}", file, resolved);
+                    Files.copy(file, resolved, StandardCopyOption.REPLACE_EXISTING);
+                }
 
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            Path resolve = target.resolve(source.relativize(file));
-            log.info("Copying {} -> {}", file, resolve);
-            Files.copy(file, resolve, StandardCopyOption.REPLACE_EXISTING);
-            return FileVisitResult.CONTINUE;
-        }
+                return FileVisitResult.CONTINUE;
+            }
 
-        @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) {
-            System.err.format("Unable to copy: %s: %s%n", file, exc);
-            return FileVisitResult.TERMINATE;
-        }
-
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                System.err.format("Unable to copy: %s: %s%n", file, exc);
+                return FileVisitResult.TERMINATE;
+            }
+        });
     }
-
 }

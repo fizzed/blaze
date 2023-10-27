@@ -98,8 +98,7 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
                         }
 
                         @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException e)
-                                throws IOException {
+                        public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
                             if (e == null) {
                                 Files.delete(dir);
                                 return FileVisitResult.CONTINUE;

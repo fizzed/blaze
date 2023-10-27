@@ -16,18 +16,11 @@
 package com.fizzed.blaze;
 
 import com.fizzed.blaze.local.LocalExec;
-import com.fizzed.blaze.system.Exec;
-import com.fizzed.blaze.system.Head;
-import com.fizzed.blaze.system.Pipeline;
-import com.fizzed.blaze.system.Remove;
-import com.fizzed.blaze.system.RequireExec;
-import com.fizzed.blaze.system.Tail;
-import com.fizzed.blaze.system.Which;
+import com.fizzed.blaze.system.*;
 import com.fizzed.blaze.util.Globber;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
-import com.fizzed.blaze.system.ExecSession;
 
 public class Systems {
     
@@ -304,7 +297,42 @@ public class Systems {
             .command(command)
             .args(arguments);
     }
-    
+
+    static public Mkdir mkdir(Path target) {
+        return new Mkdir(Contexts.currentContext())
+            .target(target);
+    }
+
+    static public Mkdir mkdir(File target) {
+        return new Mkdir(Contexts.currentContext())
+            .target(target);
+    }
+
+    static public Mkdir mkdir(String target) {
+        return new Mkdir(Contexts.currentContext())
+            .target(target);
+    }
+
+    static public Copy cp(Path source) {
+        return new Copy(Contexts.currentContext())
+            .source(source);
+    }
+
+    static public Copy cp(File source) {
+        return new Copy(Contexts.currentContext())
+            .source(source);
+    }
+
+    static public Copy cp(String source) {
+        return new Copy(Contexts.currentContext())
+            .source(source);
+    }
+
+    static public Copy cp(Globber globber) {
+        return new Copy(Contexts.currentContext())
+            .sources(globber);
+    }
+
     /**
      * Prepares an action to delete one or more files and directories using
      * a globber.
