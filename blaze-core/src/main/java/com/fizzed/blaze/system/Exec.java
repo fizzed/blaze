@@ -37,7 +37,7 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         
     }
 
-    protected final VerboseLogger log = new VerboseLogger(this);
+    protected final VerboseLogger log;
     protected final Map<String,String> environment;
     protected Path command;
     protected Path workingDirectory;
@@ -53,6 +53,7 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
     
     public Exec(Context context) {
         super(context);
+        this.log = new VerboseLogger(this);
         this.environment = new LinkedHashMap<>();
         this.arguments = new ArrayList<>();
         this.pipeInput = Streamables.standardInput();
@@ -64,23 +65,29 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         this.shell = false;
     }
 
+    // ONLY THING THAT FIXED CODE COMPLETION WAS TO INCLUDE MIXIN METHODS HERE TOO
+
     @Override
     public VerboseLogger getVerboseLogger() {
         return this.log;
     }
 
+    @Override
     public T verbose() {
         return this.verbosity(Verbosity.VERBOSE);
     }
 
+    @Override
     public T debug() {
         return this.verbosity(Verbosity.DEBUG);
     }
 
+    @Override
     public T trace() {
         return this.verbosity(Verbosity.TRACE);
     }
 
+    @Override
     public T verbosity(Verbosity verbosity) {
         this.getVerboseLogger().setLevel(verbosity);
         return (T)this;

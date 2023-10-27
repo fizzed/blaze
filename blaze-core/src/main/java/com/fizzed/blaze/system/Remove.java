@@ -27,25 +27,34 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import com.fizzed.blaze.core.PathsMixin;
+import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.util.VerboseLogger;
 
 /**
  * rm - remove files or directories
  * 
  * @author joelauer
  */
-public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Remove> {
-   
+public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Remove>, VerbosityMixin<Remove> {
+
+    private final VerboseLogger log;
     final private List<Path> paths;
     private boolean force;
     private boolean recursive;
     
     public Remove(Context context) {
         super(context);
+        this.log = new VerboseLogger(this);
         this.paths = new ArrayList<>();
         this.force = false;
         this.recursive = false;
     }
-    
+
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
+    }
+
     @Override
     public List<Path> getPaths() {
         return this.paths;
@@ -76,6 +85,7 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
         try {
             if (!recursive) {
                 for (Path path : paths) {
+                    log.verbose("Deleting {}", path);
                     if (!force) {
                         Files.delete(path);
                     } else {
@@ -85,6 +95,8 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
             } else {
                 // http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
                 for (Path path : paths) {
+                    log.verbose("Deleting {}", path);
+
                     // if path doesn't exist we should throw an error unless we are forced
                     if (force && !Files.exists(path)) {
                         continue;
@@ -93,6 +105,7 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
                     Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            log.debug(" rm {}", file);
                             Files.delete(file);
                             return FileVisitResult.CONTINUE;
                         }
@@ -100,6 +113,7 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
                         @Override
                         public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
                             if (e == null) {
+                                log.debug(" rmdir {}", dir);
                                 Files.delete(dir);
                                 return FileVisitResult.CONTINUE;
                             } else {

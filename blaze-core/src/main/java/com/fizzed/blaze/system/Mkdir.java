@@ -18,9 +18,9 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.util.ObjectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fizzed.blaze.util.VerboseLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Mkdir extends Action<Mkdir.Result,Void> {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+public class Mkdir extends Action<Mkdir.Result,Void> implements VerbosityMixin<Mkdir>  {
 
     static public class Result extends com.fizzed.blaze.core.Result<Mkdir,Void,Result> {
 
@@ -39,12 +38,19 @@ public class Mkdir extends Action<Mkdir.Result,Void> {
 
     }
 
+    protected final VerboseLogger log;
     private Path target;
     private boolean parents;
 
     public Mkdir(Context context) {
         super(context);
+        this.log = new VerboseLogger(this);
         this.parents = false;
+    }
+
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
     }
 
     public Mkdir target(String path) {
@@ -80,6 +86,9 @@ public class Mkdir extends Action<Mkdir.Result,Void> {
         }
 
         try {
+            if (log.isVerbose() && !Files.exists(this.target)) {
+                log.verbose("Creating directory {}", this.target);
+            }
             if (this.parents) {
                 Files.createDirectories(this.target);
             } else {
@@ -91,34 +100,5 @@ public class Mkdir extends Action<Mkdir.Result,Void> {
 
         return new Mkdir.Result(this, null);
     }
-
-    /*private void copyDirectory(Path sourceDir, Path targetDir) throws IOException {
-        Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                Path resolve = targetDir.resolve(sourceDir.relativize(dir));
-                if (Files.notExists(resolve)) {
-                    log.info("Creating directory {}", resolve);
-                    Files.createDirectories(resolve);
-                }
-                return FileVisitResult.CONTINUE;
-
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Path resolve = targetDir.resolve(sourceDir.relativize(file));
-                log.info("Copying {} -> {}", file, resolve);
-                Files.copy(file, resolve, StandardCopyOption.REPLACE_EXISTING);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                System.err.format("Unable to copy: %s: %s%n", file, exc);
-                return FileVisitResult.TERMINATE;
-            }
-        });
-    }*/
 
 }
