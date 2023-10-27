@@ -18,9 +18,10 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.Verbosity;
+import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fizzed.blaze.util.Timer;
 
 import java.io.*;
 import java.nio.file.*;
@@ -28,27 +29,49 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class Copy extends Action<Copy.Result,Void> {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Copy> {
 
     static public class Result extends com.fizzed.blaze.core.Result<Copy,Void,Result> {
+
+        private int dirsCreated;
+        private int filesCopied;
+        private int filesOverwritten;
 
         Result(Copy action, Void value) {
             super(action, value);
         }
 
+        public int getDirsCreated() {
+            return dirsCreated;
+        }
+
+        public int getFilesCopied() {
+            return filesCopied;
+        }
+
+        public int getFilesOverwritten() {
+            return filesOverwritten;
+        }
+
     }
 
+    private final VerboseLogger log;
     private final List<Path> sources;
     private Path target;
     private boolean force;
     private boolean recursive;
+    private Verbosity verbosity;
 
     public Copy(Context context) {
         super(context);
+        this.log = new VerboseLogger(this);
         this.sources = new ArrayList<>();
         this.force = false;
         this.recursive = false;
+    }
+
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
     }
 
     public Copy source(String path) {
@@ -160,9 +183,12 @@ public class Copy extends Action<Copy.Result,Void> {
             }
         }
 
+        final Result result = new Result(this, null);
+        final Timer timer = new Timer();
+
         try {
             for (Path source : this.sources) {
-                log.debug("Copy requested for {} -> {}", source, this.target);
+                log.verbose("Copying {} -> {}", source, this.target);
 
                 if (Files.isDirectory(source)) {
                     // if the source is a directory, does it have stuff in it?
@@ -180,15 +206,15 @@ public class Copy extends Action<Copy.Result,Void> {
                         if (Files.isDirectory(this.target)) {
                             // target exists, but is a directory, we can simply copy the source dir to it
                             Path relativeTarget = this.target.resolve(source.getFileName());
-                            copyDirectory(source, relativeTarget);
+                            copyDirectory(source, relativeTarget, result);
                         } else {
                             // target exists, but is a file!
                             throw new BlazeException("Cannot copy source directory " + source + " to an existing file " + this.target);
                         }
                     } else {
                         // build a new relative target we will perform the copy to
-                        log.info("Creating directory {}", this.target);
-                        copyDirectory(source, this.target);
+                        log.debug(" mkdir {}", this.target);
+                        copyDirectory(source, this.target, result);
                     }
                 } else {
                     // source is a file
@@ -204,11 +230,13 @@ public class Copy extends Action<Copy.Result,Void> {
                             if (!force) {
                                 throw new BlazeException("Copy target " + t + " already exists (and force is disabled)");
                             }
-                            log.info("Overwriting {} -> {}", source, t);
+                            log.debug(" overwrite {} -> {}", source, t);
                             Files.copy(source, t, StandardCopyOption.REPLACE_EXISTING);
+                            result.filesOverwritten++;
                         } else {
-                            log.info("Copying {} -> {}", source, t);
+                            log.debug(" copy {} -> {}", source, t);
                             Files.copy(source, t, StandardCopyOption.REPLACE_EXISTING);
+                            result.filesCopied++;
                         }
                     } else {
                         // target is a file
@@ -221,20 +249,23 @@ public class Copy extends Action<Copy.Result,Void> {
                             if (!this.force) {
                                 throw new BlazeException("Copy target " + this.target + " already exists (and force is disabled)");
                             }
-                            log.info("Overwriting {} -> {}", source, this.target);
+                            log.debug(" overwrite {} -> {}", source, this.target);
                             Files.copy(source, this.target, StandardCopyOption.REPLACE_EXISTING);
+                            result.filesOverwritten++;
                         } else {
-                            log.info("Copying {} -> {}", source, this.target);
+                            // already logged this at top of loop
+                            //log.debug("Copying {} -> {}", source, this.target);
                             Files.copy(source, this.target, StandardCopyOption.REPLACE_EXISTING);
+                            result.filesCopied++;
                         }
                     }
                 }
             }
-
-
         } catch (IOException e) {
             throw new BlazeException("Unable to copy", e);
         }
+
+        log.debug("Copied {} files, overwrote {} files, created {} dirs (in {})", result.filesCopied, result.filesOverwritten, result.dirsCreated, timer);
 
         return new Copy.Result(this, null);
     }
@@ -245,9 +276,7 @@ public class Copy extends Action<Copy.Result,Void> {
         }
     }
 
-    private void copyDirectory(Path sourceDir, Path targetDir) throws IOException {
-
-
+    private void copyDirectory(Path sourceDir, Path targetDir, Result result) throws IOException {
         Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -262,8 +291,9 @@ public class Copy extends Action<Copy.Result,Void> {
                         throw new BlazeException("Copy target " + resolved + " already exists (and force is disabled)");
                     }
                 } else {
-                    log.info("Creating directory {}", resolved);
+                    log.debug(" mkdir {}", resolved);
                     Files.createDirectories(resolved);
+                    result.dirsCreated++;
                 }
 
                 return FileVisitResult.CONTINUE;
@@ -280,19 +310,21 @@ public class Copy extends Action<Copy.Result,Void> {
                     if (!Copy.this.force) {
                         throw new BlazeException("Copy target " + resolved + " already exists (and force is disabled)");
                     }
-                    log.info("Overwriting {} -> {}", file, resolved);
+                    log.debug(" overwrite {} -> {}", file, resolved);
                     Files.copy(file, resolved, StandardCopyOption.REPLACE_EXISTING);
+                    result.filesOverwritten++;
                 } else {
-                    log.info("Copying {} -> {}", file, resolved);
+                    log.debug(" copy {} -> {}", file, resolved);
                     Files.copy(file, resolved, StandardCopyOption.REPLACE_EXISTING);
+                    result.filesCopied++;
                 }
 
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                System.err.format("Unable to copy: %s: %s%n", file, exc);
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                log.error("Failed while copying directory", e);
                 return FileVisitResult.TERMINATE;
             }
         });

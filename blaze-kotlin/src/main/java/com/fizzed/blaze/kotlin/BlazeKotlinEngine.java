@@ -83,7 +83,7 @@ public class BlazeKotlinEngine extends AbstractEngine<BlazeKotlinScript> {
         if (!compile) {
             log.debug("Script has not changed, using previous compiled version");
         } else {
-            Kotlin1Compiler compiler = new Kotlin1Compiler(classLoader);
+            KotlinCompiler compiler = new KotlinCompiler(classLoader);
             compiler.compile(context.scriptFile(), classesDir, sourceFile.isScript());
             
             try {

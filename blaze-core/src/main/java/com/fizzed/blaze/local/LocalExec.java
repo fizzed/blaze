@@ -139,7 +139,7 @@ public class LocalExec extends Exec<LocalExec> {
             public void stop() {
                 // NOTE: travis ci deadlocks unless we add this -- never happens
                 // on a real system so its pretty odd
-                Thread.yield();
+//                Thread.yield();
                 
                 // make sure any input, output, and error streams are closed
                 // before the superclass stop() is triggered

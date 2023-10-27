@@ -154,6 +154,7 @@ public class CopyTest {
         new Copy(this.context)
             .source(sourceFile)
             .target(targetDir)
+            .verbose()
             .run();
 
         assertThat(Files.exists(targetFile), is(true));
