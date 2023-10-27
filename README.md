@@ -43,11 +43,10 @@ invoke blaze, it does the following:
 
  - Write your applications (scripts) in whatever JVM language you prefer.
    Out-of-the-box support for
-    - Java (.java)
-    - JavaScript (.js)
-    - Groovy (.groovy)
-    - Kotlin (.kt, .kts)
-    - Or write your own (examples [here](blaze-core/src/main/java/com/fizzed/blaze/jdk), [here](blaze-core/src/main/java/com/fizzed/blaze/nashorn), [here](blaze-kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](blaze-groovy/src/main/java/com/fizzed/blaze/groovy))
+    - Java (.java) (8, 11, 17, 21, etc.)
+    - Groovy (.groovy) (v4.0.15)
+    - Kotlin (.kt) (v1.9.10)
+    - Or write your own (examples [here](blaze-core/src/main/java/com/fizzed/blaze/jdk), [here](blaze-kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](blaze-groovy/src/main/java/com/fizzed/blaze/groovy))
  - Zero-install required. Just drop `blaze.jar` into your project directory and
    you or others can run it with `java -jar blaze.jar`.
  - [IDE support](https://github.com/fizzed/blaze#ide-support)

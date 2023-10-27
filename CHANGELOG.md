@@ -1,6 +1,15 @@
 Blaze by Fizzed
 ===============
 
+#### 1.3.0 - 2023-10-26
+
+ - Kotlin upgraded to support v1.9.10 .kt scripts
+ - Groovy upgraded to support v4.0.15 .groovy scripts
+ - Java script engine no longer locks source to Java 8, it will now use the version of the JVM executing the script.
+ - Cached compiled classes will use the JVM version as part of the hash (to figure out if they should be re-compiled)
+ - Fixed unit tests failing on Windows & MacOS due to a maven surefire issue
+ - Support for parent classes of scripts to expose public methods (tasks). Allows scripts to extend parent classes.
+
 #### 1.2.1 - 2023-10-26
 
  - Prevent maven project installs and deploys in IDE support
