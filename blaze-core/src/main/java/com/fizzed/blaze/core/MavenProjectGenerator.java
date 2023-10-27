@@ -1,5 +1,6 @@
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.internal.ConfigHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,8 +88,9 @@ public class MavenProjectGenerator {
         final Path scriptFile = this.blaze.context().scriptFile().toAbsolutePath();
 
         // control the source and target we put into the maven project
-        final String sourceVersion = this.blaze.context().config().value("maven.project.source.version").orElse("8");
-        final String targetVersion = this.blaze.context().config().value("maven.project.target.version").orElse("8");
+        final int javaMajorVersion = ConfigHelper.getJavaSourceVersion(this.blaze.context());
+//        final String sourceVersion = this.blaze.context().config().value("maven.project.source.version").orElse("8");
+//        final String targetVersion = this.blaze.context().config().value("maven.project.target.version").orElse("8");
 
         // is the pomFile provided or should we calculate it?
         if (this.pomFile == null) {
@@ -96,6 +98,14 @@ public class MavenProjectGenerator {
         }
 
         final List<Dependency> dependencies = this.blaze.dependencies();
+
+        log.info("########################################################");
+        log.info("");
+        log.info("You can control what java source version is in your maven project by");
+        log.info("including a -Djava.source.version=11 argument to this command OR make");
+        log.info("it permanent by including that as a config value in your [script].conf");
+        log.info("");
+        log.info("########################################################");
 
         log.info("Generating maven project {} file...", this.pomFile);
 
@@ -141,8 +151,8 @@ public class MavenProjectGenerator {
         sb.append("  -->\n");
         sb.append("\n");
         sb.append("  <properties>\n");
-        sb.append("    <maven.compiler.source>" + sourceVersion + "</maven.compiler.source>\n");
-        sb.append("    <maven.compiler.target>" + targetVersion + "</maven.compiler.target>\n");
+        sb.append("    <maven.compiler.source>" + javaMajorVersion + "</maven.compiler.source>\n");
+        sb.append("    <maven.compiler.target>" + javaMajorVersion + "</maven.compiler.target>\n");
         sb.append("    <maven.install.skip>true</maven.install.skip>\n");
         sb.append("    <maven.deploy.skip>true</maven.deploy.skip>\n");
         sb.append("  </properties>\n");

@@ -266,8 +266,11 @@ The ```--generate-maven-project``` command will set the target source version to
 this to something else, you can add a [blaze-script].conf file that is associated with your blaze script, and add the
 following configuration values:
 
-    maven.project.source.version = 11
-    maven.project.target.version = 11
+    java.source.version = 11
+
+You can also pass this is on the command line:
+
+    blaze --generate-maven-project -Djava.source.version=17
 
 ## Where to save your script(s)
 
