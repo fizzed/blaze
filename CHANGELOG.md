@@ -1,7 +1,13 @@
 Blaze by Fizzed
 ===============
 
-#### 1.3.0 - 2023-10-26
+#### 1.4.0 - 2023-10-26
+
+ - JavaScript (via Nashorn) re-enabled using non-JDK package for Java 11+
+ - More improvements for java source version of scripts, including a config propery "java.source.version" that can
+help permanently set it
+
+#### 1.3.0 - 2023-10-15
 
  - Kotlin upgraded to support v1.9.10 .kt scripts
  - Groovy upgraded to support v4.0.15 .groovy scripts
@@ -10,11 +16,11 @@ Blaze by Fizzed
  - Fixed unit tests failing on Windows & MacOS due to a maven surefire issue
  - Support for parent classes of scripts to expose public methods (tasks). Allows scripts to extend parent classes.
 
-#### 1.2.1 - 2023-10-26
+#### 1.2.1 - 2023-10-05
 
  - Prevent maven project installs and deploys in IDE support
 
-#### 1.2.0 - 2023-10-26
+#### 1.2.0 - 2023-10-01
 
  - Add additional default ~/.ssh identities that will be loaded: id_ed25519, id_ecdsa, id_ecdsa_sk, id_ed25519_sk, id_xmss
  which are on top of existing id_rsa and id_dsa
