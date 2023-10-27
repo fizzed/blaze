@@ -33,6 +33,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Arrays.asList;
+
 /**
  *
  * @author joelauer
@@ -42,12 +44,12 @@ public class DependencyHelper {
     
     static private final Map<String, List<Dependency>> WELL_KNOWN_ENGINE_DEPENDENCIES = new HashMap<>();
     static {
+        WELL_KNOWN_ENGINE_DEPENDENCIES.put(".js",
+            asList(new Dependency("com.fizzed", "blaze-nashorn", Version.getVersion())));
         WELL_KNOWN_ENGINE_DEPENDENCIES.put(".groovy",
-            Arrays.asList(new Dependency("com.fizzed", "blaze-groovy", Version.getVersion())));
+            asList(new Dependency("com.fizzed", "blaze-groovy", Version.getVersion())));
         WELL_KNOWN_ENGINE_DEPENDENCIES.put(".kt",
-            Arrays.asList(new Dependency("com.fizzed", "blaze-kotlin", Version.getVersion())));
-        WELL_KNOWN_ENGINE_DEPENDENCIES.put(".kts",
-            Arrays.asList(new Dependency("com.fizzed", "blaze-kotlin", Version.getVersion())));
+            asList(new Dependency("com.fizzed", "blaze-kotlin", Version.getVersion())));
     }
     
     static public List<Dependency> wellKnownEngineDependencies(String fileExtension) {
