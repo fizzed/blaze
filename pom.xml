@@ -5,7 +5,7 @@
     <artifactId>blaze</artifactId>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
-    <version>1.2.2-SNAPSHOT</version>
+    <version>1.3.0</version>
 
     <parent>
         <groupId>com.fizzed</groupId>
@@ -24,7 +24,7 @@
     <scm>
         <url>https://github.com/fizzed/blaze</url>
         <connection>scm:git:git@github.com:fizzed/blaze.git</connection>
-        <tag>HEAD</tag>
+        <tag>v1.3.0</tag>
     </scm>
 
     <modules>
@@ -50,7 +50,7 @@
                 <configuration>
                     <!-- activate the use of TCP to transmit events to the plugin -->
                     <!-- fixes some forking issues on windows and mac of std in/out corrupted errors -->
-                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
+                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory" />
                 </configuration>
             </plugin>
             <plugin>
