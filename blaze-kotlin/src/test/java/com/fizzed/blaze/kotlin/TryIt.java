@@ -32,7 +32,7 @@ public class TryIt {
     
     static public void main(String[] args) throws Exception {
         //File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");
-        File scriptFile = new File("src/test/resources/kotlin/hello.kts");  
+        File scriptFile = new File("src/test/resources/kotlin/hello.kt");
         
         Context context = new ContextImpl(null, null, scriptFile.toPath(), null);
         ContextHolder.set(context);

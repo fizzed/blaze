@@ -30,10 +30,11 @@
         
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-runtime</artifactId>
+            <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         
         <!-- testing -->
+
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
