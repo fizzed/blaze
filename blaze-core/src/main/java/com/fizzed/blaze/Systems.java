@@ -323,6 +323,11 @@ public class Systems {
      * @param globber The globber to use to find the paths to delete
      * @return A new Remove action bound to current context
      */
+    static public Remove rm(Globber globber) {
+        return remove(globber);
+    }
+
+    @Deprecated
     static public Remove remove(Globber globber) {
         return new Remove(Contexts.currentContext())
             .paths(globber);
@@ -345,6 +350,11 @@ public class Systems {
      * @param paths The paths to delete
      * @return A new Remove action bound to current context
      */
+    static public Remove rm(Path... paths) {
+        return remove(paths);
+    }
+
+    @Deprecated
     static public Remove remove(Path... paths) {
         return new Remove(Contexts.currentContext())
             .paths(paths);
@@ -367,6 +377,11 @@ public class Systems {
      * @param files The files to delete
      * @return A new Remove action bound to current context
      */
+    static public Remove rm(File... files) {
+        return remove(files);
+    }
+
+    @Deprecated
     static public Remove remove(File... files) {
         return new Remove(Contexts.currentContext())
             .paths(files);
