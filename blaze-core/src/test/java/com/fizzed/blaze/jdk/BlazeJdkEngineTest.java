@@ -16,34 +16,30 @@
 package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Blaze;
-import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
-import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
-import static com.fizzed.blaze.internal.FileHelper.resourceAsPath;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import com.fizzed.blaze.util.BlazeRunner;
 import org.apache.commons.io.FileUtils;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessResult;
 
-/**
- *
- * @author joelauer
- */
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
+import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
+import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 public class BlazeJdkEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeJdkEngineTest.class);
     
@@ -63,82 +59,55 @@ public class BlazeJdkEngineTest {
         FileUtils.deleteDirectory(classesDir.toFile());
     }
     
-    @Test @Ignore
+    @Test
     public void hello() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .file(resourceAsPath("/jdk/hello.java"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("Hello World!"));
+        final File scriptFile = resourceAsFile("/jdk/hello.java");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("Hello World!" + System.lineSeparator()));
     }
     
-    @Test @Ignore
+    @Test
     public void tasks() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .file(resourceAsPath("/jdk/only_public.java"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        List<BlazeTask> tasks = blaze.tasks();
-        
-        assertThat(tasks, hasSize(1));
-        assertThat(tasks.get(0).getName(), is("main"));
+        final File scriptFile = resourceAsFile("/jdk/only_public.java");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() + " main"));
     }
     
-    @Test @Ignore
+    @Test
     public void defaultBlazeInWorkingDir() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .directory(resourceAsPath("/jdk/project0"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("worked"));
-        
-        assertThat(blaze.context().scriptFile(), is(resourceAsPath("/jdk/project0/blaze.java")));
-        assertThat(blaze.context().baseDir(), is(resourceAsPath("/jdk/project0")));
-        assertThat(blaze.context().withBaseDir("test"), is(resourceAsPath("/jdk/project0").resolve("test")));
+        final File workingDir = resourceAsFile("/jdk/project0");
+        final File scriptFile = resourceAsFile("/jdk/project0/blaze.java");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null, workingDir);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
     
-    @Test @Ignore
+    @Test
     public void defaultBlazeInSubBlazeDir() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .directory(resourceAsPath("/jdk/project1"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("worked"));
-        
-        assertThat(blaze.context().scriptFile(), is(resourceAsPath("/jdk/project1/blaze/blaze.java")));
-        assertThat(blaze.context().baseDir(), is(resourceAsPath("/jdk/project1/blaze")));
-        assertThat(blaze.context().withBaseDir("../test"), is(resourceAsPath("/jdk/project1").resolve("test")));
+        final File workingDir = resourceAsFile("/jdk/project1");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
     
-    @Test @Ignore
+    @Test
     public void defaultBlazeInSubDotBlazeDir() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .directory(resourceAsPath("/jdk/project2"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("worked"));
-        
-        assertThat(blaze.context().scriptFile(), is(resourceAsPath("/jdk/project2/.blaze/blaze.js")));
-        assertThat(blaze.context().baseDir(), is(resourceAsPath("/jdk/project2/.blaze")));
-        assertThat(blaze.context().withBaseDir("../test"), is(resourceAsPath("/jdk/project2").resolve("test")));
+        final File workingDir = resourceAsFile("/jdk/project2");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
     
 }

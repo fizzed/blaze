@@ -16,30 +16,28 @@
 package com.fizzed.blaze.kotlin;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Blaze;
-import com.fizzed.blaze.core.BlazeTask;
-import com.fizzed.blaze.core.CompilationException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
-import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
-import com.fizzed.blaze.internal.NoopDependencyResolver;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import com.fizzed.blaze.util.BlazeRunner;
 import org.apache.commons.io.FileUtils;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.hamcrest.Matchers.hasSize;
+import org.zeroturnaround.exec.ProcessResult;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
+import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import org.junit.Ignore;
 
 public class BlazeKotlinEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeKotlinEngineTest.class);
@@ -51,65 +49,34 @@ public class BlazeKotlinEngineTest {
         FileUtils.deleteDirectory(classesDir.toFile());
     }
     
-    @Rule
-    public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
-    
-    @Test @Ignore
+    @Test
     public void hello() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            // to prevent tests failing on new version not being installed locally yet
-            .dependencyResolver(new NoopDependencyResolver())
-            .file(resourceAsFile("/kotlin/hello.kts"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("Hello World!"));
+        final File scriptFile = resourceAsFile("/kotlin/hello.kt");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("Hello World!" + System.lineSeparator()));
     }
     
-    @Test @Ignore("Not sure we should support this style")
-    public void noclazz() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .dependencyResolver(new NoopDependencyResolver())
-            .file(resourceAsFile("/kotlin/noclazz.kt"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("Hello World!"));
-    }
-    
-    @Test @Ignore
+    @Test
     public void nocompile() throws Exception {
-        try {
-            Blaze blaze
-                = new Blaze.Builder()
-                    .dependencyResolver(new NoopDependencyResolver())
-                    .file(resourceAsFile("/kotlin/nocompile.kt"))
-                    .build();
-            fail();
-        } catch (CompilationException e) {
-            assertThat(e.getMessage(), containsString("Unable to cleanly compile"));
-        }
+        final File scriptFile = resourceAsFile("/kotlin/nocompile.kt");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null);
+
+        assertThat(result.getExitValue(), is(1));
     }
     
-    @Test @Ignore
+    @Test
     public void tasks() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .dependencyResolver(new NoopDependencyResolver())
-            .file(resourceAsFile("/kotlin/only_public.kt"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        List<BlazeTask> tasks = blaze.tasks();
-        
-        assertThat(tasks, hasSize(1));
-        assertThat(tasks.get(0), is(new BlazeTask("main")));
+        final File scriptFile = resourceAsFile("/kotlin/only_public.kt");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() +
+            " main"));
     }
     
 }

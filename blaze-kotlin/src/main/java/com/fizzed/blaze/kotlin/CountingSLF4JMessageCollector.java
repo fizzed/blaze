@@ -16,8 +16,12 @@
 package com.fizzed.blaze.kotlin;
 
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity;
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation;
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
 import org.slf4j.Logger;
 
@@ -46,7 +50,7 @@ public class CountingSLF4JMessageCollector implements MessageCollector {
         return warnings.get();
     }
     
-    @Override
+    /*@Override
     public void report(CompilerMessageSeverity severity, String message, CompilerMessageLocation location) {
         switch (severity) {
             case INFO:
@@ -62,6 +66,33 @@ public class CountingSLF4JMessageCollector implements MessageCollector {
                 this.logger.error("{} @ {}", message, location);
                 break;
         }
+    }*/
+
+    @Override
+    public void clear() {
+
     }
-    
+
+    @Override
+    public boolean hasErrors() {
+        return false;
+    }
+
+    @Override
+    public void report(@NotNull CompilerMessageSeverity severity, @NotNull String message, @Nullable CompilerMessageSourceLocation location) {
+        switch (severity) {
+            case INFO:
+                this.logger.info("{} @ {}", message, location);
+                break;
+            case WARNING:
+                this.warnings.incrementAndGet();
+                this.logger.warn("{} @ {}", message, location);
+                break;
+            case ERROR:
+            case EXCEPTION:
+                this.errors.incrementAndGet();
+                this.logger.error("{} @ {}", message, location);
+                break;
+        }
+    }
 }
