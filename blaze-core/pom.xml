@@ -50,16 +50,6 @@
                     </execution>
                 </executions> 
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
-                <configuration>
-                    <!-- activate the use of TCP to transmit events to the plugin -->
-                    <!-- fixes some forking issues on windows and mac -->
-                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     
