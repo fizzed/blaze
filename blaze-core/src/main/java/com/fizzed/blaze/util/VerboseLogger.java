@@ -31,37 +31,61 @@ public class VerboseLogger {
         return this;
     }
 
+    public boolean isInfo() {
+        return wrapped.isInfoEnabled();
+    }
+
     public void info(String s, Object... arguments) {
         // no conversion needed
         wrapped.info(s, arguments);
     }
 
+    public boolean isVerbose() {
+        return this.level.gte(Verbosity.VERBOSE) || wrapped.isDebugEnabled();
+    }
+
     public void verbose(String s, Object... arguments) {
-        if (this.level.gte(Verbosity.VERBOSE)) {
+        if (this.isVerbose()) {
             wrapped.info(s, arguments);
         } else {
             wrapped.debug(s, arguments);
         }
+    }
+
+    public boolean isDebug() {
+        return this.level.gte(Verbosity.DEBUG) || wrapped.isDebugEnabled();
     }
 
     public void debug(String s, Object... arguments) {
-        if (this.level.gte(Verbosity.DEBUG)) {
+        if (this.isDebug()) {
             wrapped.info(s, arguments);
         } else {
             wrapped.debug(s, arguments);
         }
     }
 
+    public boolean isTrace() {
+        return this.level.gte(Verbosity.TRACE) || wrapped.isTraceEnabled();
+    }
+
     public void trace(String s, Object... arguments) {
-        if (this.level.gte(Verbosity.TRACE)) {
+        if (this.isTrace()) {
             wrapped.info(s, arguments);
         } else {
             wrapped.trace(s, arguments);
         }
     }
 
+    public boolean isWarn() {
+        return wrapped.isWarnEnabled();
+    }
+
     public void warn(String s, Object... arguments) {
         wrapped.warn(s, arguments);
+    }
+
+    public boolean isError() {
+        return wrapped.isErrorEnabled();
     }
 
     public void error(String s, Object... arguments) {

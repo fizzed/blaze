@@ -15,35 +15,20 @@
  */
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.core.ExecMixin;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.util.ObjectHelper;
+import com.fizzed.blaze.core.*;
+import com.fizzed.blaze.util.*;
+
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import com.fizzed.blaze.core.PathsMixin;
-import com.fizzed.blaze.util.CaptureOutput;
-import com.fizzed.blaze.util.StreamableInput;
-import com.fizzed.blaze.util.StreamableOutput;
-import com.fizzed.blaze.util.Streamables;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer> implements PathsMixin<T>, ExecMixin<T> {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
+abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer> implements PathsMixin<T>, ExecMixin<T>, VerbosityMixin<T> {
     static public class Result<R extends Exec> extends com.fizzed.blaze.core.Result<R,Integer,Result<R>> {
         
         public Result(R action, Integer value) {
@@ -51,7 +36,8 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         }
         
     }
-    
+
+    protected final VerboseLogger log = new VerboseLogger(this);
     protected final Map<String,String> environment;
     protected Path command;
     protected Path workingDirectory;
@@ -76,7 +62,29 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         this.exitValues.add(0);
         this.sudo = false;
         this.shell = false;
-    }    
+    }
+
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
+    }
+
+    public T verbose() {
+        return this.verbosity(Verbosity.VERBOSE);
+    }
+
+    public T debug() {
+        return this.verbosity(Verbosity.DEBUG);
+    }
+
+    public T trace() {
+        return this.verbosity(Verbosity.TRACE);
+    }
+
+    public T verbosity(Verbosity verbosity) {
+        this.getVerboseLogger().setLevel(verbosity);
+        return (T)this;
+    }
 
     public T sudo(boolean sudo) {
         this.sudo = sudo;
@@ -152,15 +160,11 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
     public T exitValues(Integer... exitValues) {
         this.exitValues.clear();
         this.exitValues.addAll(Arrays.asList(exitValues));
-//        this.executor.exitValues(exitValues);
-//        this.exitValues.clear();
-//        this.exitValues.addAll(Arrays.asList(exitValues));
         return (T)this;
     }
 
     @Override
     public T timeout(long timeoutInMillis) {
-//        this.executor.timeout(timeoutInMillis, TimeUnit.MILLISECONDS);
         this.timeoutMillis = timeoutInMillis;
         return (T)this;
     }

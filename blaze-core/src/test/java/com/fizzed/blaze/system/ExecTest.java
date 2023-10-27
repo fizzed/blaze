@@ -67,6 +67,7 @@ public class ExecTest {
             = new LocalExec(context)
                 .command("hello-world-test")
                 .path(getBinDirAsResource())
+                .verbose()
                 .run();
         
         assertThat(exitValue, is(0));

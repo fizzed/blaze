@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import com.fizzed.blaze.util.CommandLines;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.system.Exec;
@@ -150,7 +152,24 @@ public class LocalExec extends Exec<LocalExec> {
                 super.stop();
             }
         };
-        
+
+        if (log.isVerbose()) {
+            // build a verbose string representing the executable command we are about to run
+            String cmd = CommandLines.debug(finalCommand);
+            log.verbose("Executing: {}", cmd);
+            if (this.workingDirectory != null) {
+                log.verbose(" in working dir {}", this.workingDirectory);
+            }
+            if (log.isDebug()) {
+                if (!this.environment.isEmpty()) {
+                    log.debug(" with environment:");
+                    this.environment.forEach((k,v) -> {
+                        log.debug("  {}={}", k, v);
+                    });
+                }
+            }
+        }
+
         executor
             .command(finalCommand)
             .streams(streams);
