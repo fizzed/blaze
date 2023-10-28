@@ -18,6 +18,8 @@ package com.fizzed.blaze.system;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.DirectoryNotEmptyException;
+import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.core.Verbosity;
 import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.util.*;
@@ -28,6 +30,8 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Stream;
+
+import static com.fizzed.blaze.internal.FileHelper.isNotEmptyDir;
 
 public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Copy> {
 
@@ -179,7 +183,7 @@ public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Cop
         // the sources must all exist (we should check this first before we do anything)
         for (Path source : this.sources) {
             if (!Files.exists(source)) {
-                throw new BlazeException("Copy source " + source + " does not exist");
+                throw new FileNotFoundException("Copy source file " + source + " not found");
             }
         }
 
@@ -192,8 +196,8 @@ public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Cop
 
                 if (Files.isDirectory(source)) {
                     // if the source is a directory, does it have stuff in it?
-                    if (hasFiles(source) && !this.recursive) {
-                        throw new BlazeException("Copy source directory " + source + " is not empty (and recursive is disabled)");
+                    if (isNotEmptyDir(source) && !this.recursive) {
+                        throw new DirectoryNotEmptyException("Copy source directory " + source + " is not empty (and recursive is disabled)");
                     }
 
                     // source is a directory
@@ -268,12 +272,6 @@ public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Cop
         log.debug("Copied {} files, overwrote {} files, created {} dirs (in {})", result.filesCopied, result.filesOverwritten, result.dirsCreated, timer);
 
         return new Copy.Result(this, null);
-    }
-
-    static private boolean hasFiles(Path dir) throws IOException {
-        try (Stream<Path> files = Files.list(dir)) {
-            return files.findFirst().isPresent();
-        }
     }
 
     private void copyDirectory(Path sourceDir, Path targetDir, Result result) throws IOException {

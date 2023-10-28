@@ -16,8 +16,8 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.*;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -26,9 +26,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import com.fizzed.blaze.core.PathsMixin;
-import com.fizzed.blaze.core.VerbosityMixin;
+
 import com.fizzed.blaze.util.VerboseLogger;
+
+import static com.fizzed.blaze.internal.FileHelper.isNotEmptyDir;
 
 /**
  * rm - remove files or directories
@@ -83,25 +84,23 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
     @Override
     protected Result doRun() throws BlazeException {
         try {
-            if (!recursive) {
-                for (Path path : paths) {
-                    log.verbose("Deleting {}", path);
-                    if (!force) {
-                        Files.delete(path);
-                    } else {
-                        Files.deleteIfExists(path);
-                    }
-                }
-            } else {
-                // http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
-                for (Path path : paths) {
-                    log.verbose("Deleting {}", path);
+            for (Path path : paths) {
+                log.verbose("Deleting {}", path);
 
-                    // if path doesn't exist we should throw an error unless we are forced
-                    if (force && !Files.exists(path)) {
-                        continue;
+                if (!Files.exists(path)) {
+                    if (!force) {
+                        throw new FileNotFoundException("File " + path + " not found (and force is disabled)");
                     }
-                    
+                    continue;
+                }
+
+                if (!recursive) {
+                    if (Files.isDirectory(path) && isNotEmptyDir(path)) {
+                        throw new DirectoryNotEmptyException("Directory " + path + " is not empty (and recursive is disabled)");
+                    }
+
+                    Files.delete(path);
+                } else {
                     Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

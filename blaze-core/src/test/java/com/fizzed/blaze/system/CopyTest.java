@@ -1,65 +1,31 @@
 package com.fizzed.blaze.system;
 
-import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.internal.ConfigHelper;
-import com.fizzed.blaze.internal.ContextImpl;
-import com.fizzed.blaze.internal.FileHelper;
+import com.fizzed.blaze.core.DirectoryNotEmptyException;
+import com.fizzed.blaze.core.FileNotFoundException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.List;
 
 import static com.fizzed.blaze.util.Globber.globber;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.spy;
 
-public class CopyTest {
-    private final static Logger log = LoggerFactory.getLogger(CopyTest.class);
+public class CopyTest extends TestAbstractBase {
 
-    Config config;
-    ContextImpl context;
     Path testCopyDir;
-
-    private Path createEmptyDir(Path path, boolean parents) throws IOException {
-        FileUtils.deleteDirectory(path.toFile());
-        if (parents) {
-            Files.createDirectories(path);
-        } else {
-            Files.createDirectory(path);
-        }
-        return path;
-    }
-
-    private Path createFile(Path path) throws IOException {
-        return createFile(path, "test");
-    }
-
-    private Path createFile(Path path, String text) throws IOException {
-        Files.write(path, text.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        return path;
-    }
 
     @Before
     public void setup() throws Exception {
-        this.config = ConfigHelper.create(null);
-        this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
-        // this will help find the compile target directory, where is should be in target/test-classes
-        this.testCopyDir = FileHelper.resourceAsPath("/fixtures/resource-locator.txt").resolve("../../../copy-test").normalize();
+        this.testCopyDir = targetDir.resolve("copy-test");
         Files.createDirectories(this.testCopyDir);
     }
 
-    @Test(expected= BlazeException.class)
+    @Test(expected=FileNotFoundException.class)
     public void fileToFileFailsIfSourceDoesNotExist() {
         new Copy(this.context)
             .source(this.testCopyDir.resolve("notexist"))
@@ -101,7 +67,7 @@ public class CopyTest {
     @Test
     public void fileToFileCopy() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileCopy.txt"));
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("fileToFileCopyDir"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("fileToFileCopyDir"));
         final Path targetFile = targetDir.resolve(sourceFile.getFileName());
 
         assertThat(Files.exists(targetFile), is(false));
@@ -117,7 +83,7 @@ public class CopyTest {
     @Test(expected= BlazeException.class)
     public void fileToFileCopyFailsIfAlreadyExists() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileCopyFailsIfAlreadyExists.txt"));
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("fileToFileCopyFailsIfAlreadyExists"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("fileToFileCopyFailsIfAlreadyExists"));
         final Path targetFile = createFile(targetDir.resolve("exists.txt"));
 
         new Copy(this.context)
@@ -129,7 +95,7 @@ public class CopyTest {
     @Test
     public void fileToFileCopyForced() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileCopyFailsIfAlreadyExists.txt"), "hello world");
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("fileToFileCopyFailsIfAlreadyExists"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("fileToFileCopyFailsIfAlreadyExists"));
         final Path targetFile = createFile(targetDir.resolve("exists.txt"));
 
         assertThat(FileUtils.readFileToString(targetFile.toFile(), StandardCharsets.UTF_8), is("test"));
@@ -146,7 +112,7 @@ public class CopyTest {
     @Test
     public void fileToDirCopy() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToDirCopy.txt"));
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("fileToDirCopy"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("fileToDirCopy"));
         final Path targetFile = targetDir.resolve(sourceFile.getFileName());
 
         assertThat(Files.exists(targetFile), is(false));
@@ -163,7 +129,7 @@ public class CopyTest {
     @Test(expected=BlazeException.class)
     public void dirToDirCopyFailsIfTargetExistsAsFile() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("dirToDirCopyFailsIfTargetExistsAsFile"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirCopyFailsIfTargetExistsAsFile"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
 
         final Path targetFile = createFile(this.testCopyDir.resolve("dirToDirCopyFailsIfTargetExistsAsFileToCopyTo"));
@@ -177,7 +143,7 @@ public class CopyTest {
     @Test(expected=BlazeException.class)
     public void dirToDirCopyFailsIfTargetIsSameDirectory() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("dirToDirCopyFailsIfTargetIsSameDirectory"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirCopyFailsIfTargetIsSameDirectory"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
 
         new Copy(this.context)
@@ -186,12 +152,12 @@ public class CopyTest {
             .run();
     }
 
-    @Test(expected=BlazeException.class)
+    @Test(expected=DirectoryNotEmptyException.class)
     public void dirToDirCopyFailsIfNotRecursive() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("dirToDirCopy"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirCopy"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
-        final Path sourceDirSubDir = createEmptyDir(sourceDir.resolve("subdir"), false);
+        final Path sourceDirSubDir = createDir(sourceDir.resolve("subdir"));
         final Path sourceDirSubDirFile = createFile(sourceDirSubDir.resolve("test2.txt"));
 
         // create a non-existent directory we want to copy to
@@ -209,9 +175,9 @@ public class CopyTest {
     @Test
     public void dirToDirCopy() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("dirToDirCopy"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirCopy"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
-        final Path sourceDirSubDir = createEmptyDir(sourceDir.resolve("subdir"), false);
+        final Path sourceDirSubDir = createDir(sourceDir.resolve("subdir"));
         final Path sourceDirSubDirFile = createFile(sourceDirSubDir.resolve("test2.txt"));
 
         // create a non-existent directory we want to copy to
@@ -235,16 +201,16 @@ public class CopyTest {
     @Test(expected=BlazeException.class)
     public void dirToDirCopyFailsIfFileAlreadyExists() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("dirToDirCopyFailsIfFileAlreadyExists"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirCopyFailsIfFileAlreadyExists"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
-        final Path sourceDirSubDir = createEmptyDir(sourceDir.resolve("subdir"), false);
+        final Path sourceDirSubDir = createDir(sourceDir.resolve("subdir"), false);
         final Path sourceDirSubDirFile = createFile(sourceDirSubDir.resolve("test2.txt"));
 
         // create a non-existent directory we want to copy to
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("dirToDirCopyFailsIfFileAlreadyExistsCopyTo"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("dirToDirCopyFailsIfFileAlreadyExistsCopyTo"));
         final Path targetDirFile = createFile(targetDir.resolve("test1.txt"));
         // create a directory here that already exists
-        createEmptyDir(targetDir.resolve("dirToDirCopyFailsIfFileAlreadyExists"), false);
+        createDir(targetDir.resolve("dirToDirCopyFailsIfFileAlreadyExists"));
 
         assertThat(Files.exists(targetDirFile), is(true));
 
@@ -257,8 +223,8 @@ public class CopyTest {
 
     @Test(expected=BlazeException.class)
     public void globberCopyFailsIfNoneFound() throws Exception {
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("globberCopy"), false);
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("globberCopyto"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("globberCopy"));
+        final Path targetDir = createDir(this.testCopyDir.resolve("globberCopyto"));
 
         new Copy(this.context)
             .sources(globber(sourceDir, "*.{java,js}"))
@@ -268,8 +234,8 @@ public class CopyTest {
 
     @Test
     public void globberCopyNoneFoundForced() throws Exception {
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("globberCopy"), false);
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("globberCopyto"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("globberCopy"));
+        final Path targetDir = createDir(this.testCopyDir.resolve("globberCopyto"));
 
         new Copy(this.context)
             .sources(globber(sourceDir, "*.{java,js}"))
@@ -280,11 +246,11 @@ public class CopyTest {
 
     @Test
     public void globberCopy() throws Exception {
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("globberCopy"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("globberCopy"));
         final Path sourceDirJavaFile = createFile(sourceDir.resolve("test.java"));
         final Path sourceDirJsFile = createFile(sourceDir.resolve("test.js"));
         final Path sourceDirKtFile = createFile(sourceDir.resolve("test.kt"));
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("globberCopyTo"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("globberCopyTo"));
 
         new Copy(this.context)
             .sources(globber(sourceDir, "*.{java,js}"))
@@ -298,11 +264,11 @@ public class CopyTest {
 
     @Test
     public void globberFileAndDirCopy() throws Exception {
-        final Path sourceDir = createEmptyDir(this.testCopyDir.resolve("globberFileAndDirCopy"), false);
+        final Path sourceDir = createDir(this.testCopyDir.resolve("globberFileAndDirCopy"));
         final Path sourceDirJavaFile = createFile(sourceDir.resolve("test.java"));
-        final Path sourceDirSubDir = createEmptyDir(sourceDir.resolve("subdir"), false);
+        final Path sourceDirSubDir = createDir(sourceDir.resolve("subdir"));
         final Path sourceDirSubDirKtFile = createFile(sourceDirSubDir.resolve("test.kt"));
-        final Path targetDir = createEmptyDir(this.testCopyDir.resolve("globberFileAndDirCopyTo"), false);
+        final Path targetDir = createDir(this.testCopyDir.resolve("globberFileAndDirCopyTo"));
 
         new Copy(this.context)
             .sources(globber(sourceDir, "*"))
