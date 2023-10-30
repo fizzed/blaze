@@ -3,3 +3,4 @@ target
 blaze-lite/dependency-reduced-pom.xml
 ssh/src/test/java/ssh.*
 *.iml
+examples/pom.xml
