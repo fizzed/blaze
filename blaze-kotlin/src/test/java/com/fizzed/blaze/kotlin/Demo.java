@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author Joe Lauer
  */
-public class TryIt {
-    static private final Logger log = LoggerFactory.getLogger(TryIt.class);
+public class Demo {
+    static private final Logger log = LoggerFactory.getLogger(Demo.class);
     
     static public void main(String[] args) throws Exception {
         //File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");

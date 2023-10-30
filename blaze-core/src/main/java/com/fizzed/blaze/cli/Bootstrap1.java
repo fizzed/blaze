@@ -253,6 +253,8 @@ public class Bootstrap1 {
 
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
         System.setProperty("org.slf4j.simpleLogger.log.script", scriptLevel);
+        // disable logging for zeroturnaround
+        System.setProperty("org.slf4j.simpleLogger.log.org.zeroturnaround", "off");
 
         // if using logback
         //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);

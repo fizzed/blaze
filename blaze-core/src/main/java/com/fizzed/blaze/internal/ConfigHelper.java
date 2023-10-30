@@ -222,7 +222,9 @@ public class ConfigHelper {
 
         int periodPos = javaVersion.indexOf('.');
         if (periodPos < 0) {
-            throw new IllegalStateException("java.version [" + javaVersion + "] not of format X.X.X");
+            // treat the whole string as the major version
+            periodPos = javaVersion.length();
+            //throw new IllegalStateException("java.version [" + javaVersion + "] not of format X.X.X");
         }
 
         try {

@@ -32,19 +32,13 @@ import org.jetbrains.kotlin.utils.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Compiles .kt and .kts files to .class files that are saved on the filesystem
+ * Compiles .kt files to .class files that are saved on the filesystem
  * for later re-use.  Based loosely on:
  * 
  *   https://github.com/JetBrains/kotlin/blob/d89e907f00e7a93a715d540255d98bbe8da57b3e/compiler/tests/org/jetbrains/kotlin/scripts/ScriptTest.java
@@ -52,12 +46,12 @@ import java.util.stream.Collectors;
  * 
  * @author joelauer
  */
-public class Kotlin1Compiler {
-    static private final Logger log = LoggerFactory.getLogger(Kotlin1Compiler.class);
+public class KotlinCompiler {
+    static private final Logger log = LoggerFactory.getLogger(KotlinCompiler.class);
 
     private final ClassLoader classLoader;
     
-    public Kotlin1Compiler(ClassLoader classLoader) {
+    public KotlinCompiler(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 

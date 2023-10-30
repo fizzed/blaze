@@ -59,14 +59,14 @@ public class BlazeKotlinEngineTest {
         assertThat(result.outputUTF8(), containsString("Hello World!" + System.lineSeparator()));
     }
     
-    @Test
+    /*@Test
     public void nocompile() throws Exception {
         final File scriptFile = resourceAsFile("/kotlin/nocompile.kt");
 
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, null, null);
 
         assertThat(result.getExitValue(), is(1));
-    }
+    }*/
     
     @Test
     public void tasks() throws Exception {

@@ -16,8 +16,8 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.*;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -26,26 +26,36 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import com.fizzed.blaze.core.PathsMixin;
+
+import com.fizzed.blaze.util.VerboseLogger;
+
+import static com.fizzed.blaze.internal.FileHelper.isNotEmptyDir;
 
 /**
  * rm - remove files or directories
  * 
  * @author joelauer
  */
-public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Remove> {
-   
+public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Remove>, VerbosityMixin<Remove> {
+
+    private final VerboseLogger log;
     final private List<Path> paths;
     private boolean force;
     private boolean recursive;
     
     public Remove(Context context) {
         super(context);
+        this.log = new VerboseLogger(this);
         this.paths = new ArrayList<>();
         this.force = false;
         this.recursive = false;
     }
-    
+
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
+    }
+
     @Override
     public List<Path> getPaths() {
         return this.paths;
@@ -74,33 +84,35 @@ public class Remove extends Action<Remove.Result,Void> implements PathsMixin<Rem
     @Override
     protected Result doRun() throws BlazeException {
         try {
-            if (!recursive) {
-                for (Path path : paths) {
+            for (Path path : paths) {
+                log.verbose("Deleting {}", path);
+
+                if (!Files.exists(path)) {
                     if (!force) {
-                        Files.delete(path);
-                    } else {
-                        Files.deleteIfExists(path);
+                        throw new FileNotFoundException("File " + path + " not found (and force is disabled)");
                     }
+                    continue;
                 }
-            } else {
-                // http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
-                for (Path path : paths) {
-                    // if path doesn't exist we should throw an error unless we are forced
-                    if (force && !Files.exists(path)) {
-                        continue;
+
+                if (!recursive) {
+                    if (Files.isDirectory(path) && isNotEmptyDir(path)) {
+                        throw new DirectoryNotEmptyException("Directory " + path + " is not empty (and recursive is disabled)");
                     }
-                    
+
+                    Files.delete(path);
+                } else {
                     Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            log.debug(" rm {}", file);
                             Files.delete(file);
                             return FileVisitResult.CONTINUE;
                         }
 
                         @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException e)
-                                throws IOException {
+                        public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
                             if (e == null) {
+                                log.debug(" rmdir {}", dir);
                                 Files.delete(dir);
                                 return FileVisitResult.CONTINUE;
                             } else {

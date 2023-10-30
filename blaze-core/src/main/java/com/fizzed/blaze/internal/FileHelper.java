@@ -31,6 +31,7 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.stream.Stream;
 
 /**
  *
@@ -86,7 +87,17 @@ public class FileHelper {
         }
         return name.substring(lastIndexOf);
     }
-    
+
+    static public boolean isEmptyDir(Path dir) throws IOException {
+        return !isNotEmptyDir(dir);
+    }
+
+    static public boolean isNotEmptyDir(Path dir) throws IOException {
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.findFirst().isPresent();
+        }
+    }
+
     static public Path concatToFileName(Path path, String moreFileName) {
         return path.resolveSibling(path.getFileName().toString() + moreFileName);
     }

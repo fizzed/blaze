@@ -16,18 +16,11 @@
 package com.fizzed.blaze;
 
 import com.fizzed.blaze.local.LocalExec;
-import com.fizzed.blaze.system.Exec;
-import com.fizzed.blaze.system.Head;
-import com.fizzed.blaze.system.Pipeline;
-import com.fizzed.blaze.system.Remove;
-import com.fizzed.blaze.system.RequireExec;
-import com.fizzed.blaze.system.Tail;
-import com.fizzed.blaze.system.Which;
+import com.fizzed.blaze.system.*;
 import com.fizzed.blaze.util.Globber;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
-import com.fizzed.blaze.system.ExecSession;
 
 public class Systems {
     
@@ -304,7 +297,62 @@ public class Systems {
             .command(command)
             .args(arguments);
     }
-    
+
+    static public Mkdir mkdir(Path target) {
+        return new Mkdir(Contexts.currentContext())
+            .target(target);
+    }
+
+    static public Mkdir mkdir(File target) {
+        return new Mkdir(Contexts.currentContext())
+            .target(target);
+    }
+
+    static public Mkdir mkdir(String target) {
+        return new Mkdir(Contexts.currentContext())
+            .target(target);
+    }
+
+    static public Copy cp(Path... sources) {
+        return new Copy(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Copy cp(File... sources) {
+        return new Copy(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Copy cp(String... sources) {
+        return new Copy(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Copy cp(Globber globber) {
+        return new Copy(Contexts.currentContext())
+            .sources(globber);
+    }
+
+    static public Move mv(Path... sources) {
+        return new Move(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Move mv(File... sources) {
+        return new Move(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Move mv(String... sources) {
+        return new Move(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Move mv(Globber globber) {
+        return new Move(Contexts.currentContext())
+            .sources(globber);
+    }
+
     /**
      * Prepares an action to delete one or more files and directories using
      * a globber.
@@ -323,7 +371,7 @@ public class Systems {
      * @param globber The globber to use to find the paths to delete
      * @return A new Remove action bound to current context
      */
-    static public Remove remove(Globber globber) {
+    static public Remove rm(Globber globber) {
         return new Remove(Contexts.currentContext())
             .paths(globber);
     }
@@ -345,7 +393,7 @@ public class Systems {
      * @param paths The paths to delete
      * @return A new Remove action bound to current context
      */
-    static public Remove remove(Path... paths) {
+    static public Remove rm(Path... paths) {
         return new Remove(Contexts.currentContext())
             .paths(paths);
     }
@@ -367,7 +415,7 @@ public class Systems {
      * @param files The files to delete
      * @return A new Remove action bound to current context
      */
-    static public Remove remove(File... files) {
+    static public Remove rm(File... files) {
         return new Remove(Contexts.currentContext())
             .paths(files);
     }
