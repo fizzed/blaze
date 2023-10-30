@@ -17,8 +17,7 @@ public class RemoveTest extends TestAbstractBase {
 
     @Before
     public void setup() throws Exception {
-        this.testRemoveDir = this.targetDir.resolve("remove-test");
-        Files.createDirectories(this.testRemoveDir);
+        this.testRemoveDir = this.createDir(this.targetDir.resolve("remove-test"));
     }
 
     @Test(expected=FileNotFoundException.class)
