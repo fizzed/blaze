@@ -1,6 +1,13 @@
 Blaze by Fizzed
 ===============
 
+#### 1.5.0 - 2024-10-10
+
+ - New Copy and Move commands in the Systems.* class
+ - Fix parsing of Java versions on some JDK distributions
+ - Verbosity support for exec, mkdir, and remove commands
+ - 
+
 #### 1.4.0 - 2023-10-26
 
  - JavaScript (via Nashorn) re-enabled using non-JDK package for Java 11+
