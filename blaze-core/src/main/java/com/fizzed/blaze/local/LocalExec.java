@@ -156,18 +156,15 @@ public class LocalExec extends Exec<LocalExec> {
         if (log.isVerbose()) {
             // build a verbose string representing the executable command we are about to run
             String cmd = CommandLines.debug(finalCommand);
-            log.verbose("Executing: {}", cmd);
+            String workingDir = "";
+            String env = "";
             if (this.workingDirectory != null) {
-                log.verbose(" in working dir {}", this.workingDirectory);
+                workingDir = " in working dir [" + this.workingDirectory + "]";
             }
-            if (log.isDebug()) {
-                if (!this.environment.isEmpty()) {
-                    log.debug(" with environment:");
-                    this.environment.forEach((k,v) -> {
-                        log.debug("  {}={}", k, v);
-                    });
-                }
+            if (!this.environment.isEmpty()) {
+                env = " with env " + this.environment;
             }
+            log.verbose("Exec: [{}]{}{}", cmd, workingDir, env);
         }
 
         executor
