@@ -78,23 +78,6 @@ public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Cop
         return this.log;
     }
 
-    public Copy source(String path) {
-        ObjectHelper.requireNonNull(path, "path cannot be null");
-        return this.source(Paths.get(path));
-    }
-
-    public Copy source(File path) {
-        ObjectHelper.requireNonNull(path, "path cannot be null");
-        return this.source(path.toPath());
-    }
-
-    public Copy source(Path path) {
-        ObjectHelper.requireNonNull(path, "path cannot be null");
-        this.sources.clear();
-        this.sources.add(path);
-        return this;
-    }
-
     public Copy sources(Path... paths) {
         ObjectHelper.requireNonNull(paths, "paths cannot be null");
         this.sources.clear();
@@ -102,18 +85,6 @@ public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Cop
             this.sources.add(p);
         }
         return this;
-    }
-
-    public Copy sources(Globber globber) {
-        ObjectHelper.requireNonNull(globber, "globber cannot be null");
-        try {
-            List<Path> paths = globber.scan();
-            this.sources.clear();
-            this.sources.addAll(paths);
-            return this;
-        } catch (IOException e) {
-            throw new BlazeException(e.getMessage(), e);
-        }
     }
 
     public Copy sources(File... files) {
@@ -132,6 +103,18 @@ public class Copy extends Action<Copy.Result,Void> implements VerbosityMixin<Cop
             this.sources.add(Paths.get(p));
         }
         return this;
+    }
+
+    public Copy sources(Globber globber) {
+        ObjectHelper.requireNonNull(globber, "globber cannot be null");
+        try {
+            List<Path> paths = globber.scan();
+            this.sources.clear();
+            this.sources.addAll(paths);
+            return this;
+        } catch (IOException e) {
+            throw new BlazeException(e.getMessage(), e);
+        }
     }
 
     public Copy target(String path) {

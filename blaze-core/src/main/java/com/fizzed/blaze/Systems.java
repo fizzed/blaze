@@ -313,23 +313,43 @@ public class Systems {
             .target(target);
     }
 
-    static public Copy cp(Path source) {
+    static public Copy cp(Path... sources) {
         return new Copy(Contexts.currentContext())
-            .source(source);
+            .sources(sources);
     }
 
-    static public Copy cp(File source) {
+    static public Copy cp(File... sources) {
         return new Copy(Contexts.currentContext())
-            .source(source);
+            .sources(sources);
     }
 
-    static public Copy cp(String source) {
+    static public Copy cp(String... sources) {
         return new Copy(Contexts.currentContext())
-            .source(source);
+            .sources(sources);
     }
 
     static public Copy cp(Globber globber) {
         return new Copy(Contexts.currentContext())
+            .sources(globber);
+    }
+
+    static public Move mv(Path... sources) {
+        return new Move(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Move mv(File... sources) {
+        return new Move(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Move mv(String... sources) {
+        return new Move(Contexts.currentContext())
+            .sources(sources);
+    }
+
+    static public Move mv(Globber globber) {
+        return new Move(Contexts.currentContext())
             .sources(globber);
     }
 
@@ -352,11 +372,6 @@ public class Systems {
      * @return A new Remove action bound to current context
      */
     static public Remove rm(Globber globber) {
-        return remove(globber);
-    }
-
-    @Deprecated
-    static public Remove remove(Globber globber) {
         return new Remove(Contexts.currentContext())
             .paths(globber);
     }
@@ -379,11 +394,6 @@ public class Systems {
      * @return A new Remove action bound to current context
      */
     static public Remove rm(Path... paths) {
-        return remove(paths);
-    }
-
-    @Deprecated
-    static public Remove remove(Path... paths) {
         return new Remove(Contexts.currentContext())
             .paths(paths);
     }
@@ -406,11 +416,6 @@ public class Systems {
      * @return A new Remove action bound to current context
      */
     static public Remove rm(File... files) {
-        return remove(files);
-    }
-
-    @Deprecated
-    static public Remove remove(File... files) {
         return new Remove(Contexts.currentContext())
             .paths(files);
     }

@@ -27,7 +27,7 @@ public class CopyTest extends TestAbstractBase {
     @Test(expected=FileNotFoundException.class)
     public void fileToFileFailsIfSourceDoesNotExist() {
         new Copy(this.context)
-            .source(this.testCopyDir.resolve("notexist"))
+            .sources(this.testCopyDir.resolve("notexist"))
             .target(this.testCopyDir)
             .run();
     }
@@ -37,7 +37,7 @@ public class CopyTest extends TestAbstractBase {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileFailsToSameFile.txt"));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(sourceFile)
             .run();
     }
@@ -47,7 +47,7 @@ public class CopyTest extends TestAbstractBase {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileFailsToSameFileEvenIfForced.txt"));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(sourceFile)
             .force()
             .run();
@@ -58,7 +58,7 @@ public class CopyTest extends TestAbstractBase {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToDirFailsToSameFile.txt"));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(sourceFile.getParent())
             .run();
     }
@@ -72,7 +72,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetFile), is(false));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(targetFile)
             .run();
 
@@ -86,7 +86,7 @@ public class CopyTest extends TestAbstractBase {
         final Path targetFile = createFile(targetDir.resolve("exists.txt"));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(targetFile)
             .run();
     }
@@ -100,7 +100,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(FileUtils.readFileToString(targetFile.toFile(), StandardCharsets.UTF_8), is("test"));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(targetFile)
             .force()
             .run();
@@ -117,7 +117,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetFile), is(false));
 
         new Copy(this.context)
-            .source(sourceFile)
+            .sources(sourceFile)
             .target(targetDir)
             .verbose()
             .run();
@@ -134,7 +134,7 @@ public class CopyTest extends TestAbstractBase {
         final Path targetFile = createFile(this.testCopyDir.resolve("dirToDirFailsIfTargetExistsAsFileToCopyTo"));
 
         new Copy(this.context)
-            .source(sourceDir)
+            .sources(sourceDir)
             .target(targetFile)
             .run();
     }
@@ -146,7 +146,7 @@ public class CopyTest extends TestAbstractBase {
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
 
         new Copy(this.context)
-            .source(sourceDir)
+            .sources(sourceDir)
             .target(sourceDir)
             .run();
     }
@@ -166,7 +166,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetDir), is(false));
 
         new Copy(this.context)
-            .source(sourceDir)
+            .sources(sourceDir)
             .target(targetDir)
             .run();
     }
@@ -186,7 +186,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetDir), is(false));
 
         new Copy(this.context)
-            .source(sourceDir)
+            .sources(sourceDir)
             .target(targetDir)
             .recursive()
             .run();
@@ -214,7 +214,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetDirFile), is(true));
 
         new Copy(this.context)
-            .source(sourceDir)
+            .sources(sourceDir)
             .target(targetDir)
             .recursive()
             .run();
