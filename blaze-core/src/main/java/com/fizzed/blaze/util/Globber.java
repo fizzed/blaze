@@ -15,7 +15,10 @@
  */
 package com.fizzed.blaze.util;
 
+import com.typesafe.config.ConfigException;
+
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -25,6 +28,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -32,7 +36,7 @@ import java.util.stream.Stream;
  *
  * @author joelauer
  */
-public class Globber {
+public class Globber implements Iterable<Path> {
     
     // http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileSystem.html#getPathMatcher(java.lang.String)
     static public final char[] JAVA_GLOBBING_CHARS = new char[] { '*', '{', '}', '?', '[', ']' };
@@ -173,7 +177,20 @@ public class Globber {
         
         return path;
     }
-    
+
+    @Override
+    public Iterator<Path> iterator() {
+        try {
+            return this.scan().iterator();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public Stream<Path> stream() throws IOException {
+        return scan().stream();
+    }
+
     public List<Path> scan() throws IOException {
         ArrayList<Path> paths = new ArrayList<>();
         
@@ -297,4 +314,5 @@ public class Globber {
         
         return false;
     }
+
 }

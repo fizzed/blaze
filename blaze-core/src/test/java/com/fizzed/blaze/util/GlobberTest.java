@@ -20,6 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -30,6 +33,7 @@ import static org.junit.Assert.assertThat;
  * @author joelauer
  */
 public class GlobberTest {
+    static private final Logger log = LoggerFactory.getLogger(GlobberTest.class);
     
     @Test
     public void containsUnescapedChars() {
@@ -60,9 +64,27 @@ public class GlobberTest {
         result = Globber.containsUnescapedChars("\\*\\{.java\\}", specialChars);
         assertThat(result, is(false));
     }
-    
+
     @Test
-    public void globber() throws Exception {
+    public void globberForLoop() throws Exception {
+        Path globberDir = FileHelper.resourceAsFile("/globber/globber.txt").getParentFile().toPath();
+        int count = 0;
+        for (Path path : Globber.globber(globberDir, "*.txt")) {
+            log.debug("{}", path);
+            count++;
+        }
+        assertThat(count, is(1));
+    }
+
+    @Test
+    public void globberStream() throws Exception {
+        Path globberDir = FileHelper.resourceAsFile("/globber/globber.txt").getParentFile().toPath();
+        Path path = Globber.globber(globberDir, "*.txt").stream().findFirst().get();
+        assertThat(path.getFileName().toString(), is("globber.txt"));
+    }
+
+    @Test
+    public void globberWorks() throws Exception {
         // run tests with context of the core/src/test/resources/globber directory
         Path globberDir = FileHelper.resourceAsFile("/globber/globber.txt").getParentFile().toPath();
         String globberPath = BasicPaths.toString(globberDir);
