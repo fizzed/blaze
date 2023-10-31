@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 1.5.1 - 2023-10-31
+
+ - Add Systems.remove() methods back (was causing backwards incompatiblity issues)
+ -  Add Globber.stream() method back (was causing backwards incompatiblity issues)
+
 #### 1.5.0 - 2024-10-10
 
  - New Copy and Move commands in the Systems.* class
