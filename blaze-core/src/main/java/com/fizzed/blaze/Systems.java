@@ -420,6 +420,33 @@ public class Systems {
             .paths(files);
     }
 
+    /**
+     * Use new rm() methods, not remove, to match posix-like syntax.
+     * @deprecated Use {@link #rm(Globber)}
+     */
+    @Deprecated
+    static public Remove remove(Globber globber) {
+        return rm(globber);
+    }
+
+    /**
+     * Use new rm() methods, not remove, to match posix-like syntax.
+     * @deprecated Use {@link #rm(Path...)}
+     */
+    @Deprecated
+    static public Remove remove(Path... paths) {
+        return rm(paths);
+    }
+
+    /**
+     * Use new rm() methods, not remove, to match posix-like syntax.
+     * @deprecated Use {@link #rm(File...)}
+     */
+    @Deprecated
+    static public Remove remove(File... files) {
+        return rm(files);
+    }
+
     static public Pipeline pipeline() {
         return new Pipeline(Contexts.currentContext());
     }
