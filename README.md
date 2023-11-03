@@ -138,8 +138,57 @@ Yeah, I suppose so.  But you'd probably use two shell scripts to define the
 separate tasks and if you cared about platform portability, you'd be nice to
 also include `.bat` scripts for Windows users.  However, when you want to do
 anything else that's remotely advanced, you'll start to appreciate having a
-more advanced environment.  Here's an example where we query git for the 
-latest tag and use it to update a README file with it.  We use this as a way
+more advanced environment.
+
+An example of finding a specific JDK on your local system to execute a Maven test with it.
+
+find_java.conf
+```java
+blaze.dependencies = [
+  "com.fizzed:jne:4.1.1"
+]
+```
+
+find_java.java
+```java
+public class blaze {
+
+   private final Logger log = Contexts.logger();
+   private final Config config = Contexts.config();
+   private final Path projectDir = withBaseDir("..").toAbsolutePath();
+    
+   @Task
+   public void test() throws Exception {
+      // optional command-line arguments to control which jdk version or hardware architecture
+      final Integer jdkVersion = this.config.value("jdk.version", Integer.class).orNull();
+      final HardwareArchitecture jdkArch = ofNullable(this.config.value("jdk.arch").orNull())
+              .map(HardwareArchitecture::resolve)
+              .orElse(null);
+
+      final long start = System.currentTimeMillis();
+      final JavaHome jdkHome = new JavaHomeFinder()
+              .jdk()
+              .version(jdkVersion)
+              .hardwareArchitecture(jdkArch)
+              .preferredDistributions()
+              .sorted(jdkVersion != null || jdkArch != null)  // sort if any criteria provided
+              .find();
+
+      log.info("");
+      log.info("Detected {} (in {} ms)", jdkHome, (System.currentTimeMillis()-start));
+      log.info("");
+
+      exec("mvn", "clean", "test")
+              .workingDir(projectDir)
+              .env("JAVA_HOME", jdkHome.getDirectory().toString())
+              .verbose()
+              .run();
+   }
+    
+}
+```
+
+Another example where we query git for the latest tag and use it to update a README file with it.  We use this as a way
 to maintain a README file with the latest version pushed to Maven central
 
 ```java
