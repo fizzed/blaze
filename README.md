@@ -66,6 +66,18 @@ accessible task that can be called from the command-line. Since most JVM languag
 support this kind of structure, Blaze can easily support a wide variety of 
 JVM languages.
 
+## Try It
+
+To give this project a quick try on your own machine, just run some of the examples:
+
+    git clone https://github.com/fizzed/blaze.git
+    cd blaze
+    java -jar blaze.jar examples/hello.java
+    java -jar blaze.jar examples/natives.java
+    java -jar blaze.jar examples/find_javas.java
+
+[![asciicast](https://asciinema.org/a/RuvHAKmRQ7Y2kF9qVv7dfGZNt.svg)](https://asciinema.org/a/RuvHAKmRQ7Y2kF9qVv7dfGZNt)
+
 ## Install to your project
 
 Download `blaze.jar` to your project directory.  If you have `wget` available
