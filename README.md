@@ -21,6 +21,8 @@ the JVM.  Can replace shell scripts and plays nicely with other tools.  Only
 requires a Java 8 runtime and adding `blaze.jar` to your project directory.  Start
 writing portable and cross-platform scripts.
 
+![](docs/blaze-demo.gif)
+
 Blaze pulls together stable, mature libraries from the Java ecosystem into a
 light-weight package that lets you focus on getting things done.  When you 
 invoke blaze, it does the following:
@@ -30,6 +32,14 @@ invoke blaze, it does the following:
  - Downloads runtime dependencies (e.g. jars from Maven central)
  - Loads and compiles your script(s)
  - Executes "tasks" (methods your script defines)
+
+## What is a blaze script?
+
+A Blaze script is a 100% valid JVM class with public methods that typically uses
+an empty (root) package declaration.  Each public method becomes the externally
+accessible task that can be called from the command-line. Since most JVM languages
+support this kind of structure, Blaze can easily support a wide variety of
+JVM languages.
 
 ## Features
 
@@ -58,14 +68,6 @@ invoke blaze, it does the following:
  - [SSH plugin](docs/SSH.md)
  - [HTTP plugin](docs/HTTP.md)
 
-## What is a blaze script?
-
-A Blaze script is a 100% valid JVM class with public methods that typically uses
-an empty (root) package declaration.  Each public method becomes the externally
-accessible task that can be called from the command-line. Since most JVM languages
-support this kind of structure, Blaze can easily support a wide variety of 
-JVM languages.
-
 ## Try It
 
 To give this project a quick try on your own machine, just run some of the examples:
@@ -75,8 +77,6 @@ To give this project a quick try on your own machine, just run some of the examp
     java -jar blaze.jar examples/hello.java
     java -jar blaze.jar examples/natives.java
     java -jar blaze.jar examples/find_javas.java
-
-[![asciicast](https://asciinema.org/a/RuvHAKmRQ7Y2kF9qVv7dfGZNt.svg)](https://asciinema.org/a/RuvHAKmRQ7Y2kF9qVv7dfGZNt)
 
 ## Install to your project
 
