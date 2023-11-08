@@ -209,7 +209,7 @@ public class JschConnect extends SshConnect {
                     
                     // has proxy command?
                     String proxyCommand = config.getValue("ProxyCommand");
-                    if (proxyCommand != null) {
+                    if (proxyCommand != null && !proxyCommand.equalsIgnoreCase("none")) {
                         if (this.proxy != null) {
                             log.debug("Session proxy set but host has ProxyCommand");
                         } else {
@@ -383,7 +383,14 @@ public class JschConnect extends SshConnect {
                 // via hostname
                 proxyInfo = " via " + this.proxy;
             }
-            
+
+            // workaround hosts that have a "%h" in them
+            if (jschSession.getHost().contains("%h")) {
+                // we need to swap in the original host replaced for the %h var
+                jschSession.setHost(jschSession.getHost().replace("%h", uri.getHost()));
+            }
+
+
             log.info("Open ssh://{}@{}:{}{}...",
                 jschSession.getUserName(), jschSession.getHost(), jschSession.getPort(), proxyInfo);
             
