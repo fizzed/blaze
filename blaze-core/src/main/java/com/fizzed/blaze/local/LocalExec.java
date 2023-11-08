@@ -164,7 +164,7 @@ public class LocalExec extends Exec<LocalExec> {
             if (!this.environment.isEmpty()) {
                 env = " with env " + this.environment;
             }
-            log.verbose("Exec: [{}]{}{}", cmd, workingDir, env);
+            log.verbose("Exec [{}]{}{}", cmd, workingDir, env);
         }
 
         executor

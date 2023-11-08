@@ -20,6 +20,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.system.Exec;
+import com.fizzed.blaze.util.CommandLines;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
@@ -165,8 +166,18 @@ public class JschExec extends SshExec {
             });
             
             String finalCommand = sb.toString();
-            
-            log.debug("ssh-exec [{}]", finalCommand);
+
+            if (log.isVerbose()) {
+                String workingDir = "";
+                String env = "";
+                if (this.workingDirectory != null) {
+                    workingDir = " in working dir [" + this.workingDirectory + "]";
+                }
+                if (!this.environment.isEmpty()) {
+                    env = " with env " + this.environment;
+                }
+                log.verbose("SshExec [{}]{}{}", finalCommand, workingDir, env);
+            }
             
             channel.setCommand(finalCommand);
             
