@@ -12,8 +12,6 @@ Blaze by Fizzed
 [![MacOS](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/macos-x64.yaml?branch=master&label=MacOS&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/macos-x64.yaml)
 [![Windows](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/windows-x64.yaml?branch=master&label=Windows&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/macos-x64.yaml)
 
-[Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
-
 ## Overview
 
 A speedy, flexible, general purpose scripting and application launching stack for
@@ -33,6 +31,40 @@ invoke blaze, it does the following:
  - Loads and compiles your script(s)
  - Executes "tasks" (methods your script defines)
 
+Includes the following features:
+
+- Write your applications (scripts) in whatever JVM language you prefer.
+  Out-of-the-box support for
+   - Java (.java) (8, 11, 17, 21, etc.)
+   - Groovy (.groovy) (v4.0.15)
+   - Kotlin (.kt) (v1.9.10)
+   - JavaScript (.js) (via nashorn on Java 11+)
+   - Or write your own (examples [here](blaze-core/src/main/java/com/fizzed/blaze/jdk), [here](blaze-kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](blaze-groovy/src/main/java/com/fizzed/blaze/groovy))
+- Zero-install required. Just drop `blaze.jar` into your project directory and
+  you or others can run it with `java -jar blaze.jar`.
+- [IDE support](https://github.com/fizzed/blaze#ide-support)
+- Small size so you can commit `blaze.jar` to your repository
+- Excellent framework support for executing processes, modifying the filesystem,
+  user interaction, http, and ssh.
+- Easily use any Java library as a dependency to accomplish whatever
+  the framework doesn't provide.
+
+## Sponsorship & Support
+
+![](https://cdn.fizzed.com/github/fizzed-logo-100.png)
+
+Project by [Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
+
+**Developing and maintaining opensource projects requires significant time.** If you find this project useful or need
+commercial support, we'd love to chat. Drop us an email at [ping@fizzed.com](mailto:ping@fizzed.com)
+
+Project sponsors may include the following benefits:
+
+- Priority support (outside of Github)
+- Feature development & roadmap
+- Priority bug fixes
+- Privately hosted continuous integration tests for their unique edge or use cases
+
 ## What is a blaze script?
 
 A Blaze script is a 100% valid JVM class with public methods that typically uses
@@ -40,24 +72,6 @@ an empty (root) package declaration.  Each public method becomes the externally
 accessible task that can be called from the command-line. Since most JVM languages
 support this kind of structure, Blaze can easily support a wide variety of
 JVM languages.
-
-## Features
-
- - Write your applications (scripts) in whatever JVM language you prefer.
-   Out-of-the-box support for
-    - Java (.java) (8, 11, 17, 21, etc.)
-    - Groovy (.groovy) (v4.0.15)
-    - Kotlin (.kt) (v1.9.10)
-    - JavaScript (.js) (via nashorn on Java 11+)
-    - Or write your own (examples [here](blaze-core/src/main/java/com/fizzed/blaze/jdk), [here](blaze-kotlin/src/main/java/com/fizzed/blaze/kotlin), and [here](blaze-groovy/src/main/java/com/fizzed/blaze/groovy))
- - Zero-install required. Just drop `blaze.jar` into your project directory and
-   you or others can run it with `java -jar blaze.jar`.
- - [IDE support](https://github.com/fizzed/blaze#ide-support)
- - Small size so you can commit `blaze.jar` to your repository
- - Excellent framework support for executing processes, modifying the filesystem,
-   user interaction, http, and ssh.
- - Easily use any Java library as a dependency to accomplish whatever
-   the framework doesn't provide.
 
 ## More documentation
 
