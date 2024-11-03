@@ -38,7 +38,7 @@ public class InstallHelper {
         }
         
         if (!Files.isWritable(installDir)) {
-            throw new MessageOnlyException("Install directory " + installDir + " is not writable (run this as an Administor or with sudo?)");
+            throw new MessageOnlyException("Install directory " + installDir + " is not writable (run this as an Administrator or with sudo?)");
         }
         
         List<Path> installedFiles = new ArrayList<>();
@@ -48,6 +48,11 @@ public class InstallHelper {
             Path blazeBatFile = installDir.resolve("blaze.bat");
             installResource("/bin/blaze.bat", blazeBatFile);
             installedFiles.add(blazeBatFile);
+
+            // install blaze.ps1 (powershell)
+            Path blazePs1File = installDir.resolve("blaze.ps1");
+            installResource("/bin/blaze.ps1", blazePs1File);
+            installedFiles.add(blazePs1File);
         }
         
         // for ming32 compat also install the *nix version
