@@ -13,12 +13,14 @@ public class ProcessReaper {
     private boolean shutdownHookAdded;
     private final Set<Process> processes;
     private final ReentrantLock lock;
+    private volatile boolean shuttingDown;
 
     static public final ProcessReaper INSTANCE = new ProcessReaper();
 
     public ProcessReaper() {
         this.processes = new HashSet<>();
         this.lock = new ReentrantLock();
+        this.shuttingDown = false;
     }
 
     public void register(Process process) {
@@ -45,8 +47,14 @@ public class ProcessReaper {
         }
     }
 
+    public boolean isShuttingDown() {
+        return shuttingDown;
+    }
+
     private Thread newShutdownThread() {
         return new Thread(() -> {
+            // flag to indicate we are now shutting down (which can help not throw exceptions in some cases)
+            this.shuttingDown = true;
             if (!this.processes.isEmpty()) {
                 log.debug("Will destroy {} process(es) along with its children (to properly cleanup what we started)", this.processes.size());
                 ProcessHelper processHelper = ProcessHelper.get();
