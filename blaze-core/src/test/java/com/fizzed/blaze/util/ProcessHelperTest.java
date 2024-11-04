@@ -1,6 +1,7 @@
 package com.fizzed.blaze.util;
 
 import com.fizzed.crux.util.Resources;
+import com.fizzed.crux.util.WaitFor;
 import com.fizzed.jne.OperatingSystem;
 import com.fizzed.jne.PlatformInfo;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -33,7 +35,8 @@ public class ProcessHelperTest {
             .command(binFile.toAbsolutePath().toString())
             .start();
 
-        assertThat(startedProcess.getProcess().isAlive(), is(true));
+        // processes can take awhile to start sometimes, so wait for it to be alive
+        WaitFor.of(() -> startedProcess.getProcess().isAlive()).awaitMillis(3000L, 50L);
 
         PROCESS_HELPER.destroy(startedProcess.getProcess(), 5000L);
 
@@ -53,7 +56,8 @@ public class ProcessHelperTest {
             .command(binFile.toAbsolutePath().toString())
             .start();
 
-        assertThat(startedProcess.getProcess().isAlive(), is(true));
+        // processes can take awhile to start sometimes, so wait for it to be alive
+        WaitFor.of(() -> startedProcess.getProcess().isAlive()).awaitMillis(3000L, 50L);
 
         PROCESS_HELPER.destroyWithDescendants(startedProcess.getProcess(), 5000L);
 
