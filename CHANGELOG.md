@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+#### 1.6.0 - 2024-11-04
+ 
+ - 
+
 #### 1.5.1 - 2023-10-31
 
  - Add Systems.remove() methods back (was causing backwards incompatiblity issues)
