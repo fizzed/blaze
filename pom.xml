@@ -14,7 +14,6 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <javadoc.skip>true</javadoc.skip>
         <!--<netbeans.compile.on.save>none</netbeans.compile.on.save>-->
         <!-- workaround travis ci maven version requirement -->
         <maven.enforce.version>3.2.5</maven.enforce.version>
