@@ -152,7 +152,7 @@
             <dependency>
                 <groupId>com.github.mwiede</groupId>
                 <artifactId>jsch</artifactId>
-                <version>0.2.12</version>
+                <version>0.2.18</version>
             </dependency>
 
             <dependency>
