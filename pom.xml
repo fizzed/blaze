@@ -191,6 +191,18 @@
                 </exclusions>
             </dependency>
 
+            <!-- use better JNA version for improved platform support as opposed to what jsch-agentproxy is pulling in -->
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>5.13.0</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>5.13.0</version>
+            </dependency>
+
             <!-- blaze-vagrant dependencies -->
             <dependency>
                 <groupId>com.fizzed</groupId>

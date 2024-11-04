@@ -50,6 +50,7 @@
             </exclusions>
         </dependency>
 
+        <!-- this pulls in an old JNA, fix it -->
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch.agentproxy.usocket-jna</artifactId>
@@ -58,7 +59,25 @@
                     <groupId>com.jcraft</groupId>
                     <artifactId>jsch</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna-platform</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
         </dependency>
         
         <!--
