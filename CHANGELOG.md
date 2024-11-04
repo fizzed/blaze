@@ -12,6 +12,7 @@ issue on Windows where by default the hierarchy of processes is not destroyed on
  - Bump config to v1.4.3
  - Bump commons-io to v2.16.1
  - Bump jsch to v0.2.18
+ - Bump jna to v5.13.0 (fixes ssh agent for arm64 platforms) 
 
 #### 1.5.1 - 2023-10-31
 
