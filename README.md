@@ -97,13 +97,13 @@ To give this project a quick try on your own machine, just run some of the examp
 
 Download `blaze.jar` to your project directory.  If you have `wget` available
 
-    wget -O blaze.jar 'https://repo1.maven.org/maven2/com/fizzed/blaze-lite/1.6.0/blaze-lite-1.6.0.jar'
+    wget -O blaze.jar 'https://repo1.maven.org/maven2/com/fizzed/blaze-lite/1.6.1/blaze-lite-1.6.1.jar'
 
 If you have `curl` available
 
-    curl -o blaze.jar 'https://repo1.maven.org/maven2/com/fizzed/blaze-lite/1.6.0/blaze-lite-1.6.0.jar'
+    curl -o blaze.jar 'https://repo1.maven.org/maven2/com/fizzed/blaze-lite/1.6.1/blaze-lite-1.6.1.jar'
 
-Or simply [download the file in your web browser](https://repo1.maven.org/maven2/com/fizzed/blaze-lite/1.6.0/blaze-lite-1.6.0.jar)
+Or simply [download the file in your web browser](https://repo1.maven.org/maven2/com/fizzed/blaze-lite/1.6.1/blaze-lite-1.6.1.jar)
 and save it to your project directory with a name of `blaze.jar`
 
 ## Write hello world blaze script in .java
@@ -322,7 +322,7 @@ the following in your shell
 
 Writing your blaze scripts in an IDE is significantly more productive than trying to write them in a text editor. We
 initially tried writing our own IDE plugins to automatically recognize blaze was present, but that proved too difficult
-to maintain over IDE versions.  As of Blaze v1.6.0+, there is a new simple method to enable IDE support across any
+to maintain over IDE versions.  As of Blaze v1.6.1+, there is a new simple method to enable IDE support across any
 IDE that supports Maven projects.
 
     java -jar blaze.jar --generate-maven-project
