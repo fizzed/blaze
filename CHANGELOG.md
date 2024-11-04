@@ -3,7 +3,15 @@ Blaze by Fizzed
 
 #### 1.6.0 - 2024-11-04
  
- - 
+ - New powershell blaze.ps1 to improve ctrl+c not prompting user to terminate a batch file (if you use blaze -i installer)
+ - exec() launched processes (and their descendant processes) will auto destroy when blaze JVM process shuts down (fixes
+issue on Windows where by default the hierarchy of processes is not destroyed on CTRL+C)
+ - Bump maven-parent to v2.6.0
+ - Bump crux to v1.0.47
+ - Bump SLF4J to v2.0.13
+ - Bump config to v1.4.3
+ - Bump commons-io to v2.16.1
+ - Bump jsch to v0.2.18
 
 #### 1.5.1 - 2023-10-31
 
