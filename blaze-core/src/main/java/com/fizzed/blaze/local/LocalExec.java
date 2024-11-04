@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -36,6 +37,7 @@ import com.fizzed.blaze.util.InputStreamPumper;
 import com.fizzed.blaze.util.Streamables;
 import java.io.InputStream;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.PumpStreamHandler;
 
 public class LocalExec extends Exec<LocalExec> {
@@ -172,12 +174,18 @@ public class LocalExec extends Exec<LocalExec> {
             .streams(streams);
         
         try {
-            ProcessResult processResult = executor.execute();
+            StartedProcess startedProcess = executor.start();
+
+
+
+            ProcessResult processResult = startedProcess.getFuture().get();
+
+            //ProcessResult processResult = executor.execute();
             
             return new Exec.Result(this, processResult.getExitValue());
         } catch (InvalidExitValueException e) {
             throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
-        } catch (IOException | InterruptedException | TimeoutException e) {
+        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
             throw new BlazeException("Unable to cleanly execute process", e);
         } finally {
             // close all the output streams (input stream closed above)
