@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 1.6.1 - 2024-11-04
+
+ - Blaze install command (via -i flag) will overwrite existing files (to make updating scripts easier)
+ - Bump commons-io to v2.14.0
+
 #### 1.6.0 - 2024-11-04
  
  - New powershell blaze.ps1 to improve ctrl+c not prompting user to terminate a batch file (if you use blaze -i installer)
