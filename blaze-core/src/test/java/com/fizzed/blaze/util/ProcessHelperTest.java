@@ -30,6 +30,7 @@ public class ProcessHelperTest {
         } else {
             binFile = Resources.file("/bin/echo-sleep-test");
         }
+        binFile.toFile().setExecutable(true);
 
         final StartedProcess startedProcess = new ProcessExecutor()
             .command(binFile.toAbsolutePath().toString())
@@ -51,6 +52,7 @@ public class ProcessHelperTest {
         } else {
             binFile = Resources.file("/bin/echo-sleep-test");
         }
+        binFile.toFile().setExecutable(true);
 
         final StartedProcess startedProcess = new ProcessExecutor()
             .command(binFile.toAbsolutePath().toString())
