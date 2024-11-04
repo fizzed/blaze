@@ -24,10 +24,12 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
+import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.util.CommandLines;
+import com.fizzed.blaze.util.ProcessReaper;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.system.Exec;
@@ -36,6 +38,7 @@ import com.fizzed.blaze.util.InputStreamPumper;
 import com.fizzed.blaze.util.Streamables;
 import java.io.InputStream;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.PumpStreamHandler;
 
 public class LocalExec extends Exec<LocalExec> {
@@ -82,15 +85,15 @@ public class LocalExec extends Exec<LocalExec> {
         final ProcessExecutor executor = new ProcessExecutor();
 
         
-        if (this.environment.size() > 0) {
-            this.environment.forEach((k,v) -> executor.environment(k, v));
+        if (!this.environment.isEmpty()) {
+            this.environment.forEach(executor::environment);
         }
         
         if (this.workingDirectory != null) {
             executor.directory(this.workingDirectory.toFile());
         }
         
-        if (this.exitValues != null && this.exitValues.size() > 0) {
+        if (this.exitValues != null && !this.exitValues.isEmpty()) {
             executor.exitValues(this.exitValues.toArray(new Integer[0]));
         }
         
@@ -170,15 +173,41 @@ public class LocalExec extends Exec<LocalExec> {
         executor
             .command(finalCommand)
             .streams(streams);
-        
+
         try {
-            ProcessResult processResult = executor.execute();
-            
-            return new Exec.Result(this, processResult.getExitValue());
-        } catch (InvalidExitValueException e) {
-            throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            throw new BlazeException("Unable to cleanly execute process", e);
+            final StartedProcess startedProcess = executor.start();
+
+            // register process for reaping (cleaning up...)
+            ProcessReaper.INSTANCE.register(startedProcess.getProcess());
+            try {
+                ProcessResult processResult = startedProcess.getFuture().get();
+
+                return new Exec.Result(this, processResult.getExitValue());
+            } finally {
+                ProcessReaper.INSTANCE.unregister(startedProcess.getProcess());
+            }
+        } catch (Throwable t) {
+            if (t instanceof ExecutionException) {
+                ExecutionException ee = (ExecutionException)t;
+                if (ee.getCause() instanceof InvalidExitValueException) {
+                    // this is actually what we want to process
+                    t = ee.getCause();
+                }
+            }
+
+            if (t instanceof InvalidExitValueException) {
+                InvalidExitValueException ievae = (InvalidExitValueException)t;
+
+                // this can happen IF we're in the process of being shutdown and we actually don't want to throw an exception
+                if (ProcessReaper.INSTANCE.isShuttingDown()) {
+                    log.trace("Shutting down, ignoring invalid exit code on exec()");
+                    return new Exec.Result(this, ievae.getExitValue());
+                }
+
+                throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, ievae.getExitValue());
+            }
+
+            throw new BlazeException("Unable to cleanly execute process", t);
         } finally {
             // close all the output streams (input stream closed above)
             Streamables.close(os);

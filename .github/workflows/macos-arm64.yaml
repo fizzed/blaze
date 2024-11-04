@@ -1,11 +1,11 @@
-name: MacOS x64
+name: MacOS arm64
 
 on:
   push
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Azul JDK 11
