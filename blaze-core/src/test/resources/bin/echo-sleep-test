@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+for i in `seq 1 5000`; do
+  echo "Iteration $i (will now sleep for 1 sec)"
+  sleep 1
+done

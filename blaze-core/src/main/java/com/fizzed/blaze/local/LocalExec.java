@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import com.fizzed.blaze.util.CommandLines;
+import com.fizzed.blaze.util.ProcessReaper;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.system.Exec;
@@ -84,15 +84,15 @@ public class LocalExec extends Exec<LocalExec> {
         final ProcessExecutor executor = new ProcessExecutor();
 
         
-        if (this.environment.size() > 0) {
-            this.environment.forEach((k,v) -> executor.environment(k, v));
+        if (!this.environment.isEmpty()) {
+            this.environment.forEach(executor::environment);
         }
         
         if (this.workingDirectory != null) {
             executor.directory(this.workingDirectory.toFile());
         }
         
-        if (this.exitValues != null && this.exitValues.size() > 0) {
+        if (this.exitValues != null && !this.exitValues.isEmpty()) {
             executor.exitValues(this.exitValues.toArray(new Integer[0]));
         }
         
@@ -172,20 +172,22 @@ public class LocalExec extends Exec<LocalExec> {
         executor
             .command(finalCommand)
             .streams(streams);
-        
+
         try {
-            StartedProcess startedProcess = executor.start();
+            final StartedProcess startedProcess = executor.start();
 
+            // register process for reaping (cleaning up...)
+            ProcessReaper.INSTANCE.register(startedProcess.getProcess());
+            try {
+                ProcessResult processResult = startedProcess.getFuture().get();
 
-
-            ProcessResult processResult = startedProcess.getFuture().get();
-
-            //ProcessResult processResult = executor.execute();
-            
-            return new Exec.Result(this, processResult.getExitValue());
+                return new Exec.Result(this, processResult.getExitValue());
+            } finally {
+                ProcessReaper.INSTANCE.unregister(startedProcess.getProcess());
+            }
         } catch (InvalidExitValueException e) {
             throw new com.fizzed.blaze.core.UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, e.getExitValue());
-        } catch (IOException | InterruptedException | TimeoutException | ExecutionException e) {
+        } catch (IOException | InterruptedException | ExecutionException e) {
             throw new BlazeException("Unable to cleanly execute process", e);
         } finally {
             // close all the output streams (input stream closed above)

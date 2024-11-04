@@ -269,6 +269,20 @@
                 <!-- v1.4.x requires java 11+ -->
                 <version>1.3.8</version>
             </dependency>
+
+            <!-- to help with testing -->
+            <dependency>
+                <groupId>com.fizzed</groupId>
+                <artifactId>crux-util</artifactId>
+                <version>1.0.47-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fizzed</groupId>
+                <artifactId>jne</artifactId>
+                <version>4.1.1</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
