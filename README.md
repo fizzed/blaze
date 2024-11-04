@@ -159,6 +159,20 @@ public class blaze {
 
 You can now just run these with `java -jar blaze.jar demo1` or `java -jar blaze.jar demo2`
 
+## Avoid "Terminate batch job (Y/N)" on CTRL+C in Windows
+
+If you leverage powershell on Windows, Blaze v1.6.0+ will install a `blaze.ps1` via the "-i" installer flag. This 
+powershell script will help you avoid the infuriating "Terminate batch job (Y/N)" prompt on Windows.
+
+## Avoid zombie processes triggered with maven and CTRL+C on Windows
+
+On windows if you run maven, and it in turn creates child processes for javadocs, exec plugin, etc., in almost all
+cases, maven will close but leave the processes it opened still running. The problem is that Windows itself does not
+close the process hierarchy if the parent is terminated, like Linux or MacOS will do.
+
+As of Blaze v1.6.0+, any blaze exec() action will automatically destroy any running processes as well as any child
+processes upon shutdown via CTRL+C (or any reason for an exit). Blaze makes Maven on Windows much easier to use.
+
 ## But I can still do your previous example in a shell script?
 
 Yeah, I suppose so.  But you'd probably use two shell scripts to define the
