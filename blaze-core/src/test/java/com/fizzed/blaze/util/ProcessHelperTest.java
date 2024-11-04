@@ -41,6 +41,9 @@ public class ProcessHelperTest {
 
         PROCESS_HELPER.destroy(startedProcess.getProcess(), 5000L);
 
+        // github actions are slow, make this a bit more reliable
+        WaitFor.of(() -> !startedProcess.getProcess().isAlive()).awaitMillis(3000L, 50L);
+
         assertThat(startedProcess.getProcess().isAlive(), is(false));
     }
 
@@ -62,6 +65,9 @@ public class ProcessHelperTest {
         WaitFor.of(() -> startedProcess.getProcess().isAlive()).awaitMillis(3000L, 50L);
 
         PROCESS_HELPER.destroyWithDescendants(startedProcess.getProcess(), 5000L);
+
+        // github actions are slow, make this a bit more reliable
+        WaitFor.of(() -> !startedProcess.getProcess().isAlive()).awaitMillis(3000L, 50L);
 
         assertThat(startedProcess.getProcess().isAlive(), is(false));
     }
