@@ -23,12 +23,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class InstallHelper {
     
-    static public List<Path> installBlazeBinaries(Path installDir) throws MessageOnlyException {
+    static public List<Path> installBlazeBinaries(Path installDir) throws MessageOnlyException, IOException {
         if (Files.notExists(installDir)) {
             throw new MessageOnlyException("Install directory " + installDir + " does not exist");
         }
@@ -63,7 +62,7 @@ public class InstallHelper {
         return installedFiles;
     }
     
-    static private void installResource(String resourceName, Path targetFile) throws MessageOnlyException {
+    static private void installResource(String resourceName, Path targetFile) throws MessageOnlyException, IOException {
         String fileName = targetFile.getFileName().toString();
         InputStream is = Blaze.class.getResourceAsStream(resourceName);
         
@@ -71,9 +70,10 @@ public class InstallHelper {
             throw new MessageOnlyException("Unable to find resource for " + resourceName);
         }
 
-        if (Files.exists(targetFile)) {
-            throw new MessageOnlyException("File " + targetFile + " already exists (delete first then try again)");
-        }
+        /*if (Files.exists(targetFile)) {
+            // we should just delete the file, so it can be replaced
+            //throw new MessageOnlyException("File " + targetFile + " already exists (delete first then try again)");
+        }*/
         
         try {
             Files.copy(is, targetFile, StandardCopyOption.REPLACE_EXISTING);
