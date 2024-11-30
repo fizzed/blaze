@@ -16,6 +16,8 @@
 package com.fizzed.blaze.util;
 
 import com.fizzed.blaze.core.WrappedBlazeException;
+import org.apache.commons.io.output.TeeOutputStream;
+
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -26,16 +28,22 @@ import java.nio.charset.StandardCharsets;
  * @author joelauer
  */
 public class CaptureOutput extends StreamableOutput {
-    
-    private final ByteArrayOutputStream baos;
+
+    private final ByteArrayOutputStream captureOutputStream;
+    private final StreamableOutput otherOutput;
     
     public CaptureOutput() {
-        this(new ByteArrayOutputStream());
+        this(Streamables.standardOutput());
+    }
+
+    public CaptureOutput(StreamableOutput otherOutput) {
+        this(new ByteArrayOutputStream(), otherOutput);
     }
     
-    private CaptureOutput(ByteArrayOutputStream baos) {
-        super(baos, "<capture>", null, null);
-        this.baos = baos;
+    private CaptureOutput(ByteArrayOutputStream captureOutputStream, StreamableOutput otherOutput) {
+        super(new TeeOutputStream(captureOutputStream, otherOutput.stream()), "<capture>", null, null);
+        this.captureOutputStream = captureOutputStream;
+        this.otherOutput = otherOutput;
     }
     
     @Override
@@ -49,14 +57,14 @@ public class CaptureOutput extends StreamableOutput {
     
     public String asString(Charset charset) {
         try {
-            return this.baos.toString(charset.name());
+            return this.captureOutputStream.toString(charset.name());
         } catch (UnsupportedEncodingException e) {
             throw new WrappedBlazeException(e);
         }
     }
     
     public byte[] asBytes() {
-        return this.baos.toByteArray();
+        return this.captureOutputStream.toByteArray();
     }
     
 }
