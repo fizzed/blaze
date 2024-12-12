@@ -19,7 +19,7 @@
         <maven.enforce.version>3.2.5</maven.enforce.version>
         <jsch.agentproxy.version>0.0.9</jsch.agentproxy.version>
         <slf4j.version>2.0.13</slf4j.version>
-        <crux.version>1.0.47</crux.version>
+        <crux.version>1.0.48</crux.version>
     </properties>
 
     <scm>
@@ -35,6 +35,7 @@
         <module>blaze-groovy</module>
         <module>blaze-kotlin</module>
         <module>blaze-http</module>
+        <module>blaze-archive</module>
         <module>blaze-ssh</module>
         <module>blaze-docker</module>
         <module>blaze-haproxy</module>
