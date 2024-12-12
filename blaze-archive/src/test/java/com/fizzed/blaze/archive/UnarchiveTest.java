@@ -52,6 +52,20 @@ public class UnarchiveTest {
     }
 
     @Test
+    public void stripLeadingPath() throws Exception {
+        final Path file = Resources.file("/fixtures/sample-with-root-dir.zip");
+        final Path target = this.createEmptyTargetDir("zipWithRootDir");
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .stripLeadingPath()
+            .run();
+
+        assertThat(Files.exists(target.resolve("a.txt")), is(true));
+        assertThat(Files.exists(target.resolve("c/d.txt")), is(true));
+    }
+
+    @Test
     public void tarNoRootDir() throws Exception {
         final Path file = Resources.file("/fixtures/sample-no-root-dir.tar");
         final Path target = this.createEmptyTargetDir("tarNoRootDir");
@@ -114,6 +128,19 @@ public class UnarchiveTest {
 
         assertThat(Files.exists(target.resolve("a.txt")), is(true));
         assertThat(Files.exists(target.resolve("c/d.txt")), is(true));
+    }
+
+    @Test
+    public void _7zWithRootDir() throws Exception {
+        final Path file = Resources.file("/fixtures/sample-with-root-dir.7z");
+        final Path target = this.createEmptyTargetDir("_7zWithRootDir");
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .run();
+
+        assertThat(Files.exists(target.resolve("sample/a.txt")), is(true));
+        assertThat(Files.exists(target.resolve("sample/c/d.txt")), is(true));
     }
 
 }

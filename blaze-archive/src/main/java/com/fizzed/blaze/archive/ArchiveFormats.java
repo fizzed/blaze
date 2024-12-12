@@ -13,7 +13,8 @@ public class ArchiveFormats {
         new ArchiveFormat("tar", "bzip2", ".tar.bz2"),
         new ArchiveFormat("tar", "xz", ".tar.xz"),
         new ArchiveFormat("tar", "zstd", ".tar.zst"),
-        new ArchiveFormat(null, "gz", ".gz")
+        new ArchiveFormat(null, "gz", ".gz"),
+        new ArchiveFormat("7z", null, ".7z")
     );
 
     static public ArchiveFormat detectByFileName(String fileName) {
