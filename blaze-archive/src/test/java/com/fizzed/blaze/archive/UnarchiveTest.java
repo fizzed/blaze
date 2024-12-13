@@ -1,6 +1,7 @@
 package com.fizzed.blaze.archive;
 
 import com.fizzed.blaze.Config;
+import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import org.apache.commons.io.FileUtils;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import com.fizzed.crux.util.Resources;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.spy;
 
@@ -52,7 +54,7 @@ public class UnarchiveTest {
     }
 
     @Test
-    public void stripLeadingPath() throws Exception {
+    public void stripComponents1() throws Exception {
         final Path file = Resources.file("/fixtures/sample-with-root-dir.zip");
         final Path target = this.createEmptyTargetDir("zipWithRootDir");
 
@@ -63,6 +65,47 @@ public class UnarchiveTest {
 
         assertThat(Files.exists(target.resolve("a.txt")), is(true));
         assertThat(Files.exists(target.resolve("c/d.txt")), is(true));
+    }
+
+    @Test
+    public void stripComponents2() throws Exception {
+        final Path file = Resources.file("/fixtures/sample-with-root-dir.zip");
+        final Path target = this.createEmptyTargetDir("zipWithRootDir");
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .stripComponents(2)
+            .run();
+
+        assertThat(Files.exists(target.resolve("a.txt")), is(true));
+        assertThat(Files.exists(target.resolve("d.txt")), is(true));
+    }
+
+    @Test
+    public void doNotOverwrite() throws Exception {
+        final Path file = Resources.file("/fixtures/sample-with-root-dir.zip");
+        final Path target = this.createEmptyTargetDir("zipWithRootDir");
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .run();
+
+        // run it again (should fail)
+        try {
+            new Unarchive(this.context, file)
+                .target(target)
+                .run();
+        } catch (BlazeException e) {
+            assertThat(e.getMessage(), containsString(".force()"));
+        }
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .force()
+            .run();
+
+        assertThat(Files.exists(target.resolve("sample/a.txt")), is(true));
+        assertThat(Files.exists(target.resolve("sample/c/d.txt")), is(true));
     }
 
     @Test
@@ -141,6 +184,30 @@ public class UnarchiveTest {
 
         assertThat(Files.exists(target.resolve("sample/a.txt")), is(true));
         assertThat(Files.exists(target.resolve("sample/c/d.txt")), is(true));
+    }
+
+    @Test
+    public void gzFileOnly() throws Exception {
+        final Path file = Resources.file("/fixtures/hello.txt.gz");
+        final Path target = this.createEmptyTargetDir("gzFileOnly");
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .run();
+
+        assertThat(Files.exists(target.resolve("hello.txt")), is(true));
+    }
+
+    @Test
+    public void zstdFileOnly() throws Exception {
+        final Path file = Resources.file("/fixtures/hello.txt.zst");
+        final Path target = this.createEmptyTargetDir("zstdFileOnly");
+
+        new Unarchive(this.context, file)
+            .target(target)
+            .run();
+
+        assertThat(Files.exists(target.resolve("hello.txt")), is(true));
     }
 
 }

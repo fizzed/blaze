@@ -34,20 +34,38 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
+
+import static java.util.Optional.ofNullable;
 
 public class Unarchive extends Action<Unarchive.Result,Void> implements VerbosityMixin<Unarchive> {
 
     static public class Result extends com.fizzed.blaze.core.Result<Unarchive,Void,Result> {
 
-        private int fileCount;
+        private int filesCreated;
+        private int filesOverwritten;
 
         Result(Unarchive action, Void value) {
             super(action, value);
         }
 
-        public int getFileCount() {
-            return fileCount;
+        public int getFilesCreated() {
+            return filesCreated;
+        }
+
+        public Result setFilesCreated(int filesCreated) {
+            this.filesCreated = filesCreated;
+            return this;
+        }
+
+        public int getFilesOverwritten() {
+            return filesOverwritten;
+        }
+
+        public Result setFilesOverwritten(int filesOverwritten) {
+            this.filesOverwritten = filesOverwritten;
+            return this;
         }
 
     }
@@ -55,17 +73,17 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     private final VerboseLogger log;
     private final Path source;
     private Path target;
-    private Boolean stripLeadingPath;
-    //private Predicate<String> filter;
-    //private boolean force;
-    private Verbosity verbosity;
+    private int stripComponents;
+    private boolean force;
+    private Function<String,String> renamer;
+    private Predicate<String> filter;
 
     public Unarchive(Context context, Path source) {
         super(context);
         this.log = new VerboseLogger(this);
         this.source = source;
-        this.stripLeadingPath = false;
-        //this.force = false;
+        this.stripComponents = 0;
+        this.force = false;
     }
 
     public VerboseLogger getVerboseLogger() {
@@ -89,16 +107,16 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     }
 
     public Unarchive stripLeadingPath() {
-        this.stripLeadingPath = true;
+        this.stripComponents = 1;
         return this;
     }
 
-    public Unarchive stripLeadingPath(Boolean stripLeadingPath) {
-        this.stripLeadingPath = stripLeadingPath;
+    public Unarchive stripComponents(int stripComponents) {
+        this.stripComponents = stripComponents;
         return this;
     }
 
-    /*public Unarchive force() {
+    public Unarchive force() {
         this.force = true;
         return this;
     }
@@ -106,7 +124,17 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     public Unarchive force(boolean force) {
         this.force = force;
         return this;
-    }*/
+    }
+
+    public Unarchive renamer(Function<String, String> renamer) {
+        this.renamer = renamer;
+        return this;
+    }
+
+    public Unarchive filter(Predicate<String> filter) {
+        this.filter = filter;
+        return this;
+    }
 
     @Override
     protected Unarchive.Result doRun() throws BlazeException {
@@ -117,6 +145,9 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
 
         // target is current directory by default, or the provided target
         final Path destDir = this.target != null ? this.target : Paths.get(".");
+
+        log.info("Unarchiving {} ", this.source);
+        log.info(" -> {}", destDir);
 
         if (!Files.exists(destDir)) {
             log.debug("Creating target directory: {}", destDir);
@@ -131,37 +162,35 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         final Result result = new Result(this, null);
         final Timer timer = new Timer();
 
-        final ArchiveFormat archiveFormat = ArchiveFormats.detectByFileName(this.source.getFileName().toString());
+        final ArchiveInfo archiveInfo = ArchiveHelper.archiveInfo(this.source);
 
-        if (archiveFormat == null) {
-            throw new BlazeException("Unable to detect archive format (or its unsupported)");
+        if (archiveInfo == null) {
+            throw new BlazeException("Unable to detect archive format from file extension (e.g. .tar.gz) or the format is not yet unsupported");
         }
 
-        log.debug("Unarchiving {} -> {}", this.source, this.target);
-        log.debug("Detected archive format: archiveMethod={}, compressMethod={}", archiveFormat.getArchiveMethod(), archiveFormat.getCompressMethod());
+        log.verbose("Using archiver={}, compressor={}",
+            ofNullable(archiveInfo.getArchiver()).map(v -> v.name()).orElse("none"),
+            ofNullable(archiveInfo.getCompressor()).map(v -> v.name()).orElse("none"));
 
         // special handling for 7z
-        if ("7z".equals(archiveFormat.getArchiveMethod())) {
-            this.unarchive7z(this.source, destDir);
+        if (archiveInfo.getArchiver() == Archiver.SEVENZ) {
+            this.unarchive7z(this.source, destDir, result);
         } else {
-            // unarchiving via streaming
             try (InputStream fin = Files.newInputStream(this.source)) {
-                // we need it buffered so we can auto-detect the format with mark/reset
                 try (InputStream bin = new BufferedInputStream(fin)) {
                     // is this file compressed?
                     InputStream uncompressedIn = bin;
-                    if (archiveFormat.getCompressMethod() != null) {
-                        try {
-                            uncompressedIn = CompressorStreamFactory.getSingleton().createCompressorInputStream(archiveFormat.getCompressMethod(), bin);
-                        } catch (CompressorException e) {
-                            throw new BlazeException("Unable to uncompress source", e);
-                        }
+                    if (archiveInfo.getCompressor() != null) {
+                        uncompressedIn = this.openUncompressedStream(archiveInfo.getCompressor(), bin);
                     }
 
                     try {
                         // is this file archived?
-                        if (archiveFormat.getArchiveMethod() != null) {
-                            this.unarchiveStreaming(archiveFormat.getArchiveMethod(), uncompressedIn, destDir);
+                        if (archiveInfo.getArchiver() != null) {
+                            this.unarchiveCommonsArchiveStream(archiveInfo.getArchiver(), uncompressedIn, destDir, result);
+                        } else {
+                            // file is compressed only, we'll treat it as a single entry within an archive
+                            this.extractEntry(archiveInfo.getUnarchivedName(), uncompressedIn, destDir, result);
                         }
                     } finally {
                         if (uncompressedIn != null) {
@@ -170,22 +199,26 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
                     }
                 }
             } catch (IOException e) {
-                throw new BlazeException("Unable to copy", e);
+                throw new BlazeException("Failed to unarchive", e);
             }
         }
 
-        //log.debug("Copied {} files, overwrote {} files, created {} dirs (in {})", result.filesCopied, result.filesOverwritten, result.dirsCreated, timer);
+        log.info("Unarchived {} files, overwrote {} files (in {})", result.filesCreated, result.filesOverwritten, timer);
 
         return new Unarchive.Result(this, null);
     }
 
-    private void unarchiveStreaming(String archiveMethod, InputStream in, Path destDir) throws BlazeException {
+    private void unarchiveCommonsArchiveStream(Archiver archiver, InputStream in, Path destDir, Result result) throws BlazeException {
         try {
-            ArchiveInputStream<? extends ArchiveEntry> ais = ArchiveStreamFactory.DEFAULT.createArchiveInputStream(archiveMethod, in);
+            final String archiverName = ArchiveHelper.getCommonsArchiverName(archiver);
+
+            ArchiveInputStream<? extends ArchiveEntry> ais = ArchiveStreamFactory.DEFAULT.createArchiveInputStream(archiverName, in);
 
             ArchiveEntry entry = ais.getNextEntry();
             while (entry != null) {
-                this.extractEntry(entry, ais, destDir);
+                if (!entry.isDirectory()) {
+                    this.extractEntry(entry.getName(), ais, destDir, result);
+                }
                 entry = ais.getNextEntry();
             }
         } catch (IOException | ArchiveException e) {
@@ -193,12 +226,14 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         }
     }
 
-    private void unarchive7z(Path source, Path destDir) throws BlazeException {
+    private void unarchive7z(Path source, Path destDir, Result result) throws BlazeException {
         try (SevenZFile sevenZFile = new SevenZFile(source.toFile())) {
             SevenZArchiveEntry entry = sevenZFile.getNextEntry();
             while (entry != null) {
-                try (InputStream in = sevenZFile.getInputStream(entry)) {
-                    this.extractEntry(entry, in, destDir);
+                if (!entry.isDirectory()) {
+                    try (InputStream in = sevenZFile.getInputStream(entry)) {
+                        this.extractEntry(entry.getName(), in, destDir, result);
+                    }
                 }
 
                 entry = sevenZFile.getNextEntry();
@@ -208,27 +243,85 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         }
     }
 
-    private void extractEntry(ArchiveEntry entry, InputStream in, Path destDir) throws BlazeException {
+    private void extractEntry(String entryName, InputStream in, Path destDir, Result result) throws BlazeException {
         try {
-            if (!entry.isDirectory()) {
-                String name = entry.getName();
+            String name = entryName;
+            String strippedPath = null;
 
-                if (this.stripLeadingPath != null && this.stripLeadingPath) {
-                    int slashPos = name.indexOf('/');
-                    if (slashPos > 0) {
-                        name = name.substring(slashPos+1);
-                    }
-                    log.debug("{} (stripped leading)", name);
-                } else {
-                    log.debug("{}", name);
-                }
-
-                Path file = destDir.resolve(name).normalize();
-                Files.createDirectories(file.getParent());
-                Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
+            if (this.stripComponents > 0) {
+                final String[] stripResult = ArchiveHelper.stripComponents(name, this.stripComponents);
+                name = stripResult[0];
+                strippedPath = stripResult[1];
             }
+
+            // any filtering?
+            if (this.filter != null) {
+                if (!this.filter.test(name)) {
+                    log.verbose("Filtered: {}   (skipped)", name);
+                    return; // do not extract
+                }
+            }
+
+            // any renaming?
+            String origName = null;
+            if (this.renamer != null) {
+                String newName = this.renamer.apply(name);
+                if (newName != null && !newName.equals(name)) {
+                    origName = name;
+                    name = newName;
+                }
+            }
+
+            // build options string for logging
+            StringBuilder optionsStr = new StringBuilder();
+            if (origName != null) {
+                optionsStr.append("renamed: ");
+                optionsStr.append(origName);
+            }
+            if (strippedPath != null) {
+                if (optionsStr.length() > 0) {
+                    optionsStr.append(", ");
+                }
+                optionsStr.append("strippedPath: ");
+                optionsStr.append(strippedPath);
+            }
+
+            // log the entry now
+            if (optionsStr.length() > 0) {
+                log.verbose("Extracting: {}   ({})", name, optionsStr);
+            } else {
+                log.verbose("Extracting: {}", name);
+            }
+
+            Path file = destDir.resolve(name).normalize();
+
+            if (Files.exists(file)) {
+                if (!this.force) {
+                    throw new BlazeException("File already exists: " + file + " (you can call .force() to overwrite existing files)");
+                } else {
+                    result.filesOverwritten++;
+                }
+            } else {
+                result.filesCreated++;
+            }
+
+            final Path dir = file.getParent();
+            if (dir != null && !Files.exists(dir)) {
+                Files.createDirectories(dir);
+            }
+            Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new BlazeException("Failed to unarchive: " + e.getMessage(), e);
+        }
+    }
+
+    private InputStream openUncompressedStream(Compressor compressor, InputStream compressedStream) throws BlazeException {
+        try {
+            String compressorName = ArchiveHelper.getCommonsCompressorName(compressor);
+
+            return CompressorStreamFactory.getSingleton().createCompressorInputStream(compressorName, compressedStream);
+        } catch (CompressorException e) {
+            throw new BlazeException("Unable to uncompress source", e);
         }
     }
 

@@ -2,22 +2,22 @@ package com.fizzed.blaze.archive;
 
 public class ArchiveFormat {
 
-    final private String compressMethod;
-    final private String archiveMethod;
+    final private Archiver archiver;
+    final private Compressor compressor;
     final private String[] extensions;
 
-    public ArchiveFormat(String archiveMethod, String compressMethod, String... extensions) {
-        this.compressMethod = compressMethod;
-        this.archiveMethod = archiveMethod;
+    public ArchiveFormat(Archiver archiver, Compressor compressor, String... extensions) {
+        this.archiver = archiver;
+        this.compressor = compressor;
         this.extensions = extensions;
     }
 
-    public String getCompressMethod() {
-        return compressMethod;
+    public Archiver getArchiver() {
+        return archiver;
     }
 
-    public String getArchiveMethod() {
-        return archiveMethod;
+    public Compressor getCompressor() {
+        return compressor;
     }
 
     public String[] getExtensions() {

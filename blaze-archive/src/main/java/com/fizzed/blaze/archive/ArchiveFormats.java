@@ -1,22 +1,34 @@
 package com.fizzed.blaze.archive;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.Arrays.asList;
 
 public class ArchiveFormats {
 
-    static public final List<ArchiveFormat> ALL = asList(
-        new ArchiveFormat("zip", null, ".zip"),
-        new ArchiveFormat("tar", null, ".tar"),
-        new ArchiveFormat("tar", "gz", ".tar.gz", ".tgz"),
-        new ArchiveFormat("tar", "bzip2", ".tar.bz2"),
-        new ArchiveFormat("tar", "xz", ".tar.xz"),
-        new ArchiveFormat("tar", "zstd", ".tar.zst"),
-        new ArchiveFormat(null, "gz", ".gz"),
-        new ArchiveFormat("7z", null, ".7z")
-    );
+    static public final List<ArchiveFormat> ALL;
+    static {
+        ALL = new ArrayList<>();
+        // build our compatability list, then add in any special extra cases (e.g. extensions)
+        // add all the archives in first
+        for (Archiver archiver : Archiver.values()) {
+            ALL.add(new ArchiveFormat(archiver, null, archiver.getExtension()));
+        }
 
+        // .tar archives can simply be compressed with any compression we support
+        for (Compressor compressor : Compressor.values()) {
+            ALL.add(new ArchiveFormat(Archiver.TAR, compressor, Archiver.TAR.getExtension() + compressor.getExtension()));
+        }
+
+        // .tgz special case
+        ALL.add(new ArchiveFormat(Archiver.TAR, Compressor.GZ, ".tgz"));
+
+        // all compressors too
+        for (Compressor compressor : Compressor.values()) {
+            ALL.add(new ArchiveFormat(null, compressor, compressor.getExtension()));
+        }
+    }
+
+/*
     static public ArchiveFormat detectByFileName(String fileName) {
         final String n = fileName.toLowerCase();
 
@@ -34,6 +46,6 @@ public class ArchiveFormats {
         }
 
         return matchedFormat;
-    }
+    }*/
     
 }
