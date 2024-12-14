@@ -22,17 +22,18 @@
             <artifactId>blaze-core</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>fluent-hc</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
         </dependency>
 
         <!-- apache unfortunately uses commons-logging -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
+        </dependency>-->
         
         <!-- testing -->
         
