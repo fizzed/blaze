@@ -35,7 +35,7 @@ public class HttpTest {
     @Test
     public void postForm() {
         new Http(context).post("http://example.com")
-            .verbose()
+            //.verbose()
             .form("a", "b")
             .run();
     }

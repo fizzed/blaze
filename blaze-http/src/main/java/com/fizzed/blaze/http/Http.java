@@ -8,8 +8,14 @@ import com.fizzed.blaze.util.VerboseLogger;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Http> {
 
@@ -26,6 +32,7 @@ public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Htt
     private final Request.Builder requestBuilder;
     private String method;
     private FormBody.Builder formBuilder;
+    private Path target;
 
     public Http(Context context) {
         super(context);
@@ -58,6 +65,19 @@ public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Htt
         return this;
     }
 
+    public Http target(Path target) {
+        this.target = target;
+        return this;
+    }
+
+    public Http target(File target) {
+        return this.target(target.toPath());
+    }
+
+    public Http target(String target) {
+        return this.target(Paths.get(target));
+    }
+
     @Override
     protected Result doRun() throws BlazeException {
         if (this.method == null) {
@@ -86,20 +106,50 @@ public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Htt
 
         final Request request = this.requestBuilder.build();
 
+        final long startTime = System.currentTimeMillis();
+        final AtomicBoolean isFirstRequest = new AtomicBoolean(true);
         final OkHttpClient client = this.clientBuilder
-            .addInterceptor(new Interceptor() {
+            .addNetworkInterceptor(new Interceptor() {
                 @NotNull
                 @Override
                 public Response intercept(@NotNull Chain chain) throws IOException {
-                    Request r = chain.request();
-                    log.verbose("Http {} {}", r.method(), r.url());
-                    return chain.proceed(r);
+                    final Request _request = chain.request();
+                    if (isFirstRequest.get()) {
+                        log.info("Http request method={} url={}", request.method(), request.url());
+                        if (log.isDebug()) {
+                            _request.headers().forEach(h -> {
+                                log.debug("{}: {}", h.getFirst(), h.getSecond());
+                            });
+                        }
+                    }
+                    isFirstRequest.set(false);
+                    final Response response = chain.proceed(_request);
+                    if (!response.isRedirect()) {
+                        log.info("Http response method={}, url={}, code={}, protocol={} (in {} ms)",
+                            request.method(), request.url(), response.code(), response.protocol(), (System.currentTimeMillis() - startTime));
+                        if (log.isDebug()) {
+                            response.headers().forEach(h -> {
+                                log.debug("{}: {}", h.getFirst(), h.getSecond());
+                            });
+                        }
+                    }
+                    return response;
                 }
             })
             .build();
 
         try (Response response = client.newCall(request).execute()) {
             Result result = new Result(this, null);
+
+            // what to do with the response?
+            if (this.target != null) {
+                final ResponseBody responseBody = response.body();
+                if (responseBody != null) {
+                    try (InputStream is = responseBody.byteStream()) {
+                        Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+            }
 
             return result;
         } catch (IOException e) {
