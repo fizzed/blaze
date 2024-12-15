@@ -4,6 +4,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.util.IntMatcher;
 import com.fizzed.blaze.util.VerboseLogger;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
@@ -15,13 +16,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Http> {
+public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<Http> {
 
-    static public class Result extends com.fizzed.blaze.core.Result<Http,Void,Result> {
+    static public class Result extends com.fizzed.blaze.core.Result<Http,Integer,Result> {
 
-        Result(Http action, Void value) {
+        Result(Http action, Integer value) {
             super(action, value);
         }
 
@@ -33,12 +37,15 @@ public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Htt
     private String method;
     private FormBody.Builder formBuilder;
     private Path target;
+    private List<IntMatcher> statusCodes;
 
     public Http(Context context) {
         super(context);
         this.log = new VerboseLogger(this);
         this.clientBuilder = new OkHttpClient.Builder();
         this.requestBuilder = new Request.Builder();
+        this.statusCodes = new ArrayList<>();
+        this.statusCodes.add(new IntMatcher(200, 299));
     }
 
     public VerboseLogger getVerboseLogger() {
@@ -57,11 +64,40 @@ public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Htt
         return this;
     }
 
+    public Http statusCodes(Integer ... codes) {
+        this.statusCodes.clear();
+        for (Integer code : codes) {
+            this.statusCodes.add(new IntMatcher(code, code));
+        }
+        return this;
+    }
+
+    public Http statusCodes(IntMatcher ... intMatchers) {
+        this.statusCodes.clear();
+        this.statusCodes.addAll(Arrays.asList(intMatchers));
+        return this;
+    }
+
+    public Http statusCodesAny() {
+        this.statusCodes.clear();
+        return this;
+    }
+
     public Http form(String param, String value) {
         if (this.formBuilder == null) {
             this.formBuilder = new FormBody.Builder();
         }
         this.formBuilder.add(param, value);
+        return this;
+    }
+
+    public Http header(String name, String value) {
+        this.requestBuilder.header(name, value);
+        return this;
+    }
+
+    public Http addHeader(String name, String value) {
+        this.requestBuilder.addHeader(name, value);
         return this;
     }
 
@@ -139,7 +175,21 @@ public class Http extends Action<Http.Result,Void> implements VerbosityMixin<Htt
             .build();
 
         try (Response response = client.newCall(request).execute()) {
-            Result result = new Result(this, null);
+            Result result = new Result(this, response.code());
+
+            // was the status code what we expect?
+            if (!this.statusCodes.isEmpty()) {
+                boolean matched = false;
+                for (IntMatcher intMatcher : this.statusCodes) {
+                    if (intMatcher.matches(response.code())) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    throw new BlazeException("Unexpected http response code " + response.code());
+                }
+            }
 
             // what to do with the response?
             if (this.target != null) {
