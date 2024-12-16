@@ -51,6 +51,57 @@ public class HttpTest {
     }
 
     @Test
+    public void requireBody() throws InterruptedException {
+        try {
+            new Http(context).post(this.getMockUrl())
+                .verbose()
+                .run();
+        } catch (BlazeException e) {
+            assertThat(e.getMessage(), containsString("body"));
+        }
+    }
+
+    @Test
+    public void postBody() throws InterruptedException {
+        this.mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201)
+            .setBody("ok"));
+
+        int code = new Http(context).post(this.getMockUrl())
+            .verbose()
+            .body("body", "text/plain")
+            .run();
+
+        assertThat(code, is(201));
+
+        RecordedRequest rr = this.mockWebServer.takeRequest();
+
+        assertThat(rr.getMethod(), is("POST"));
+        assertThat(rr.getHeader("Content-Type"), is("text/plain; charset=utf-8"));
+        assertThat(rr.getBody().readUtf8(), is("body"));
+    }
+
+    @Test
+    public void postForm() throws InterruptedException {
+        this.mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201)
+            .setBody("ok"));
+
+        int code = new Http(context).post(this.getMockUrl())
+            .verbose()
+            .form("a", "b")
+            .run();
+
+        assertThat(code, is(201));
+
+        RecordedRequest rr = this.mockWebServer.takeRequest();
+
+        assertThat(rr.getMethod(), is("POST"));
+        assertThat(rr.getHeader("Content-Type"), is("application/x-www-form-urlencoded"));
+        assertThat(rr.getBody().readUtf8(), is("a=b"));
+    }
+
+    @Test
     public void unexpectedStatusCode() throws InterruptedException {
         this.mockWebServer.enqueue(new MockResponse()
             .setResponseCode(201).setBody("ok"));
@@ -76,26 +127,6 @@ public class HttpTest {
             .run();
 
         assertThat(code, is(499));
-    }
-
-    @Test
-    public void postForm() throws InterruptedException {
-        this.mockWebServer.enqueue(new MockResponse()
-            .setResponseCode(201)
-            .setBody("ok"));
-
-        int code = new Http(context).post(this.getMockUrl())
-            .verbose()
-            .form("a", "b")
-            .run();
-
-        assertThat(code, is(201));
-
-        RecordedRequest rr = this.mockWebServer.takeRequest();
-
-        assertThat(rr.getMethod(), is("POST"));
-        assertThat(rr.getHeader("Content-Type"), is("application/x-www-form-urlencoded"));
-        assertThat(rr.getBody().readUtf8(), is("a=b"));
     }
 
 }

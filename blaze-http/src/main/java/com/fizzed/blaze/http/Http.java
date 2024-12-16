@@ -4,7 +4,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.VerbosityMixin;
-import com.fizzed.blaze.util.IntMatcher;
+import com.fizzed.blaze.util.IntRange;
 import com.fizzed.blaze.util.VerboseLogger;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
@@ -36,8 +36,9 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     private final Request.Builder requestBuilder;
     private String method;
     private FormBody.Builder formBuilder;
+    private RequestBody body;
     private Path target;
-    private List<IntMatcher> statusCodes;
+    private final List<IntRange> statusCodes;
 
     public Http(Context context) {
         super(context);
@@ -45,7 +46,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         this.clientBuilder = new OkHttpClient.Builder();
         this.requestBuilder = new Request.Builder();
         this.statusCodes = new ArrayList<>();
-        this.statusCodes.add(new IntMatcher(200, 299));
+        this.statusCodes.add(new IntRange(200, 299));
     }
 
     public VerboseLogger getVerboseLogger() {
@@ -67,19 +68,29 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     public Http statusCodes(Integer ... codes) {
         this.statusCodes.clear();
         for (Integer code : codes) {
-            this.statusCodes.add(new IntMatcher(code, code));
+            this.statusCodes.add(new IntRange(code, code));
         }
         return this;
     }
 
-    public Http statusCodes(IntMatcher ... intMatchers) {
+    public Http statusCodes(IntRange... intRanges) {
         this.statusCodes.clear();
-        this.statusCodes.addAll(Arrays.asList(intMatchers));
+        this.statusCodes.addAll(Arrays.asList(intRanges));
         return this;
     }
 
     public Http statusCodesAny() {
         this.statusCodes.clear();
+        return this;
+    }
+
+    public Http header(String name, String value) {
+        this.requestBuilder.header(name, value);
+        return this;
+    }
+
+    public Http addHeader(String name, String value) {
+        this.requestBuilder.addHeader(name, value);
         return this;
     }
 
@@ -91,13 +102,18 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         return this;
     }
 
-    public Http header(String name, String value) {
-        this.requestBuilder.header(name, value);
+    public Http body(Path file, String contentType) {
+        this.body = RequestBody.create(file.toFile(), MediaType.parse(contentType));
         return this;
     }
 
-    public Http addHeader(String name, String value) {
-        this.requestBuilder.addHeader(name, value);
+    public Http body(byte[] bytes, String contentType) {
+        this.body = RequestBody.create(bytes, MediaType.parse(contentType));
+        return this;
+    }
+
+    public Http body(String str, String contentType) {
+        this.body = RequestBody.create(str, MediaType.parse(contentType));
         return this;
     }
 
@@ -114,6 +130,12 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         return this.target(Paths.get(target));
     }
 
+    private void require(RequestBody requestBody) {
+        if (requestBody == null) {
+            throw new BlazeException("Request body must be set");
+        }
+    }
+
     @Override
     protected Result doRun() throws BlazeException {
         if (this.method == null) {
@@ -121,9 +143,11 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         }
 
         // is there a request body?
-        RequestBody body = null;
+        RequestBody requestBody = null;
         if (this.formBuilder != null) {
-            body = this.formBuilder.build();
+            requestBody = this.formBuilder.build();
+        } else if (this.body != null) {
+            requestBody = this.body;
         }
 
         switch (this.method) {
@@ -131,10 +155,20 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                 this.requestBuilder.get();
                 break;
             case "post":
-                this.requestBuilder.post(body);
+                this.require(requestBody);
+                this.requestBuilder.post(requestBody);
+                break;
+            case "put":
+                this.require(requestBody);
+                this.requestBuilder.put(requestBody);
+                break;
+            case "patch":
+                this.require(requestBody);
+                this.requestBuilder.patch(requestBody);
                 break;
             case "delete":
-                this.requestBuilder.delete(body);
+                this.require(requestBody);
+                this.requestBuilder.delete(requestBody);
                 break;
             default:
                 throw new BlazeException("Unknown http method: " + this.method);
@@ -180,8 +214,8 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
             // was the status code what we expect?
             if (!this.statusCodes.isEmpty()) {
                 boolean matched = false;
-                for (IntMatcher intMatcher : this.statusCodes) {
-                    if (intMatcher.matches(response.code())) {
+                for (IntRange intRange : this.statusCodes) {
+                    if (intRange.matches(response.code())) {
                         matched = true;
                         break;
                     }
