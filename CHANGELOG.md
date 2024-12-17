@@ -1,6 +1,13 @@
 Blaze by Fizzed
 ===============
 
+#### 1.7.0 - 2024-12-17
+
+ - New `blaze-archive` module to handle wide variety of uncompress and unarchive activities such as unzipping, or
+   untarring/ungzipping a file.
+ - New (and reworked) `blaze-http` module to make Http methods like GET, POST as simple and cross-platform as using
+   something like curl.
+
 #### 1.6.1 - 2024-11-04
 
  - Blaze install command (via -i flag) will overwrite existing files (to make updating scripts easier)
