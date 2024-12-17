@@ -4,12 +4,17 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
+import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.Streamables;
+import com.fizzed.crux.util.TemporaryPath;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -48,6 +53,45 @@ public class HttpTest {
         RecordedRequest rr = this.mockWebServer.takeRequest();
 
         assertThat(rr.getMethod(), is("GET"));
+    }
+
+    @Test
+    public void getToString() throws InterruptedException {
+        this.mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201).setBody("ok"));
+
+        CaptureOutput output = Streamables.captureOutput(false);
+
+        Integer code = new Http(context).get(this.getMockUrl())
+            .verbose()
+            .target(output)
+            .run();
+
+        assertThat(code, is(201));
+
+        RecordedRequest rr = this.mockWebServer.takeRequest();
+
+        assertThat(output.asString(), is("ok"));
+    }
+
+    @Test
+    public void getToFile() throws InterruptedException, IOException {
+        this.mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201).setBody("ok"));
+
+        try (TemporaryPath temporaryPath = TemporaryPath.tempFile()) {
+
+            Integer code = new Http(context).get(this.getMockUrl())
+                .verbose()
+                .target(temporaryPath.getPath())
+                .run();
+
+            assertThat(code, is(201));
+
+            RecordedRequest rr = this.mockWebServer.takeRequest();
+
+            assertThat(new String(Files.readAllBytes(temporaryPath.getPath())), is("ok"));
+        }
     }
 
     @Test

@@ -4,18 +4,17 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.VerbosityMixin;
-import com.fizzed.blaze.util.IntRange;
-import com.fizzed.blaze.util.VerboseLogger;
+import com.fizzed.blaze.util.*;
 import okhttp3.*;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,8 +36,8 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     private String method;
     private FormBody.Builder formBuilder;
     private RequestBody body;
-    private Path target;
     private final List<IntRange> statusCodes;
+    private StreamableOutput target;
 
     public Http(Context context) {
         super(context);
@@ -117,23 +116,44 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         return this;
     }
 
-    public Http target(Path target) {
-        this.target = target;
+    public Http target(Path file) {
+        this.target = Streamables.output(file);
         return this;
     }
 
-    public Http target(File target) {
-        return this.target(target.toPath());
+    public Http target(File file) {
+        this.target = Streamables.output(file);
+        return this;
     }
 
-    public Http target(String target) {
-        return this.target(Paths.get(target));
+    public Http target(String file) {
+        return this.target(Paths.get(file));
+    }
+
+    public Http target(StreamableOutput output) {
+        this.target = output;
+        return this;
     }
 
     private void require(RequestBody requestBody) {
         if (requestBody == null) {
             throw new BlazeException("Request body must be set");
         }
+    }
+
+    public CaptureOutput runCaptureOutput() throws BlazeException {
+        CaptureOutput captureOutput;
+        // already set as capture output?
+        if (this.target != null && this.target instanceof CaptureOutput) {
+            captureOutput = (CaptureOutput)this.target;
+        } else {
+            captureOutput = Streamables.captureOutput(false);
+            this.target = captureOutput;
+        }
+
+        this.run();
+
+        return captureOutput;
     }
 
     @Override
@@ -230,7 +250,9 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                 final ResponseBody responseBody = response.body();
                 if (responseBody != null) {
                     try (InputStream is = responseBody.byteStream()) {
-                        Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+                        try (OutputStream os = this.target.stream()) {
+                            IOUtils.copy(is, os);
+                        }
                     }
                 }
             }
