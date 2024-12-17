@@ -194,7 +194,15 @@ public class Streamables {
     }
     
     static public CaptureOutput captureOutput() {
-        return new CaptureOutput();
+        return captureOutput(true);
+    }
+
+    static public CaptureOutput captureOutput(boolean includeStdOut) {
+        if (includeStdOut) {
+            return new CaptureOutput();
+        } else {
+            return new CaptureOutput(nullOutput());
+        }
     }
     
     static public StreamableOutput lineOutput(LineOutputStream.Processor processor) {
