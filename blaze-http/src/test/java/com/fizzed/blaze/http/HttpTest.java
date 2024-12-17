@@ -44,7 +44,7 @@ public class HttpTest {
         this.mockWebServer.enqueue(new MockResponse()
             .setResponseCode(201).setBody("ok"));
 
-        Integer code = new Http(context).get(this.getMockUrl())
+        Integer code = new Http(context, Http.METHOD_GET, this.getMockUrl())
             .verbose()
             .run();
 
@@ -62,7 +62,7 @@ public class HttpTest {
 
         CaptureOutput output = Streamables.captureOutput(false);
 
-        Integer code = new Http(context).get(this.getMockUrl())
+        Integer code = new Http(context, Http.METHOD_GET, this.getMockUrl())
             .verbose()
             .target(output)
             .run();
@@ -81,7 +81,7 @@ public class HttpTest {
 
         try (TemporaryPath temporaryPath = TemporaryPath.tempFile()) {
 
-            Integer code = new Http(context).get(this.getMockUrl())
+            Integer code = new Http(context, Http.METHOD_GET, this.getMockUrl())
                 .verbose()
                 .target(temporaryPath.getPath())
                 .run();
@@ -97,7 +97,7 @@ public class HttpTest {
     @Test
     public void requireBody() throws InterruptedException {
         try {
-            new Http(context).post(this.getMockUrl())
+            new Http(context, Http.METHOD_POST, this.getMockUrl())
                 .verbose()
                 .run();
         } catch (BlazeException e) {
@@ -111,7 +111,7 @@ public class HttpTest {
             .setResponseCode(201)
             .setBody("ok"));
 
-        int code = new Http(context).post(this.getMockUrl())
+        int code = new Http(context, Http.METHOD_POST, this.getMockUrl())
             .verbose()
             .body("body", "text/plain")
             .run();
@@ -131,7 +131,7 @@ public class HttpTest {
             .setResponseCode(201)
             .setBody("ok"));
 
-        int code = new Http(context).post(this.getMockUrl())
+        int code = new Http(context, Http.METHOD_POST, this.getMockUrl())
             .verbose()
             .form("a", "b")
             .run();
@@ -151,7 +151,7 @@ public class HttpTest {
             .setResponseCode(201).setBody("ok"));
 
         try {
-            new Http(context).get(this.getMockUrl())
+            new Http(context, Http.METHOD_GET, this.getMockUrl())
                 .verbose()
                 .statusCodes(200)
                 .run();
@@ -165,7 +165,7 @@ public class HttpTest {
         this.mockWebServer.enqueue(new MockResponse()
             .setResponseCode(499).setBody("ok"));
 
-        Integer code = new Http(context).get(this.getMockUrl())
+        Integer code = new Http(context, Http.METHOD_DELETE, this.getMockUrl())
             .verbose()
             .statusCodesAny()
             .run();

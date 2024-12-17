@@ -22,6 +22,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<Http> {
 
+    static public final String METHOD_HEAD = "HEAD";
+    static public final String METHOD_GET = "GET";
+    static public final String METHOD_POST = "POST";
+    static public final String METHOD_PUT = "PUT";
+    static public final String METHOD_PATCH = "PATCH";
+    static public final String METHOD_DELETE = "DELETE";
+
     static public class Result extends com.fizzed.blaze.core.Result<Http,Integer,Result> {
 
         Result(Http action, Integer value) {
@@ -33,35 +40,25 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     private final VerboseLogger log;
     private final OkHttpClient.Builder clientBuilder;
     private final Request.Builder requestBuilder;
-    private String method;
+    private final String method;
     private FormBody.Builder formBuilder;
     private RequestBody body;
     private final List<IntRange> statusCodes;
     private StreamableOutput target;
 
-    public Http(Context context) {
+    public Http(Context context, String method, String url) {
         super(context);
         this.log = new VerboseLogger(this);
         this.clientBuilder = new OkHttpClient.Builder();
         this.requestBuilder = new Request.Builder();
         this.statusCodes = new ArrayList<>();
         this.statusCodes.add(new IntRange(200, 299));
+        this.requestBuilder.url(url);
+        this.method = method;
     }
 
     public VerboseLogger getVerboseLogger() {
         return this.log;
-    }
-
-    public Http get(String url) {
-        this.requestBuilder.url(url);
-        this.method = "get";
-        return this;
-    }
-
-    public Http post(String url) {
-        this.requestBuilder.url(url);
-        this.method = "post";
-        return this;
     }
 
     public Http statusCodes(Integer ... codes) {
@@ -170,28 +167,23 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
             requestBody = this.body;
         }
 
-        switch (this.method) {
+        switch (this.method.toLowerCase()) {
             case "get":
                 this.requestBuilder.get();
                 break;
-            case "post":
-                this.require(requestBody);
-                this.requestBuilder.post(requestBody);
-                break;
-            case "put":
-                this.require(requestBody);
-                this.requestBuilder.put(requestBody);
-                break;
-            case "patch":
-                this.require(requestBody);
-                this.requestBuilder.patch(requestBody);
-                break;
             case "delete":
-                this.require(requestBody);
-                this.requestBuilder.delete(requestBody);
+                // delete does NOT always require a body
+                if (requestBody != null) {
+                    this.requestBuilder.delete(requestBody);
+                } else {
+                    this.requestBuilder.delete();
+                }
                 break;
             default:
-                throw new BlazeException("Unknown http method: " + this.method);
+                // everything else requires a body
+                this.require(requestBody);
+                this.requestBuilder.method(this.method, requestBody);
+                break;
         }
 
         final Request request = this.requestBuilder.build();
