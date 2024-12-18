@@ -15,9 +15,12 @@
  */
 package com.fizzed.blaze.util;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +35,7 @@ public class Converter {
         T convert(String value);
     }
     
-    final static public Map<Class<?>,Impl> CONVERTERS = new HashMap<>();
+    final static public Map<Class<?>,Impl<?>> CONVERTERS = new HashMap<>();
     static {
         CONVERTERS.put(Integer.class, (Impl<Integer>) (String value) -> {
             return Integer.valueOf(value);
@@ -81,6 +84,9 @@ public class Converter {
         CONVERTERS.put(short.class, CONVERTERS.get(Short.class));
         CONVERTERS.put(byte.class, CONVERTERS.get(Byte.class));
         CONVERTERS.put(double.class, CONVERTERS.get(Double.class));
+
+        CONVERTERS.put(Path.class, Paths::get);
+        CONVERTERS.put(File.class, File::new);
     }
     
     static public <T> T convert(String value, Class<T> type) {
