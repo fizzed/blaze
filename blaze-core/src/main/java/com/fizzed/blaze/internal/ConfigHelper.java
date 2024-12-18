@@ -34,49 +34,57 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author joelauer
- */
 public class ConfigHelper {
     static private final Logger log = LoggerFactory.getLogger(ConfigHelper.class);
-    
-    static public File file(File directory, File file) {
-        String fileExt = FileHelper.fileExtension(file);
 
-        String confFileName = file.getName();
-        confFileName = confFileName.substring(0, confFileName.length() - fileExt.length());
-        confFileName += ".conf";
+    static public ConfigPaths paths(Path scriptDir, Path scriptFile) {
+        // e.g. blaze.java ---> extract out the .java part
+        final String ext = FileHelper.fileExtension(scriptFile);
 
-        return new File(directory, confFileName);
-    }
-    
-    static public Path path(Path directory, Path file) {
-        String fileExt = FileHelper.fileExtension(file);
+        final String name = scriptFile.getFileName().toString();
+        // e.g. blaze.java --> without extension such as "blaze"
+        final String nameWithoutExt = name.substring(0, name.length() - ext.length());
+        final String primaryConfName = nameWithoutExt + ".conf";
+        final String localConfName = nameWithoutExt + ".local.conf";
 
-        String confFileName = file.getFileName().toString();
-        confFileName = confFileName.substring(0, confFileName.length() - fileExt.length());
-        confFileName += ".conf";
-
-        if (directory == null) {
-            return Paths.get(confFileName);
+        final Path primaryFile;
+        final Path localFile;
+        if (scriptDir == null) {
+            primaryFile = Paths.get(primaryConfName);
+            localFile = Paths.get(localConfName);
         } else {
-            return directory.resolve(confFileName);
+            primaryFile = scriptDir.resolve(primaryConfName);
+            localFile = scriptDir.resolve(localConfName);
         }
+
+        return new ConfigPaths(primaryFile, localFile);
     }
     
-    static public Config create(Path file) {
+    static public Config create(ConfigPaths configPaths) {
         //
         // configuration
         //
         com.typesafe.config.Config typesafeConfig = null;
 
+        // there are 2 config files -- one is the primary and then there is a local conf that can override it
+        // the local conf is intended to allow you to NOT commit a file to your repository
+        final Path primaryFile = configPaths != null ? configPaths.getPrimaryFile() : null;
+        final Path localFile = configPaths != null ? configPaths.getLocalFile() : null;
+
         // build a typesafe config that we'll wrap w/ our interface (just in case we swap out down the road)
-        if (file != null && Files.exists(file)) {
-            log.debug("Configuring with {}", file);
-            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(file.toFile());
+        if (primaryFile != null && Files.exists(primaryFile)) {
+            log.debug("Configuring with file {}", primaryFile);
+            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(primaryFile.toFile());
         } else {
             typesafeConfig = com.typesafe.config.ConfigFactory.empty();
+        }
+
+        // use the local file to override anything in the default?
+        if (localFile != null && Files.exists(localFile)) {
+            log.debug("Configuring with local/overlay file {}", localFile);
+            com.typesafe.config.Config typesafeLocalConfig = com.typesafe.config.ConfigFactory.parseFile(localFile.toFile());
+            // we'll actually use the local version first, making the primary the new fallback
+            typesafeConfig = typesafeLocalConfig.withFallback(typesafeConfig);
         }
 
         // overlay system properties on top of it

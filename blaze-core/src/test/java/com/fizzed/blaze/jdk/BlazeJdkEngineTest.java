@@ -109,5 +109,28 @@ public class BlazeJdkEngineTest {
         assertThat(result.getExitValue(), is(0));
         assertThat(result.outputUTF8(), containsString("worked" + System.lineSeparator()));
     }
+
+    @Test
+    public void blazeWithConfig() throws Exception {
+        final File workingDir = resourceAsFile("/jdk/project3");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
+
+        assertThat(result.getExitValue(), is(0));
+        assertThat(result.outputUTF8(), containsString("I am a random value in the primary config file"));
+    }
+
+    @Test
+    public void blazeWithLocalConfig() throws Exception {
+        final File workingDir = resourceAsFile("/jdk/project4");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
+
+        assertThat(result.getExitValue(), is(0));
+
+        final String output = result.outputUTF8();
+        assertThat(output, containsString("val1 = This is val1 in the local config file"));
+        assertThat(output, containsString("val2 = This is val2 in the primary config file"));
+    }
     
 }

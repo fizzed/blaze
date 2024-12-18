@@ -15,16 +15,12 @@
  */
 package com.fizzed.blaze.core;
 
-import com.fizzed.blaze.internal.ContextImpl;
+import com.fizzed.blaze.internal.*;
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.internal.DependencyHelper;
-import com.fizzed.blaze.internal.ClassLoaderHelper;
+
 import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
-import com.fizzed.blaze.internal.ConfigHelper;
-import com.fizzed.blaze.internal.DefaultScriptFileLocator;
-import com.fizzed.blaze.internal.EngineHelper;
-import com.fizzed.blaze.internal.FileHelper;
+
 import com.fizzed.blaze.jdk.BlazeJdkEngine;
 import com.fizzed.blaze.jdk.TargetObjectScript;
 import com.fizzed.blaze.util.Timer;
@@ -201,16 +197,16 @@ public class Blaze {
                 locate();
             }
             
-            Path configFile = null;
+            ConfigPaths configPaths = null;
             
             // a script may not actually have been detected
             if (this.detectedScriptFile != null) {
-                configFile = ConfigHelper.path(detectedBaseDir, detectedScriptFile);
+                configPaths = ConfigHelper.paths(detectedBaseDir, detectedScriptFile);
                 
                 scriptExtension = FileHelper.fileExtension(detectedScriptFile);
             }
             
-            config = ConfigHelper.create(configFile);
+            config = ConfigHelper.create(configPaths);
 
             context = new ContextImpl(
                 (detectedBaseDir != null ? detectedBaseDir : null),
