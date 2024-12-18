@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.ssh.impl;
 
+import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.ssh.*;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
@@ -190,7 +191,7 @@ public class JschExec extends SshExec {
             
             Integer exitValue = channel.getExitStatus();
             
-            if (!this.exitValues.contains(exitValue)) {
+            if (!IntRangeHelper.contains(this.exitValues, exitValue)) {
                 throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, exitValue);
             }
             

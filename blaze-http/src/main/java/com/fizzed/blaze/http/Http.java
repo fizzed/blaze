@@ -4,6 +4,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.util.*;
 import okhttp3.*;
 import org.apache.commons.io.IOUtils;
@@ -225,14 +226,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
 
             // was the status code what we expect?
             if (!this.statusCodes.isEmpty()) {
-                boolean matched = false;
-                for (IntRange intRange : this.statusCodes) {
-                    if (intRange.matches(response.code())) {
-                        matched = true;
-                        break;
-                    }
-                }
-                if (!matched) {
+                if (!IntRangeHelper.contains(this.statusCodes, response.code())) {
                     throw new BlazeException("Unexpected http response code " + response.code());
                 }
             }

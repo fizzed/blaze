@@ -28,14 +28,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import com.fizzed.blaze.core.UnexpectedExitValueException;
-import com.fizzed.blaze.util.CommandLines;
-import com.fizzed.blaze.util.ProcessReaper;
+import com.fizzed.blaze.internal.IntRangeHelper;
+import com.fizzed.blaze.util.*;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.system.Which;
-import com.fizzed.blaze.util.InputStreamPumper;
-import com.fizzed.blaze.util.Streamables;
+
 import java.io.InputStream;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -94,7 +93,7 @@ public class LocalExec extends Exec<LocalExec> {
         }
         
         if (this.exitValues != null && !this.exitValues.isEmpty()) {
-            executor.exitValues(this.exitValues.toArray(new Integer[0]));
+            executor.exitValues(IntRangeHelper.toExpandedArray(this.exitValues));
         }
         
         if (this.timeoutMillis > 0) {

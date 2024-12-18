@@ -16,6 +16,7 @@
 package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.util.CaptureOutput;
+import com.fizzed.blaze.util.IntRange;
 import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.File;
@@ -58,8 +59,12 @@ public interface ExecMixin<T> extends PipeErrorMixin<T> {
     default public T exitValue(Integer exitValue) {
         return exitValues(new Integer[] { exitValue });
     }
-    
+
+    T exitValuesAny();
+
     T exitValues(Integer... exitValues);
+
+    T exitValues(IntRange... exitValues);
     
     /**
     default public T captureOutput() {

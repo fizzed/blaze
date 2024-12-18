@@ -15,6 +15,8 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.util.IntRange;
+
 import java.util.List;
 
 /**
@@ -23,7 +25,7 @@ import java.util.List;
  */
 public class UnexpectedExitValueException extends BlazeException {
 
-    final private List<Integer> expected;
+    final private List<IntRange> expected;
     final private Integer actual;
     
     /**
@@ -32,13 +34,13 @@ public class UnexpectedExitValueException extends BlazeException {
      *
      * @param msg the detail message.
      */
-    public UnexpectedExitValueException(String msg, List<Integer> expected, Integer actual) {
+    public UnexpectedExitValueException(String msg, List<IntRange> expected, Integer actual) {
         super(msg + " (expected = " + expected + "; actual = " + actual + ")");
         this.expected = expected;
         this.actual = actual;
     }
 
-    public List<Integer> getExpected() {
+    public List<IntRange> getExpected() {
         return expected;
     }
 

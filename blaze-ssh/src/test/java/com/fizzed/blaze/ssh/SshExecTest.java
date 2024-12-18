@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.fizzed.blaze.util.IntRange.intRange;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
@@ -84,7 +86,7 @@ public class SshExecTest extends SshBaseTest {
             fail();
         } catch (UnexpectedExitValueException e) {
             assertThat(e.getActual(), is(1));
-            assertThat(e.getExpected(), contains(0));
+            assertThat(e.getExpected(), contains(intRange(0, 0)));
         }
     }
     

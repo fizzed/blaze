@@ -28,6 +28,9 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.fizzed.blaze.util.IntRange.intRange;
+import static java.util.Arrays.asList;
+
 abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer> implements PathsMixin<T>, ExecMixin<T>, VerbosityMixin<T> {
     static public class Result<R extends Exec> extends com.fizzed.blaze.core.Result<R,Integer,Result<R>> {
         
@@ -46,7 +49,7 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
     protected StreamableOutput pipeOutput;
     protected StreamableOutput pipeError;
     protected boolean pipeErrorToOutput;
-    final protected List<Integer> exitValues;
+    final protected List<IntRange> exitValues;
     protected long timeoutMillis = -1L;
     protected boolean sudo;
     protected boolean shell;
@@ -60,7 +63,7 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         this.pipeOutput = Streamables.standardOutput();
         this.pipeError = Streamables.standardError();
         this.exitValues = new ArrayList<>();
-        this.exitValues.add(0);
+        this.exitValues.add(intRange(0, 0));
         this.sudo = false;
         this.shell = false;
     }
@@ -162,11 +165,26 @@ abstract public class Exec<T extends Exec> extends Action<Exec.Result<T>,Integer
         this.workingDirectory = Paths.get(path);
         return (T)this;
     }
-    
+
+    @Override
+    public T exitValuesAny() {
+        this.exitValues.clear();
+        return (T)this;
+    }
+
     @Override
     public T exitValues(Integer... exitValues) {
         this.exitValues.clear();
-        this.exitValues.addAll(Arrays.asList(exitValues));
+        for (Integer exitValue : exitValues) {
+            this.exitValues.add(intRange(exitValue, exitValue));
+        }
+        return (T)this;
+    }
+
+    @Override
+    public T exitValues(IntRange... exitValues) {
+        this.exitValues.clear();
+        this.exitValues.addAll(asList(exitValues));
         return (T)this;
     }
 
