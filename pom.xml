@@ -36,6 +36,7 @@
         <module>blaze-kotlin</module>
         <module>blaze-http</module>
         <module>blaze-archive</module>
+        <module>blaze-postoffice</module>
         <module>blaze-ssh</module>
         <module>blaze-docker</module>
         <module>blaze-haproxy</module>
