@@ -31,6 +31,12 @@
         <!-- testing -->
 
         <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail-standalone</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>crux-util</artifactId>
             <scope>test</scope>
