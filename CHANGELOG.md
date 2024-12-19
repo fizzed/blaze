@@ -5,6 +5,10 @@ Blaze by Fizzed
 
  - New `blaze-postoffice` module to handle sending emails via SMTP. The SMTP settings can be setup in the `blaze.conf`
    or programatically setup with the new PostOffices.mail() action.
+ - Config now supports Path and File class types
+ - Config now supports `script.conf` or `script.local.conf` configuration files so that one config file can define the
+   defaults and the other could potentially not be committed to a repository to help define overrides.
+ - Exec and sshExec both now support exit code value ranges, as well as ignoring the exit code entirely via `exitValuesAny()`
 
 #### 1.7.0 - 2024-12-17
 
