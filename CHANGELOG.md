@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+#### 1.8.0 - 2024-12-19
+
+ - New `blaze-postoffice` module to handle sending emails via SMTP. The SMTP settings can be setup in the `blaze.conf`
+   or programatically setup with the new PostOffices.mail() action.
+
 #### 1.7.0 - 2024-12-17
 
  - New `blaze-archive` module to handle wide variety of uncompress and unarchive activities such as unzipping, or
