@@ -5,3 +5,4 @@ ssh/src/test/java/ssh.*
 *.iml
 examples/pom.xml
 .idea
+.buildx

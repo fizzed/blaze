@@ -23,14 +23,20 @@ import com.fizzed.blaze.core.Actions;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.util.Streamables;
 import static com.fizzed.blaze.util.Streamables.input;
+import static java.util.Arrays.asList;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.fizzed.buildx.Buildx;
+import com.fizzed.buildx.Target;
 import org.slf4j.Logger;
 
 public class blaze {
@@ -122,4 +128,28 @@ public class blaze {
         // replace readme with updated version
         Files.move(newReadmeFile, readmeFile, StandardCopyOption.REPLACE_EXISTING);
     }
+
+    private final List<Target> crossTestTargets = asList(
+        new Target("linux", "x64").setTags("test").setHost("bmh-build-x64-linux-latest"),
+        new Target("linux", "arm64").setTags("test").setHost("bmh-build-arm64-linux-latest"),
+        //new Target("linux", "riscv64").setTags("test").setHost("bmh-build-riscv64-linux-latest"),
+        new Target("linux_musl", "x64").setTags("test").setHost("bmh-build-x64-linux-musl-latest"),
+        new Target("macos", "x64").setTags("test").setHost("bmh-build-x64-macos-latest"),
+        new Target("macos", "arm64").setTags("test").setHost("bmh-build-arm64-macos-latest"),
+        new Target("windows", "x64").setTags("test").setHost("bmh-build-x64-windows-latest"),
+        new Target("windows", "arm64").setTags("test").setHost("bmh-build-arm64-windows-latest")
+        //new Target("freebsd", "x64").setTags("test").setHost("bmh-build-x64-freebsd-latest"),
+        //new Target("openbsd", "x64").setTags("test").setHost("bmh-build-x64-openbsd-latest")
+    );
+
+    @Task(order = 100)
+    public void cross_tests() throws Exception {
+        new Buildx(crossTestTargets)
+            .tags("test")
+            .execute((target, project) -> {
+                project.action("mvn", "clean", "test")
+                    .run();
+            });
+    }
+
 }
