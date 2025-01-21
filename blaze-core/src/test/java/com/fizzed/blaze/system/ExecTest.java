@@ -123,6 +123,22 @@ public class ExecTest {
         
         assertThat(output.trim(), is("Hello World 7586930100"));
     }
+
+    @Test
+    public void captureOutputWithPs1() throws Exception {
+        CaptureOutput capture = Streamables.captureOutput();
+
+        new LocalExec(context)
+            .command("hello-world-test2")       // will be .ps1 on windows, using powershell.exe
+            .path(getBinDirAsResource())
+            .pipeInput(Streamables.standardInput())
+            .pipeOutput(capture)
+            .run();
+
+        String output = capture.asString();
+
+        assertThat(output.trim(), is("Hello World 5624112309877"));
+    }
     
     @Test
     public void customInput() throws Exception {
