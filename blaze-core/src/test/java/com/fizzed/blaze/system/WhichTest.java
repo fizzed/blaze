@@ -82,7 +82,7 @@ public class WhichTest {
         assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
 
         Path f = new Which(context)
-            .command("blaze")
+            .command("hello-world-test2")
             .path(getBinDirAsResource())
             .run();
 
@@ -90,7 +90,7 @@ public class WhichTest {
 
         assertThat(f, is(not(nullValue())));
         // .ps1 should be preferred to .bat
-        assertThat(f.getFileName().toString(), either(is("blaze")).or(is("blaze.ps1")));
+        assertThat(f.getFileName().toString(), either(is("hello-world-test2")).or(is("hello-world-test2.ps1")));
     }
     
     @Test
