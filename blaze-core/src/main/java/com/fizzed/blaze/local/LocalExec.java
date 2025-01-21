@@ -125,7 +125,7 @@ public class LocalExec extends Exec<LocalExec> {
         if (exeFile.getFileName().toString().toLowerCase().endsWith(".ps1")) {
             // we need to actually execute powershell.exe
             final Path powershellExe = new Which(context)
-                .command("powershell.exe")
+                .command("powershell")
                 .run();
 
             finalCommand.add(powershellExe.toAbsolutePath().toString());
