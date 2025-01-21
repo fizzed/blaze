@@ -1,6 +1,13 @@
 Blaze by Fizzed
 ===============
 
+#### 1.9.0 - 2025-01-21
+
+ - New PowerShell support on Windows where .ps1 scripts are searched for and can be executed by blaze invoking it with
+   `powershell.exe`
+ - Eating our own dog food - our own .blaze/blaze.java leverages blaze public project template for cross platform tests,
+   common release tasks, etc.
+
 #### 1.8.0 - 2024-12-19
 
  - New `blaze-postoffice` module to handle sending emails via SMTP. The SMTP settings can be setup in the `blaze.conf`
