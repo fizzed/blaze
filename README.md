@@ -403,3 +403,16 @@ If you'd like to have more than one script, you can supply it on the command-lin
 like so
 
     java -jar blaze.jar path/to/script.[ext]
+
+## Usage for developing blaze extensions
+
+```conf
+<dependencies>
+  <dependency>
+    <groupId>com.fizzed</groupId>
+    <artifactId>blaze-core</artifactId>
+    <version>1.8.0</version>
+    <scope>provided</scope>
+  </dependency>
+</dependencies>
+```
