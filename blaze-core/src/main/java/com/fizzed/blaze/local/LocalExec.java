@@ -120,7 +120,17 @@ public class LocalExec extends Exec<LocalExec> {
             finalCommand.add("sh");
             finalCommand.add("-c");
         }
-        
+
+        // is this a powershell command?
+        if (exeFile.getFileName().toString().toLowerCase().endsWith(".ps1")) {
+            // we need to actually execute powershell.exe
+            final Path powershellExe = new Which(context)
+                .command("powershell.exe")
+                .run();
+
+            finalCommand.add(powershellExe.toAbsolutePath().toString());
+        }
+
         finalCommand.add(exeFile.toAbsolutePath().toString());
         
         finalCommand.addAll(this.arguments);

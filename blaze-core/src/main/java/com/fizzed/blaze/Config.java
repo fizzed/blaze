@@ -37,7 +37,7 @@ public interface Config {
     static Boolean DEFAULT_DEPENDENCY_CLEAN = Boolean.FALSE;
     
     static List<String> DEFAULT_COMMAND_EXTS_UNIX = Arrays.asList("", ".sh");
-    static List<String> DEFAULT_COMMAND_EXTS_WINDOWS = Arrays.asList(".exe", ".bat", ".cmd");
+    static List<String> DEFAULT_COMMAND_EXTS_WINDOWS = Arrays.asList(".exe", ".ps1", ".bat", ".cmd");
     
     /**
      * Gets a configuration value by its key.

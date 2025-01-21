@@ -76,6 +76,22 @@ public class WhichTest {
         assertThat(Files.isRegularFile(f), is(true));
         assertThat(Files.isExecutable(f), is(true));
     }
+
+    @Test
+    public void worksOnWindowsForPs1() throws Exception {
+        assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
+
+        Path f = new Which(context)
+            .command("blaze")
+            .path(getBinDirAsResource())
+            .run();
+
+        log.debug("which: {}", f);
+
+        assertThat(f, is(not(nullValue())));
+        // .ps1 should be preferred to .bat
+        assertThat(f.getFileName().toString(), either(is("blaze")).or(is("blaze.ps1")));
+    }
     
     @Test
     public void worksOnUnix() throws Exception {
