@@ -28,6 +28,8 @@ public class ShellTestHelper {
         // fix permissions from maven copy (otherwise test fails)
         FileHelper.resourceAsFile("/bin/hello-world-test").setExecutable(true);
         FileHelper.resourceAsFile("/bin/hello-world-test.bat").setExecutable(true);
+        FileHelper.resourceAsFile("/bin/hello-world-test2").setExecutable(true);
+        FileHelper.resourceAsFile("/bin/hello-world-test2.ps1").setExecutable(true);
         
         // must use a resource that exists to then get its parent
         return FileHelper.resourceAsFile("/bin/hello-world-test").getParentFile();
