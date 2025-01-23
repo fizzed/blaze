@@ -47,7 +47,7 @@ values in the config file.  A great way to also pass arguments to your tasks.
 
     java -Dundertow.port=9001 -jar blaze.jar
 
-### Blaze config
+### Blaze Dependencies
 
 Blaze itself uses values from `Config` to configure itself as well.
 
@@ -62,6 +62,17 @@ blaze.dependencies = [
 ```
 
 Try `examples/guava.js` or `examples/guava.groovy` to see it in action!
+
+### Blaze Repository
+
+If you need to change which maven repositories it will pull artifacts from, you can modify
+the config `blaze.repositories`:
+
+```
+blaze.repositories = [
+  "mycompany|https://repos.example.com/repository/maven-public"
+]
+```
 
 ### Latest and Release Versions
 
