@@ -46,6 +46,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     private RequestBody body;
     private final List<IntRange> statusCodes;
     private StreamableOutput target;
+    private boolean progress;
 
     public Http(Context context, String method, String url) {
         super(context);
@@ -56,6 +57,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         this.statusCodes.add(new IntRange(200, 299));
         this.requestBuilder.url(url);
         this.method = method;
+        this.progress = false;
     }
 
     public VerboseLogger getVerboseLogger() {
@@ -130,6 +132,15 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
 
     public Http target(StreamableOutput output) {
         this.target = output;
+        return this;
+    }
+
+    public Http progress() {
+        return this.progress(true);
+    }
+
+    public Http progress(boolean progress) {
+        this.progress = progress;
         return this;
     }
 
@@ -235,10 +246,35 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
             if (this.target != null) {
                 final ResponseBody responseBody = response.body();
                 if (responseBody != null) {
+                    final long knownContentLength = responseBody.contentLength();
+
+                    // should we activate the progress bar?
+                    final ConsoleIOProgressBar progressBar;
+                    if (this.progress && (knownContentLength > 0 || knownContentLength == -1)) {
+                        progressBar = new ConsoleIOProgressBar(knownContentLength);
+                    } else {
+                        progressBar = null;
+                    }
+
                     try (InputStream is = responseBody.byteStream()) {
                         try (OutputStream os = this.target.stream()) {
-                            IOUtils.copy(is, os);
+                            byte[] buffer = new byte[8192];
+                            int n;
+                            while (-1 != (n = is.read(buffer))) {
+                                os.write(buffer, 0, n);
+
+                                if (progressBar != null) {
+                                    progressBar.update(n);
+                                    if (progressBar.isRenderStale(1)) {
+                                        System.out.print("\r" + progressBar.render());
+                                    }
+                                }
+                            }
                         }
+                    }
+
+                    if (progressBar != null) {
+                        System.out.print("\r" + progressBar.render());
                     }
                 }
             }
