@@ -1,0 +1,10 @@
+
+The following files have been resolved:
+   com.fizzed:blaze-ivy:jar:1.9.0
+   org.apache.ivy:ivy:jar:2.5.2
+   commons-io:commons-io:jar:2.16.1
+   com.typesafe:config:jar:1.4.3
+   com.fizzed:blaze-core:jar:1.9.0
+   org.slf4j:slf4j-simple:jar:2.0.13
+   org.slf4j:slf4j-api:jar:2.0.13
+   org.zeroturnaround:zt-exec:jar:1.12

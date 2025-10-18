@@ -21,7 +21,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.10</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>copy-list</id>
@@ -41,7 +41,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.1</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -55,6 +55,19 @@
                                 </transformer>
                             </transformers>
                             <filters>
+                                <!-- this helps to remove the bundled-test.txt from the final bundle -->
+                                <filter>
+                                    <artifact>com.fizzed:blaze-core</artifact>
+                                    <excludes>
+                                        <exclude>com/fizzed/blaze/bundled**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fizzed:blaze-ivy</artifact>
+                                    <excludes>
+                                        <exclude>com/fizzed/blaze/bundled**</exclude>
+                                    </excludes>
+                                </filter>
                                 <filter>
                                     <artifact>org.apache.ivy</artifact>
                                     <excludes>
