@@ -24,6 +24,7 @@ import com.fizzed.blaze.ssh.SshSftpGet;
 import com.fizzed.blaze.ssh.SshSftpNoSuchFileException;
 import com.fizzed.blaze.ssh.SshSftpPut;
 import com.fizzed.blaze.ssh.SshSftpSession;
+import com.fizzed.blaze.util.ConsoleIOProgressBar;
 import com.fizzed.blaze.util.DurationFormatter;
 import com.fizzed.blaze.util.HumanReadables;
 import com.fizzed.blaze.util.Streamable;
@@ -182,11 +183,11 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
         try {
             // TODO: how can we log w/o requring it be a line???
             if (log.isInfoEnabled()) {
-                System.out.print("[INFO] Downloading " + source + " -> " + target.path());
+                log.info("Downloading {} -> {}", source, target.path());
             }
             
             try {
-                this.channel.get(source.toString(), target.stream(), new TermProgressMonitor(null), ChannelSftp.OVERWRITE, 0);
+                this.channel.get(source.toString(), target.stream(), new SftpConsoleIOProgressMonitor(null), ChannelSftp.OVERWRITE, 0);
             } finally {
                 IOUtils.closeQuietly(target);
             }  
@@ -207,15 +208,11 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
             
             // TODO: how can we log w/o requring it be a complete line?
             if (log.isInfoEnabled()) {
-                if (source.size() != null) {
-                    System.out.print("[INFO] Uploading " + source.path() + " -> " + target + " (" + source.size() + " bytes)");
-                } else {
-                    System.out.print("[INFO] Uploading " + source.path() + " -> " + target);
-                }
+                log.info("Uploading {} -> {}", source.path(), target);
             }
 
             OutputStream output
-                = this.channel.put(target, new TermProgressMonitor(source.size()), ChannelSftp.OVERWRITE, 0);
+                = this.channel.put(target, new SftpConsoleIOProgressMonitor(source.size()), ChannelSftp.OVERWRITE, 0);
             
             try {
                 // copy streams input -> output
@@ -394,99 +391,37 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
         }
     }
 
-    static public class TermProgressMonitor implements SftpProgressMonitor {
-        
-        private final long startTime;
-        private long totalBytes;
-        private long processedBytes;
-        private int maxPrintLen;
+    static public class SftpConsoleIOProgressMonitor implements SftpProgressMonitor {
 
-        public TermProgressMonitor(Long totalBytes) {
-            this.startTime = System.currentTimeMillis();
-            this.totalBytes = totalBytes != null ? totalBytes : -1;
+        private ConsoleIOProgressBar progressBar;
+
+        public SftpConsoleIOProgressMonitor(Long totalBytes) {
+            this.progressBar = new ConsoleIOProgressBar(totalBytes != null ? totalBytes : -1);
         }
-        
+
         @Override
         public void init(int op, String src, String dest, long max) {
-            if (this.totalBytes < 0) {
-                this.totalBytes = max;
+            if (this.progressBar.getTotalBytes() < 0) {
+                this.progressBar = new ConsoleIOProgressBar(max);
             }
-            System.out.println("");
         }
 
         @Override
         public boolean count(long count) {
-            this.processedBytes += count;
-            
-            if (this.totalBytes <= 0) {
-                System.out.print(".");
-            } else {
-//                double progress = (double)this.processedBytes / (double)totalBytes;
-                // 25%[=============>______________________________________] 25,000 100.0K/s
-                //System.out.print("\r"+(progress*100d));
-                this.printProgress(startTime, this.totalBytes, this.processedBytes);
+            this.progressBar.update(count);
+            if (this.progressBar.isRenderStale(1)) {
+                System.out.print("\r"+this.progressBar.render());
             }
-            
             return true;
         }
 
         @Override
         public void end() {
-            System.out.println("");
+            // render the bar one for time, plus newline
+            System.out.println("\r"+this.progressBar.render());
         }
-        
-        private void printProgress(long startTime, long total, long current) {
-            
-            long elapsedMillis = (System.currentTimeMillis() - startTime);
-            
-            long eta = current == 0 ? 0
-                : (total - current) * elapsedMillis / current;
 
-            // bytes per second...
-            final double bytesPerSec = (double)current / (elapsedMillis/1000);
-            final double kilobytesPerSec = HumanReadables.kilobytes(bytesPerSec);
-            
-            final String speed = String.format("%.0f KiB/s", kilobytesPerSec);
-            
-//            int seconds = (int) (eta / 1000) % 60 ;
-//            int minutes = (int) ((eta / (1000*60)) % 60);
-//            int hours   = (int) ((eta / (1000*60*60)) % 24);
-            
-            final String etaHms = current == 0 ? "N/A" : DurationFormatter.format(eta);
-            
-            double totalKilobytes = HumanReadables.kilobytes(total);
-            double currentKilobytes = HumanReadables.kilobytes(current);
-            
-//            String etaHms = current == 0 ? "N/A"
-//                : String.format("%02d:%02d:%02d", hours, minutes, seconds);
-
-            StringBuilder sb = new StringBuilder(140);
-            int percent = (int) (current * 100 / total);
-            sb
-                .append('\r')
-                .append(String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), " ")))
-                .append(String.format(" %d%% [", percent))
-                .append(String.join("", Collections.nCopies(percent, "=")))
-                .append('>')
-                .append(String.join("", Collections.nCopies(100 - percent, " ")))
-                .append(']')
-                .append(String.join("", Collections.nCopies((int) (Math.log10(totalKilobytes)) - (int) (Math.log10(currentKilobytes)), " ")))
-                .append(String.format(" %.0f/%.0f KiB, %s, %s ", currentKilobytes, totalKilobytes, etaHms, speed));
-
-            if (sb.length() > maxPrintLen) {
-                maxPrintLen = sb.length();
-            }
-            
-            // pad spaces if needed
-            for (int i = 0; i < (maxPrintLen - sb.length()); i++) {
-                sb.append(" ");
-            }
-            
-            System.out.print(sb);
-//            System.out.println(new String(new char[70]).replace("\0", "\r\n"));
-        }
     }
-    
     
     static public class JschFileAttributes implements SshFileAttributes {
         

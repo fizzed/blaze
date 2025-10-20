@@ -10,6 +10,7 @@ public class ConsoleIOProgressBar {
 
     private long lastRenderTime;
     private long lastBytesProcessed;
+    private int maxRenderLength;
     private int spinnerState = 0;
     private static final char[] SPINNER_CHARS = {'|', '/', '-', '\\'};
 
@@ -26,6 +27,11 @@ public class ConsoleIOProgressBar {
         this.lastRenderTime = this.startTime;
         this.bytesProcessed = 0;
         this.lastBytesProcessed = 0;
+        this.maxRenderLength = 0;
+    }
+
+    public long getTotalBytes() {
+        return totalBytes;
     }
 
     /**
@@ -52,7 +58,7 @@ public class ConsoleIOProgressBar {
     public String render() {
         // If total size is unknown, show a different style of progress bar.
         if (this.totalBytes < 0) {
-            return getUnknownSizeProgressBar();
+            return renderUnknownSizeProgressBar();
         }
 
         long now = System.nanoTime();
@@ -86,14 +92,14 @@ public class ConsoleIOProgressBar {
         this.lastBytesProcessed = currentBytes;
         this.lastRenderTime = now;
 
-        return buildString(percentage, speed, etaSeconds, currentBytes);
+        return renderKnownSizeProgressBar(percentage, speed, etaSeconds, currentBytes);
     }
 
     /**
      * Generates and returns a progress string for operations with unknown total size.
      * Displays a spinner, bytes processed, current speed, and elapsed time.
      */
-    private String getUnknownSizeProgressBar() {
+    private String renderUnknownSizeProgressBar() {
         long now = System.nanoTime();
         long currentBytes = this.bytesProcessed;
 
@@ -124,13 +130,15 @@ public class ConsoleIOProgressBar {
         sb.append(String.format(" | %s/s", formatBytes((long) speed)));
         sb.append(String.format(" | Elapsed: %s", formatDuration(elapsedSeconds)));
 
+        this.appendPadding(sb);
+
         return sb.toString();
     }
 
     /**
      * Helper method to construct the final progress string.
      */
-    private String buildString(double percentage, double speed, long etaSeconds, long currentBytes) {
+    private String renderKnownSizeProgressBar(double percentage, double speed, long etaSeconds, long currentBytes) {
         StringBuilder sb = new StringBuilder();
         int barWidth = 25; // Width of the progress bar in characters
 
@@ -151,7 +159,21 @@ public class ConsoleIOProgressBar {
         sb.append(String.format(" | %s/s", formatBytes((long) speed)));
         sb.append(String.format(" | ETA: %s", formatDuration(etaSeconds)));
 
+        this.appendPadding(sb);
+
         return sb.toString();
+    }
+
+    private void appendPadding(StringBuilder sb) {
+        if (sb.length() > maxRenderLength) {
+            this.maxRenderLength = sb.length();
+        } else {
+            // we need to add some spaces to the end to make sure the progress bar is always the same length
+            int spacesToAdd = maxRenderLength - sb.length();
+            for (int i = 0; i < spacesToAdd; i++) {
+                sb.append(" ");
+            }
+        }
     }
 
     /**

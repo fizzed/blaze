@@ -273,8 +273,9 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                         }
                     }
 
+                    // we need 1 more render to make sure it shows 100% and to newline it
                     if (progressBar != null) {
-                        System.out.print("\r" + progressBar.render());
+                        System.out.println("\r" + progressBar.render());
                     }
                 }
             }
