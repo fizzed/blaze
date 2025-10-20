@@ -2,6 +2,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>blaze-postoffice</artifactId>
+    <name>blaze-postoffice</name>
     <packaging>jar</packaging>
  
     <parent>

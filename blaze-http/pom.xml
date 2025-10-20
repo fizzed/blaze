@@ -2,6 +2,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>blaze-http</artifactId>
+    <name>blaze-http</name>
     <packaging>jar</packaging>
  
     <parent>
