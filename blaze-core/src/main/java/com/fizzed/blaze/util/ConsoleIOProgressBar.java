@@ -125,6 +125,7 @@ public class ConsoleIOProgressBar {
         StringBuilder sb = new StringBuilder();
         char spinnerChar = SPINNER_CHARS[spinnerState++ % SPINNER_CHARS.length];
 
+        sb.append("  ");
         sb.append(String.format("[%c] ", spinnerChar));
         sb.append(String.format("%s processed", formatBytes(currentBytes)));
         sb.append(String.format(" | %s/s", formatBytes((long) speed)));
@@ -142,6 +143,7 @@ public class ConsoleIOProgressBar {
         StringBuilder sb = new StringBuilder();
         int barWidth = 25; // Width of the progress bar in characters
 
+        sb.append("  ");
         sb.append(String.format("%6.2f%% ", percentage));
         sb.append("[");
         int progress = (int) (percentage * barWidth / 100);

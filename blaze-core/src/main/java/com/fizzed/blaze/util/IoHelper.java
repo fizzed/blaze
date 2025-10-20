@@ -3,8 +3,28 @@ package com.fizzed.blaze.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
 
 public class IoHelper {
+
+    static public void copy(Path input, OutputStream output, boolean progress, OpenOption... options) throws IOException {
+        final long knownContentLength = Files.size(input);
+        try (InputStream is = Files.newInputStream(input, options)) {
+            copy(is, output, progress, knownContentLength);
+        }
+    }
+
+    static public void copy(InputStream input, Path output, boolean progress, OpenOption... options) throws IOException {
+        copy(input, output, progress, -1L, options);
+    }
+
+    static public void copy(InputStream input, Path output, boolean progress, long knownContentLength, OpenOption... options) throws IOException {
+        try (OutputStream os = Files.newOutputStream(output, options)) {
+            copy(input, os, progress, knownContentLength);
+        }
+    }
 
     static public void copy(InputStream input, OutputStream output, boolean progress, long knownContentLength) throws IOException {
         // should we activate the progress bar?

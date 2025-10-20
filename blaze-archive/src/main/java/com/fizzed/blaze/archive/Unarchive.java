@@ -17,9 +17,7 @@ package com.fizzed.blaze.archive;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.*;
-import com.fizzed.blaze.util.ObjectHelper;
-import com.fizzed.blaze.util.Timer;
-import com.fizzed.blaze.util.VerboseLogger;
+import com.fizzed.blaze.util.*;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -27,6 +25,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 import java.io.BufferedInputStream;
@@ -39,7 +38,7 @@ import java.util.function.Predicate;
 
 import static java.util.Optional.ofNullable;
 
-public class Unarchive extends Action<Unarchive.Result,Void> implements VerbosityMixin<Unarchive> {
+public class Unarchive extends Action<Unarchive.Result,Void> implements VerbosityMixin<Unarchive>, ProgressMixin<Unarchive> {
 
     static public class Result extends com.fizzed.blaze.core.Result<Unarchive,Void,Result> {
 
@@ -71,6 +70,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     }
 
     private final VerboseLogger log;
+    private final ValueHolder<Boolean> progress;
     private final Path source;
     private Path target;
     private int stripComponents;
@@ -81,6 +81,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     public Unarchive(Context context, Path source) {
         super(context);
         this.log = new VerboseLogger(this);
+        this.progress = new ValueHolder<>(false);
         this.source = source;
         this.stripComponents = 0;
         this.force = false;
@@ -88,6 +89,11 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
 
     public VerboseLogger getVerboseLogger() {
         return this.log;
+    }
+
+    @Override
+    public ValueHolder<Boolean> getProgressHolder() {
+        return this.progress;
     }
 
     public Unarchive target(String path) {
@@ -146,8 +152,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         // target is current directory by default, or the provided target
         final Path destDir = this.target != null ? this.target : Paths.get(".");
 
-        log.info("Unarchiving {} ", this.source);
-        log.info(" -> {}", destDir);
+        log.verbose("Unarchiving {} -> {}", this.source, destDir);
 
         if (!Files.exists(destDir)) {
             log.debug("Creating target directory: {}", destDir);
@@ -157,7 +162,6 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
                 throw new BlazeException("Unable to create target directory", e);
             }
         }
-
 
         final Result result = new Result(this, null);
         final Timer timer = new Timer();
@@ -190,7 +194,8 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
                             this.unarchiveCommonsArchiveStream(archiveInfo.getArchiver(), uncompressedIn, destDir, result);
                         } else {
                             // file is compressed only, we'll treat it as a single entry within an archive
-                            this.extractEntry(archiveInfo.getUnarchivedName(), uncompressedIn, destDir, result);
+                            // Single-file compression formats do not store the uncompressed size in an easily accessible header. For these formats, the only reliable way to get the size is to decompress the entire stream and count the resulting bytes.
+                            this.extractEntry(archiveInfo.getUnarchivedName(), -1L, uncompressedIn, destDir, result);
                         }
                     } finally {
                         if (uncompressedIn != null) {
@@ -217,7 +222,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             ArchiveEntry entry = ais.getNextEntry();
             while (entry != null) {
                 if (!entry.isDirectory()) {
-                    this.extractEntry(entry.getName(), ais, destDir, result);
+                    this.extractEntry(entry.getName(), entry.getSize(), ais, destDir, result);
                 }
                 entry = ais.getNextEntry();
             }
@@ -232,7 +237,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             while (entry != null) {
                 if (!entry.isDirectory()) {
                     try (InputStream in = sevenZFile.getInputStream(entry)) {
-                        this.extractEntry(entry.getName(), in, destDir, result);
+                        this.extractEntry(entry.getName(), entry.getSize(), in, destDir, result);
                     }
                 }
 
@@ -243,7 +248,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         }
     }
 
-    private void extractEntry(String entryName, InputStream in, Path destDir, Result result) throws BlazeException {
+    private void extractEntry(String entryName, long knownSize, InputStream in, Path destDir, Result result) throws BlazeException {
         try {
             String name = entryName;
             String strippedPath = null;
@@ -288,7 +293,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
 
             // log the entry now
             if (optionsStr.length() > 0) {
-                log.verbose("Extracting: {}   ({})", name, optionsStr);
+                log.verbose("Extracting: {} ({})", name, optionsStr);
             } else {
                 log.verbose("Extracting: {}", name);
             }
@@ -309,7 +314,9 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             if (dir != null && !Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
-            Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
+
+            IoHelper.copy(in, file, this.progress.get(), knownSize, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            //Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new BlazeException("Failed to unarchive: " + e.getMessage(), e);
         }
@@ -319,7 +326,9 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         try {
             String compressorName = ArchiveHelper.getCommonsCompressorName(compressor);
 
-            return CompressorStreamFactory.getSingleton().createCompressorInputStream(compressorName, compressedStream);
+            CompressorInputStream cis = CompressorStreamFactory.getSingleton().createCompressorInputStream(compressorName, compressedStream);
+
+            return cis;
         } catch (CompressorException e) {
             throw new BlazeException("Unable to uncompress source", e);
         }
