@@ -248,34 +248,10 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                 if (responseBody != null) {
                     final long knownContentLength = responseBody.contentLength();
 
-                    // should we activate the progress bar?
-                    final ConsoleIOProgressBar progressBar;
-                    if (this.progress && (knownContentLength > 0 || knownContentLength == -1)) {
-                        progressBar = new ConsoleIOProgressBar(knownContentLength);
-                    } else {
-                        progressBar = null;
-                    }
-
                     try (InputStream is = responseBody.byteStream()) {
                         try (OutputStream os = this.target.stream()) {
-                            byte[] buffer = new byte[8192];
-                            int n;
-                            while (-1 != (n = is.read(buffer))) {
-                                os.write(buffer, 0, n);
-
-                                if (progressBar != null) {
-                                    progressBar.update(n);
-                                    if (progressBar.isRenderStale(1)) {
-                                        System.out.print("\r" + progressBar.render());
-                                    }
-                                }
-                            }
+                            IoHelper.copy(is, os, this.progress, knownContentLength);
                         }
-                    }
-
-                    // we need 1 more render to make sure it shows 100% and to newline it
-                    if (progressBar != null) {
-                        System.out.println("\r" + progressBar.render());
                     }
                 }
             }

@@ -11,7 +11,7 @@ public class HttpDemo {
         final Path file = Files.createTempFile("test", ".tar.gz");
         try {
             httpGet("https://dl.fizzed.com/java/jdk-8u11-linux-x64.tar.gz")
-                //.progress()
+                .progress()
                 .target(file)
                 .run();
         }  finally {

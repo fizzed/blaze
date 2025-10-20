@@ -26,27 +26,54 @@ import com.fizzed.blaze.util.StreamableOutput;
 import com.fizzed.blaze.util.Streamables;
 import java.io.OutputStream;
 
+/**
+ * A class for performing SFTP (SSH File Transfer Protocol) file download operations.
+ * This class allows the user to configure the source file to be downloaded, the target
+ * location for the downloaded file, and whether to show progress information during the
+ * SFTP operation. It facilitates a fluent API for method chaining.
+ */
 public class SshSftpGet extends Action<SshSftpGet.Result,Void> {
 
     private final SshSftpSupport sftp;
     private StreamableOutput target;
     private Path source;
+    private boolean progress;
     
     public SshSftpGet(SshSftpSession sftp) {
         super(sftp.session().context());
         this.sftp = (SshSftpSupport)sftp;
         this.target = null;
+        this.progress = true;
     }
-    
+
+    /**
+     * Specifies the source file to be downloaded via SFTP using its path as a string.
+     *
+     * @param sourceFile the path to the source file as a string. This file will be retrieved during the SFTP operation.
+     * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
+     */
     public SshSftpGet source(String sourceFile) {
         return source(Paths.get(sourceFile));
     }
-    
+
+    /**
+     * Sets the source file to be downloaded via SFTP.
+     *
+     * @param sourceFile the {@code Path} representing the location of the source file
+     *                   that will be downloaded during the SFTP operation.
+     * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
+     */
     public SshSftpGet source(Path sourceFile) {
         this.source = sourceFile;
         return this;
     }
     
+    /**
+     * Specifies the target file to which the downloaded data will be saved, using its path as a string.
+     *
+     * @param targetFile the path to the target file as a string. This file will be the destination for the SFTP operation's output.
+     * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
+     */
     public SshSftpGet target(String targetFile) {
         return target(Paths.get(targetFile));
     }
@@ -65,6 +92,23 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> {
     
     public SshSftpGet target(StreamableOutput target) {
         this.target = target;
+        return this;
+    }
+
+    public SshSftpGet progress() {
+        return this.progress(true);
+    }
+
+    /**
+     * Enables or disables the display of progress information during file transfer.
+     *
+     * @param progress a boolean value indicating whether progress updates should be displayed
+     *                 during the SFTP operation. If true, progress will be displayed;
+     *                 if false, it will be disabled.
+     * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
+     */
+    public SshSftpGet progress(boolean progress) {
+        this.progress = progress;
         return this;
     }
 

@@ -32,11 +32,13 @@ public class SshSftpPut extends Action<SshSftpPut.Result,Void> {
     private final SshSftpSupport sftp;
     private StreamableInput source;
     private String target;
+    private boolean progress;
     
     public SshSftpPut(SshSftpSession sftp) {
         super(sftp.session().context());
         this.sftp = (SshSftpSupport)sftp;
         this.target = null;
+        this.progress = true;
     }
     
     public SshSftpPut source(String sourceFile) {
@@ -71,6 +73,15 @@ public class SshSftpPut extends Action<SshSftpPut.Result,Void> {
     
     public SshSftpPut target(File targetFile) {
         return target(targetFile.toPath());
+    }
+
+    public SshSftpPut progress() {
+        return this.progress(true);
+    }
+
+    public SshSftpPut progress(boolean progress) {
+        this.progress = progress;
+        return this;
     }
 
     @Override
