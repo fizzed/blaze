@@ -4,6 +4,10 @@ import java.nio.file.Path;
 
 public class ArchiveHelper {
 
+    static public boolean isArchived(Path file) {
+        return archiveInfo(file) != null;
+    }
+
     static public ArchiveInfo archiveInfo(Path file) {
         return archiveInfo(file.getFileName().toString());
     }

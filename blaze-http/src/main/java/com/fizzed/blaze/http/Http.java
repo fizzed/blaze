@@ -1,10 +1,7 @@
 package com.fizzed.blaze.http;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.ProgressMixin;
-import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.http.okhttp.ProgressRequestBody;
 import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.util.*;
@@ -23,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<Http>, ProgressMixin<Http> {
+public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<Http>, ProgressMixin<Http>, TargetOutputMixin<Http> {
 
     static public final String METHOD_HEAD = "HEAD";
     static public final String METHOD_GET = "GET";
@@ -124,20 +121,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         return this;
     }
 
-    public Http target(Path file) {
-        this.target = Streamables.output(file);
-        return this;
-    }
-
-    public Http target(File file) {
-        this.target = Streamables.output(file);
-        return this;
-    }
-
-    public Http target(String file) {
-        return this.target(Paths.get(file));
-    }
-
+    @Override
     public Http target(StreamableOutput output) {
         this.target = output;
         return this;

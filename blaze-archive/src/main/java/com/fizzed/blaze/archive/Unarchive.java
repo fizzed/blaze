@@ -17,6 +17,7 @@ package com.fizzed.blaze.archive;
 
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.*;
+import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.util.*;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
@@ -28,10 +29,7 @@ import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -73,6 +71,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     private final ValueHolder<Boolean> progress;
     private final Path source;
     private Path target;
+    private boolean useTemporaryFiles;
     private int stripComponents;
     private boolean force;
     private Function<String,String> renamer;
@@ -83,6 +82,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         this.log = new VerboseLogger(this);
         this.progress = new ValueHolder<>(false);
         this.source = source;
+        this.useTemporaryFiles = false;
         this.stripComponents = 0;
         this.force = false;
     }
@@ -112,31 +112,111 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         return this;
     }
 
+    /**
+     * Enables the use of temporary files during the unarchiving process. The file(s) will be unarchived to the target
+     * directory, initially as the filename but with a .tmp file extension. Once fully unarchived, the .tmp file will
+     * be renamed to the final filename.
+     * By default, temporary files are not used unless explicitly configured.
+     *
+     * @return the current instance of {@code Unarchive} for method chaining
+     */
+    public Unarchive useTemporaryFiles() {
+        this.useTemporaryFiles = true;
+        return this;
+    }
+
+    /**
+     * Sets whether temporary files will be used during the unarchiving process. If enabled,
+     * files will initially be unarchived with a temporary `.tmp` extension before being
+     * renamed to their final names once the unarchiving process completes.
+     * This can help ensure that incomplete or partial files are not mistakenly processed.
+     *
+     * @param useTemporaryFiles a boolean indicating whether to use temporary files
+     *                          (true to enable, false to disable)
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
+    public Unarchive useTemporaryFiles(boolean useTemporaryFiles) {
+        this.useTemporaryFiles = useTemporaryFiles;
+        return this;
+    }
+
+    /**
+     * Configures the unarchiving process to strip the leading path component
+     * from file entries in the archive. This is typically used to ignore
+     * the root directory entry in an archive when extracting its contents.
+     *
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
     public Unarchive stripLeadingPath() {
         this.stripComponents = 1;
         return this;
     }
 
+    /**
+     * Configures the unarchiving process to strip a specified number of leading path
+     * components from file entries in the archive. This can be used to reorganize the
+     * extracted file structure by removing unnecessary directory levels.
+     *
+     * @param stripComponents the number of leading path components to strip from
+     *                        each file entry in the archive (must be non-negative)
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
     public Unarchive stripComponents(int stripComponents) {
         this.stripComponents = stripComponents;
         return this;
     }
 
+    /**
+     * Enables the "force" mode for the unarchiving process. This typically
+     * ensures that any existing files or constraints that might prevent the
+     * unarchiving are overridden or bypassed.
+     *
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
     public Unarchive force() {
         this.force = true;
         return this;
     }
 
+    /**
+     * Sets whether the "force" mode should be enabled during the unarchiving process.
+     * When enabled, this typically ensures that any constraints or file conflicts
+     * preventing the unarchiving process are overridden or bypassed.
+     *
+     * @param force a boolean indicating whether to enable or disable "force" mode
+     *              (true to enable, false to disable)
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
     public Unarchive force(boolean force) {
         this.force = force;
         return this;
     }
 
+    /**
+     * Configures a custom renaming function to be applied to the filenames
+     * during the unarchiving process. The renaming function takes the original
+     * filename as input and returns the desired renamed filename.
+     *
+     * @param renamer a {@code Function<String, String>} that defines the mapping
+     *                from original filenames to renamed filenames
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
     public Unarchive renamer(Function<String, String> renamer) {
         this.renamer = renamer;
         return this;
     }
 
+    /**
+     * Configures a filter to selectively include or exclude specific entries
+     * from the unarchiving process, based on the provided {@code Predicate}.
+     * The filter uses the entry name as input to determine whether the entry
+     * should be processed.
+     *
+     * @param filter a {@code Predicate<String>} that evaluates the entry name
+     *               and returns {@code true} if the entry should be included
+     *               in the unarchiving process, or {@code false} otherwise
+     * @return the current instance of {@code Unarchive}, allowing for method chaining
+     */
     public Unarchive filter(Predicate<String> filter) {
         this.filter = filter;
         return this;
@@ -195,7 +275,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
                         } else {
                             // file is compressed only, we'll treat it as a single entry within an archive
                             // Single-file compression formats do not store the uncompressed size in an easily accessible header. For these formats, the only reliable way to get the size is to decompress the entire stream and count the resulting bytes.
-                            this.extractEntry(archiveInfo.getUnarchivedName(), -1L, uncompressedIn, destDir, result);
+                            this.extractEntry(archiveInfo.getUnarchivedName(), -1L, this.useTemporaryFiles, uncompressedIn, destDir, result);
                         }
                     } finally {
                         if (uncompressedIn != null) {
@@ -222,7 +302,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             ArchiveEntry entry = ais.getNextEntry();
             while (entry != null) {
                 if (!entry.isDirectory()) {
-                    this.extractEntry(entry.getName(), entry.getSize(), ais, destDir, result);
+                    this.extractEntry(entry.getName(), entry.getSize(), this.useTemporaryFiles, ais, destDir, result);
                 }
                 entry = ais.getNextEntry();
             }
@@ -237,7 +317,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             while (entry != null) {
                 if (!entry.isDirectory()) {
                     try (InputStream in = sevenZFile.getInputStream(entry)) {
-                        this.extractEntry(entry.getName(), entry.getSize(), in, destDir, result);
+                        this.extractEntry(entry.getName(), entry.getSize(), this.useTemporaryFiles, in, destDir, result);
                     }
                 }
 
@@ -248,7 +328,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
         }
     }
 
-    private void extractEntry(String entryName, long knownSize, InputStream in, Path destDir, Result result) throws BlazeException {
+    private void extractEntry(String entryName, long knownSize, boolean useTemporaryFile, InputStream in, Path destDir, Result result) throws BlazeException {
         try {
             String name = entryName;
             String strippedPath = null;
@@ -315,8 +395,10 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
                 Files.createDirectories(dir);
             }
 
-            IoHelper.copy(in, file, this.progress.get(), knownSize, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            //Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
+            final StreamableOutput output = Streamables.output(file, useTemporaryFile);
+            try (OutputStream finalOutput = output.stream()) {
+                IoHelper.copy(in, finalOutput, this.progress.get(), knownSize);
+            }
         } catch (IOException e) {
             throw new BlazeException("Failed to unarchive: " + e.getMessage(), e);
         }

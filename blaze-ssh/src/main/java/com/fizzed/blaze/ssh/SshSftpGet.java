@@ -15,18 +15,13 @@
  */
 package com.fizzed.blaze.ssh;
 
-import com.fizzed.blaze.core.Action;
-import com.fizzed.blaze.core.BlazeException;
-import java.io.File;
+import com.fizzed.blaze.core.*;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.fizzed.blaze.core.ProgressMixin;
-import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
 import com.fizzed.blaze.util.*;
-
-import java.io.OutputStream;
 
 /**
  * A class for performing SFTP (SSH File Transfer Protocol) file download operations.
@@ -34,13 +29,13 @@ import java.io.OutputStream;
  * location for the downloaded file, and whether to show progress information during the
  * SFTP operation. It facilitates a fluent API for method chaining.
  */
-public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements VerbosityMixin<SshSftpGet>, ProgressMixin<SshSftpGet> {
+public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements VerbosityMixin<SshSftpGet>, ProgressMixin<SshSftpGet>, TargetOutputMixin<SshSftpGet> {
 
     private final VerboseLogger log;
     private final ValueHolder<Boolean> progress;
     private final SshSftpSupport sftp;
-    private StreamableOutput target;
     private Path source;
+    private StreamableOutput target;
     
     public SshSftpGet(SshSftpSession sftp) {
         super(sftp.session().context());
@@ -48,6 +43,16 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements Verbos
         this.progress = new ValueHolder<>(false);
         this.sftp = (SshSftpSupport)sftp;
         this.target = null;
+    }
+
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
+    }
+
+    @Override
+    public ValueHolder<Boolean> getProgressHolder() {
+        return this.progress;
     }
 
     /**
@@ -71,42 +76,11 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements Verbos
         this.source = sourceFile;
         return this;
     }
-    
-    /**
-     * Specifies the target file to which the downloaded data will be saved, using its path as a string.
-     *
-     * @param targetFile the path to the target file as a string. This file will be the destination for the SFTP operation's output.
-     * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
-     */
-    public SshSftpGet target(String targetFile) {
-        return target(Paths.get(targetFile));
-    }
-    
-    public SshSftpGet target(Path targetFile) {
-        return target(Streamables.output(targetFile));
-    }
-    
-    public SshSftpGet target(File targetFile) {
-        return target(Streamables.output(targetFile));
-    }
-    
-    public SshSftpGet target(OutputStream target) {
-        return target(Streamables.output(target));
-    }
-    
+
+    @Override
     public SshSftpGet target(StreamableOutput target) {
         this.target = target;
         return this;
-    }
-
-    @Override
-    public VerboseLogger getVerboseLogger() {
-        return this.log;
-    }
-
-    @Override
-    public ValueHolder<Boolean> getProgressHolder() {
-        return this.progress;
     }
 
     @Override

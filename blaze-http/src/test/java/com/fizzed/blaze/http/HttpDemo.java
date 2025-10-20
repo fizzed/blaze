@@ -12,7 +12,7 @@ public class HttpDemo {
         try {
             httpGet("https://dl.fizzed.com/java/jdk-8u11-linux-x64.tar.gz")
                 .progress()
-                .target(file)
+                .target(file, true)
                 .run();
         }  finally {
             Files.deleteIfExists(file);
