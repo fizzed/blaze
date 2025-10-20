@@ -58,15 +58,16 @@ public class SshDemo {
 
                 sftp.cd("Downloads");
 
-                /*sftp.get()
+                sftp.get()
+                    .progress()
                     .source("ubuntu-24.10-desktop-amd64.iso")
                     .target(Paths.get("test.deb"))
-                    .run();*/
+                    .run();
 
-                sftp.put()
+                /*sftp.put()
                     .source(Paths.get("test.deb"))
                     .target("test.deb")
-                    .run();
+                    .run();*/
             }
         }
     }

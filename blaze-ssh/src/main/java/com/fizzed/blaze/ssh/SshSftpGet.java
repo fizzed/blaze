@@ -20,10 +20,12 @@ import com.fizzed.blaze.core.BlazeException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import com.fizzed.blaze.core.ProgressMixin;
+import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
-import com.fizzed.blaze.util.ObjectHelper;
-import com.fizzed.blaze.util.StreamableOutput;
-import com.fizzed.blaze.util.Streamables;
+import com.fizzed.blaze.util.*;
+
 import java.io.OutputStream;
 
 /**
@@ -32,18 +34,20 @@ import java.io.OutputStream;
  * location for the downloaded file, and whether to show progress information during the
  * SFTP operation. It facilitates a fluent API for method chaining.
  */
-public class SshSftpGet extends Action<SshSftpGet.Result,Void> {
+public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements VerbosityMixin<SshSftpGet>, ProgressMixin<SshSftpGet> {
 
+    private final VerboseLogger log;
+    private final ValueHolder<Boolean> progress;
     private final SshSftpSupport sftp;
     private StreamableOutput target;
     private Path source;
-    private boolean progress;
     
     public SshSftpGet(SshSftpSession sftp) {
         super(sftp.session().context());
+        this.log = new VerboseLogger(this);
+        this.progress = new ValueHolder<>(false);
         this.sftp = (SshSftpSupport)sftp;
         this.target = null;
-        this.progress = true;
     }
 
     /**
@@ -95,28 +99,21 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> {
         return this;
     }
 
-    public SshSftpGet progress() {
-        return this.progress(true);
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
     }
 
-    /**
-     * Enables or disables the display of progress information during file transfer.
-     *
-     * @param progress a boolean value indicating whether progress updates should be displayed
-     *                 during the SFTP operation. If true, progress will be displayed;
-     *                 if false, it will be disabled.
-     * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
-     */
-    public SshSftpGet progress(boolean progress) {
-        this.progress = progress;
-        return this;
+    @Override
+    public ValueHolder<Boolean> getProgressHolder() {
+        return this.progress;
     }
 
     @Override
     protected Result doRun() throws BlazeException {
-        ObjectHelper.requireNonNull(source, "source cannot be null");
-        ObjectHelper.requireNonNull(target, "target cannot be null");
-        sftp.get(source, target);
+        ObjectHelper.requireNonNull(this.source, "source cannot be null");
+        ObjectHelper.requireNonNull(this.target, "target cannot be null");
+        sftp.get(this.log, this.progress.get(), this.source, this.target);
         return new Result(this, null);
     }
     

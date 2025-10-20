@@ -24,10 +24,7 @@ import com.fizzed.blaze.ssh.SshSftpGet;
 import com.fizzed.blaze.ssh.SshSftpNoSuchFileException;
 import com.fizzed.blaze.ssh.SshSftpPut;
 import com.fizzed.blaze.ssh.SshSftpSession;
-import com.fizzed.blaze.util.ConsoleIOProgressBar;
-import com.fizzed.blaze.util.DurationFormatter;
-import com.fizzed.blaze.util.HumanReadables;
-import com.fizzed.blaze.util.Streamable;
+import com.fizzed.blaze.util.*;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.SftpATTRS;
@@ -179,15 +176,15 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public void get(Path source, Streamable<OutputStream> target) throws SshException {
+    public void get(VerboseLogger log, boolean progress, Path source, Streamable<OutputStream> target) throws SshException {
         try {
-            // TODO: how can we log w/o requring it be a line???
-            if (log.isInfoEnabled()) {
-                log.info("Downloading {} -> {}", source, target.path());
-            }
-            
+            log.verbose("Sftp get: {} -> {}", source, target.path());
+
+            // if progress is desired, provide an impl where total bytes is unknown (but eventually provided by JSCH)
+            final SftpConsoleIOProgressMonitor progressMonitor = progress ? new SftpConsoleIOProgressMonitor(null) : null;
+
             try {
-                this.channel.get(source.toString(), target.stream(), new SftpConsoleIOProgressMonitor(null), ChannelSftp.OVERWRITE, 0);
+                this.channel.get(source.toString(), target.stream(), progressMonitor, ChannelSftp.OVERWRITE, 0);
             } finally {
                 IOUtils.closeQuietly(target);
             }  
@@ -202,17 +199,14 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public void put(Streamable<InputStream> source, String target) throws SshException {
+    public void put(VerboseLogger log, boolean progress, Streamable<InputStream> source, String target) throws SshException {
         try {
-            // target potentially 
-            
-            // TODO: how can we log w/o requring it be a complete line?
-            if (log.isInfoEnabled()) {
-                log.info("Uploading {} -> {}", source.path(), target);
-            }
+            log.verbose("Sftp put: {} -> {}", source.path(), target);
 
-            OutputStream output
-                = this.channel.put(target, new SftpConsoleIOProgressMonitor(source.size()), ChannelSftp.OVERWRITE, 0);
+            // if progress is desired, provide an impl where total bytes is unknown (but eventually provided by JSCH)
+            final SftpConsoleIOProgressMonitor progressMonitor = progress ? new SftpConsoleIOProgressMonitor(source.size()) : null;
+
+            OutputStream output = this.channel.put(target, progressMonitor, ChannelSftp.OVERWRITE, 0);
             
             try {
                 // copy streams input -> output

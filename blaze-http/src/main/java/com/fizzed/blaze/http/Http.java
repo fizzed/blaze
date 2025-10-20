@@ -3,7 +3,9 @@ package com.fizzed.blaze.http;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.ProgressMixin;
 import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.http.okhttp.ProgressRequestBody;
 import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.util.*;
 import okhttp3.*;
@@ -21,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<Http> {
+public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<Http>, ProgressMixin<Http> {
 
     static public final String METHOD_HEAD = "HEAD";
     static public final String METHOD_GET = "GET";
@@ -39,6 +41,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     }
 
     private final VerboseLogger log;
+    private final ValueHolder<Boolean> progress;
     private final OkHttpClient.Builder clientBuilder;
     private final Request.Builder requestBuilder;
     private final String method;
@@ -46,22 +49,27 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
     private RequestBody body;
     private final List<IntRange> statusCodes;
     private StreamableOutput target;
-    private boolean progress;
 
     public Http(Context context, String method, String url) {
         super(context);
         this.log = new VerboseLogger(this);
+        this.progress = new ValueHolder<>(false);
         this.clientBuilder = new OkHttpClient.Builder();
         this.requestBuilder = new Request.Builder();
         this.statusCodes = new ArrayList<>();
         this.statusCodes.add(new IntRange(200, 299));
         this.requestBuilder.url(url);
         this.method = method;
-        this.progress = false;
     }
 
+    @Override
     public VerboseLogger getVerboseLogger() {
         return this.log;
+    }
+
+    @Override
+    public ValueHolder<Boolean> getProgressHolder() {
+        return this.progress;
     }
 
     public Http statusCodes(Integer ... codes) {
@@ -135,15 +143,6 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
         return this;
     }
 
-    public Http progress() {
-        return this.progress(true);
-    }
-
-    public Http progress(boolean progress) {
-        this.progress = progress;
-        return this;
-    }
-
     private void require(RequestBody requestBody) {
         if (requestBody == null) {
             throw new BlazeException("Request body must be set");
@@ -177,6 +176,12 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
             requestBody = this.formBuilder.build();
         } else if (this.body != null) {
             requestBody = this.body;
+        }
+
+        // if there is a request body AND progress was requested, we need to leverage our progress-enabled request
+        // body to actually count the bytes as they are written
+        if (requestBody != null && this.progress.get()) {
+            requestBody = new ProgressRequestBody(requestBody);
         }
 
         switch (this.method.toLowerCase()) {
@@ -250,7 +255,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
 
                     try (InputStream is = responseBody.byteStream()) {
                         try (OutputStream os = this.target.stream()) {
-                            IoHelper.copy(is, os, this.progress, knownContentLength);
+                            IoHelper.copy(is, os, this.progress.get(), knownContentLength);
                         }
                     }
                 }
