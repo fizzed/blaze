@@ -4,7 +4,7 @@
     <artifactId>blaze</artifactId>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
-    <version>1.10.1-SNAPSHOT</version>
+    <version>1.9.1-SNAPSHOT</version>
 
     <parent>
         <groupId>com.fizzed</groupId>
