@@ -17,24 +17,28 @@ package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.core.ProgressMixin;
+import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.ssh.impl.PathHelper;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
-import com.fizzed.blaze.util.ObjectHelper;
-import com.fizzed.blaze.util.StreamableInput;
-import com.fizzed.blaze.util.Streamables;
+import com.fizzed.blaze.util.*;
 
-public class SshSftpPut extends Action<SshSftpPut.Result,Void> {
+public class SshSftpPut extends Action<SshSftpPut.Result,Void> implements VerbosityMixin<SshSftpGet>, ProgressMixin<SshSftpGet> {
 
+    private final VerboseLogger log;
+    private final ValueHolder<Boolean> progress;
     private final SshSftpSupport sftp;
     private StreamableInput source;
     private String target;
     
     public SshSftpPut(SshSftpSession sftp) {
         super(sftp.session().context());
+        this.log = new VerboseLogger(this);
+        this.progress = new ValueHolder<>(false);
         this.sftp = (SshSftpSupport)sftp;
         this.target = null;
     }
@@ -74,10 +78,20 @@ public class SshSftpPut extends Action<SshSftpPut.Result,Void> {
     }
 
     @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
+    }
+
+    @Override
+    public ValueHolder<Boolean> getProgressHolder() {
+        return this.progress;
+    }
+
+    @Override
     protected Result doRun() throws BlazeException {
         ObjectHelper.requireNonNull(source, "source cannot be null");
         ObjectHelper.requireNonNull(target, "target cannot be null");
-        sftp.put(source, target);
+        sftp.put(this.log, this.progress.get(), this.source, this.target);
         return new Result(this, null);
     }
     

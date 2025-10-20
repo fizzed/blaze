@@ -10,6 +10,7 @@ import com.fizzed.crux.util.TemporaryPath;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import okio.Buffer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -75,7 +76,7 @@ public class HttpTest {
     }
 
     @Test
-    public void getToFile() throws InterruptedException, IOException {
+    public void getFile() throws InterruptedException, IOException {
         this.mockWebServer.enqueue(new MockResponse()
             .setResponseCode(201).setBody("ok"));
 
@@ -91,6 +92,28 @@ public class HttpTest {
             RecordedRequest rr = this.mockWebServer.takeRequest();
 
             assertThat(new String(Files.readAllBytes(temporaryPath.getPath())), is("ok"));
+        }
+    }
+
+    @Test
+    public void getFileWithProgress() throws InterruptedException, IOException {
+        this.mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201)
+            .setBody("this is a test"));
+
+        try (TemporaryPath temporaryPath = TemporaryPath.tempFile()) {
+
+            Integer code = new Http(context, Http.METHOD_GET, this.getMockUrl())
+                .verbose()
+                .progress()
+                .target(temporaryPath.getPath())
+                .run();
+
+            assertThat(code, is(201));
+
+            RecordedRequest rr = this.mockWebServer.takeRequest();
+
+            assertThat(new String(Files.readAllBytes(temporaryPath.getPath())), is("this is a test"));
         }
     }
 
@@ -113,6 +136,27 @@ public class HttpTest {
 
         int code = new Http(context, Http.METHOD_POST, this.getMockUrl())
             .verbose()
+            .body("body", "text/plain")
+            .run();
+
+        assertThat(code, is(201));
+
+        RecordedRequest rr = this.mockWebServer.takeRequest();
+
+        assertThat(rr.getMethod(), is("POST"));
+        assertThat(rr.getHeader("Content-Type"), is("text/plain; charset=utf-8"));
+        assertThat(rr.getBody().readUtf8(), is("body"));
+    }
+
+    @Test
+    public void postFileWithProgress() throws InterruptedException {
+        this.mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201)
+            .setBody("ok"));
+
+        int code = new Http(context, Http.METHOD_POST, this.getMockUrl())
+            .verbose()
+            .progress()
             .body("body", "text/plain")
             .run();
 

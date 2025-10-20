@@ -20,7 +20,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.10</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>copy-list</id>
@@ -29,7 +29,7 @@
                             <goal>list</goal>
                         </goals>
                         <configuration>
-                            <outputFile>${project.build.outputDirectory}/com/fizzed/blaze/bundled.txt</outputFile>
+                            <outputFile>${project.build.outputDirectory}/com/fizzed/blaze/bundled-test.txt</outputFile>
                             <includeScope>runtime</includeScope>
                             <outputScope>false</outputScope>
                             <excludeTransitive>true</excludeTransitive>

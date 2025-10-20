@@ -20,7 +20,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
 /**
@@ -29,28 +32,26 @@ import java.util.Objects;
  * @author joelauer
  */
 public class DeferredFileOutputStream extends OutputStream {
- 
-    private final File file;
+
+    private final Path file;
+    private final Path temporaryFile;
     private OutputStream output;
     
-    public DeferredFileOutputStream(File file) {
+    public DeferredFileOutputStream(Path file, boolean useTemporaryFile) {
         Objects.requireNonNull(file, "file cannot be null");
-        /**
-        if (!file.exists()) {
-            throw new FileNotFoundException("File " + file + " not found");
-        }
-        */
         this.file = file;
-    }
-    
-    public DeferredFileOutputStream(Path path) throws FileNotFoundException {
-        this(path != null ? path.toFile() : (File)null);
+        if (useTemporaryFile) {
+            this.temporaryFile = file.resolveSibling(file.getFileName() + ".tmp");
+        } else {
+            this.temporaryFile = null;
+        }
     }
     
     public void open() {
         if (this.output == null) {
             try {
-                this.output = new FileOutputStream(file);
+                final Path fileToOpen = this.temporaryFile != null ? this.temporaryFile : this.file;
+                this.output = Files.newOutputStream(fileToOpen, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             } catch (Exception e) {
                 throw new FileNotFoundException(e.getMessage(), e);
             }
@@ -62,6 +63,10 @@ public class DeferredFileOutputStream extends OutputStream {
         if (this.output != null) {
             this.output.close();
             this.output = null;
+            // if using a temporary file, now if the time to swap it to the final file
+            if (this.temporaryFile != null) {
+                Files.move(this.temporaryFile, this.file, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
     }
 

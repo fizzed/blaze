@@ -85,19 +85,43 @@ public class DependencyHelper {
      * @return 
      */
     static public String cleanMavenDependencyLine(String dependency) {
-        return dependency.replace(":jar:", ":");
+        String s = dependency.replace(":jar:", ":");
+        // maven v3.9.11 adds control stuff too
+        int controlPos = s.indexOf('\u001B');
+        if (controlPos > 0) {
+            s = s.substring(0, controlPos);
+        }
+        return s;
     }
-    
+
     static public List<Dependency> alreadyBundled() {
-        String resourceName = "/com/fizzed/blaze/bundled.txt";
-        
+        // unfortunately, we need "bundled.txt" for many unit tests, but we need to also ensure that the final one
+        // included in the blaze-lite package is the one we really want to use in production. we will search for two
+        // versions of the file, the main one and a test one, which will let unit tests run, but ultimately will be
+        // excluded in the final packaging
+        // first, search for the main one we want to use
+        final String resourceNameMain = "/com/fizzed/blaze/bundled.txt";
+        final String resourceNameTest = "/com/fizzed/blaze/bundled-test.txt";
+        try {
+            return alreadyBundled(resourceNameMain);
+        } catch (BlazeException e) {
+            // ignore, we'll try the test one
+            try {
+                return alreadyBundled(resourceNameTest);
+            } catch (BlazeException e2) {
+                throw new BlazeException("Unable to find resource " + resourceNameMain + " or " + resourceNameTest + ". Maybe not packaged as jar correctly?", e);
+            }
+        }
+    }
+
+    static public List<Dependency> alreadyBundled(String resourceName) {
         URL url = DependencyHelper.class.getResource(resourceName);
         
         if (url == null) {
             throw new BlazeException("Unable to find resource " + resourceName + ". Maybe not packaged as jar correctly?");
         }
         
-        List<Dependency> dependencies = new ArrayList<>();
+        final List<Dependency> dependencies = new ArrayList<>();
         
         try (InputStream is = url.openStream()) {
             List<String> lines = IOUtils.readLines(is, "UTF-8");

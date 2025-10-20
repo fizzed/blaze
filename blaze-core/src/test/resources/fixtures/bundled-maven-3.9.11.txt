@@ -1,0 +1,10 @@
+
+The following files have been resolved:
+   com.fizzed:blaze-core:jar:1.9.1-SNAPSHOT[36m -- module blaze.core[0;1;33m (auto)[m
+   org.slf4j:slf4j-api:jar:2.0.13[36m -- module org.slf4j[m
+   com.typesafe:config:jar:1.4.3[36m -- module typesafe.config[0;1m [auto][m
+   commons-io:commons-io:jar:2.16.1[36m -- module org.apache.commons.io[m
+   org.zeroturnaround:zt-exec:jar:1.12[36m -- module zt.exec[0;1;33m (auto)[m
+   com.fizzed:blaze-ivy:jar:1.9.1-SNAPSHOT[36m -- module blaze.ivy[0;1;33m (auto)[m
+   org.apache.ivy:ivy:jar:2.5.2[36m -- module org.apache.ivy[0;1m [auto][m
+   org.slf4j:slf4j-simple:jar:2.0.13[36m -- module org.slf4j.simple[m
