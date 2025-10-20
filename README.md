@@ -11,6 +11,7 @@ The following Java versions and platforms are tested using GitHub workflows:
 [![Java 11](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java11.yaml?branch=master&label=Java%2011&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java11.yaml)
 [![Java 17](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java17.yaml?branch=master&label=Java%2017&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java17.yaml)
 [![Java 21](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java21.yaml?branch=master&label=Java%2021&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java21.yaml)
+[![Java 25](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java25.yaml?branch=master&label=Java%2025&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java25.yaml)
 
 [![Linux x64](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/linux-java8.yaml?branch=master&label=Linux&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/linux-java8.yaml)
 [![MacOS arm64](https://img.shields.io/github/actions/workflow/status/fizzed/blaze/macos-arm64.yaml?branch=master&label=MacOS+arm64&style=flat-square)](https://github.com/fizzed/blaze/actions/workflows/macos-arm64.yaml)
