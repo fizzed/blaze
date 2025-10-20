@@ -1,6 +1,15 @@
 Blaze by Fizzed
 ===============
 
+#### 1.10.0 - 2025-10-20
+
+ - Added github workfow test for Java 25
+ - New Console I/O progress bar utility class
+ - Console "progress bar" for blaze-http gets or puts, blaze-ssh sftp gets or puts, and blaze-archive unarchive runs.
+ - Ability to request http get/put, sftp get, and archiver unarchive requests to use "temporary files" to simplify
+   the process of something like downloading a file and only having it become the final file name once its fully downloaded.
+ - Fixed build problem on Maven >= 3.9.7
+
 #### 1.9.0 - 2025-01-21
 
  - New PowerShell support on Windows where .ps1 scripts are searched for and can be executed by blaze invoking it with
