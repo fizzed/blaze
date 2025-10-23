@@ -325,10 +325,16 @@ public class Blaze {
         }
         
         public Blaze build() {
+            return this.build(true);
+        }
+
+        public Blaze build(boolean compileScript) {
             this.loadDependencies();     // also calls locate(), configure(), and resolveDependencies()
 
-            this.compileScript();
-            
+            if (compileScript) {
+                this.compileScript();
+            }
+
             return new Blaze(this.context, this.dependencies, this.engine, this.script);
         }
     }

@@ -83,25 +83,32 @@ public class Bootstrap1 {
         
         Timer timer = new Timer();
         try {
-            // build & compile blaze script
-            Blaze blaze = this.buildBlaze(arguments);
-
             if (arguments.isGenerateMavenProject()) {
+                // we do NOT need to compile the script to generate the maven project and this helps if a user has
+                // some syntax issues with their script that would prevent building the POM
+                Blaze blaze = this.buildBlaze(arguments, false);
                 new MavenProjectGenerator().setBlaze(blaze).generate();
                 System.exit(0);
-            } else if (arguments.isListTasks()) {
+                return;
+            }
+
+            // build & compile blaze script
+            Blaze blaze = this.buildBlaze(arguments, true);
+
+            if (arguments.isListTasks()) {
                 this.logTasks(log, blaze);
                 System.exit(0);
-            } else {
-                try {
-                    log.debug("tasks to execute: {}", arguments.getTasks());
-                    blaze.executeAll(arguments.getTasks());
-                } catch (NoSuchTaskException e) {
-                    // do not log stack trace
-                    log.error(e.getMessage());
-                    this.logTasks(log, blaze);
-                    System.exit(1);
-                }
+                return;
+            }
+
+            try {
+                log.debug("Tasks to execute: {}", arguments.getTasks());
+                blaze.executeAll(arguments.getTasks());
+            } catch (NoSuchTaskException e) {
+                // do not log stack trace
+                log.error(e.getMessage());
+                this.logTasks(log, blaze);
+                System.exit(1);
             }
         } catch (MessageOnlyException | DependencyResolveException e) {
             // do not log stack trace
@@ -151,12 +158,12 @@ public class Bootstrap1 {
         System.out.println("-i|--install <dir>       Install blaze or blaze.bat to directory");
     }
     
-    public Blaze buildBlaze(BlazeArguments arguments) {
+    public Blaze buildBlaze(BlazeArguments arguments, boolean buildScript) {
         return new Blaze.Builder()
             .file(arguments.getBlazeFile())
             .directory(arguments.getBlazeDir())
             .configProperties(arguments.getConfigProperties())
-            .build();
+            .build(buildScript);
     }
     
     public void systemProperty(String name, String value) {

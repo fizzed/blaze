@@ -102,7 +102,7 @@ public class MavenProjectGenerator {
         log.info("########################################################");
         log.info("");
         log.info("You can control what java source version is in your maven project by");
-        log.info("including a -Djava.source.version=11 argument to this command OR make");
+        log.info("including a --java.source.version=11 argument to this command OR make");
         log.info("it permanent by including that as a config value in your [script].conf");
         log.info("");
         log.info("########################################################");
