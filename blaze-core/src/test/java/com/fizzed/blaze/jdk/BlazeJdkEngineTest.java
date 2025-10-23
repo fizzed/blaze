@@ -156,5 +156,18 @@ public class BlazeJdkEngineTest {
         assertThat(output2, containsString("arg2 = arg2"));
         assertThat(output2, containsString("arg3 = cmdLineArg3"));
     }
-    
+
+    @Test
+    public void blazeNoTaskInArgs() throws Exception {
+        final File workingDir = resourceAsFile("/jdk/project5");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, null, null, workingDir);
+
+        assertThat(result.getExitValue(), is(1));
+
+        final String output = result.outputUTF8();
+        assertThat(output.contains("'main' not found"), is(false));
+        assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n test"));
+    }
+
 }

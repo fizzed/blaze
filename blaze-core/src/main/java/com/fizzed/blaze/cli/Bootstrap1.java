@@ -105,8 +105,13 @@ public class Bootstrap1 {
                 log.debug("Tasks to execute: {}", arguments.getTasks());
                 blaze.executeAll(arguments.getTasks());
             } catch (NoSuchTaskException e) {
-                // do not log stack trace
-                log.error(e.getMessage());
+                // if no task was supplied at all, the default task was missing and its stupid to log this message
+                if (!arguments.getTasks().isEmpty()) {
+                    // do not log stack trace
+                    log.error(e.getMessage());
+                } else {
+                    log.error("You must specify one or more tasks to execute.");
+                }
                 this.logTasks(log, blaze);
                 System.exit(1);
             }
