@@ -170,4 +170,19 @@ public class BlazeJdkEngineTest {
         assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n test"));
     }
 
+    @Test
+    public void blazeValidateAllTasksExistBeforeExecutingThem() throws Exception {
+        final File workingDir = resourceAsFile("/jdk/project5");
+
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(null, asList("test", "notexist"), null, workingDir);
+
+        assertThat(result.getExitValue(), is(1));
+
+        final String output = result.outputUTF8();
+        // this prints out from test which should NOT run if any task is missing
+        assertThat(output.contains("arg1 = 1"), is(false));
+        assertThat(output, containsString("'notexist' not found"));
+        assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n test"));
+    }
+
 }

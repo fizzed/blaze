@@ -368,7 +368,7 @@ public class Blaze {
     }
     
     public List<BlazeTask> tasks() throws BlazeException {
-        List<BlazeTask> tasks = this.script.tasks();
+        final List<BlazeTask> tasks = this.script.tasks();
         
         // sort strategy (alphabetical by default)
         Collections.sort(tasks);
@@ -377,7 +377,7 @@ public class Blaze {
     }
     
     public void execute() throws Exception {
-        execute(null);
+        this.execute(null);
     }
     
     public void execute(String task) throws Exception {
@@ -385,7 +385,7 @@ public class Blaze {
             task = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
         }
         
-        String scriptName = (context.scriptFile() != null ? context.scriptFile().toString() : "");
+        final String scriptName = (context.scriptFile() != null ? context.scriptFile().toString() : "");
         
         log.info("Executing {}:{}...", scriptName, task);
         Timer executeTimer = new Timer();
@@ -398,10 +398,19 @@ public class Blaze {
     public void executeAll(List<String> tasks) throws Exception {
         // default task?
         if (tasks == null || tasks.isEmpty()) {
-            execute(null);
+            this.execute(null);
         } else {
+            // validate all the tasks exist before trying to execute any of them
+            final List<BlazeTask> validTasks = this.tasks();
             for (String task : tasks) {
-                execute(task);
+                if (!validTasks.stream().anyMatch(t -> t.getName().equals(task))) {
+                    throw new NoSuchTaskException(task);
+                }
+            }
+
+            // now try to execute all the tasks
+            for (String task : tasks) {
+                this.execute(task);
             }
         }
     }
