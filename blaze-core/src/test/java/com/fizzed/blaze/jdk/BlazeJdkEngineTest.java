@@ -132,5 +132,29 @@ public class BlazeJdkEngineTest {
         assertThat(output, containsString("val1 = This is val1 in the local config file"));
         assertThat(output, containsString("val2 = This is val2 in the primary config file"));
     }
+
+    @Test
+    public void blazeWithConfigsAndCommandLineArguments() throws Exception {
+        final File workingDir = resourceAsFile("/jdk/project5");
+
+        final ProcessResult result1 = BlazeRunner.invokeWithCurrentJvmHome(null, asList("test"), null, workingDir);
+
+        assertThat(result1.getExitValue(), is(0));
+
+        final String output1 = result1.outputUTF8();
+        assertThat(output1, containsString("arg1 = 1"));
+        assertThat(output1, containsString("arg2 = arg2"));
+        assertThat(output1, containsString("arg3 = localArg3"));
+
+        // now with command line arguments to override config
+        final ProcessResult result2 = BlazeRunner.invokeWithCurrentJvmHome(null, asList("test"), asList("--project5.arg3", "cmdLineArg3", "--project5.arg1", "999"), workingDir);
+
+        assertThat(result2.getExitValue(), is(0));
+
+        final String output2 = result2.outputUTF8();
+        assertThat(output2, containsString("arg1 = 999"));
+        assertThat(output2, containsString("arg2 = arg2"));
+        assertThat(output2, containsString("arg3 = cmdLineArg3"));
+    }
     
 }

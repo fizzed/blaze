@@ -37,7 +37,7 @@ public class MailTest {
         this.greenMail.withConfiguration(new GreenMailConfiguration()
             );
         this.greenMail.start();
-        this.config = ConfigHelper.create(null);
+        this.config = ConfigHelper.createEmpty();
         this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
     }
 

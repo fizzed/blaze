@@ -28,7 +28,7 @@ public class UnarchiveTest {
 
     @Before
     public void setup() throws Exception {
-        config = ConfigHelper.create(null);
+        config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
         targetDir = Resources.file("/fixtures/sample-no-root-dir.zip").resolve("../../../../target").toAbsolutePath().normalize();
     }

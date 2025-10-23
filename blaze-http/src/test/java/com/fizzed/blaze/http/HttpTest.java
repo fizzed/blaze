@@ -31,7 +31,7 @@ public class HttpTest {
 
     @Before
     public void setup() throws Exception {
-        this.config = ConfigHelper.create(null);
+        this.config = ConfigHelper.createEmpty();
         this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
         this.mockWebServer = new MockWebServer();
     }

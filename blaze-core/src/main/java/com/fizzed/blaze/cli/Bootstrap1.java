@@ -20,145 +20,86 @@ import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.internal.InstallHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Bootstrap1 {
-    
-    protected Path blazeFile = null;
-    protected Path blazeDir = null;
-    protected List<String> tasks;
-    
-    public Bootstrap1() {
-        this.tasks = new ArrayList<>();
-    }
 
-    public void run(String[] args) throws IOException {
-       
-        
-        run(new ArrayDeque(Arrays.asList(args)));
-    }
-    
     @SuppressWarnings("ThrowableResultIgnored")
-    public void run(Deque<String> args) throws IOException {
+    public void run(String[] args) throws IOException {
         Thread.currentThread().setName(getName());
 
-        boolean listTasks = false;
-        boolean generateMavenProject = false;
-        boolean loggingConfigured = false;
+        final BlazeArguments arguments;
+        try {
+            arguments = BlazeArguments.parse(args);
+        } catch (IllegalArgumentException | MessageOnlyException e) {
+            System.err.println("[ERROR] " + e.getMessage());
+            System.exit(1);
+            return;
+        }
 
-        while (!args.isEmpty()) {
-            String arg = args.remove();
-            
-            if (this.interceptArgument(arg, args)) {
-                continue;       // move on
-            }
-            
-            if (arg.startsWith("-D")) {
-                // strip -D then split on first equals char
-                String nv = arg.substring(2);
-                int equalsPos = nv.indexOf('=');
-                if (equalsPos < 0) {
-                    systemProperty(nv, "");
-                } else {
-                    systemProperty(nv.substring(0, equalsPos), nv.substring(equalsPos+1));
+        if (arguments.isShowVersion()) {
+            this.printVersion();
+            System.exit(0);
+            return;
+        }
+
+        if (arguments.isShowHelp()) {
+            this.printHelp();
+            System.exit(0);
+            return;
+        }
+
+        if (arguments.getInstallDir() != null) {
+            try {
+                List<Path> installedFiles = InstallHelper.installBlazeBinaries(arguments.getInstallDir());
+                for (Path installedFile : installedFiles) {
+                    System.out.println("Installed " + installedFile);
                 }
-            } else if (arg.equals("-v") || arg.equals("--version")) {
-                printVersion();
                 System.exit(0);
-            } else if (arg.equals("-q") || arg.equals("-qq") || arg.equals("-x") || arg.equals("-xx") || arg.equals("-xxx")) {
-                configureLogging(arg);
-                loggingConfigured = true;
-            } else if (arg.equals("-h") || arg.equals("--help")) {
-                printHelp();
-                System.exit(0);
-            } else if (arg.equals("-f") || arg.equals("--file")) {
-                String nextArg = nextArg(args, arg, "<file>");
-                blazeFile = Paths.get(nextArg);
-            } else if (arg.equals("-d") || arg.equals("--dir")) {
-                String nextArg = nextArg(args, arg, "<dir>");
-                blazeDir = Paths.get(nextArg);
-            } else if (arg.equals("--generate-maven-project")) {
-                generateMavenProject = true;
-            } else if (arg.equals("-i") || arg.equals("--install")) {
-                String nextArg = nextArg(args, arg, "<dir>");
-                Path installDir = Paths.get(nextArg);
-                
-                try {
-                    List<Path> installedFiles = InstallHelper.installBlazeBinaries(installDir);
-                    for (Path installedFile : installedFiles) {
-                        System.out.println("Installed " + installedFile);
-                    }
-                    System.exit(0);
-                } catch (MessageOnlyException e) {
-                    System.err.println("[ERROR] " + e.getMessage());
-                    System.exit(1);
-                }
-            } else if (arg.equals("-l") || arg.equals("--list")) {
-                listTasks = true;
-            } else if (arg.startsWith("--")) {
-                // treat this like an argument...
-                // strip -- then split on first equals char
-                String key = arg.substring(2);
-                String val = args.peek();
-                if (val == null || val.startsWith("-")) {
-                    systemProperty(key, "");
-                } else {
-                    systemProperty(key, args.remove());
-                }
-            } else if (arg.startsWith("-")) {
-                System.err.println("[ERROR] Unsupported command line switch [" + arg + "]; " + getName() + " -h for more info");
+            } catch (IllegalArgumentException | MessageOnlyException e) {
+                System.err.println("[ERROR] " + e.getMessage());
                 System.exit(1);
-            } else {
-                // this may be a task to run - special case for first occurrence
-                // which may be a script to run
-                if (tasks.isEmpty()) {
-                    Path maybeBlazeFile = Paths.get(arg);
-                    if (Files.exists(maybeBlazeFile) && Files.isRegularFile(maybeBlazeFile)) {
-                        blazeFile = maybeBlazeFile;
-                        continue;
-                    }
-                }
-                // otherwise this is a task to run
-                tasks.add(arg);
             }
+            return;
         }
-        
-        // configure logging if not yet configured
-        if (!loggingConfigured) {
-            this.configureLogging("");
-        }
+
+        // configure logging (either default or provided level)
+        this.configureLogging(arguments.getLoggingLevel());
         
         // trigger logger to be bound!
         Logger log = LoggerFactory.getLogger(Bootstrap1.class);
+
+        // any system properties to set?
+        if (arguments.getSystemProperties() != null) {
+            for (Map.Entry<String,String> entry : arguments.getSystemProperties().entrySet()) {
+                log.debug("Setting system property: {}={}", entry.getKey(), entry.getValue());
+                this.systemProperty(entry.getKey(), entry.getValue());
+            }
+        }
         
         Timer timer = new Timer();
         try {
-            // build blaze
-            Blaze blaze = this.buildBlaze();
+            // build & compile blaze script
+            Blaze blaze = this.buildBlaze(arguments);
 
-            if (generateMavenProject) {
+            if (arguments.isGenerateMavenProject()) {
                 new MavenProjectGenerator().setBlaze(blaze).generate();
                 System.exit(0);
-            } else if (listTasks) {
-                logTasks(log, blaze);
+            } else if (arguments.isListTasks()) {
+                this.logTasks(log, blaze);
                 System.exit(0);
             } else {
                 try {
-                    log.debug("tasks to execute: {}", tasks);
-                    blaze.executeAll(tasks);
+                    log.debug("tasks to execute: {}", arguments.getTasks());
+                    blaze.executeAll(arguments.getTasks());
                 } catch (NoSuchTaskException e) {
                     // do not log stack trace
                     log.error(e.getMessage());
-                    logTasks(log, blaze);
+                    this.logTasks(log, blaze);
                     System.exit(1);
                 }
             }
@@ -186,13 +127,9 @@ public class Bootstrap1 {
         return "blaze";
     }
 
-    public String nextArg(Deque<String> args, String arg, String valueDescription) {
-        if (args.isEmpty()) {
-            System.err.println("[ERROR] " + arg + " argument requires next arg to be a " + valueDescription);
-            System.exit(1);
-        }
-        return args.remove();
-    }
+    //
+    // Utility Methods
+    //
     
     public void printVersion() {
         System.out.println(getName() + ": v" + Version.getLongVersion());
@@ -214,10 +151,11 @@ public class Bootstrap1 {
         System.out.println("-i|--install <dir>       Install blaze or blaze.bat to directory");
     }
     
-    public Blaze buildBlaze() {
+    public Blaze buildBlaze(BlazeArguments arguments) {
         return new Blaze.Builder()
-            .file(blazeFile)
-            .directory(blazeDir)
+            .file(arguments.getBlazeFile())
+            .directory(arguments.getBlazeDir())
+            .configProperties(arguments.getConfigProperties())
             .build();
     }
     
@@ -225,27 +163,29 @@ public class Bootstrap1 {
         System.setProperty(name, value);
     }
     
-    public boolean interceptArgument(String arg, Deque<String> args) {
-        // really meant for subclasses to be able to handl the argument
-        return false;
-    }
-    
-    public void configureLogging(String arg) {
+    public void configureLogging(int loggingLevel) {
+        // default logging level of 0
         String level = "info";
         String scriptLevel = "info";
 
-        if (arg.equals("-q")) {
-            level = "warn";
-        } else if (arg.equals("-qq")) {
-            level = scriptLevel = "warn";
-        } else if (arg.equals("-x")) {
-            level = scriptLevel = "debug";
-        } else if (arg.equals("-xx")) {
-            level = scriptLevel = "trace";
-        } else if (arg.equals("-xxx")) {
-            level = scriptLevel = "trace";
-            // but also set another system property which really turns on even MORE debugging
-            System.setProperty("blaze.superdebug", "true");
+        switch (loggingLevel) {
+            case -2:    // -qq
+                level = scriptLevel = "warn";
+                break;
+            case -1:    // -q
+                level = "warn";
+                break;
+            case 1:     // -x
+                level = scriptLevel = "debug";
+                break;
+            case 2:     // -xx
+                level = scriptLevel = "trace";
+                break;
+            case 3:     // -xxx
+                level = scriptLevel = "trace";
+                // but also set another system property which really turns on even MORE debugging
+                System.setProperty("blaze.superdebug", "true");
+                break;
         }
 
         JdkLoggerHelper.setRootLevel(level);
@@ -255,17 +195,6 @@ public class Bootstrap1 {
         System.setProperty("org.slf4j.simpleLogger.log.script", scriptLevel);
         // disable logging for zeroturnaround
         System.setProperty("org.slf4j.simpleLogger.log.org.zeroturnaround", "off");
-
-        // if using logback
-        //Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        /**
-        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        if (arg.length() == 2) {
-        root.setLevel(Level.DEBUG);
-        } else {
-        root.setLevel(Level.INFO);
-        }
-         */
     }
     
     public void logTasks(Logger log, Blaze blaze) {

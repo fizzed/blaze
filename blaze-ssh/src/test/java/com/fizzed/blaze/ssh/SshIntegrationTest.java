@@ -85,7 +85,7 @@ public class SshIntegrationTest {
         this.host = host;
         this.uri = MutableUri.of("ssh://{}", host);
         // required before any blaze methods called...
-        Config config = ConfigHelper.create(null);
+        Config config = ConfigHelper.createEmpty();
         this.context = new ContextImpl(null, null, null, config);
         ContextHolder.set(this.context);
     }

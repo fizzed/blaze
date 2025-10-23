@@ -49,7 +49,7 @@ public class WhichTest {
     
     @Before
     public void setup() {
-        config = ConfigHelper.create(null);
+        config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
     }
     

@@ -51,7 +51,7 @@ abstract public class TestAbstractBase {
 
     @Before
     public void baseBefore() throws Exception {
-        this.config = ConfigHelper.create(null);
+        this.config = ConfigHelper.createEmpty();
         this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
         // this will help find the compile target directory, where is should be in target/test-classes
         this.targetDir = FileHelper.resourceAsPath("/fixtures/resource-locator.txt").resolve("../../..").normalize();

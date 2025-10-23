@@ -64,7 +64,7 @@ public class SshBaseTest {
         File sshdTestTxtFile = FileHelper.resourceAsFile("/sshd/ssh-test.txt");
         File sshdTestDir = sshdTestTxtFile.getParentFile();
         
-        config = ConfigHelper.create(null);
+        config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, sshdTestDir.toPath(), null, config));
         prompter = new ExpectPrompter();
         context.prompter(prompter);
