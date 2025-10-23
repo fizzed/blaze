@@ -15,25 +15,27 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.Task;
+
 import java.util.Objects;
 
 /**
  * Represents a task in a script.
  */
 public class BlazeTask implements Comparable<BlazeTask> {
-    
+
     private final String name;
     private final String description;
     private final int order;
-    
+
     public BlazeTask(String name) {
-        this(name, null, 0);
+        this(name, null);
     }
-    
+
     public BlazeTask(String name, String description) {
-        this(name, description, 0);
+        this(name, description, Task.DEFAULT_ORDER);
     }
-    
+
     public BlazeTask(String name, String description, int order) {
         this.name = name;
         this.description = description;

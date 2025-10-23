@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * A script that uses reflection to detect and invoke tasks based on public
  * methods. Can be used by other engines that have a similar model.
@@ -67,18 +69,16 @@ public class TargetObjectScript implements Script {
                 }
                 
                 // defaults
-                String name = m.getName();
-                String description = null;
-                int order = 0;
-                
+                final String name = m.getName();
+
                 // task annotation present?
                 Task task = m.getAnnotation(Task.class);
                 if (task != null) {
-                    description = (task.value() != null ? task.value() : null);
-                    order = task.order();
+                    final String description = ofNullable(task.value()).filter(v -> !v.trim().isEmpty()).orElse(null);
+                    tasks.add(new BlazeTask(name, description, task.order()));
+                } else {
+                    tasks.add(new BlazeTask(name));
                 }
-                
-                tasks.add(new BlazeTask(name, description, order));
             }
         } catch (SecurityException e) {
             throw new BlazeException("Unable to detect script tasks", e);
