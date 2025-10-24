@@ -31,36 +31,21 @@ import java.util.Map;
 public class Converter {
     
     @FunctionalInterface
-    static public interface Impl<T> {
+    public interface Impl<T> {
         T convert(String value);
     }
     
     final static public Map<Class<?>,Impl<?>> CONVERTERS = new HashMap<>();
     static {
-        CONVERTERS.put(Integer.class, (Impl<Integer>) (String value) -> {
-            return Integer.valueOf(value);
-        });
-        CONVERTERS.put(Long.class, (Impl<Long>) (String value) -> {
-            return Long.valueOf(value);
-        });
-        CONVERTERS.put(Boolean.class, (Impl<Boolean>) (String value) -> {
-            return Boolean.valueOf(value);
-        });
-        CONVERTERS.put(Float.class, (Impl<Float>) (String value) -> {
-            return Float.valueOf(value);
-        });
-        CONVERTERS.put(Short.class, (Impl<Short>) (String value) -> {
-            return Short.valueOf(value);
-        });
-        CONVERTERS.put(Byte.class, (Impl<Byte>) (String value) -> {
-            return Byte.valueOf(value);
-        });
-        CONVERTERS.put(Double.class, (Impl<Double>) (String value) -> {
-            return Double.valueOf(value);
-        });
-        CONVERTERS.put(URI.class, (Impl<URI>) (String value) -> {
-            return URI.create(value);
-        });
+        CONVERTERS.put(String.class, (Impl<String>) (String value) -> value);
+        CONVERTERS.put(Integer.class, (Impl<Integer>) Integer::valueOf);
+        CONVERTERS.put(Long.class, (Impl<Long>) Long::valueOf);
+        CONVERTERS.put(Boolean.class, (Impl<Boolean>) Boolean::valueOf);
+        CONVERTERS.put(Float.class, (Impl<Float>) Float::valueOf);
+        CONVERTERS.put(Short.class, (Impl<Short>) Short::valueOf);
+        CONVERTERS.put(Byte.class, (Impl<Byte>) Byte::valueOf);
+        CONVERTERS.put(Double.class, (Impl<Double>) Double::valueOf);
+        CONVERTERS.put(URI.class, (Impl<URI>) URI::create);
         CONVERTERS.put(URL.class, (Impl<URL>) (String value) -> {
             try {
                 return new URL(value);
@@ -68,15 +53,10 @@ public class Converter {
                 throw new IllegalArgumentException(e.getMessage(), e);
             }
         });
-        CONVERTERS.put(MutableUri.class, (Impl<MutableUri>) (String value) -> {
-            return MutableUri.of(value);
-        });
-        CONVERTERS.put(ImmutableUri.class, (Impl<ImmutableUri>) (String value) -> {
-            return MutableUri.of(value).toImmutableUri();
-        });
-        
-        
-        // primitives as well
+        CONVERTERS.put(MutableUri.class, (Impl<MutableUri>) MutableUri::of);
+        CONVERTERS.put(ImmutableUri.class, (Impl<ImmutableUri>) (String value) -> MutableUri.of(value).toImmutableUri());
+
+        // primitives as well by leveraging the object versions
         CONVERTERS.put(int.class, CONVERTERS.get(Integer.class));
         CONVERTERS.put(long.class, CONVERTERS.get(Long.class));
         CONVERTERS.put(boolean.class, CONVERTERS.get(Boolean.class));

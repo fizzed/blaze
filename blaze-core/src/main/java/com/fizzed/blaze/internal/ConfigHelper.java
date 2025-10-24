@@ -98,7 +98,7 @@ public class ConfigHelper {
         // apply config properties
         if (configProperties != null && !configProperties.isEmpty()) {
             // load config properties, with a fallback of whatever was previous
-            log.debug("Configuring with local/overlay file {}", localFile);
+            log.debug("Configuring with config properties {}", configProperties);
             typesafeConfig = com.typesafe.config.ConfigFactory.parseMap(configProperties)
                 .withFallback(typesafeConfig);
         }

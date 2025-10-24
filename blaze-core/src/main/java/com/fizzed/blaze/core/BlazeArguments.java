@@ -203,7 +203,8 @@ public class BlazeArguments {
                 final String key = arg.substring(2);
                 String val = args.peek();
                 if (val == null || val.startsWith("--")) {
-                    val = null;
+                    // this is a flag and in order for config options to work, we'll implicitly set the value to "true"
+                    val = "true";
                 } else {
                     // this is a real value and we need to remove it from the args queue
                     args.remove();

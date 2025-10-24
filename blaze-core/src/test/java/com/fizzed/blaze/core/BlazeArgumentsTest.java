@@ -95,7 +95,7 @@ public class BlazeArgumentsTest {
         BlazeArguments blazeArguments = BlazeArguments.parse(asList("--config", "value", "--flag"));
 
         assertThat(blazeArguments.getConfigProperties().get("config"), is("value"));
-        assertThat(blazeArguments.getConfigProperties().get("flag"), is(nullValue()));
+        assertThat(blazeArguments.getConfigProperties().get("flag"), is("true"));
     }
 
     @Test
@@ -150,7 +150,7 @@ public class BlazeArgumentsTest {
         assertThat(blazeArguments.getTasks(), contains("task1", "task2"));
         assertThat(blazeArguments.getConfigProperties(), aMapWithSize(2));
         assertThat(blazeArguments.getConfigProperties().get("version"), is("hijacked"));
-        assertThat(blazeArguments.getConfigProperties().get("flag1"), is(nullValue()));
+        assertThat(blazeArguments.getConfigProperties().get("flag1"), is("true"));
         assertThat(blazeArguments.getConfigProperties(), not(hasKey("task1")));
         assertThat(blazeArguments.getConfigProperties(), not(hasKey("task2")));
 
