@@ -33,19 +33,19 @@ public interface PipeErrorMixin<T> extends PipeMixin<T> {
     
     T pipeError(StreamableOutput pipeError);
 
-    default public T pipeError(OutputStream stream) {
+    default T pipeError(OutputStream stream) {
         return pipeError(Streamables.output(stream));
     }
     
-    default public T pipeError(Path path) {
+    default T pipeError(Path path) {
         return pipeError(Streamables.output(path));
     }
     
-    default public T pipeError(File file) {
+    default T pipeError(File file) {
         return pipeError(Streamables.output(file));
     }
     
-    default public T disablePipeError() {
+    default T disablePipeError() {
         return pipeError((StreamableOutput)null);
     }
     

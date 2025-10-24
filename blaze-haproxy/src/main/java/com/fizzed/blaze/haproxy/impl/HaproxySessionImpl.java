@@ -19,6 +19,7 @@ import com.fizzed.blaze.Systems;
 import com.fizzed.blaze.haproxy.HaproxyInfo;
 import com.fizzed.blaze.haproxy.HaproxyStat;
 import com.fizzed.blaze.haproxy.HaproxyStats;
+import com.fizzed.blaze.system.Exec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fizzed.blaze.system.ExecSession;
@@ -42,13 +43,14 @@ public class HaproxySessionImpl implements HaproxySession {
             String command) {
 
         log.debug("Running haproxy admin command: {}", command);
-        
-        String result = Systems.execOn(execSession)
+
+        Exec exec = Systems.execOn(execSession)
             .command("socat")
             .args("stdio", this.adminSocket)
             .sudo(this.sudo)
-            .pipeInput(command + "\r\n")
-            .runCaptureOutput()
+            .pipeInput(command + "\r\n");
+
+        final String result = exec.runCaptureOutput()
             .asString()
             .trim();
         

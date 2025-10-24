@@ -19,8 +19,8 @@ import com.fizzed.blaze.util.ImmutableUri;
 
 public interface ExecSession {
  
-    public ImmutableUri uri();
+    ImmutableUri uri();
     
-    public Exec newExec();
+    Exec newExec();
     
 }

@@ -47,7 +47,7 @@ public class SecureShells {
     }
     
     static public SshExec sshExec(SshSession session, String command, Object ... arguments) {
-        return new JschExec(Contexts.currentContext(), session)
+        return (SshExec)new JschExec(Contexts.currentContext(), session)
             .command(command)
             .args(arguments);
     }

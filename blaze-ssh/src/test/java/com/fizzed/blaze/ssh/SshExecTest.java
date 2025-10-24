@@ -278,7 +278,7 @@ public class SshExecTest extends SshBaseTest {
         Integer exitValue
             = new JschExec(context, session)
                 .command("hello")
-                .exitValue(1)
+                .exitValues(1)
                 .pipeInput((StreamableInput)null)
                 .pipeOutput((StreamableOutput)null)
                 .pipeError((StreamableOutput)null)
