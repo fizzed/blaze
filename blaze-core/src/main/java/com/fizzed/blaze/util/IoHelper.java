@@ -7,30 +7,32 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 
+import static com.fizzed.blaze.util.TerminalHelper.clearLinePrint;
+
 public class IoHelper {
 
-    static public void copy(Path input, OutputStream output, boolean progress, OpenOption... options) throws IOException {
+    static public void copy(Path input, OutputStream output, boolean progress, boolean clearProgressLineAtEnd, OpenOption... options) throws IOException {
         final long knownContentLength = Files.size(input);
         try (InputStream is = Files.newInputStream(input, options)) {
-            copy(is, output, progress, knownContentLength);
+            copy(is, output, progress, clearProgressLineAtEnd, knownContentLength);
         }
     }
 
-    static public void copy(InputStream input, Path output, boolean progress, OpenOption... options) throws IOException {
-        copy(input, output, progress, -1L, options);
+    static public void copy(InputStream input, Path output, boolean progress, boolean clearProgressLineAtEnd, OpenOption... options) throws IOException {
+        copy(input, output, progress, clearProgressLineAtEnd, -1L, options);
     }
 
-    static public void copy(InputStream input, Path output, boolean progress, long knownContentLength, OpenOption... options) throws IOException {
+    static public void copy(InputStream input, Path output, boolean progress, boolean clearProgressLineAtEnd, long knownContentLength, OpenOption... options) throws IOException {
         try (OutputStream os = Files.newOutputStream(output, options)) {
-            copy(input, os, progress, knownContentLength);
+            copy(input, os, progress, clearProgressLineAtEnd, knownContentLength);
         }
     }
 
-    static public void copy(InputStream input, OutputStream output, boolean progress, long knownContentLength) throws IOException {
+    static public void copy(InputStream input, OutputStream output, boolean progress, boolean clearProgressLineAtEnd, long knownContentLength) throws IOException {
         // should we activate the progress bar?
-        final ConsoleIOProgressBar progressBar;
+        final TerminalIOProgressBar progressBar;
         if (progress) {
-            progressBar = new ConsoleIOProgressBar(knownContentLength);
+            progressBar = new TerminalIOProgressBar(knownContentLength);
         } else {
             progressBar = null;
         }
@@ -43,14 +45,18 @@ public class IoHelper {
             if (progressBar != null) {
                 progressBar.update(n);
                 if (progressBar.isRenderStale(1)) {
-                    System.out.print("\r" + progressBar.render());
+                    clearLinePrint(progressBar.render());
                 }
             }
         }
 
-        // we need 1 more render to make sure it shows 100% and to newline it
+        // we need 1 more render to make sure it shows 100%
         if (progressBar != null) {
-            System.out.println("\r" + progressBar.render());
+            if (clearProgressLineAtEnd) {
+                clearLinePrint();
+            } else {
+                clearLinePrint(progressBar.render());
+            }
         }
     }
 

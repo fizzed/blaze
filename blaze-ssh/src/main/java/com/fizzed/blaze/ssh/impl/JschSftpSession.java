@@ -38,12 +38,11 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -387,16 +386,16 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
 
     static public class SftpConsoleIOProgressMonitor implements SftpProgressMonitor {
 
-        private ConsoleIOProgressBar progressBar;
+        private TerminalIOProgressBar progressBar;
 
         public SftpConsoleIOProgressMonitor(Long totalBytes) {
-            this.progressBar = new ConsoleIOProgressBar(totalBytes != null ? totalBytes : -1);
+            this.progressBar = new TerminalIOProgressBar(totalBytes != null ? totalBytes : -1);
         }
 
         @Override
         public void init(int op, String src, String dest, long max) {
             if (this.progressBar.getTotalBytes() < 0) {
-                this.progressBar = new ConsoleIOProgressBar(max);
+                this.progressBar = new TerminalIOProgressBar(max);
             }
         }
 

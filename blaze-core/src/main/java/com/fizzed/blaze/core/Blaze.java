@@ -274,7 +274,7 @@ public class Blaze {
                     }
                 }
             } finally {
-                log.info("Resolved dependencies in {} ms", dependencyTimer.stop().millis());
+                log.info("Resolved dependencies in {}", dependencyTimer.stop());
             }
         }
         
@@ -321,7 +321,7 @@ public class Blaze {
 
             this.script = engine.compile(context);
             
-            log.info("Compiled script in {} ms", engineTimer.stop().millis());
+            log.info("Compiled script in {}", engineTimer.stop());
         }
         
         public Blaze build() {
@@ -392,7 +392,7 @@ public class Blaze {
         
         this.script.execute(task);
         
-        log.info("Executed {}:{} in {} ms", scriptName, task, executeTimer.stop().millis());
+        log.info("Executed {}:{} in {}", scriptName, task, executeTimer.stop());
     }
     
     public void executeAll(List<String> tasks) throws Exception {

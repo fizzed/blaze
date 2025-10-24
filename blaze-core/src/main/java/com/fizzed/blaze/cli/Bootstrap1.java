@@ -131,7 +131,7 @@ public class Bootstrap1 {
         }
         
         // only log time if no exception
-        log.info("Blazed in {} ms", timer.stop().millis());
+        log.info("Blazed in {}", timer.stop());
     }
     
     // all overrideable by subclasses

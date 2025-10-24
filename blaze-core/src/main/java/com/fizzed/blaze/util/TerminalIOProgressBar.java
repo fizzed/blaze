@@ -2,7 +2,7 @@ package com.fizzed.blaze.util;
 
 import java.util.concurrent.TimeUnit;
 
-public class ConsoleIOProgressBar {
+public class TerminalIOProgressBar {
 
     private final long totalBytes;
     private long bytesProcessed;
@@ -10,7 +10,6 @@ public class ConsoleIOProgressBar {
 
     private long lastRenderTime;
     private long lastBytesProcessed;
-    private int maxRenderLength;
     private int spinnerState = 0;
     private static final char[] SPINNER_CHARS = {'|', '/', '-', '\\'};
 
@@ -18,7 +17,7 @@ public class ConsoleIOProgressBar {
      * Constructs a new NetworkProgress tracker.
      * @param totalBytes The total number of bytes expected in the operation.
      */
-    public ConsoleIOProgressBar(long totalBytes) {
+    public TerminalIOProgressBar(long totalBytes) {
         if (totalBytes == 0) {
             throw new IllegalArgumentException("Total bytes must be a positive number.");
         }
@@ -27,7 +26,6 @@ public class ConsoleIOProgressBar {
         this.lastRenderTime = this.startTime;
         this.bytesProcessed = 0;
         this.lastBytesProcessed = 0;
-        this.maxRenderLength = 0;
     }
 
     public long getTotalBytes() {
@@ -131,8 +129,6 @@ public class ConsoleIOProgressBar {
         sb.append(String.format(" | %s/s", formatBytes((long) speed)));
         sb.append(String.format(" | Elapsed: %s", formatDuration(elapsedSeconds)));
 
-        this.appendPadding(sb);
-
         return sb.toString();
     }
 
@@ -161,21 +157,7 @@ public class ConsoleIOProgressBar {
         sb.append(String.format(" | %s/s", formatBytes((long) speed)));
         sb.append(String.format(" | ETA: %s", formatDuration(etaSeconds)));
 
-        this.appendPadding(sb);
-
         return sb.toString();
-    }
-
-    private void appendPadding(StringBuilder sb) {
-        if (sb.length() > maxRenderLength) {
-            this.maxRenderLength = sb.length();
-        } else {
-            // we need to add some spaces to the end to make sure the progress bar is always the same length
-            int spacesToAdd = maxRenderLength - sb.length();
-            for (int i = 0; i < spacesToAdd; i++) {
-                sb.append(" ");
-            }
-        }
     }
 
     /**
@@ -208,7 +190,7 @@ public class ConsoleIOProgressBar {
     public static void main(String[] args) {
         final long TOTAL_BYTES = 100 * 1024 * 1024; // 100 MB
 
-        ConsoleIOProgressBar progressBar = new ConsoleIOProgressBar(TOTAL_BYTES);
+        TerminalIOProgressBar progressBar = new TerminalIOProgressBar(TOTAL_BYTES);
 //        TerminalIOProgressBar2 progressBar = new TerminalIOProgressBar2(-1);
 
         System.out.println("Starting simulated network download...");
