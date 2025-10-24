@@ -143,6 +143,21 @@ public class BlazeArgumentsTest {
     }
 
     @Test
+    public void parseIgnoreBlankStrings() {
+        // for bash completion, its possible empty command line arguments are provided and we don't want to break
+        // they should just be ignored and skipped like they don't exist
+        BlazeArguments blazeArguments = BlazeArguments.parse(asList("task1", "", "   ", "task2", "  --flag1  ", "--arg2", "  2  "));
+
+        assertThat(blazeArguments.isShowVersion(), is(false));
+        assertThat(blazeArguments.getTasks(), contains("task1", "task2"));
+        assertThat(blazeArguments.getConfigProperties(), aMapWithSize(2));
+        assertThat(blazeArguments.getConfigProperties().get("flag1"), is("true"));
+        assertThat(blazeArguments.getConfigProperties().get("arg2"), is("2"));
+        assertThat(blazeArguments.getConfigProperties(), not(hasKey("task1")));
+        assertThat(blazeArguments.getConfigProperties(), not(hasKey("task2")));
+    }
+
+    @Test
     public void parseRealWorld1() {
         BlazeArguments blazeArguments = BlazeArguments.parse(asList("task1", "task2", "--version", "hijacked", "--flag1"));
 

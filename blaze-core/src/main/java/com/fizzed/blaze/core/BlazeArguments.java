@@ -127,7 +127,12 @@ public class BlazeArguments {
         boolean taskParsingMode = false;
 
         while (!args.isEmpty()) {
-            final String arg = args.remove();
+            final String arg = args.remove().trim();        // always clean up the argument?
+
+            // in some very rare cases, the arg will be an empty string, only example I have is during bash completion
+            if (arg.isEmpty()) {
+                continue;    // skip it entirely
+            }
 
             //
             // these are blaze.jar arguments UNTIL a task is provided, then we will switch and treat them explicitly
@@ -201,7 +206,7 @@ public class BlazeArguments {
                 // this is a config property
                 // TODO: should we support the = syntax to set a value as well?
                 final String key = arg.substring(2);
-                String val = args.peek();
+                String val = peekArg(args);
                 if (val == null || val.startsWith("--")) {
                     // this is a flag and in order for config options to work, we'll implicitly set the value to "true"
                     val = "true";
@@ -244,11 +249,19 @@ public class BlazeArguments {
         return blazeArgs;
     }
 
+    static private String peekArg(Deque<String> args) {
+        String s = args.peek();
+        if (s != null) {
+            return s.trim();            // always clean up the argument
+        }
+        return s;
+    }
+
     static private String nextArg(Deque<String> args, String arg, String valueDescription) {
         if (args.isEmpty()) {
             throw new IllegalArgumentException(arg + " argument requires next arg to be a " + valueDescription);
         }
-        return args.remove();
+        return args.remove().trim();        // seems like cleaning up the argument is always good practice
     }
 
 }

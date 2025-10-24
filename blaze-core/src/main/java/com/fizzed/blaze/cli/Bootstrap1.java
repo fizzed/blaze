@@ -32,6 +32,15 @@ public class Bootstrap1 {
     public void run(String[] args) throws IOException {
         Thread.currentThread().setName(getName());
 
+        // is command line completion requested?
+
+        if (BashCompleter.isRequested(args) ) {
+            // this will take over handling and also call System.exit()
+            new BashCompleter().run(args);
+        }
+
+        // regular handling of blaze command
+
         final BlazeArguments arguments;
         try {
             arguments = BlazeArguments.parse(args);
@@ -181,6 +190,9 @@ public class Bootstrap1 {
         String scriptLevel = "info";
 
         switch (loggingLevel) {
+            case -3:    // special case, disable everything!
+                level = scriptLevel = "off";
+                break;
             case -2:    // -qq
                 level = scriptLevel = "warn";
                 break;
