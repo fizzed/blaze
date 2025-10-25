@@ -23,7 +23,7 @@ import java.lang.annotation.*;
 public @interface TaskGroup {
 
     int DEFAULT_ORDER = Integer.MAX_VALUE - 10;
-    int GENERAL_GROUP_ORDER = Integer.MAX_VALUE;
+    int OTHER_GROUP_ORDER = Integer.MAX_VALUE;
 
     String value() default "";
 

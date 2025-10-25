@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.cli;
 
-import com.fizzed.blaze.TaskGroup;
 import com.fizzed.blaze.Version;
 import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.internal.InstallHelper;
@@ -23,14 +22,9 @@ import com.fizzed.blaze.util.Timer;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.fizzed.blaze.util.TerminalHelper.greenCode;
-import static com.fizzed.blaze.util.TerminalHelper.resetCode;
-import static java.util.Optional.ofNullable;
 
 public class Bootstrap1 {
 
@@ -111,7 +105,7 @@ public class Bootstrap1 {
             Blaze blaze = this.buildBlaze(arguments, true);
 
             if (arguments.isListTasks()) {
-                this.logTasks(log, blaze);
+                this.printTasks(blaze);
                 System.exit(0);
                 return;
             }
@@ -127,7 +121,7 @@ public class Bootstrap1 {
                 } else {
                     log.error("You must specify one or more tasks to execute.");
                 }
-                this.logTasks(log, blaze);
+                this.printTasks(blaze);
                 System.exit(1);
             }
         } catch (MessageOnlyException | DependencyResolveException e) {
@@ -159,25 +153,45 @@ public class Bootstrap1 {
     //
     
     public void printVersion() {
-        System.out.println(getName() + ": v" + Version.getLongVersion());
-        System.out.println(" by Fizzed, Inc. (http://fizzed.com)");
-        System.out.println(" at https://github.com/fizzed/blaze");
+        System.out.println(getName() + " v" + Version.getLongVersion());
+        System.out.println("  by Fizzed, Inc. (http://fizzed.com)");
+        System.out.println("  at https://github.com/fizzed/blaze");
     }
     
     public void printHelp() {
-        System.out.println(getName() + ": [options] <task> [<task> ...]");
-        System.out.println("-f|--file <file>         Use this " + getName() + " file instead of default");
-        System.out.println("-d|--dir <dir>           Search this dir for " + getName() + " file instead of default (-f supercedes)");
-        System.out.println("-l|--list                Display list of available tasks");
-        System.out.println("-q                       Only log " + getName() + " warnings to stdout (script logging is still info level)");
-        System.out.println("-qq                      Only log warnings to stdout (including script logging)");
-        System.out.println("-x[x...]                 Increases verbosity of logging to stdout");
-        System.out.println("-v|--version             Display version and then exit");
-        System.out.println("-Dname=value             Sets a System property as name=value");
-        System.out.println("--generate-maven-project Generate a maven project pom.xml in the same dir as your blaze script for IDE support");
-        System.out.println("-i|--install <dir>       Install blaze or blaze.bat to directory");
+        // help will consist of printing the version
+        this.printVersion();
+        System.out.println();
+        System.out.println("Usage =>");
+        System.out.println("  " + getName() + " [options] <task> [arg ...] [<task> ...] [arg ...]");
+        System.out.println();
+        System.out.println("Options =>");
+        System.out.println("  -f|--file <file>           Use this " + getName() + " file instead of default");
+        System.out.println("  -d|--dir <dir>             Search this dir for " + getName() + " file instead of default (-f supercedes)");
+        System.out.println("  -l|--list                  Display list of available tasks");
+        System.out.println("  -q                         Only log " + getName() + " warnings to stdout (script logging is still info level)");
+        System.out.println("  -qq                        Only log warnings to stdout (including script logging)");
+        System.out.println("  -x[x...]                   Increases verbosity of logging to stdout");
+        System.out.println("  -v|--version               Display version and then exit");
+        System.out.println("  -Dname=value               Sets a System property as name=value");
+        System.out.println("  --generate-maven-project   Generate a maven project pom.xml in the same dir as your blaze script for IDE support");
+        System.out.println("  -i|--install <dir>         Install blaze or blaze.bat to directory");
+        System.out.println();
+        System.out.println("Tasks =>");
+        System.out.println("  Run with --list to display a list of available tasks");
+        System.out.println();
     }
-    
+
+    public void printTasks(Blaze blaze) {
+        final String taskListText = new TaskListRenderer().render(blaze);
+        System.out.println("Run and execute one or more tasks and their arguments.");
+        System.out.println();;
+        System.out.println("Usage =>");
+        System.out.println("  " + getName() + " <task> [arg ...] [<task> ...] [arg ...]");
+        System.out.println();
+        System.out.println(taskListText);       // taskListText ends in newline, so this also adds another newline
+    }
+
     public Blaze buildBlaze(BlazeArguments arguments, boolean buildScript) {
         return new Blaze.Builder()
             .file(arguments.getBlazeFile())
@@ -226,8 +240,10 @@ public class Bootstrap1 {
         // disable logging for zeroturnaround
         System.setProperty("org.slf4j.simpleLogger.log.org.zeroturnaround", "off");
     }
-    
-    public void logTasks(Logger log, Blaze blaze) {
+
+
+
+    /*public void logTasks(Logger log, Blaze blaze) {
         System.out.println("Run and execute one or more tasks.");
         System.out.println();
         System.out.println("Usage =>");
@@ -305,17 +321,6 @@ public class Bootstrap1 {
         }
 
         System.out.println();
-    }
-    
-    private static String padRight(String value, int width) {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(value);
-        
-        for (int i = 0; i < (width - value.length()); i++) {
-            sb.append(' ');
-        }
-        
-        return sb.toString();
-    }
+    }*/
+
 }

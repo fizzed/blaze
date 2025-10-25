@@ -2,6 +2,18 @@ package com.fizzed.blaze.util;
 
 public class TerminalHelper {
 
+    static public String padRight(String value, int width) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(value);
+
+        for (int i = 0; i < (width - value.length()); i++) {
+            sb.append(' ');
+        }
+
+        return sb.toString();
+    }
+
     static public void clearLinePrint() {
         System.out.print(clearLineCode());
     }
