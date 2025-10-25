@@ -11,13 +11,13 @@ public class BashCompleter extends Bootstrap1 {
 
     static public boolean isRequested(String[] args) {
         return args.length > 0 && (
-            args[0].equals("--_generate_completion") || args[0].equals("--_generate_completion_with_desc")
+            args[0].equals("--generate-completion") || args[0].equals("--generate-completion-with-desc")
         );
     }
 
     public void run(String[] args) {
         // should we include descriptions in the completion?
-        final boolean includeDescriptions = args.length > 1 && args[0].equals("--_generate_completion_with_desc");
+        final boolean includeDescriptions = args.length > 1 && args[0].equals("--generate-completion-with-desc");
 
         // the first argument needs removed, the remaining arguments are what is currently on the cli
         final List<String> cliArgs = Arrays.asList(args).subList(1, args.length);

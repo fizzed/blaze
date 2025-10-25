@@ -10,7 +10,7 @@ _blaze() {
     # 1. Run the SAME Java command to get suggestions
     #    "${(@f)...}" is a Zsh-specific trick to split the
     #    command's output by newline into an array.
-    suggestions=("${(@f)$(blaze --_generate_completion_with_desc $words)}")
+    suggestions=("${(@f)$(blaze --generate-completion-with-desc $words)}")
 
     # 2. 'compadd' is the Zsh command to add suggestions.
     #    -a tells it to treat 'suggestions' as an array.
