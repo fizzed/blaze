@@ -15,11 +15,9 @@
  */
 package com.fizzed.blaze.nashorn;
 
-import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.NoSuchTaskException;
-import com.fizzed.blaze.core.Script;
-import com.fizzed.blaze.core.BlazeTask;
+import com.fizzed.blaze.core.*;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,6 +57,12 @@ public class BlazeNashornScript implements Script {
         return tasks.stream()
             .map((t) -> new BlazeTask(t, null))
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BlazeTaskGroup> taskGroups() throws BlazeException {
+        // these can't be supported
+        return Collections.emptyList();
     }
 
     @Override

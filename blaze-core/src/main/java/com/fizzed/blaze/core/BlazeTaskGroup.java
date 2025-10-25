@@ -20,44 +20,30 @@ import com.fizzed.blaze.Task;
 import java.util.Objects;
 
 /**
- * Represents a task in a script.
+ * Represents a task group in a script.
  */
-public class BlazeTask implements Comparable<BlazeTask> {
+public class BlazeTaskGroup implements Comparable<BlazeTaskGroup> {
 
+    private final String id;
     private final String name;
-    private final String description;
     private final int order;
-    private final String group;
 
-    public BlazeTask(String name) {
-        this(name, null);
-    }
-
-    public BlazeTask(String name, String description) {
-        this(name, description, Task.DEFAULT_ORDER, null);
-    }
-
-    public BlazeTask(String name, String description, int order, String group) {
+    public BlazeTaskGroup(String id, String name, int order) {
+        this.id = id;
         this.name = name;
-        this.description = description;
         this.order = order;
-        this.group = group;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
     public int getOrder() {
         return order;
-    }
-
-    public String getGroup() {
-        return group;
     }
 
     @Override
@@ -68,7 +54,7 @@ public class BlazeTask implements Comparable<BlazeTask> {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 83 * hash + Objects.hashCode(this.name);
+        hash = 83 * hash + Objects.hashCode(this.id);
         return hash;
     }
 
@@ -83,15 +69,15 @@ public class BlazeTask implements Comparable<BlazeTask> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final BlazeTask other = (BlazeTask) obj;
-        if (!Objects.equals(this.name, other.name)) {
+        final BlazeTaskGroup other = (BlazeTaskGroup) obj;
+        if (!Objects.equals(this.id, other.id)) {
             return false;
         }
         return true;
     }
 
     @Override
-    public int compareTo(BlazeTask o) {
+    public int compareTo(BlazeTaskGroup o) {
         // by order, then name
         int compareTo = this.order - o.order;
         
@@ -101,4 +87,5 @@ public class BlazeTask implements Comparable<BlazeTask> {
         
         return compareTo;
     }
+
 }

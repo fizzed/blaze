@@ -29,5 +29,7 @@ public @interface Task {
     String value() default "";
         
     int order() default DEFAULT_ORDER;
+
+    String group() default "";
     
 }

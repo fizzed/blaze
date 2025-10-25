@@ -26,6 +26,9 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.fizzed.blaze.util.TerminalHelper.greenCode;
+import static com.fizzed.blaze.util.TerminalHelper.resetCode;
+
 public class Bootstrap1 {
 
     @SuppressWarnings("ThrowableResultIgnored")
@@ -222,22 +225,76 @@ public class Bootstrap1 {
     }
     
     public void logTasks(Logger log, Blaze blaze) {
-        System.out.println("tasks =>");
+        List<BlazeTaskGroup> gs = blaze.getTaskGroups();
+        List<BlazeTask> ts = blaze.getTasks();
         
-        List<BlazeTask> ts = blaze.tasks();
-        
-        // max width of task name
+        // calculate max width of task name
         int width = 0;
         for (BlazeTask t : ts) {
             width =  Math.max(t.getName().length(), width);
         }
-        
-        // output task name & description w/ padding
-        for (BlazeTask t : ts) {
-            if (t.getDescription() != null) {
-                System.out.println(" " + padRight(t.getName(), width+10) + t.getDescription());
-            } else {
-                System.out.println(" " + t.getName());
+
+        // group mode?
+        if (!gs.isEmpty()) {
+            // do any tasks have a group which we don't know about?
+            for (BlazeTask t : ts) {
+                if (t.getGroup() != null && !gs.stream().anyMatch(g -> g.getId().equals(t.getGroup()))) {
+                    log.warn("Task [{}] has unknown group [{}].", t.getName(), t.getGroup());
+                    // add the group to the list
+                    gs.add(new BlazeTaskGroup(t.getGroup(), null, 0));
+                }
+            }
+
+            // are there any groups we don't need?
+            List<String> groupIdsToRemove = new ArrayList<>();
+            group_remove_search:
+            for (BlazeTaskGroup g : gs) {
+                for (BlazeTask t : ts) {
+                    if (g.getId().equals(t.getGroup())) {
+                        continue group_remove_search;
+                    }
+                }
+                // if we get here, this group is irrelevant
+                groupIdsToRemove.add(g.getId());
+            }
+
+            for (String id : groupIdsToRemove) {
+                log.warn("Task group [{}] is not needed - no tasks use it.", id);
+                gs.removeIf(g -> g.getId().equals(id));
+            }
+
+            // do we need to add the default group? if any tasks are missing a group id, we need the default one
+            if (ts.stream().anyMatch(t -> t.getGroup() == null)) {
+                gs.add(new BlazeTaskGroup("__default__", "Default", 0));
+            }
+
+            // sort the groups by order
+            Collections.sort(gs);
+
+            for (BlazeTaskGroup g : gs) {
+                System.out.println(g.getName() + " tasks =>");
+                for (BlazeTask t : ts) {
+                    final String group = t.getGroup() != null ? t.getGroup() : "__default__";
+                    if (g.getId().equals(group)) {
+                        if (t.getDescription() != null) {
+                            System.out.println("  " + padRight(t.getName(), width + 10) + t.getDescription());
+                        } else {
+                            System.out.println("  " + t.getName());
+                        }
+                    }
+                }
+            }
+        } else {
+            // non-group mode
+            System.out.println("Tasks =>");
+
+            // output task name & description w/ padding
+            for (BlazeTask t : ts) {
+                if (t.getDescription() != null) {
+                    System.out.println("  " + padRight(t.getName(), width+10) + t.getDescription());
+                } else {
+                    System.out.println("  " + t.getName());
+                }
             }
         }
     }

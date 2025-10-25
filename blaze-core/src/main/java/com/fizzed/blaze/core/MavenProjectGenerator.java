@@ -85,10 +85,10 @@ public class MavenProjectGenerator {
     }
 
     public void generate() throws IOException {
-        final Path scriptFile = this.blaze.context().scriptFile().toAbsolutePath();
+        final Path scriptFile = this.blaze.getContext().scriptFile().toAbsolutePath();
 
         // control the source and target we put into the maven project
-        final int javaMajorVersion = ConfigHelper.getJavaSourceVersion(this.blaze.context());
+        final int javaMajorVersion = ConfigHelper.getJavaSourceVersion(this.blaze.getContext());
 //        final String sourceVersion = this.blaze.context().config().value("maven.project.source.version").orElse("8");
 //        final String targetVersion = this.blaze.context().config().value("maven.project.target.version").orElse("8");
 
@@ -97,7 +97,7 @@ public class MavenProjectGenerator {
             this.pomFile = scriptFile.getParent().resolve("pom.xml");
         }
 
-        final List<Dependency> dependencies = this.blaze.dependencies();
+        final List<Dependency> dependencies = this.blaze.getDependencies();
 
         log.info("########################################################");
         log.info("");

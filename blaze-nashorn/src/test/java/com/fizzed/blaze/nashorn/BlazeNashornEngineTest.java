@@ -21,7 +21,6 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.NoSuchTaskException;
 //import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
-import com.fizzed.blaze.core.Dependency;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
 import java.io.File;
 import java.util.Arrays;
@@ -33,8 +32,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
@@ -124,7 +122,7 @@ public class BlazeNashornEngineTest {
             .file(resourceAsFile("/nashorn/new_default_task.js"))
             .build();
         
-        assertThat(blaze.context().config().value(Config.KEY_DEFAULT_TASK).get(), is("blaze"));
+        assertThat(blaze.getContext().config().value(Config.KEY_DEFAULT_TASK).get(), is("blaze"));
         
         systemOutRule.clearLog();
         
@@ -156,7 +154,7 @@ public class BlazeNashornEngineTest {
         
         systemOutRule.clearLog();
         
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         log.debug("tasks: {}", tasks);
         

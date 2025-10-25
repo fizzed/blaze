@@ -16,11 +16,9 @@
 package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Task;
-import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.NoSuchTaskException;
-import com.fizzed.blaze.core.Script;
-import com.fizzed.blaze.core.BlazeTask;
-import com.fizzed.blaze.core.WrappedBlazeException;
+import com.fizzed.blaze.TaskGroup;
+import com.fizzed.blaze.core.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -53,6 +51,22 @@ public class TargetObjectScript implements Script {
         this.targetObject = targetObject;
     }
 
+    public List<BlazeTaskGroup> findTaskGroups() throws BlazeException {
+        List<BlazeTaskGroup> groups = new ArrayList<>();
+
+        try {
+            final TaskGroup[] taskGroups = targetObject.getClass().getAnnotationsByType(TaskGroup.class);
+
+            for (TaskGroup taskGroup : taskGroups) {
+                groups.add(new BlazeTaskGroup(taskGroup.value(), taskGroup.name(), taskGroup.order()));
+            }
+        } catch (SecurityException e) {
+            throw new BlazeException("Unable to detect script task groups", e);
+        }
+
+        return groups;
+    }
+
     public List<BlazeTask> findTasks(Predicate<Method>... filters) throws BlazeException {
         List<BlazeTask> tasks = new ArrayList<>();
         
@@ -75,7 +89,8 @@ public class TargetObjectScript implements Script {
                 Task task = m.getAnnotation(Task.class);
                 if (task != null) {
                     final String description = ofNullable(task.value()).filter(v -> !v.trim().isEmpty()).orElse(null);
-                    tasks.add(new BlazeTask(name, description, task.order()));
+                    final String group = ofNullable(task.group()).filter(v -> !v.trim().isEmpty()).orElse(null);
+                    tasks.add(new BlazeTask(name, description, task.order(), group));
                 } else {
                     tasks.add(new BlazeTask(name));
                 }
@@ -116,10 +131,15 @@ public class TargetObjectScript implements Script {
             throw new WrappedBlazeException(e);
         }
     }
-    
+
+    @Override
+    public List<BlazeTaskGroup> taskGroups() throws BlazeException {
+        return this.findTaskGroups();
+    }
+
     @Override
     public List<BlazeTask> tasks() throws BlazeException {
-        return findTasks(FILTER_OBJECT_INSTANCE_METHOD, FILTER_PUBLIC_INSTANCE_METHOD);
+        return this.findTasks(FILTER_OBJECT_INSTANCE_METHOD, FILTER_PUBLIC_INSTANCE_METHOD);
     }
 
     @Override

@@ -96,7 +96,7 @@ public class BlazeGroovyEngineTest {
         
         systemOutRule.clearLog();
         
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         log.debug("tasks: {}", tasks);
         

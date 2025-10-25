@@ -351,23 +351,32 @@ public class Blaze {
         this.script = script;
     }
 
-    public Context context() {
-        return context;
+    public Context getContext() {
+        return this.context;
     }
 
-    public List<Dependency> dependencies() {
-        return dependencies;
+    public List<Dependency> getDependencies() {
+        return this.dependencies;
     }
     
-    public Engine engine() {
+    public Engine getEngine() {
         return engine;
     }
 
-    public Script script() {
+    public Script getScript() {
         return script;
     }
-    
-    public List<BlazeTask> tasks() throws BlazeException {
+
+    public List<BlazeTaskGroup> getTaskGroups() throws BlazeException {
+        final List<BlazeTaskGroup> taskGroups = this.script.taskGroups();
+
+        // sort strategy (alphabetical by default)
+        Collections.sort(taskGroups);
+
+        return taskGroups;
+    }
+
+    public List<BlazeTask> getTasks() throws BlazeException {
         final List<BlazeTask> tasks = this.script.tasks();
         
         // sort strategy (alphabetical by default)
@@ -401,7 +410,7 @@ public class Blaze {
             this.execute(null);
         } else {
             // validate all the tasks exist before trying to execute any of them
-            final List<BlazeTask> validTasks = this.tasks();
+            final List<BlazeTask> validTasks = this.getTasks();
             for (String task : tasks) {
                 if (!validTasks.stream().anyMatch(t -> t.getName().equals(task))) {
                     throw new NoSuchTaskException(task);

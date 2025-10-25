@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Fizzed, Inc.
+ * Copyright 2016 Fizzed, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.blaze.core;
+package com.fizzed.blaze;
 
-import java.util.List;
+import java.lang.annotation.*;
 
-public interface Script {
-
-    List<BlazeTaskGroup> taskGroups() throws BlazeException;
-
-    List<BlazeTask> tasks() throws BlazeException;
-    
-    void execute(String task) throws Exception;
-    
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface TaskGroups {
+    TaskGroup[] value();
 }

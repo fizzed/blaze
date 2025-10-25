@@ -1,6 +1,5 @@
 package com.fizzed.blaze.cli;
 
-import com.fizzed.blaze.Task;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.core.BlazeArguments;
 import com.fizzed.blaze.core.BlazeTask;
@@ -32,7 +31,7 @@ public class BashCompleter extends Bootstrap1 {
         // try to build & compile the blaze script, so we  can get a list of tasks
         final Blaze blaze = this.buildBlaze(arguments, true);
 
-        for (BlazeTask task : blaze.tasks()) {
+        for (BlazeTask task : blaze.getTasks()) {
             if (includeDescriptions && task.getDescription() != null) {
                 System.out.println(task.getName() + " - " + task.getDescription());
             } else {
