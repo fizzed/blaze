@@ -75,8 +75,7 @@ public class BlazeKotlinEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() +
-            " main"));
+        assertThat(result.outputUTF8().replaceAll("\r\n", "\n"), containsString("tasks =>\n  main"));
     }
     
 }

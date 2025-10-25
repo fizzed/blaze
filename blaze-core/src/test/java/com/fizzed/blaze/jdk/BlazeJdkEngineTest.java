@@ -76,7 +76,7 @@ public class BlazeJdkEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() + " main"));
+        assertThat(result.outputUTF8(), containsString("tasks =>\n  main"));
     }
     
     @Test
@@ -167,7 +167,7 @@ public class BlazeJdkEngineTest {
 
         final String output = result.outputUTF8();
         assertThat(output.contains("'main' not found"), is(false));
-        assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n test"));
+        assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n  test"));
     }
 
     @Test
@@ -182,7 +182,7 @@ public class BlazeJdkEngineTest {
         // this prints out from test which should NOT run if any task is missing
         assertThat(output.contains("arg1 = 1"), is(false));
         assertThat(output, containsString("'notexist' not found"));
-        assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n test"));
+        assertThat(output.replaceAll("\r\n", "\n"), containsString("tasks =>\n  test"));
     }
 
 }
