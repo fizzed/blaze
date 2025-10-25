@@ -167,7 +167,7 @@ public class Bootstrap1 {
         System.out.println();
         System.out.println("Options =>");
         System.out.println("  -f|--file <file>           Use this " + getName() + " file instead of default");
-        System.out.println("  -d|--dir <dir>             Search this dir for " + getName() + " file instead of default (-f supercedes)");
+        System.out.println("  -d|--dir <dir>             Search this dir for " + getName() + " file instead of default (-f supersedes)");
         System.out.println("  -l|--list                  Display list of available tasks");
         System.out.println("  -q                         Only log " + getName() + " warnings to stdout (script logging is still info level)");
         System.out.println("  -qq                        Only log warnings to stdout (including script logging)");
