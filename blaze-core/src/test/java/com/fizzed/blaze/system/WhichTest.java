@@ -28,11 +28,11 @@ import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.spy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class WhichTest {
     Config config;
     ContextImpl context;
     
-    @Before
+    @BeforeEach
     public void setup() {
         config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
@@ -64,7 +64,7 @@ public class WhichTest {
     
     @Test
     public void worksOnWindows() throws Exception {
-        assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
+        assumeTrue(ConfigHelper.OperatingSystem.windows(), "Test only valid on windows");
 
         Path f = new Which(context)
             .command("cmd")
@@ -79,7 +79,7 @@ public class WhichTest {
 
     @Test
     public void worksOnWindowsForPs1() throws Exception {
-        assumeTrue("Test only valid on windows", ConfigHelper.OperatingSystem.windows());
+        assumeTrue(ConfigHelper.OperatingSystem.windows(), "Test only valid on windows");
 
         Path f = new Which(context)
             .command("hello-world-test2")
@@ -95,7 +95,7 @@ public class WhichTest {
     
     @Test
     public void worksOnUnix() throws Exception {
-        assumeTrue("Test only valid on unix or mac", ConfigHelper.OperatingSystem.unix() || ConfigHelper.OperatingSystem.mac());
+        assumeTrue(ConfigHelper.OperatingSystem.unix() || ConfigHelper.OperatingSystem.mac(), "Test only valid on unix or mac");
 
         Path f = new Which(context)
             .command("ls")

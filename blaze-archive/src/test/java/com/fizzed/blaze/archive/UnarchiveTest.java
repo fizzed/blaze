@@ -5,8 +5,8 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +26,7 @@ public class UnarchiveTest {
     ContextImpl context;
     Path targetDir;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));

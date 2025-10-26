@@ -18,11 +18,9 @@ package com.fizzed.blaze.util;
 import com.fizzed.blaze.util.MutableUri;
 import java.net.URI;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
+import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  *

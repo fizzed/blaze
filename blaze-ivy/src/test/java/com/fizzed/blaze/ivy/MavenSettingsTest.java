@@ -19,8 +19,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.jupiter.api.Test;
 
 public class MavenSettingsTest {
  

@@ -18,7 +18,8 @@ package com.fizzed.blaze.docker;
 import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.system.Which;
 import java.nio.file.Path;
-import org.junit.Assume;
+
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DockerTestHelper {
  
@@ -28,7 +29,7 @@ public class DockerTestHelper {
             .command("docker")
             .run();
         
-        Assume.assumeTrue("docker is present", which != null);
+        assumeTrue(which != null, "docker is present");
     }
     
 }

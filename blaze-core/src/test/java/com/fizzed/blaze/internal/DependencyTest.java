@@ -20,13 +20,10 @@ import java.util.HashSet;
 import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-/**
- *
- * @author joelauer
- */
+import org.junit.jupiter.api.Test;
+
 public class DependencyTest {
     
     @Test

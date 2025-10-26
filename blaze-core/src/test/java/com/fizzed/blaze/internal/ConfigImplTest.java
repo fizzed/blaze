@@ -2,13 +2,13 @@ package com.fizzed.blaze.internal;
 
 import com.fizzed.blaze.Config;
 import com.fizzed.crux.util.Maps;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.NoSuchElementException;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ConfigImplTest {
 

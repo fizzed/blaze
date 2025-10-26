@@ -26,24 +26,22 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.PublicKey;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.sshd.server.SshServer;
-import org.apache.sshd.server.auth.AsyncAuthException;
-import org.apache.sshd.server.auth.pubkey.PublickeyAuthenticator;
 import org.apache.sshd.server.channel.ChannelSession;
-import org.apache.sshd.server.command.Command;
-import org.apache.sshd.server.command.CommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import org.junit.After;
-import static org.junit.Assert.assertThat;
-import org.junit.Before;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.spy;
 
 /**
@@ -59,7 +57,7 @@ public class SshBaseTest {
     SshServer sshd;
     SshCommandHandler commandHandler;
     
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         File sshdTestTxtFile = FileHelper.resourceAsFile("/sshd/ssh-test.txt");
         File sshdTestDir = sshdTestTxtFile.getParentFile();
@@ -91,7 +89,7 @@ public class SshBaseTest {
         });
     }
     
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         try {
             sshd.stop(true);

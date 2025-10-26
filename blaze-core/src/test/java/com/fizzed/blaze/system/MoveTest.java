@@ -1,11 +1,10 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.DirectoryNotEmptyException;
 import com.fizzed.blaze.core.FileNotFoundException;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,53 +13,62 @@ import java.nio.file.Path;
 import static com.fizzed.blaze.util.Globber.globber;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MoveTest extends TestAbstractBase {
 
     Path testMoveDir;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.testMoveDir = this.createDir(targetDir.resolve("move-test"));
     }
 
-    @Test(expected=FileNotFoundException.class)
+    @Test
     public void fileToFileFailsIfSourceDoesNotExist() {
-        new Move(this.context)
-            .sources(this.testMoveDir.resolve("notexist"))
-            .target(this.testMoveDir)
-            .run();
+        assertThrows(FileNotFoundException.class, () -> {
+            new Move(this.context)
+                .sources(this.testMoveDir.resolve("notexist"))
+                .target(this.testMoveDir)
+                .run();
+        });
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void fileToFileFailsToSameFile() throws Exception {
         final Path sourceFile = createFile(this.testMoveDir.resolve("fileToFileFailsToSameFile.txt"));
 
-        new Move(this.context)
-            .sources(sourceFile)
-            .target(sourceFile)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(sourceFile)
+                .target(sourceFile)
+                .run();
+        });
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void fileToFileFailsToSameFileEvenIfForced() throws Exception {
         final Path sourceFile = createFile(this.testMoveDir.resolve("fileToFileFailsToSameFileEvenIfForced.txt"));
 
-        new Move(this.context)
-            .sources(sourceFile)
-            .target(sourceFile)
-            .force()
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(sourceFile)
+                .target(sourceFile)
+                .force()
+                .run();
+        });
     }
 
-    @Test(expected= BlazeException.class)
+    @Test
     public void fileToDirFailsToSameFile() throws Exception {
         final Path sourceFile = createFile(this.testMoveDir.resolve("fileToDirFailsToSameFile.txt"));
 
-        new Move(this.context)
-            .sources(sourceFile)
-            .target(sourceFile.getParent())
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(sourceFile)
+                .target(sourceFile.getParent())
+                .run();
+        });
     }
 
     @Test
@@ -81,16 +89,18 @@ public class MoveTest extends TestAbstractBase {
         assertThat(Files.exists(targetFile), is(true));
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void fileToFileFailsIfAlreadyExists() throws Exception {
         final Path sourceFile = createFile(this.testMoveDir.resolve("fileToFileFailsIfAlreadyExists.txt"));
         final Path targetDir = createDir(this.testMoveDir.resolve("fileToFileFailsIfAlreadyExists"));
         final Path targetFile = createFile(targetDir.resolve("exists.txt"));
 
-        new Move(this.context)
-            .sources(sourceFile)
-            .target(targetFile)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(sourceFile)
+                .target(targetFile)
+                .run();
+        });
 
         assertThat(Files.exists(sourceFile), is(true));
         assertThat(Files.exists(targetFile), is(true));
@@ -135,29 +145,33 @@ public class MoveTest extends TestAbstractBase {
         assertThat(Files.exists(targetFile), is(true));
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void dirToDirFailsIfTargetExistsAsFile() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
         final Path sourceDir = createDir(this.testMoveDir.resolve("dirToDirFailsIfTargetExistsAsFile"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
         final Path targetFile = createFile(this.testMoveDir.resolve("dirToDirFailsIfTargetExistsAsFileToMoveTo"));
 
-        new Move(this.context)
-            .sources(sourceDir)
-            .target(targetFile)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(sourceDir)
+                .target(targetFile)
+                .run();
+        });
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void dirToDirFailsIfTargetIsSameDirectory() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
         final Path sourceDir = createDir(this.testMoveDir.resolve("dirToDirFailsIfTargetIsSameDirectory"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
 
-        new Move(this.context)
-            .sources(sourceDir)
-            .target(sourceDir)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(sourceDir)
+                .target(sourceDir)
+                .run();
+        });
     }
 
     @Test
@@ -185,15 +199,17 @@ public class MoveTest extends TestAbstractBase {
     }
 
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void globCopyFailsIfNoneFound() throws Exception {
         final Path sourceDir = createDir(this.testMoveDir.resolve("glob"));
         final Path targetDir = createDir(this.testMoveDir.resolve("globTo"));
 
-        new Move(this.context)
-            .sources(globber(sourceDir, "*.{java,js}"))
-            .target(targetDir)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Move(this.context)
+                .sources(globber(sourceDir, "*.{java,js}"))
+                .target(targetDir)
+                .run();
+        });
     }
 
     @Test

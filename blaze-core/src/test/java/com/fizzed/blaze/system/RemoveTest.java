@@ -2,29 +2,32 @@ package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.core.DirectoryNotEmptyException;
 import com.fizzed.blaze.core.FileNotFoundException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RemoveTest extends TestAbstractBase {
 
     private Path testRemoveDir;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.testRemoveDir = this.createDir(this.targetDir.resolve("remove-test"));
     }
 
-    @Test(expected=FileNotFoundException.class)
+    @Test
     public void removeFileNotFound() {
-        new Remove(this.context)
-            .path(this.testRemoveDir.resolve("notexist"))
-            .run();
+        assertThrows(FileNotFoundException.class, () -> {
+            new Remove(this.context)
+                .path(this.testRemoveDir.resolve("notexist"))
+                .run();
+        });
     }
 
     @Test
@@ -48,18 +51,20 @@ public class RemoveTest extends TestAbstractBase {
         assertThat(Files.exists(file), is(false));
     }
 
-    @Test(expected=DirectoryNotEmptyException.class)
+    @Test
     public void removeDirRecursiveDisabled() throws Exception {
-        final Path dir = this.createDir(this.testRemoveDir.resolve("removeDirRecursiveDisabled"));
-        final Path file = this.createFile(dir.resolve("test.txt"));
+        assertThrows(DirectoryNotEmptyException.class, () -> {
+            final Path dir = this.createDir(this.testRemoveDir.resolve("removeDirRecursiveDisabled"));
+            final Path file = this.createFile(dir.resolve("test.txt"));
 
-        assertThat(Files.exists(file), is(true));
+            assertThat(Files.exists(file), is(true));
 
-        new Remove(this.context)
-            .path(dir)
-            .run();
+            new Remove(this.context)
+                .path(dir)
+                .run();
 
-        assertThat(Files.exists(file), is(false));
+            assertThat(Files.exists(file), is(false));
+        });
     }
 
     @Test
@@ -79,18 +84,20 @@ public class RemoveTest extends TestAbstractBase {
         assertThat(Files.exists(dir), is(false));
     }
 
-    @Test(expected=FileNotFoundException.class)
+    @Test
     public void removeDirRecursiveNotExists() throws Exception {
-        final Path dir = this.testRemoveDir.resolve("dirnotexist");
+        assertThrows(FileNotFoundException.class, () -> {
+            final Path dir = this.testRemoveDir.resolve("dirnotexist");
 
-        assertThat(Files.exists(dir), is(false));
+            assertThat(Files.exists(dir), is(false));
 
-        new Remove(this.context)
-            .path(dir)
-            .recursive()
-            .run();
+            new Remove(this.context)
+                .path(dir)
+                .recursive()
+                .run();
 
-        assertThat(Files.exists(dir), is(false));
+            assertThat(Files.exists(dir), is(false));
+        });
     }
 
     @Test

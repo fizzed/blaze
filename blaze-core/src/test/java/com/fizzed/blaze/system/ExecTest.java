@@ -30,37 +30,39 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
-import java.util.Objects;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 public class ExecTest {
     private static final Logger log = LoggerFactory.getLogger(ExecTest.class);
-    
+
     Config config;
     ContextImpl context;
-    
-    @Before
+
+    @BeforeEach
     public void setup() {
         config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
     }
-    
-    @Test(expected=ExecutableNotFoundException.class)
+
+    @Test
     public void notFind() throws Exception {
-        new LocalExec(context)
-            .command("thisdoesnotexist")
-            .run();
+        assertThrows(ExecutableNotFoundException.class, () -> {
+            new LocalExec(context)
+                .command("thisdoesnotexist")
+                .run();
+        });
     }
-    
+
     @Test
     public void works() throws Exception {
         Integer exitValue
@@ -69,10 +71,10 @@ public class ExecTest {
                 .path(getBinDirAsResource())
                 .verbose()
                 .run();
-        
+    
         assertThat(exitValue, is(0));
     }
-    
+
     @Test
     public void nullInputAndOutputs() throws Exception {
         Integer exitValue
@@ -83,17 +85,17 @@ public class ExecTest {
                 .pipeOutput((StreamableOutput)null)
                 .pipeError((StreamableOutput)null)
                 .run();
-        
+    
         assertThat(exitValue, is(0));
     }
-    
+
     @Test
     public void customInputAndOutputs() throws Exception {
         // custom input and outputs
         InputStream in = spy(new ByteArrayInputStream(new byte[0]));
         OutputStream out = spy(new ByteArrayOutputStream());
         OutputStream err = spy(new ByteArrayOutputStream());
-        
+    
         new LocalExec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
@@ -101,26 +103,26 @@ public class ExecTest {
             .pipeOutput(out)
             .pipeError(err)
             .run();
-        
+    
         // verify all streams were closed
         verify(in, atLeast(1)).close();
         verify(out, atLeast(1)).close();
         verify(err, atLeast(1)).close();
     }
-    
+
     @Test
     public void captureOutput() throws Exception {
         CaptureOutput capture = Streamables.captureOutput();
-        
+    
         new LocalExec(context)
             .command("hello-world-test")
             .path(getBinDirAsResource())
             .pipeInput(Streamables.standardInput())
             .pipeOutput(capture)
             .run();
-            
-        String output = capture.asString();
         
+        String output = capture.asString();
+    
         assertThat(output.trim(), is("Hello World 7586930100"));
     }
 
@@ -139,21 +141,21 @@ public class ExecTest {
 
         assertThat(output.trim(), is("Hello World 5624112309877"));
     }
-    
+
     @Test
     public void customInput() throws Exception {
         CaptureOutput capture = Streamables.captureOutput();
-        
+    
         new LocalExec(context)
             .command("tee")
             .path(getBinDirAsResource())
             .pipeInput(Streamables.input("hello dude"))
             .pipeOutput(capture)
             .run();
-            
-        String output = capture.asString();
         
+        String output = capture.asString();
+    
         assertThat(output.trim(), is("hello dude"));
     }
-    
+
 }

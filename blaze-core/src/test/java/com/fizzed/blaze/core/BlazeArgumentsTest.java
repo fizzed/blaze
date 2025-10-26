@@ -1,20 +1,16 @@
-// File: BlazeArgumentsTest.java
 package com.fizzed.blaze.core;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the {@link BlazeArguments#parse(List)} method.
- * This method parses command-line arguments and sets corresponding fields in the BlazeArguments object.
- */
 public class BlazeArgumentsTest {
 
     @Test

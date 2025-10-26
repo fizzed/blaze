@@ -28,10 +28,11 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
-import org.junit.Ignore;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,7 +199,7 @@ public class SshConnectTest extends SshBaseTest {
         assertThat(prompter.answers(), hasSize(0));
     }
     
-    @Test @Ignore
+    @Test @Disabled
     public void userPublicKeyAuth() throws Exception {
         Path publicKeyUserDir = context.userDir().resolve("public_key");
         context.userDir(publicKeyUserDir);
@@ -233,7 +234,7 @@ public class SshConnectTest extends SshBaseTest {
         assertThat(prompter.answers(), hasSize(0));
     }
     
-    @Test @Ignore
+    @Test @Disabled
     public void suppliedPublicKeyAuth() throws Exception {
         contextWithEmptyUserDir();
         

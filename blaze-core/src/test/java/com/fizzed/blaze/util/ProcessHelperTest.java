@@ -4,7 +4,7 @@ import com.fizzed.crux.util.Resources;
 import com.fizzed.crux.util.WaitFor;
 import com.fizzed.jne.OperatingSystem;
 import com.fizzed.jne.PlatformInfo;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;

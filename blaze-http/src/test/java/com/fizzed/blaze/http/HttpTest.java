@@ -10,9 +10,8 @@ import com.fizzed.crux.util.TemporaryPath;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import okio.Buffer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +28,7 @@ public class HttpTest {
     private ContextImpl context;
     private MockWebServer mockWebServer;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.config = ConfigHelper.createEmpty();
         this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));

@@ -19,29 +19,27 @@ import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.MutableUri;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 public class DockerExecTest {
  
     @Test
     public void noDockerContainer() {
         DockerTestHelper.assumeDockerIsPresent();
-        
+    
         DockerSession session = new DockerSession(Contexts.currentContext(), new MutableUri("docker://nosuchcontainer"));
-        
-        try {
-            String output = session.newExec()
+    
+        BlazeException exception = assertThrows(BlazeException.class, () -> {
+            session.newExec()
                 .command("bash")
                 .runCaptureOutput()
                 .asString();
-            
-            fail();
-        }
-        catch (BlazeException e) {
-            assertThat(e.getMessage(), containsString("is not running"));
-        }
+        });
+        
+        assertThat(exception.getMessage(), containsString("is not running"));
     }
-    
+
 }

@@ -20,12 +20,12 @@ import com.fizzed.blaze.local.LocalExec;
 import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
 import com.fizzed.blaze.util.CaptureOutput;
 import com.fizzed.blaze.util.Streamables;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ExecCaptureOutputTest {
     private static final Logger log = LoggerFactory.getLogger(ExecCaptureOutputTest.class);

@@ -19,8 +19,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 public class BytePipeTest {
     
