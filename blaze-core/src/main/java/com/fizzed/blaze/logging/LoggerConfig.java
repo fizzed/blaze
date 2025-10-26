@@ -10,8 +10,12 @@ public class LoggerConfig {
     // --- Configuration Storage ---
 
     // Stores configured log levels. Key is the logger name (e.g., "com.example.MyClass")
-    private static final Map<String, LogLevel> LEVEL_CONFIG = new ConcurrentHashMap<>();
-    private static LogLevel defaultLevel = LogLevel.INFO;
+    static private final Map<String,LogLevel> LEVEL_CONFIG = new ConcurrentHashMap<>();
+    static private LogLevel defaultLevel = LogLevel.INFO;
+    static private boolean displayDateTime = true;
+    static private boolean displayThreadName = true;
+    static private boolean displayAnsiColors = true;
+    static private boolean displayLoggerName = true;
 
     // --- Listener for config changes ---
 
@@ -104,6 +108,42 @@ public class LoggerConfig {
 
         // 4. Use default
         return defaultLevel;
+    }
+
+    public static boolean isDisplayDateTime() {
+        return displayDateTime;
+    }
+
+    public static void setDisplayDateTime(boolean displayDateTime) {
+        LoggerConfig.displayDateTime = displayDateTime;
+        notifyListener();
+    }
+
+    public static boolean isDisplayThreadName() {
+        return displayThreadName;
+    }
+
+    public static void setDisplayThreadName(boolean displayThreadName) {
+        LoggerConfig.displayThreadName = displayThreadName;
+        notifyListener();
+    }
+
+    public static boolean isDisplayAnsiColors() {
+        return displayAnsiColors;
+    }
+
+    public static void setDisplayAnsiColors(boolean displayAnsiColors) {
+        LoggerConfig.displayAnsiColors = displayAnsiColors;
+        notifyListener();
+    }
+
+    public static boolean isDisplayLoggerName() {
+        return displayLoggerName;
+    }
+
+    public static void setDisplayLoggerName(boolean displayLoggerName) {
+        LoggerConfig.displayLoggerName = displayLoggerName;
+        notifyListener();
     }
 
     private static void notifyListener() {

@@ -8,6 +8,7 @@ import org.slf4j.helpers.AbstractLogger;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.io.PrintStream;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -19,8 +20,8 @@ public class LoggerFactory implements ILoggerFactory {
     private final Map<String, SimpleLogger> loggerMap = new ConcurrentHashMap<>();
 
     // Formatter for the timestamp
-    private static final DateTimeFormatter DATE_FORMATTER =
-        DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault());
+//    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
 
     public LoggerFactory() {
         // Register a listener to config changes
@@ -98,11 +99,11 @@ public class LoggerFactory implements ILoggerFactory {
          */
         @Override
         protected void handleNormalizedLoggingCall(
-            Level level,
-            org.slf4j.Marker marker, // We ignore markers
-            String messagePattern,
-            Object[] arguments,
-            Throwable throwable) {
+                Level level,
+                org.slf4j.Marker marker, // We ignore markers
+                String messagePattern,
+                Object[] arguments,
+                Throwable throwable) {
 
             // 1. Convert to our internal level (for color, etc.)
             LogLevel myLevel = LogLevel.fromSlf4jLevel(level);
@@ -113,25 +114,36 @@ public class LoggerFactory implements ILoggerFactory {
 
             // 3. Get the right color and output stream
             String color = myLevel.getColor();
+
             //PrintStream out = (myLevel.getLevelInt() >= LogLevel.WARN.getLevelInt()) ? errorStream : outputStream;
             PrintStream out = System.out;
 
             // 4. Build the final log string
             // [Timestamp] [Thread] LEVEL [LoggerName] - Message
             StringBuilder sb = new StringBuilder();
-            //sb.append(color); // Start color
-            //sb.append(DATE_FORMATTER.format(Instant.now()));
-            //sb.append(" [");
-            //sb.append(Thread.currentThread().getName());
-            //sb.append("] ");
-            sb.append("[");
-            sb.append(color);                   // start color
-            sb.append(String.format("%-5s", myLevel.name())); // "INFO ", "ERROR"
-            sb.append(LogLevel.ANSI_RESET);     // end color
-            sb.append("] ");
-            //sb.append(" [");
-            //sb.append(this.shortName);
-            //sb.append("] - ");
+            if (LoggerConfig.isDisplayDateTime()) {
+                sb.append(DATE_FORMATTER.format(Instant.now()));
+            }
+
+            sb.append(" [");
+            if (LoggerConfig.isDisplayAnsiColors()) sb.append(color);                           // start color
+            sb.append(String.format("%-4s", myLevel.getLogName())); // "INFO ", "ERROR"
+            if (LoggerConfig.isDisplayAnsiColors()) sb.append(LogLevel.ANSI_RESET);             // end color
+            sb.append("]");
+
+            if (LoggerConfig.isDisplayThreadName()) {
+                sb.append(" [");
+                sb.append(Thread.currentThread().getName());
+                sb.append("]");
+            }
+
+            if (LoggerConfig.isDisplayLoggerName()) {
+                sb.append(" [");
+                sb.append(this.shortName);
+                sb.append("]");
+            }
+
+            sb.append(" ");
             sb.append(formattedMessage);
 
             // 5. Print it!
