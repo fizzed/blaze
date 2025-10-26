@@ -33,18 +33,23 @@ import org.slf4j.Logger;
 public class blaze extends PublicBlaze {
     static private final Logger log = Contexts.logger();
 
-    @Task(group="project")
+    @Task(group="project", order=1, value="Hello, world! example")
     public void hello() {
         log.info("Hello, world!");
     }
 
-    @Task(group="project", order=1, value="Try all scripts in examples/ dir")
+    @Task(group="project", order=2, value="Try all scripts in examples/ dir")
     public void try_all() throws Exception {
         // execute another blaze script in this jvm
         new Blaze.Builder()
             .file(withBaseDir("../examples/try_all.java"))
             .build()
             .execute();
+    }
+
+    @Task(group="project", order=3, value="Run unit tests across all LTS Java releases")
+    public void jdk_tests() throws Exception {
+        super.jdk_tests();
     }
 
     @Override
