@@ -1,7 +1,7 @@
 package com.fizzed.blaze.util;
 
 import com.fizzed.jne.JavaVersion;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

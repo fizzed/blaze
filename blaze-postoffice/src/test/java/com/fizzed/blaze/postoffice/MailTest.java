@@ -10,17 +10,16 @@ import com.icegreen.greenmail.util.ServerSetup;
 import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.spy;
 
 public class MailTest {
@@ -30,18 +29,18 @@ public class MailTest {
     private ContextImpl context;
 
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         this.greenMail = new GreenMail(ServerSetup.SMTP
             .dynamicPort());
         this.greenMail.withConfiguration(new GreenMailConfiguration()
             );
         this.greenMail.start();
-        this.config = ConfigHelper.create(null);
+        this.config = ConfigHelper.createEmpty();
         this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.greenMail.stop();
     }

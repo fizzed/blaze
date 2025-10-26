@@ -21,7 +21,7 @@ import com.fizzed.blaze.internal.ContextImpl;
 public class DefaultContext extends ContextImpl {
     
     public DefaultContext() {
-        super(null, null, null, ConfigHelper.create(null));
+        super(null, null, null, ConfigHelper.create(false, null, null));
     }
     
 }

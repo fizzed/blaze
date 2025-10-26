@@ -15,13 +15,13 @@
  */
 package com.fizzed.blaze.internal;
 
-import com.fizzed.blaze.internal.EngineHelper;
 import com.fizzed.blaze.core.Engine;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertThat;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -29,7 +29,7 @@ import org.junit.Test;
  */
 public class EngineHelperTest {
     
-    @Test @Ignore("service loader does return same instance")
+    @Test @Disabled("service loader does return same instance")
     public void newInstanceReturned() {
         Engine engine0 = EngineHelper.findByFileExtension(".java", false);
         

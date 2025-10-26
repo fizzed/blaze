@@ -44,7 +44,7 @@ public class TryIt {
         
         BlazeGroovyScript script = engine.compile(context);
         
-        log.info("Compiled in {} ms", timer.stop().millis());
+        log.info("Compiled in {}", timer.stop());
         
         script.execute("main");
     }

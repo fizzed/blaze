@@ -23,9 +23,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Task {
-    
+
+    int DEFAULT_ORDER = Integer.MAX_VALUE;
+
     String value() default "";
         
-    int order() default 0;
+    int order() default DEFAULT_ORDER;
+
+    String group() default "";
     
 }

@@ -20,10 +20,8 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.util.BlazeRunner;
 import org.apache.commons.io.FileUtils;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.SystemOutRule;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
@@ -37,12 +35,12 @@ import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BlazeKotlinEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeKotlinEngineTest.class);
     
-    @BeforeClass
+    @BeforeAll
     static public void clearCache() throws IOException {
         Context context = new ContextImpl(null, Paths.get(System.getProperty("user.home")), null, null);
         Path classesDir = ConfigHelper.userBlazeEngineDir(context, "kotlin");
@@ -75,8 +73,7 @@ public class BlazeKotlinEngineTest {
         final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(scriptFile, asList("-l"), null);
 
         assertThat(result.getExitValue(), is(0));
-        assertThat(result.outputUTF8(), containsString("tasks =>" + System.lineSeparator() +
-            " main"));
+        assertThat(result.outputUTF8().replaceAll("\r\n", "\n"), containsString("tasks =>\n  main"));
     }
     
 }

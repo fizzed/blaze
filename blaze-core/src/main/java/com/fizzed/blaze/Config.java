@@ -27,18 +27,20 @@ import java.util.Objects;
  */
 public interface Config {
     
-    static String KEY_COMMAND_EXTS = "blaze.command.exts";
-    static String KEY_DEFAULT_TASK = "blaze.default.task";
-    static String KEY_DEPENDENCIES = "blaze.dependencies";
-    static String KEY_REPOSITORIES = "blaze.repositories";
-    static String KEY_DEPENDENCY_CLEAN = "blaze.dependency.clean";
+    String KEY_COMMAND_EXTS = "blaze.command.exts";
+    String KEY_DEFAULT_TASK = "blaze.default.task";
+    String KEY_DEPENDENCIES = "blaze.dependencies";
+    String KEY_REPOSITORIES = "blaze.repositories";
+    String KEY_DEPENDENCY_CLEAN = "blaze.dependency.clean";
     
-    static String DEFAULT_TASK = "main";
-    static Boolean DEFAULT_DEPENDENCY_CLEAN = Boolean.FALSE;
+    String DEFAULT_TASK = "main";
+    Boolean DEFAULT_DEPENDENCY_CLEAN = Boolean.FALSE;
     
-    static List<String> DEFAULT_COMMAND_EXTS_UNIX = Arrays.asList("", ".sh");
-    static List<String> DEFAULT_COMMAND_EXTS_WINDOWS = Arrays.asList(".exe", ".ps1", ".bat", ".cmd");
-    
+    List<String> DEFAULT_COMMAND_EXTS_UNIX = Arrays.asList("", ".sh");
+    List<String> DEFAULT_COMMAND_EXTS_WINDOWS = Arrays.asList(".exe", ".ps1", ".bat", ".cmd");
+
+    Value<Boolean> flag(String key);
+
     /**
      * Gets a configuration value by its key.
      * @param key The configuration key (e.g. "undertow.port")
@@ -122,7 +124,7 @@ public interface Config {
          * Gets the value or throws an exception if its missing.
          * @return The non-null value
          * @throws NoSuchElementException Thrown if the value is missing
-         * @see #or(java.lang.Object) If you'd like a default value returned
+         * @see #orElse(Object)  If you'd like a default value returned
          *      instead of an exception thrown.
          */
         public T get() throws NoSuchElementException {
@@ -137,7 +139,7 @@ public interface Config {
          * Gets the value if its present or will return the supplied default.
          * @param defaultValue The default if the value is missing
          * @return The value or the default
-         * @see #orElse() 
+         * @see #orElse(java.lang.Object)
          */
         @Deprecated
         public T getOr(T defaultValue) {

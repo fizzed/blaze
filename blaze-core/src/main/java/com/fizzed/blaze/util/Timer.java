@@ -47,7 +47,8 @@ public class Timer {
 
     @Override
     public String toString() {
-        return this.elapsed() + " ms";
+        return DurationFormatter.formatShort(this.elapsed());
+        //return this.elapsed() + " ms";
     }
     
 }

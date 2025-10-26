@@ -1,6 +1,6 @@
 package com.fizzed.blaze.http.okhttp;
 
-import com.fizzed.blaze.util.ConsoleIOProgressBar;
+import com.fizzed.blaze.util.TerminalIOProgressBar;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
@@ -9,6 +9,8 @@ import okio.ForwardingSink;
 import okio.Okio;
 
 import java.io.IOException;
+
+import static com.fizzed.blaze.util.TerminalHelper.clearLinePrint;
 
 /**
  * A custom {@link RequestBody} implementation that wraps an existing {@link RequestBody} and allows
@@ -37,7 +39,7 @@ public class ProgressRequestBody extends RequestBody {
     @Override
     public void writeTo(BufferedSink sink) throws IOException {
         final long contentLength = this.delegate.contentLength();
-        final ConsoleIOProgressBar progressBar = new ConsoleIOProgressBar(contentLength);
+        final TerminalIOProgressBar progressBar = new TerminalIOProgressBar(contentLength);
 
         final ForwardingSink progressForwardingSink = new ForwardingSink(sink) {
             @Override
@@ -45,7 +47,7 @@ public class ProgressRequestBody extends RequestBody {
                 super.write(source, byteCount);
                 progressBar.update(byteCount);
                 if (progressBar.isRenderStale(1)) {
-                    System.out.print("\r" + progressBar.render());
+                    clearLinePrint(progressBar.render());
                 }
             }
         };
@@ -58,8 +60,8 @@ public class ProgressRequestBody extends RequestBody {
 
         progressBufferedSink.flush(); // Crucial to ensure all bytes are written
 
-        // one last render to clear the progress bar and make sure it displays 100%
-        System.out.println("\r" + progressBar.render());
+        // one last render to clear the line
+        clearLinePrint();
     }
 
 }

@@ -30,10 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +52,7 @@ public class Blaze {
         
         private Path directory;
         private Path file;
+        private Map<String,String> configProperties;
         private Object scriptObject;
         private List<Dependency> collectedDependencies;
         private ScriptFileLocator scriptFileLocator;
@@ -101,6 +100,15 @@ public class Blaze {
         
         public Path getFile() {
             return this.file;
+        }
+
+        public Map<String, String> getConfigProperties() {
+            return configProperties;
+        }
+
+        public Builder configProperties(Map<String, String> configProperties) {
+            this.configProperties = configProperties;
+            return this;
         }
 
         public Builder scriptObject(Object scriptObject) {
@@ -193,33 +201,33 @@ public class Blaze {
         }
         
         public void configure() {
-            if (detectedScriptFile == null) {
-                locate();
+            if (this.detectedScriptFile == null) {
+                this.locate();
             }
             
             ConfigPaths configPaths = null;
             
             // a script may not actually have been detected
             if (this.detectedScriptFile != null) {
-                configPaths = ConfigHelper.paths(detectedBaseDir, detectedScriptFile);
+                configPaths = ConfigHelper.paths(this.detectedBaseDir, this.detectedScriptFile);
                 
-                scriptExtension = FileHelper.fileExtension(detectedScriptFile);
+                this.scriptExtension = FileHelper.fileExtension(this.detectedScriptFile);
             }
             
-            config = ConfigHelper.create(configPaths);
+            this.config = ConfigHelper.create(false, configPaths, this.configProperties);
 
-            context = new ContextImpl(
-                (detectedBaseDir != null ? detectedBaseDir : null),
-                null,    
-                detectedScriptFile,
-                config);
+            this.context = new ContextImpl(
+                (this.detectedBaseDir != null ? this.detectedBaseDir : null),
+                null,
+                this.detectedScriptFile,
+                this.config);
             
-            ContextHolder.set(context);
+            ContextHolder.set(this.context);
         }
         
         public void resolveDependencies() {
-            if (context == null) {
-                configure();
+            if (this.context == null) {
+                this.configure();
             }
             
             //
@@ -230,30 +238,30 @@ public class Blaze {
             
             // save which dependencies are already resolved
             List<Dependency> resolvedDependencies
-                    = (collectedDependencies != null ? collectedDependencies : DependencyHelper.alreadyBundled());
+                    = (this.collectedDependencies != null ? this.collectedDependencies : DependencyHelper.alreadyBundled());
             
-            // any well known engines to include?
-            List<Dependency> wellKnownEngineDependencies = DependencyHelper.wellKnownEngineDependencies(scriptExtension);
+            // any well-known engines to include?
+            List<Dependency> wellKnownEngineDependencies = DependencyHelper.wellKnownEngineDependencies(this.scriptExtension);
             
             // do we need the ecj compiler?
-            List<Dependency> javaCompilerDependencies = BlazeJdkEngine.compilerDependencies(scriptExtension);
+            List<Dependency> javaCompilerDependencies = BlazeJdkEngine.compilerDependencies(this.scriptExtension);
             
             // did script declare any dependencies we need to include?
-            List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(config);
+            List<Dependency> applicationDependencies = DependencyHelper.applicationDependencies(this.config);
             
             // build dependencies to resolve (need collected so correct versions are picked)
-            dependencies = new ArrayList<>();
+            this.dependencies = new ArrayList<>();
             
-            DependencyHelper.collect(dependencies, resolvedDependencies);
-            DependencyHelper.collect(dependencies, wellKnownEngineDependencies);
-            DependencyHelper.collect(dependencies, javaCompilerDependencies);
-            DependencyHelper.collect(dependencies, applicationDependencies);
+            DependencyHelper.collect(this.dependencies, resolvedDependencies);
+            DependencyHelper.collect(this.dependencies, wellKnownEngineDependencies);
+            DependencyHelper.collect(this.dependencies, javaCompilerDependencies);
+            DependencyHelper.collect(this.dependencies, applicationDependencies);
             
             // smart resolving...
             try {
-                if (dependencies.isEmpty()) {
+                if (this.dependencies.isEmpty()) {
                     log.debug("No dependencies to resolve (skipping resolver)");
-                } else if (dependencies.size() == resolvedDependencies.size()) {
+                } else if (this.dependencies.size() == resolvedDependencies.size()) {
                     log.debug("We already have the dependencies we need (skipping resolver)");
                 } else {
                     try {
@@ -266,18 +274,18 @@ public class Blaze {
                     }
                 }
             } finally {
-                log.info("Resolved dependencies in {} ms", dependencyTimer.stop().millis());
+                log.info("Resolved dependencies in {}", dependencyTimer.stop());
             }
         }
         
         public void loadDependencies() {
-            if (dependencies == null) {
+            if (this.dependencies == null) {
                 resolveDependencies();
             }
             
-            if (dependencyJarFiles != null) {
+            if (this.dependencyJarFiles != null) {
                 final ClassLoader classLoader = currentThreadContextClassLoader();
-                dependencyJarFiles.stream().forEach((jarFile) -> {
+                this.dependencyJarFiles.stream().forEach((jarFile) -> {
                     if (ClassLoaderHelper.addClassPath(classLoader, jarFile)) {
                         log.debug("Added {} to classpath", jarFile.getName());
                         log.debug(" => {}", jarFile);
@@ -289,7 +297,7 @@ public class Blaze {
         public void compileScript() {
             // if we are simply wrapping an object, no need to compile
             if (this.scriptObject != null) {
-                script = new TargetObjectScript(this.scriptObject);
+                this.script = new TargetObjectScript(this.scriptObject);
                 return;
             }
             
@@ -298,30 +306,36 @@ public class Blaze {
             //
             log.info("Compiling script...");
             Timer engineTimer = new Timer();
+
+            this.engine = EngineHelper.findByFileExtension(scriptExtension, dependencyJarFiles != null && !dependencyJarFiles.isEmpty());
             
-            engine = EngineHelper.findByFileExtension(scriptExtension, dependencyJarFiles != null && !dependencyJarFiles.isEmpty());
-            
-            if (engine == null) {
+            if (this.engine == null) {
                 throw new BlazeException("Unable to find script engine for file extension " + scriptExtension + ". Maybe bad file extension or missing dependency?");
             }
 
             log.debug("Using script engine {}", engine.getClass().getCanonicalName());
             
-            if (!engine.isInitialized()) {
-                engine.init(context);
+            if (!this.engine.isInitialized()) {
+                this.engine.init(context);
             }
+
+            this.script = engine.compile(context);
             
-            script = engine.compile(context);
-            
-            log.info("Compiled script in {} ms", engineTimer.stop().millis());
+            log.info("Compiled script in {}", engineTimer.stop());
         }
         
         public Blaze build() {
-            loadDependencies();     // also calls locate(), configure(), and resolveDependencies()
-            
-            compileScript();
-            
-            return new Blaze(context, dependencies, engine, script);
+            return this.build(true);
+        }
+
+        public Blaze build(boolean compileScript) {
+            this.loadDependencies();     // also calls locate(), configure(), and resolveDependencies()
+
+            if (compileScript) {
+                this.compileScript();
+            }
+
+            return new Blaze(this.context, this.dependencies, this.engine, this.script);
         }
     }
     
@@ -337,24 +351,33 @@ public class Blaze {
         this.script = script;
     }
 
-    public Context context() {
-        return context;
+    public Context getContext() {
+        return this.context;
     }
 
-    public List<Dependency> dependencies() {
-        return dependencies;
+    public List<Dependency> getDependencies() {
+        return this.dependencies;
     }
     
-    public Engine engine() {
+    public Engine getEngine() {
         return engine;
     }
 
-    public Script script() {
+    public Script getScript() {
         return script;
     }
-    
-    public List<BlazeTask> tasks() throws BlazeException {
-        List<BlazeTask> tasks = this.script.tasks();
+
+    public List<BlazeTaskGroup> getTaskGroups() throws BlazeException {
+        final List<BlazeTaskGroup> taskGroups = this.script.taskGroups();
+
+        // sort strategy (alphabetical by default)
+        Collections.sort(taskGroups);
+
+        return taskGroups;
+    }
+
+    public List<BlazeTask> getTasks() throws BlazeException {
+        final List<BlazeTask> tasks = this.script.tasks();
         
         // sort strategy (alphabetical by default)
         Collections.sort(tasks);
@@ -363,7 +386,7 @@ public class Blaze {
     }
     
     public void execute() throws Exception {
-        execute(null);
+        this.execute(null);
     }
     
     public void execute(String task) throws Exception {
@@ -371,23 +394,32 @@ public class Blaze {
             task = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
         }
         
-        String scriptName = (context.scriptFile() != null ? context.scriptFile().toString() : "");
+        final String scriptName = (context.scriptFile() != null ? context.scriptFile().toString() : "");
         
         log.info("Executing {}:{}...", scriptName, task);
         Timer executeTimer = new Timer();
         
         this.script.execute(task);
         
-        log.info("Executed {}:{} in {} ms", scriptName, task, executeTimer.stop().millis());
+        log.info("Executed {}:{} in {}", scriptName, task, executeTimer.stop());
     }
     
     public void executeAll(List<String> tasks) throws Exception {
         // default task?
         if (tasks == null || tasks.isEmpty()) {
-            execute(null);
+            this.execute(null);
         } else {
+            // validate all the tasks exist before trying to execute any of them
+            final List<BlazeTask> validTasks = this.getTasks();
             for (String task : tasks) {
-                execute(task);
+                if (!validTasks.stream().anyMatch(t -> t.getName().equals(task))) {
+                    throw new NoSuchTaskException(task);
+                }
+            }
+
+            // now try to execute all the tasks
+            for (String task : tasks) {
+                this.execute(task);
             }
         }
     }

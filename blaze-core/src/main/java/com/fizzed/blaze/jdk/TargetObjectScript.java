@@ -16,17 +16,17 @@
 package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Task;
-import com.fizzed.blaze.core.BlazeException;
-import com.fizzed.blaze.core.NoSuchTaskException;
-import com.fizzed.blaze.core.Script;
-import com.fizzed.blaze.core.BlazeTask;
-import com.fizzed.blaze.core.WrappedBlazeException;
+import com.fizzed.blaze.TaskGroup;
+import com.fizzed.blaze.core.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * A script that uses reflection to detect and invoke tasks based on public
@@ -51,6 +51,22 @@ public class TargetObjectScript implements Script {
         this.targetObject = targetObject;
     }
 
+    public List<BlazeTaskGroup> findTaskGroups() throws BlazeException {
+        List<BlazeTaskGroup> groups = new ArrayList<>();
+
+        try {
+            final TaskGroup[] taskGroups = targetObject.getClass().getAnnotationsByType(TaskGroup.class);
+
+            for (TaskGroup taskGroup : taskGroups) {
+                groups.add(new BlazeTaskGroup(taskGroup.value(), taskGroup.name(), taskGroup.order()));
+            }
+        } catch (SecurityException e) {
+            throw new BlazeException("Unable to detect script task groups", e);
+        }
+
+        return groups;
+    }
+
     public List<BlazeTask> findTasks(Predicate<Method>... filters) throws BlazeException {
         List<BlazeTask> tasks = new ArrayList<>();
         
@@ -67,18 +83,17 @@ public class TargetObjectScript implements Script {
                 }
                 
                 // defaults
-                String name = m.getName();
-                String description = null;
-                int order = 0;
-                
+                final String name = m.getName();
+
                 // task annotation present?
                 Task task = m.getAnnotation(Task.class);
                 if (task != null) {
-                    description = (task.value() != null ? task.value() : null);
-                    order = task.order();
+                    final String description = ofNullable(task.value()).filter(v -> !v.trim().isEmpty()).orElse(null);
+                    final String group = ofNullable(task.group()).filter(v -> !v.trim().isEmpty()).orElse(null);
+                    tasks.add(new BlazeTask(name, description, task.order(), group));
+                } else {
+                    tasks.add(new BlazeTask(name));
                 }
-                
-                tasks.add(new BlazeTask(name, description, order));
             }
         } catch (SecurityException e) {
             throw new BlazeException("Unable to detect script tasks", e);
@@ -116,10 +131,15 @@ public class TargetObjectScript implements Script {
             throw new WrappedBlazeException(e);
         }
     }
-    
+
+    @Override
+    public List<BlazeTaskGroup> taskGroups() throws BlazeException {
+        return this.findTaskGroups();
+    }
+
     @Override
     public List<BlazeTask> tasks() throws BlazeException {
-        return findTasks(FILTER_OBJECT_INSTANCE_METHOD, FILTER_PUBLIC_INSTANCE_METHOD);
+        return this.findTasks(FILTER_OBJECT_INSTANCE_METHOD, FILTER_PUBLIC_INSTANCE_METHOD);
     }
 
     @Override

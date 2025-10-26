@@ -43,7 +43,7 @@ public class DemoMain {
         
         BlazeJdkScript script = engine.compile(context);
         
-        log.info("Compiled in {} ms", timer.stop().millis());
+        log.info("Compiled in {}", timer.stop());
         
         script.execute("main");
     }

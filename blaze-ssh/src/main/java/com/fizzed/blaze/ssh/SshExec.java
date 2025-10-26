@@ -18,8 +18,8 @@ package com.fizzed.blaze.ssh;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.system.Exec;
 
-abstract public class SshExec extends Exec<SshExec> {
-    
+abstract public class SshExec extends Exec {
+
     final protected SshSession session;
     protected boolean pty;
     
@@ -34,12 +34,4 @@ abstract public class SshExec extends Exec<SshExec> {
         return this;
     }
 
-//    static public class Result extends com.fizzed.blaze.system.Exec.Result<SshExec,Integer,Result> {
-//        
-//        public Result(SshExec action, Integer value) {
-//            super(action, value);
-//        }
-//        
-//    }
-    
 }

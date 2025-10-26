@@ -19,8 +19,9 @@ import java.io.StringReader;
 import java.util.Deque;
 import org.apache.commons.io.input.ReaderInputStream;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 /**
  *

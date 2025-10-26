@@ -21,31 +21,27 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.core.BlazeTask;
 import com.fizzed.blaze.core.NoSuchTaskException;
 //import static com.fizzed.blaze.system.ShellTestHelper.getBinDirAsResource;
-import com.fizzed.blaze.core.Dependency;
 import static com.fizzed.blaze.internal.FileHelper.resourceAsFile;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.SystemOutRule;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import com.fizzed.blaze.util.BlazeRunner;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessResult;
 
 public class BlazeNashornEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeNashornEngineTest.class);
-    
-    @Rule
-    public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
     
     /*@BeforeClass
     static public void forceBinResourceExecutable() throws Exception {
@@ -79,15 +75,10 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void defaultFileName() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .directory(resourceAsFile("/nashorn"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("Default Blaze!"));
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(
+            null, asList("--dir", resourceAsFile("/nashorn").getAbsolutePath().toString()), null);
+
+        assertThat(result.outputUTF8(), containsString("Default Blaze!"));
     }
     
     @Test
@@ -106,46 +97,25 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void hello() throws Exception {
-        Blaze blaze = new Blaze.Builder()
-            .file(resourceAsFile("/nashorn/hello.js"))
-            .build();
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(resourceAsFile("/nashorn/hello.js"), null, null);
         
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("Hello World!"));
+        assertThat(result.outputUTF8(), containsString("Hello World!"));
     }
     
     @Test
     public void confFileLoaded() throws Exception {
         // this should find the corrosponding conf file and change the default task
-        Blaze blaze = new Blaze.Builder()
-            .file(resourceAsFile("/nashorn/new_default_task.js"))
-            .build();
-        
-        assertThat(blaze.context().config().value(Config.KEY_DEFAULT_TASK).get(), is("blaze"));
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute();
-        
-        assertThat(systemOutRule.getLog(), containsString("New Default Task!"));
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(resourceAsFile("/nashorn/new_default_task.js"), null, null);
+
+        assertThat(result.outputUTF8(), containsString("New Default Task!"));
     }
     
     @Test
     public void executeTwoTasks() throws Exception {
-        // this should find the corrosponding conf file and change the default task
-        Blaze blaze = new Blaze.Builder()
-            .file(resourceAsFile("/nashorn/two_tasks.js"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.executeAll(Arrays.asList("main", "blaze"));
-        
-        assertThat(systemOutRule.getLog(), containsString("Hello World!"));
-        assertThat(systemOutRule.getLog(), containsString("In Blaze!"));
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(resourceAsFile("/nashorn/two_tasks.js"), null, asList("main", "blaze"));
+
+        assertThat(result.outputUTF8(), containsString("Hello World!"));
+        assertThat(result.outputUTF8(), containsString("In Blaze!"));
     }
     
     @Test
@@ -154,9 +124,7 @@ public class BlazeNashornEngineTest {
             .file(resourceAsFile("/nashorn/two_tasks.js"))
             .build();
         
-        systemOutRule.clearLog();
-        
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         log.debug("tasks: {}", tasks);
         
@@ -187,17 +155,9 @@ public class BlazeNashornEngineTest {
     
     @Test
     public void logInBindings() throws Exception {
-        systemOutRule.clearLog();
+        final ProcessResult result = BlazeRunner.invokeWithCurrentJvmHome(resourceAsFile("/nashorn/log.js"), null, null);
 
-        Blaze blaze = new Blaze.Builder()
-            .file(resourceAsFile("/nashorn/log.js"))
-            .build();
-        
-        systemOutRule.clearLog();
-        
-        blaze.execute("main");
-        
-        assertThat(systemOutRule.getLog(), containsString("Did this work?"));
+        assertThat(result.outputUTF8(), containsString("Did this work?"));
     }
     
     /*@Test @Ignore("Log output breaks")

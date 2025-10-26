@@ -18,19 +18,24 @@ package com.fizzed.blaze.ssh.util;
 import java.util.Arrays;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SshCommandTest {
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void invalidExecutable() {
-        SshCommand.parse("ssh2 -q jump1.example.com nc %h %p");
+        assertThrows(IllegalArgumentException.class, () -> {
+            SshCommand.parse("ssh2 -q jump1.example.com nc %h %p");
+        });
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void unsupportedOption() {
-        SshCommand.parse("ssh -X jump1.example.com nc %h %p");
+        assertThrows(IllegalArgumentException.class, () -> {
+            SshCommand.parse("ssh -X jump1.example.com nc %h %p");
+        });
     }
     
     @Test

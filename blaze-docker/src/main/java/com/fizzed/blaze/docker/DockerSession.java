@@ -49,7 +49,7 @@ public class DockerSession implements ExecSession {
     }
     
     @Override
-    public Exec newExec() {
+    public LocalExec newExec() {
         return new DockerExec(this.context, this);
     }
     

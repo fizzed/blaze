@@ -18,7 +18,9 @@ package com.fizzed.blaze.core;
 import java.util.List;
 
 public interface Script {
-    
+
+    List<BlazeTaskGroup> taskGroups() throws BlazeException;
+
     List<BlazeTask> tasks() throws BlazeException;
     
     void execute(String task) throws Exception;

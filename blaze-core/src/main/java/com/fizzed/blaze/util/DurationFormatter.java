@@ -15,6 +15,8 @@
  */
 package com.fizzed.blaze.util;
 
+import java.util.concurrent.TimeUnit;
+
 public class DurationFormatter {
  
     static public String format(double millis) {
@@ -32,6 +34,51 @@ public class DurationFormatter {
         } else {
             return String.format("%02d:%02d", minutes, seconds);
         }
+    }
+
+    /**
+     * Formats a duration in milliseconds into a compact, human-readable string.
+     *
+     * @param millis The duration in milliseconds.
+     * @return A compact string representation (e.g., "12 ms", "1.5s", "2m 10s").
+     */
+    public static String formatShort(long millis) {
+        if (millis < 0) {
+            // Or throw an IllegalArgumentException, depending on desired behavior
+            return "N/A";
+        }
+        if (millis == 0) {
+            return "0 ms";
+        }
+
+        // Using Java 8's TimeUnit for clarity
+        final long DAY = TimeUnit.DAYS.toMillis(1);
+        final long HOUR = TimeUnit.HOURS.toMillis(1);
+        final long MINUTE = TimeUnit.MINUTES.toMillis(1);
+        final long SECOND = TimeUnit.SECONDS.toMillis(1);
+
+        if (millis >= DAY) {
+            long days = millis / DAY;
+            long hours = (millis % DAY) / HOUR;
+            return String.format("%dd %dh", days, hours);
+        }
+        if (millis >= HOUR) {
+            long hours = millis / HOUR;
+            long minutes = (millis % HOUR) / MINUTE;
+            return String.format("%dh %dm", hours, minutes);
+        }
+        if (millis >= MINUTE) {
+            long minutes = millis / MINUTE;
+            long seconds = (millis % MINUTE) / SECOND;
+            return String.format("%dm %ds", minutes, seconds);
+        }
+        if (millis >= SECOND) {
+            // Show one decimal place for seconds
+            return String.format("%.1fs", millis / 1000.0);
+        }
+
+        // Less than a second
+        return String.format("%d ms", millis);
     }
     
 }

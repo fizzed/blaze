@@ -18,6 +18,7 @@ import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.withBaseDir;
 
 import com.fizzed.blaze.Task;
+import com.fizzed.blaze.TaskGroup;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.project.PublicBlaze;
 
@@ -27,10 +28,17 @@ import java.util.stream.Collectors;
 import com.fizzed.buildx.Target;
 import org.slf4j.Logger;
 
+@TaskGroup(value="project", name="Project")
+@TaskGroup(value="maintainer", name="Maintainers Only")
 public class blaze extends PublicBlaze {
     static private final Logger log = Contexts.logger();
-    
-    @Task(order=1, value="Try all scripts in examples/ dir")
+
+    @Task(group="project")
+    public void hello() {
+        log.info("Hello, world!");
+    }
+
+    @Task(group="project", order=1, value="Try all scripts in examples/ dir")
     public void try_all() throws Exception {
         // execute another blaze script in this jvm
         new Blaze.Builder()
@@ -40,6 +48,7 @@ public class blaze extends PublicBlaze {
     }
 
     @Override
+    @Task(group="maintainer", value="Cross-test all targets")
     protected List<Target> crossTestTargets() {
         return super.crossTestTargets().stream()
             .filter(v -> !v.getArch().contains("riscv64"))

@@ -5,7 +5,7 @@ import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.internal.FileHelper;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +49,9 @@ abstract public class TestAbstractBase {
         return path;
     }
 
-    @Before
+    @BeforeEach
     public void baseBefore() throws Exception {
-        this.config = ConfigHelper.create(null);
+        this.config = ConfigHelper.createEmpty();
         this.context = spy(new ContextImpl(null, null, Paths.get("blaze.java"), config));
         // this will help find the compile target directory, where is should be in target/test-classes
         this.targetDir = FileHelper.resourceAsPath("/fixtures/resource-locator.txt").resolve("../../..").normalize();

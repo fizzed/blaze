@@ -4,8 +4,8 @@ import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.DirectoryNotEmptyException;
 import com.fizzed.blaze.core.FileNotFoundException;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,53 +14,62 @@ import java.nio.file.Path;
 import static com.fizzed.blaze.util.Globber.globber;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CopyTest extends TestAbstractBase {
 
     Path testCopyDir;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.testCopyDir = this.createDir(targetDir.resolve("copy-test"));
     }
 
-    @Test(expected=FileNotFoundException.class)
+    @Test
     public void fileToFileFailsIfSourceDoesNotExist() {
-        new Copy(this.context)
-            .sources(this.testCopyDir.resolve("notexist"))
-            .target(this.testCopyDir)
-            .run();
+        assertThrows(FileNotFoundException.class, () -> {
+            new Copy(this.context)
+                .sources(this.testCopyDir.resolve("notexist"))
+                .target(this.testCopyDir)
+                .run();
+        });
     }
 
-    @Test(expected= BlazeException.class)
+    @Test
     public void fileToFileFailsToSameFile() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileFailsToSameFile.txt"));
 
-        new Copy(this.context)
-            .sources(sourceFile)
-            .target(sourceFile)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceFile)
+                .target(sourceFile)
+                .run();
+        });
     }
 
-    @Test(expected= BlazeException.class)
+    @Test
     public void fileToFileFailsToSameFileEvenIfForced() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileFailsToSameFileEvenIfForced.txt"));
 
-        new Copy(this.context)
-            .sources(sourceFile)
-            .target(sourceFile)
-            .force()
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceFile)
+                .target(sourceFile)
+                .force()
+                .run();
+        });
     }
 
-    @Test(expected= BlazeException.class)
+    @Test
     public void fileToDirFailsToSameFile() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToDirFailsToSameFile.txt"));
 
-        new Copy(this.context)
-            .sources(sourceFile)
-            .target(sourceFile.getParent())
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceFile)
+                .target(sourceFile.getParent())
+                .run();
+        });
     }
 
     @Test
@@ -79,16 +88,18 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetFile), is(true));
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void fileToFileFailsIfAlreadyExists() throws Exception {
         final Path sourceFile = createFile(this.testCopyDir.resolve("fileToFileFailsIfAlreadyExists.txt"));
         final Path targetDir = createDir(this.testCopyDir.resolve("fileToFileFailsIfAlreadyExists"));
         final Path targetFile = createFile(targetDir.resolve("exists.txt"));
 
-        new Copy(this.context)
-            .sources(sourceFile)
-            .target(targetFile)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceFile)
+                .target(targetFile)
+                .run();
+        });
     }
 
     @Test
@@ -125,7 +136,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.exists(targetFile), is(true));
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void dirToDirFailsIfTargetExistsAsFile() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
         final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirFailsIfTargetExistsAsFile"));
@@ -133,25 +144,29 @@ public class CopyTest extends TestAbstractBase {
 
         final Path targetFile = createFile(this.testCopyDir.resolve("dirToDirFailsIfTargetExistsAsFileToCopyTo"));
 
-        new Copy(this.context)
-            .sources(sourceDir)
-            .target(targetFile)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceDir)
+                .target(targetFile)
+                .run();
+        });
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void dirToDirFailsIfTargetIsSameDirectory() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
         final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirFailsIfTargetIsSameDirectory"));
         final Path sourceDirFile = createFile(sourceDir.resolve("test1.txt"));
 
-        new Copy(this.context)
-            .sources(sourceDir)
-            .target(sourceDir)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceDir)
+                .target(sourceDir)
+                .run();
+        });
     }
 
-    @Test(expected=DirectoryNotEmptyException.class)
+    @Test
     public void dirToDirFailsIfNotRecursive() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
         final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDir"));
@@ -165,10 +180,12 @@ public class CopyTest extends TestAbstractBase {
 
         assertThat(Files.exists(targetDir), is(false));
 
-        new Copy(this.context)
-            .sources(sourceDir)
-            .target(targetDir)
-            .run();
+        assertThrows(DirectoryNotEmptyException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceDir)
+                .target(targetDir)
+                .run();
+        });
     }
 
     @Test
@@ -197,7 +214,7 @@ public class CopyTest extends TestAbstractBase {
         assertThat(Files.isRegularFile(targetDir.resolve("subdir/test2.txt")), is(true));
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void dirToDirFailsIfFileAlreadyExists() throws Exception {
         // create a source directory with a file, a subdir, and the subdir with a file
         final Path sourceDir = createDir(this.testCopyDir.resolve("dirToDirFailsIfFileAlreadyExists"));
@@ -213,22 +230,26 @@ public class CopyTest extends TestAbstractBase {
 
         assertThat(Files.exists(targetDirFile), is(true));
 
-        new Copy(this.context)
-            .sources(sourceDir)
-            .target(targetDir)
-            .recursive()
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(sourceDir)
+                .target(targetDir)
+                .recursive()
+                .run();
+        });
     }
 
-    @Test(expected=BlazeException.class)
+    @Test
     public void globFailsIfNoneFound() throws Exception {
         final Path sourceDir = createDir(this.testCopyDir.resolve("globber"));
         final Path targetDir = createDir(this.testCopyDir.resolve("globberTo"));
 
-        new Copy(this.context)
-            .sources(globber(sourceDir, "*.{java,js}"))
-            .target(targetDir)
-            .run();
+        assertThrows(BlazeException.class, () -> {
+            new Copy(this.context)
+                .sources(globber(sourceDir, "*.{java,js}"))
+                .target(targetDir)
+                .run();
+        });
     }
 
     @Test

@@ -32,10 +32,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.fizzed.blaze.util.IntRange.intRange;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import org.slf4j.Logger;
@@ -278,7 +279,7 @@ public class SshExecTest extends SshBaseTest {
         Integer exitValue
             = new JschExec(context, session)
                 .command("hello")
-                .exitValue(1)
+                .exitValues(1)
                 .pipeInput((StreamableInput)null)
                 .pipeOutput((StreamableOutput)null)
                 .pipeError((StreamableOutput)null)

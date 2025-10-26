@@ -26,10 +26,11 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.spy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,17 +45,22 @@ public class RequiredExecTest {
     Config config;
     ContextImpl context;
     
-    @Before
+    @BeforeEach
     public void setup() {
-        config = ConfigHelper.create(null);
+        config = ConfigHelper.createEmpty();
         context = spy(new ContextImpl(null, null, Paths.get("blaze.js"), config));
     }
     
-    @Test(expected=MessageOnlyException.class)
+    @Test
     public void notFind() throws Exception {
-        Path f = new RequireExec(context)
-            .command("thisdoesnotexist")
-            .run();
+        try {
+            Path f = new RequireExec(context)
+                .command("thisdoesnotexist")
+                .run();
+            fail();
+        } catch (MessageOnlyException e) {
+            // expected
+        }
     }
     
     @Test

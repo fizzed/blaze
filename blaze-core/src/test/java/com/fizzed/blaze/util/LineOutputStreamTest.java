@@ -19,15 +19,11 @@ import com.fizzed.blaze.util.LineOutputStream.BufferingProcessor;
 import com.fizzed.blaze.util.LineOutputStream.LastLineProcessor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
+import org.junit.jupiter.api.Test;
 
 /**
  *

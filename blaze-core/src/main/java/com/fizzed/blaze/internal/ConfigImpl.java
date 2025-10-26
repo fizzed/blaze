@@ -17,6 +17,7 @@ package com.fizzed.blaze.internal;
 
 import com.fizzed.blaze.util.Converter;
 import com.fizzed.blaze.Config;
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigException.Missing;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +35,13 @@ public class ConfigImpl implements Config {
     }
 
     @Override
+    public Value<Boolean> flag(String key) {
+        return this.value(key, Boolean.class);
+    }
+
+    @Override
     public Value<String> value(String key) {
-        try {
-            return Value.of(key, this.config.getString(key));
-        } catch (Missing e) {
-            return Value.empty(key);
-        }
+        return this.value(key, String.class);
     }
     
     @Override
@@ -54,17 +56,25 @@ public class ConfigImpl implements Config {
     
     @Override
     public Value<List<String>> valueList(String key) {
-        try {
-            return Value.of(key, this.config.getStringList(key));
-        } catch (Missing e) {
-            return Value.empty(key);
-        }
+        return this.valueList(key, String.class);
     }
     
     @Override
     public <T> Value<List<T>> valueList(String key, Class<T> type) {
         try {
-            List<String> values = this.config.getStringList(key);
+            // we'll use the typesafe library "list" method first
+            List<String> values;
+            try {
+                values = this.config.getStringList(key);
+            } catch (ConfigException.WrongType ex) {
+                // if that fails, we'll grab the value as a String and split it ourselves using commas
+                String rawValue = this.config.getString(key);
+                values = new ArrayList<>();
+                for (String s : rawValue.split(",")) {
+                    values.add(s.trim());
+                }
+            }
+
             List<T> convertedValues = new ArrayList<>(values.size());
             for (String value : values) {
                 convertedValues.add(Converter.convert(value, type));

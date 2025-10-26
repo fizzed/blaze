@@ -33,7 +33,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
 import static java.util.Optional.ofNullable;
 
 public class Unarchive extends Action<Unarchive.Result,Void> implements VerbosityMixin<Unarchive>, ProgressMixin<Unarchive> {
@@ -252,7 +251,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             throw new BlazeException("Unable to detect archive format from file extension (e.g. .tar.gz) or the format is not yet unsupported");
         }
 
-        log.verbose("Using archiver={}, compressor={}",
+        log.debug("Using archiver={}, compressor={}",
             ofNullable(archiveInfo.getArchiver()).map(v -> v.name()).orElse("none"),
             ofNullable(archiveInfo.getCompressor()).map(v -> v.name()).orElse("none"));
 
@@ -288,7 +287,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             }
         }
 
-        log.info("Unarchived {} files, overwrote {} files (in {})", result.filesCreated, result.filesOverwritten, timer);
+        log.info("Unarchived {} files, overwrote {} files in {}", result.filesCreated, result.filesOverwritten, timer);
 
         return new Unarchive.Result(this, null);
     }
@@ -342,7 +341,7 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
             // any filtering?
             if (this.filter != null) {
                 if (!this.filter.test(name)) {
-                    log.verbose("Filtered: {}   (skipped)", name);
+                    log.verbose("-x {} (filtered out)", name);
                     return; // do not extract
                 }
             }
@@ -373,9 +372,9 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
 
             // log the entry now
             if (optionsStr.length() > 0) {
-                log.verbose("Extracting: {} ({})", name, optionsStr);
+                log.verbose("-> {} ({})", name, optionsStr);
             } else {
-                log.verbose("Extracting: {}", name);
+                log.verbose("-> {}", name);
             }
 
             Path file = destDir.resolve(name).normalize();
@@ -397,7 +396,8 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
 
             final StreamableOutput output = Streamables.output(file, useTemporaryFile);
             try (OutputStream finalOutput = output.stream()) {
-                IoHelper.copy(in, finalOutput, this.progress.get(), knownSize);
+                final boolean showProgress = this.progress.get() && log.isVerbose();
+                IoHelper.copy(in, finalOutput, showProgress, true, knownSize);
             }
         } catch (IOException e) {
             throw new BlazeException("Failed to unarchive: " + e.getMessage(), e);

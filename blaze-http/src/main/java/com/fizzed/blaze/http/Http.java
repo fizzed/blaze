@@ -154,6 +154,9 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
             throw new BlazeException("Method must be set by calling .get(), .post(), etc.");
         }
 
+        // progress is only enabled if verbose is too
+        final boolean progress = this.getVerboseLogger().isVerbose() && this.getProgressHolder().get();
+
         // is there a request body?
         RequestBody requestBody = null;
         if (this.formBuilder != null) {
@@ -164,7 +167,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
 
         // if there is a request body AND progress was requested, we need to leverage our progress-enabled request
         // body to actually count the bytes as they are written
-        if (requestBody != null && this.progress.get()) {
+        if (requestBody != null && progress) {
             requestBody = new ProgressRequestBody(requestBody);
         }
 
@@ -189,7 +192,13 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
 
         final Request request = this.requestBuilder.build();
 
-        final long startTime = System.currentTimeMillis();
+        if (log.isVerbose()) {
+            String verb = request.method().toLowerCase();
+            verb = verb.substring(0, 1).toUpperCase() + verb.substring(1);
+            log.verbose("{} {}", verb, request.url());
+        }
+
+        final Timer timer = new Timer();
         final AtomicBoolean isFirstRequest = new AtomicBoolean(true);
         final OkHttpClient client = this.clientBuilder
             .addNetworkInterceptor(new Interceptor() {
@@ -198,7 +207,7 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                 public Response intercept(@NotNull Chain chain) throws IOException {
                     final Request _request = chain.request();
                     if (isFirstRequest.get()) {
-                        log.info("Http request method={} url={}", request.method(), request.url());
+                        log.debug("Http request method={} url={}", request.method(), request.url());
                         if (log.isDebug()) {
                             _request.headers().forEach(h -> {
                                 log.debug("{}: {}", h.getFirst(), h.getSecond());
@@ -208,8 +217,8 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                     isFirstRequest.set(false);
                     final Response response = chain.proceed(_request);
                     if (!response.isRedirect()) {
-                        log.info("Http response method={}, url={}, code={}, protocol={} (in {} ms)",
-                            request.method(), request.url(), response.code(), response.protocol(), (System.currentTimeMillis() - startTime));
+                        log.debug("Http response method={}, url={}, code={}, protocol={} (in {})",
+                            request.method(), request.url(), response.code(), response.protocol(), timer.stop());
                         if (log.isDebug()) {
                             response.headers().forEach(h -> {
                                 log.debug("{}: {}", h.getFirst(), h.getSecond());
@@ -236,10 +245,9 @@ public class Http extends Action<Http.Result,Integer> implements VerbosityMixin<
                 final ResponseBody responseBody = response.body();
                 if (responseBody != null) {
                     final long knownContentLength = responseBody.contentLength();
-
                     try (InputStream is = responseBody.byteStream()) {
                         try (OutputStream os = this.target.stream()) {
-                            IoHelper.copy(is, os, this.progress.get(), knownContentLength);
+                            IoHelper.copy(is, os, progress, true, knownContentLength);
                         }
                     }
                 }

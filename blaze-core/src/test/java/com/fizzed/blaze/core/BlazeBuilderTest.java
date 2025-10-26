@@ -24,10 +24,10 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -45,11 +45,11 @@ public class BlazeBuilderTest {
         Blaze blaze = blazeBuilder.build();
         
         assertThat(blaze, is(not(nullValue())));
-        assertThat(blaze.context(), is(not(nullValue())));
-        assertThat(blaze.context().config(), is(not(nullValue())));
-        assertThat(blaze.dependencies(), is(not(empty())));
-        assertThat(blaze.engine(), is(nullValue()));
-        assertThat(blaze.script(), instanceOf(TargetObjectScript.class));
+        assertThat(blaze.getContext(), is(not(nullValue())));
+        assertThat(blaze.getContext().config(), is(not(nullValue())));
+        assertThat(blaze.getDependencies(), is(not(empty())));
+        assertThat(blaze.getEngine(), is(nullValue()));
+        assertThat(blaze.getScript(), instanceOf(TargetObjectScript.class));
         
         blaze.execute("main");
 
@@ -83,7 +83,7 @@ public class BlazeBuilderTest {
         
         assertThat(blaze, is(not(nullValue())));
         
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         assertThat(tasks, hasSize(1));
         assertThat(tasks.get(0).getName(), is("main"));
@@ -109,7 +109,7 @@ public class BlazeBuilderTest {
         Blaze blaze = blazeBuilder.build();
         
         // should be in alphabetical order
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         assertThat(tasks, hasSize(3));
         assertThat(tasks.get(0).getName(), is("a1"));
@@ -140,7 +140,7 @@ public class BlazeBuilderTest {
         Blaze blaze = blazeBuilder.build();
         
         // should be in alphabetical order
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         assertThat(tasks, hasSize(3));
         assertThat(tasks.get(0).getDescription(), is("this is a1"));
@@ -171,7 +171,7 @@ public class BlazeBuilderTest {
         Blaze blaze = blazeBuilder.build();
         
         // should be in alphabetical order
-        List<BlazeTask> tasks = blaze.tasks();
+        List<BlazeTask> tasks = blaze.getTasks();
         
         assertThat(tasks, hasSize(3));
         assertThat(tasks.get(0).getName(), is("c3"));

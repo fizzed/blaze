@@ -21,7 +21,6 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.system.Exec;
-import com.fizzed.blaze.util.CommandLines;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.WrappedOutputStream;
 import com.jcraft.jsch.ChannelExec;
@@ -195,7 +194,7 @@ public class JschExec extends SshExec {
                 throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, exitValue);
             }
             
-            return new SshExec.Result(this, exitValue);
+            return new Exec.Result(this, exitValue);
         } catch (JSchException | InterruptedException e) {
             throw new SshException(e.getMessage(), e);
         } finally {

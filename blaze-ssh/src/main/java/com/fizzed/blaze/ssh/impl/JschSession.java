@@ -16,6 +16,7 @@
 package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.ssh.SshExec;
 import com.fizzed.blaze.ssh.SshSession;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.ImmutableUri;
@@ -44,7 +45,7 @@ public class JschSession implements SshSession {
     }
     
     @Override
-    public Exec newExec() {
+    public SshExec newExec() {
         return new JschExec(context, this);
     }
     

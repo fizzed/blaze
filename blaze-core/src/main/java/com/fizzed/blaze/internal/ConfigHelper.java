@@ -26,13 +26,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Optional.ofNullable;
 
 public class ConfigHelper {
     static private final Logger log = LoggerFactory.getLogger(ConfigHelper.class);
@@ -59,40 +58,54 @@ public class ConfigHelper {
 
         return new ConfigPaths(primaryFile, localFile);
     }
-    
-    static public Config create(ConfigPaths configPaths) {
+
+    static public Config createEmpty() {
+        return new ConfigImpl(com.typesafe.config.ConfigFactory.empty());
+    }
+
+    static public Config create(boolean systemProperties, ConfigPaths configPaths, Map<String,String> configProperties) {
         //
         // configuration
         //
-        com.typesafe.config.Config typesafeConfig = null;
+        com.typesafe.config.Config typesafeConfig = com.typesafe.config.ConfigFactory.empty();
+
+        if (systemProperties) {
+            // load system properties, with a fallback of whatever was previous
+            log.debug("Configuring with system properties");
+            typesafeConfig = com.typesafe.config.ConfigFactory.systemProperties()
+                .withFallback(typesafeConfig);
+        }
 
         // there are 2 config files -- one is the primary and then there is a local conf that can override it
         // the local conf is intended to allow you to NOT commit a file to your repository
-        final Path primaryFile = configPaths != null ? configPaths.getPrimaryFile() : null;
-        final Path localFile = configPaths != null ? configPaths.getLocalFile() : null;
-
-        // build a typesafe config that we'll wrap w/ our interface (just in case we swap out down the road)
-        if (primaryFile != null && Files.exists(primaryFile)) {
-            log.debug("Configuring with file {}", primaryFile);
-            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(primaryFile.toFile());
-        } else {
-            typesafeConfig = com.typesafe.config.ConfigFactory.empty();
+        final Path primaryConfigFile = ofNullable(configPaths).map(ConfigPaths::getPrimaryFile).orElse(null);
+        if (primaryConfigFile != null && Files.exists(primaryConfigFile)) {
+            // load primary config, with a fallback of whatever was previous
+            log.debug("Configuring with file {}", primaryConfigFile);
+            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(primaryConfigFile.toFile())
+                .withFallback(typesafeConfig);
         }
 
         // use the local file to override anything in the default?
+        final Path localFile = ofNullable(configPaths).map(ConfigPaths::getLocalFile).orElse(null);
         if (localFile != null && Files.exists(localFile)) {
+            // load primary config, with a fallback of whatever was previous
             log.debug("Configuring with local/overlay file {}", localFile);
-            com.typesafe.config.Config typesafeLocalConfig = com.typesafe.config.ConfigFactory.parseFile(localFile.toFile());
-            // we'll actually use the local version first, making the primary the new fallback
-            typesafeConfig = typesafeLocalConfig.withFallback(typesafeConfig);
+            typesafeConfig = com.typesafe.config.ConfigFactory.parseFile(localFile.toFile())
+                .withFallback(typesafeConfig);
         }
 
-        // overlay system properties on top of it
-        typesafeConfig = com.typesafe.config.ConfigFactory.load(typesafeConfig);
+        // apply config properties
+        if (configProperties != null && !configProperties.isEmpty()) {
+            // load config properties, with a fallback of whatever was previous
+            log.debug("Configuring with config properties {}", configProperties);
+            typesafeConfig = com.typesafe.config.ConfigFactory.parseMap(configProperties)
+                .withFallback(typesafeConfig);
+        }
 
         return new ConfigImpl(typesafeConfig);
     }
-    
+
     static public boolean isSuperDebugEnabled() {
         return System.getProperty("blaze.superdebug", "false").equalsIgnoreCase("true");
     }
