@@ -18,6 +18,8 @@ package com.fizzed.blaze.cli;
 import com.fizzed.blaze.Version;
 import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.internal.InstallHelper;
+import com.fizzed.blaze.logging.LogLevel;
+import com.fizzed.blaze.logging.LoggerConfig;
 import com.fizzed.blaze.util.Timer;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -231,6 +233,12 @@ public class Bootstrap1 {
                 System.setProperty("blaze.superdebug", "true");
                 break;
         }
+
+        LoggerConfig.setDefaultLogLevel(LogLevel.valueOf(level.toUpperCase()));
+        LoggerConfig.setLogLevel("script", LogLevel.valueOf(scriptLevel.toUpperCase()));
+        LoggerConfig.setLogLevel("org.zeroturnaround", LogLevel.OFF);
+
+
 
         JdkLoggerHelper.setRootLevel(level);
         JdkLoggerHelper.setLevel("script", scriptLevel);

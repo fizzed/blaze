@@ -150,10 +150,10 @@
         </dependency>
                 
         <!-- logback is suprisingly huge -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-        </dependency>
+        </dependency>-->
         
     </dependencies>
 
