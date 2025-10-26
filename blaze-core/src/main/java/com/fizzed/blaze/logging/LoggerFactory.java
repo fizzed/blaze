@@ -8,7 +8,6 @@ import org.slf4j.helpers.AbstractLogger;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.io.PrintStream;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -79,10 +78,6 @@ public class LoggerFactory implements ILoggerFactory {
         // A shortened name for display
         private final String shortName;
 
-        // The output streams
-        private final PrintStream outputStream = System.out;
-        private final PrintStream errorStream = System.err;
-
         protected SimpleLogger(String name) {
             this.name = name;
             this.shortName = shortenName(name);
@@ -118,7 +113,8 @@ public class LoggerFactory implements ILoggerFactory {
 
             // 3. Get the right color and output stream
             String color = myLevel.getColor();
-            PrintStream out = (myLevel.getLevelInt() >= LogLevel.WARN.getLevelInt()) ? errorStream : outputStream;
+            //PrintStream out = (myLevel.getLevelInt() >= LogLevel.WARN.getLevelInt()) ? errorStream : outputStream;
+            PrintStream out = System.out;
 
             // 4. Build the final log string
             // [Timestamp] [Thread] LEVEL [LoggerName] - Message
@@ -139,13 +135,13 @@ public class LoggerFactory implements ILoggerFactory {
             sb.append(formattedMessage);
 
             // 5. Print it!
-            out.println(sb.toString());
+            out.println(sb);
 
             // 6. Print the stack trace if it exists
             if (throwable != null) {
-                out.print(color); // Keep the color for the stack trace
+                //out.print(color); // Keep the color for the stack trace
                 throwable.printStackTrace(out);
-                out.print(LogLevel.ANSI_RESET);
+                //out.print(LogLevel.ANSI_RESET);
                 out.flush();
             }
         }

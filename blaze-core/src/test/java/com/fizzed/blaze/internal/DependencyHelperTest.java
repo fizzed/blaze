@@ -70,7 +70,7 @@ public class DependencyHelperTest {
         // NOTE: 4 OR the version of slf4j-api may change if those dependencies actually change, but this will help
         // validate that the bundled.txt file is being parsed correctly
         assertThat(dependencies, hasSize(4));
-        assertThat(dependencies, hasItem(Dependency.parse("org.slf4j:slf4j-api:2.0.13")));
+        assertThat(dependencies, hasItem(Dependency.parse("org.slf4j:slf4j-api:2.0.17")));
     }
 
     @Test
