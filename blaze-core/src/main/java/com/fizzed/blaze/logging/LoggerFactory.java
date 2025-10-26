@@ -123,27 +123,27 @@ public class LoggerFactory implements ILoggerFactory {
             StringBuilder sb = new StringBuilder();
             if (LoggerConfig.isDisplayDateTime()) {
                 sb.append(DATE_FORMATTER.format(Instant.now()));
+                sb.append(" ");
             }
 
-            sb.append(" [");
+            sb.append("[");
             if (LoggerConfig.isDisplayAnsiColors()) sb.append(color);                           // start color
             sb.append(String.format("%-4s", myLevel.getLogName())); // "INFO ", "ERROR"
             if (LoggerConfig.isDisplayAnsiColors()) sb.append(LogLevel.ANSI_RESET);             // end color
-            sb.append("]");
+            sb.append("] ");
 
             if (LoggerConfig.isDisplayThreadName()) {
-                sb.append(" [");
+                sb.append("[");
                 sb.append(Thread.currentThread().getName());
-                sb.append("]");
+                sb.append("] ");
             }
 
             if (LoggerConfig.isDisplayLoggerName()) {
-                sb.append(" [");
+                sb.append("[");
                 sb.append(this.shortName);
-                sb.append("]");
+                sb.append("] ");
             }
 
-            sb.append(" ");
             sb.append(formattedMessage);
 
             // 5. Print it!

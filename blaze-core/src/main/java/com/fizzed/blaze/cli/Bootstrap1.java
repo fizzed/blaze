@@ -235,6 +235,9 @@ public class Bootstrap1 {
         }
 
         LoggerConfig.setDefaultLogLevel(LogLevel.valueOf(level.toUpperCase()));
+        LoggerConfig.setDisplayLoggerName(false);
+        LoggerConfig.setDisplayThreadName(false);
+        LoggerConfig.setDisplayDateTime(false);
         LoggerConfig.setLogLevel("script", LogLevel.valueOf(scriptLevel.toUpperCase()));
         LoggerConfig.setLogLevel("org.zeroturnaround", LogLevel.OFF);
 
