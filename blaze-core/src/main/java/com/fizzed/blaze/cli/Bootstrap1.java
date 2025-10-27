@@ -210,6 +210,7 @@ public class Bootstrap1 {
         // default logging level of 0
         String level = "info";
         String scriptLevel = "info";
+        boolean additionalLoggingProperties = false;
 
         switch (loggingLevel) {
             case -3:    // special case, disable everything!
@@ -226,26 +227,25 @@ public class Bootstrap1 {
                 break;
             case 2:     // -xx
                 level = scriptLevel = "trace";
+                additionalLoggingProperties = true;
                 break;
             case 3:     // -xxx
                 level = scriptLevel = "trace";
+                additionalLoggingProperties = true;
                 // but also set another system property which really turns on even MORE debugging
                 System.setProperty("blaze.superdebug", "true");
                 break;
         }
 
         LoggerConfig.setDefaultLogLevel(LogLevel.valueOf(level.toUpperCase()));
-        LoggerConfig.setDisplayLoggerName(false);
-        LoggerConfig.setDisplayThreadName(false);
-        LoggerConfig.setDisplayDateTime(false);
+        LoggerConfig.setDisplayLoggerName(additionalLoggingProperties);
+        LoggerConfig.setDisplayThreadName(additionalLoggingProperties);
+        LoggerConfig.setDisplayDateTime(additionalLoggingProperties);
         LoggerConfig.setLogLevel("script", LogLevel.valueOf(scriptLevel.toUpperCase()));
         LoggerConfig.setLogLevel("org.zeroturnaround", LogLevel.OFF);
-        // annoying "port is null" as invalid ERROR logging on jsch (I submitted a PR to fix this, we can back this
-        // out once that PR is pushed out
-        LoggerConfig.setLogLevel("com.jcraft.jsch.OpenSSHConfig", LogLevel.OFF);
 
 
-
+        // legacy logging properties
         JdkLoggerHelper.setRootLevel(level);
         JdkLoggerHelper.setLevel("script", scriptLevel);
 
