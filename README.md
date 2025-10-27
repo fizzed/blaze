@@ -96,6 +96,7 @@ JVM languages.
  - [Basic usage](docs/BASIC.md)
  - [SSH plugin](docs/SSH.md)
  - [HTTP plugin](docs/HTTP.md)
+ - [Archive plugin](docs/ARCHIVE.md)
 
 ## Try It
 

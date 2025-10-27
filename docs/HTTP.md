@@ -3,10 +3,9 @@ Blaze by Fizzed
 
 ## HTTP
 
-Add the following to your `blaze.conf` file to include rich support for HTTP --
-much better support than the JDK HttpUrlConnection class.
-You do not want to specify a version so Blaze will resolve the identical version
-to whatever `blaze-core` you're running with.
+Add the following to your `blaze.conf` file to include rich support for HTTP get/post/delete/etc. Significantly
+enhanced over any built-in JDK http support.  You do not want to specify a version so Blaze will resolve the identical
+version to whatever `blaze.jar` you're running with.
 
 ```
 blaze.dependencies = [
@@ -14,11 +13,32 @@ blaze.dependencies = [
 ]
 ```
 
-For now this is mostly a "virtual" dependency that will trigger the transitive
-dependency of Apache Fluent HttpClient to be downloaded and added to the classpath.
-Apache's own transitive dependencies will be correctly excluded to pickup the
-right SLF4J bindings.  Down the road we may provide additional wrappers to make
-working with HTTP via Apache HttpClient even easier -- although it's [own
-fluent client](https://hc.apache.org/httpcomponents-client-ga/tutorial/html/fluent.html) isn't awful.
+Here is an example of getting a URL, capturing all of its output to a String, and then printing it out.
 
-Checkout [this](../examples/http.java) for an example API get request
+```java
+import org.slf4j.Logger;
+import com.fizzed.blaze.Contexts;
+import com.fizzed.blaze.util.MutableUri;
+import java.net.URI;
+import static com.fizzed.blaze.Https.*;
+
+public class http {
+    static final private Logger log = Contexts.logger();
+
+    public void main() throws Exception {
+        String url = MutableUri.of("http://jsonplaceholder.typicode.com/comments")
+            .query("postId", 1)
+            .toString();
+        
+        String output = httpGet(url)
+            .verbose()
+            .progress()
+            .addHeader("Accept", "application/json")
+            .runCaptureOutput()
+            .toString();
+        
+        log.info("Quote of the day JSON is {}", output);
+    }
+    
+}
+```

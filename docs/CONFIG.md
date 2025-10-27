@@ -23,7 +23,7 @@ In your script (we'll use .java as an example), you'd access the config value
 like so
 
 ```java
-import static com.fizzed.blaze.Contexts.config
+import static com.fizzed.blaze.Contexts.*;
 
 // ... other code
 
@@ -34,18 +34,28 @@ Integer port = config().value("undertow.port", Integer.class).get();
 be used instead with a call to `.getOr()` instead
 
 ```java
-import static com.fizzed.blaze.Contexts.config
+import static com.fizzed.blaze.Contexts.*;
 
 // ... other code
 
 Integer port = config().value("undertow.port", Integer.class).getOr(9000);
 ```
 
-The `Config` object prefers System properties over config file values.  So
-standard Java system properties can be supplied on the command-line to override
-values in the config file.  A great way to also pass arguments to your tasks.
+There is also support for flag-type command line arguments, where there's no associated value. If the flag is present,
+the value will be `true`.
 
-    java -Dundertow.port=9001 -jar blaze.jar
+```java
+import static com.fizzed.blaze.Contexts.*;
+
+// ... other code
+
+boolean present = config().flag("my-flag").getOr(false);
+```
+
+The `Config` object prefers command-line arguments over config file values.  So arguments can be supplied on the
+command-line to override values in the config file.  A great way to also pass arguments to your tasks.
+
+    java -jar blaze.jar --undertow.port 9001 
 
 ### Blaze Dependencies
 
