@@ -1,6 +1,10 @@
 Blaze by Fizzed
 ===============
 
+## 2.0.2 - 2025-10-27
+ - Fix mv() command when moving files or directories across partitions / volumes / filesystems. The underlying Files.move
+command was throwing a "DirectoryNotEmptyException" and this special case requires a copy-then-delete strategy.
+
 ## 2.0.1 - 2025-10-27
  - Fixed NPE with task group display in cases where no @TaskGroup was defined
  - Blaze -xx mode now enables logging timestamps, logger name, and thread name for enhanced troubleshooting
