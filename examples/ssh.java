@@ -16,9 +16,9 @@ public class ssh {
     
     public void main() throws Exception {
         // simple for skipping this example in try_all.java
-        boolean in_try_all_example = config.value("examples.try_all", Boolean.class).getOr(false);
-        
+        boolean in_try_all_example = config.flag("examples-try-all").getOr(false);
         if (in_try_all_example) {
+            log.info("Skipping example in try_all.java");
             return;
         }
         
@@ -38,6 +38,7 @@ public class ssh {
                 .command("pwd")
                 .pipeOutput(capture)
                 .run();
+
             log.info("Remote working dir is {}", capture.toString().trim());
             
             // who are we logged in as? (optimized capture example since its

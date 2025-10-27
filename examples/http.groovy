@@ -3,8 +3,7 @@
 import org.slf4j.Logger
 import com.fizzed.blaze.Contexts
 import com.fizzed.blaze.util.MutableUri
-import java.net.URI
-import org.apache.http.client.fluent.Request
+import static com.fizzed.blaze.Https.*;
 
 def main() {
     def log = Contexts.logger()
@@ -13,12 +12,10 @@ def main() {
         .query("postId", 1)
         .toURI()
 
-    def output = 
-        Request.Get(uri)
-            .addHeader("Accept", "application/json")
-            .execute()
-            .returnContent()
-            .toString()
+    def output = httpGet(uri.toString())
+        .addHeader("Accept", "application/json")
+        .runCaptureOutput()
+        .toString();
 
     log.info("Quote of the day JSON is {}", output)
 }

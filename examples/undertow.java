@@ -10,15 +10,16 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 
 public class undertow {
+    final private Logger log = Contexts.logger();
+    final private Config config = Contexts.config();
 
     public void main() throws Exception {
-        Path dir = Contexts.baseDir();
-        Logger log = Contexts.logger();
-        Config config = Contexts.config();
+        // simple for skipping this example in try_all.java
+        boolean in_try_all_example = config.flag("examples-try-all").getOr(false);
 
+        Path dir = Contexts.baseDir();
         String host = config.value("undertow.host").get();
         int port = config.value("undertow.port", int.class).get();
-        boolean in_try_all_example = config.value("examples.try_all", Boolean.class).getOr(false);
 
         Undertow undertow = Undertow.builder()
             .addHttpListener(port, host)

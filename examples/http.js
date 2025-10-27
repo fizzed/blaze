@@ -5,7 +5,7 @@ var Imports = new JavaImporter(
     Packages.org.slf4j.Logger,
     Packages.com.fizzed.blaze.Contexts,
     Packages.com.fizzed.blaze.util.MutableUri,
-    Packages.org.apache.http.client.fluent.Request);
+    Packages.com.fizzed.blaze.Https);
     
 with (Imports) {
     
@@ -16,12 +16,10 @@ with (Imports) {
             .query("postId", 1)
             .toURI();
 
-        var output = 
-            Request.Get(uri)
-                .addHeader("Accept", "application/json")
-                .execute()
-                .returnContent()
-                .toString();
+        var output = Https.httpGet(uri.toString())
+            .addHeader("Accept", "application/json")
+            .runCaptureOutput()
+            .toString();
 
         log.info("Quote of the day JSON is {}", output);
     };
