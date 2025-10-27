@@ -1,8 +1,35 @@
 Blaze by Fizzed
 ===============
 
-#### 1.10.0 - 2025-10-20
+## 2.0.1 - 2025-10-27
+ - Fixed NPE with task group display in cases where no @TaskGroup was defined
+ - Blaze -xx mode now enables logging timestamps, logger name, and thread name for enhanced troubleshooting
+ - More polish on error logging if no tasks were supplied on command line
+ - Fix try_all examples
 
+## 2.0.0 - 2025-10-26
+ - Potentially Breaking: System properties are NO longer included in Config -- those properties had a good chance of
+conflicting with argument names that your application wanted to use.
+ - Potentially Breaking: Exec changed its interfaces and it **may** break some existing Java code compiled against the older versions. Compiling
+against the latest version will resolve that.
+ - Full refactor of command line argument processing. Once tasks are included on cmd line, all arguments thereafter count
+towards application (so it can hijack things like --version from blaze as long as its after a task name).
+ - Maven POM generator now no longer compiles script (allows you to have syntax errors but still have POM generated)
+ - Tasks now have a default order value of Integer.MAX_VALUE, so that any @Task with an order will display above ones
+that don't have an order value explicitly set.
+ - Blaze now has its own SLF4j logger and we removed slf4j-simple as a dependency. Our own version now supports ANSI
+colors for log levels, as well as much easier programmatic control over how logging works.
+ - Refactor and modernize how help, version, and task lists are displayed in CLI
+ - New @TaskGroup annotation at class-level, plus a "group" parameter in @Task to let you group tasks and the display
+of them into groups.
+ - New ```config.flag()``` option on Config to allow for command-line arguments that are simply flags (no value assigned
+to them)
+ - Migrate all unit tests to Junit 5
+ - Bump slf4j to v2.0.17
+ - Bump apache ivy to v2.5.3
+ - Bump jsch to v2.27.4
+
+## 1.10.0 - 2025-10-20
  - Java 25 Support
  - New github action for Java 25 testing
  - Bump Kotlin embeddable compiler to v2.2.20 (for Java 25 support)
@@ -13,15 +40,13 @@ Blaze by Fizzed
    the process of something like downloading a file and only having it become the final file name once its fully downloaded.
  - Fixed the build problem on Maven >= 3.9.7
 
-#### 1.9.0 - 2025-01-21
-
+## 1.9.0 - 2025-01-21
  - New PowerShell support on Windows where .ps1 scripts are searched for and can be executed by blaze invoking it with
    `powershell.exe`
  - Eating our own dog food - our own .blaze/blaze.java leverages blaze public project template for cross platform tests,
    common release tasks, etc.
 
-#### 1.8.0 - 2024-12-19
-
+## 1.8.0 - 2024-12-19
  - New `blaze-postoffice` module to handle sending emails via SMTP. The SMTP settings can be setup in the `blaze.conf`
    or programatically setup with the new PostOffices.mail() action.
  - Config now supports Path and File class types
@@ -29,20 +54,17 @@ Blaze by Fizzed
    defaults and the other could potentially not be committed to a repository to help define overrides.
  - Exec and sshExec both now support exit code value ranges, as well as ignoring the exit code entirely via `exitValuesAny()`
 
-#### 1.7.0 - 2024-12-17
-
+## 1.7.0 - 2024-12-17
  - New `blaze-archive` module to handle wide variety of uncompress and unarchive activities such as unzipping, or
    untarring/ungzipping a file.
  - New (and reworked) `blaze-http` module to make Http methods like GET, POST as simple and cross-platform as using
    something like curl.
 
-#### 1.6.1 - 2024-11-04
-
+## 1.6.1 - 2024-11-04
  - Blaze install command (via -i flag) will overwrite existing files (to make updating scripts easier)
  - Bump commons-io to v2.14.0
 
-#### 1.6.0 - 2024-11-04
- 
+## 1.6.0 - 2024-11-04
  - New powershell blaze.ps1 to improve ctrl+c not prompting user to terminate a batch file (if you use blaze -i installer)
  - exec() launched processes (and their descendant processes) will auto destroy when blaze JVM process shuts down (fixes
 issue on Windows where by default the hierarchy of processes is not destroyed on CTRL+C)
@@ -54,26 +76,21 @@ issue on Windows where by default the hierarchy of processes is not destroyed on
  - Bump jsch to v0.2.18
  - Bump jna to v5.13.0 (fixes ssh agent for arm64 platforms) 
 
-#### 1.5.1 - 2023-10-31
-
+## 1.5.1 - 2023-10-31
  - Add Systems.remove() methods back (was causing backwards incompatiblity issues)
- -  Add Globber.stream() method back (was causing backwards incompatiblity issues)
+ - Add Globber.stream() method back (was causing backwards incompatiblity issues)
 
-#### 1.5.0 - 2024-10-10
-
+## 1.5.0 - 2024-10-10
  - New Copy and Move commands in the Systems.* class
  - Fix parsing of Java versions on some JDK distributions
  - Verbosity support for exec, mkdir, and remove commands
- - 
 
-#### 1.4.0 - 2023-10-26
-
+## 1.4.0 - 2023-10-26
  - JavaScript (via Nashorn) re-enabled using non-JDK package for Java 11+
  - More improvements for java source version of scripts, including a config propery "java.source.version" that can
 help permanently set it
 
-#### 1.3.0 - 2023-10-15
-
+## 1.3.0 - 2023-10-15
  - Kotlin upgraded to support v1.9.10 .kt scripts
  - Groovy upgraded to support v4.0.15 .groovy scripts
  - Java script engine no longer locks source to Java 8, it will now use the version of the JVM executing the script.
@@ -81,12 +98,10 @@ help permanently set it
  - Fixed unit tests failing on Windows & MacOS due to a maven surefire issue
  - Support for parent classes of scripts to expose public methods (tasks). Allows scripts to extend parent classes.
 
-#### 1.2.1 - 2023-10-05
-
+## 1.2.1 - 2023-10-05
  - Prevent maven project installs and deploys in IDE support
 
-#### 1.2.0 - 2023-10-01
-
+## 1.2.0 - 2023-10-01
  - Add additional default ~/.ssh identities that will be loaded: id_ed25519, id_ecdsa, id_ecdsa_sk, id_ed25519_sk, id_xmss
  which are on top of existing id_rsa and id_dsa
  - New general purpose blaze command "--generate-maven-project" to generate a pom.xml file that lives in same directory as 
@@ -98,21 +113,17 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - Bump jsch fork to v0.2.12
  - Bump slf4j to v2.0.7
 
-#### 1.1.0 - 2023-01-02
-
+## 1.1.0 - 2023-01-02
  - Switch to fork of jsch (since jsch is no longer maintained). Improves support for modern ciphers, etc.
  - Automated testing using github workflows
 
-#### 1.0.2 - 2021-10-07
-
+## 1.0.2 - 2021-10-07
  - Improved support for ssh-agents in blaze-ssh
 
-#### 1.0.1 - 2021-10-07
-
+## 1.0.1 - 2021-10-07
  - Support for ssh-agents in blaze-ssh
 
-#### 1.0.0 - 2020-06-09
-
+## 1.0.0 - 2020-06-09
  - New blaze-haproxy module
  - New blaze-docker module to simplify executing on docker containers
  - New blaze-mysql module
@@ -128,47 +139,38 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - zt-turnaround to v1.11
  - Bump ivy to v2.5.0
 
-#### 0.21.0 - 2020-06-01
-
+## 0.21.0 - 2020-06-01
  - Improved SFTP put/get progress meter (uses single line of text e.g. wget)
 
-#### 0.20.0 - 2019-05-24
-
+## 0.20.0 - 2019-05-24
  - Support for Java 9, 10, 11, and up
 
-#### 0.18.0 - 2017-12-13
-
+## 0.18.0 - 2017-12-13
  - Blaze .java engine automatically adds Eclipse compiler to dependency resolution
    if running on JRE
  - Custom zt-exec InputStreamPumper fixes unnecessary aggressive error logging
  - Eclipse compiler now omits compile warnings from stdout (matches JDK compiler)
 
-#### 0.17.0 - 2017-12-12
-
+## 0.17.0 - 2017-12-12
  - Fix issue with Streamables.input not passing EOF thru in some cases.
  - Added Streamables.input for text
 
-#### 0.16.0 - 2017-01-30
-
+## 0.16.0 - 2017-01-30
  - Bump jsch from v0.1.53 to v0.1.54
  - blaze-ssh: Remove debug output indicating jar was a snapshot
  - blaze-ssh: Fix random connect timeouts when via bastion/jump host
 
-#### 0.15.1 - 2016-12-09
-
+## 0.15.1 - 2016-12-09
  - Fix issue parsing system properties w/ an equals char
 
-#### 0.15.0 - 2016-09-27
-
+## 0.15.0 - 2016-09-27
  - Exec.workingDir no longer tries to resolve against project base dir.
  - More defensive code while searching for homedrive on windows
 
-#### 0.14.1 - 2016-09-21
-
+## 0.14.1 - 2016-09-21
  - Improve user home dir locator for windows
 
-#### 0.14.0 - 2016-09-16
-
+## 0.14.0 - 2016-09-16
  - New `@Task` annotation can be added to blaze methods to declare descriptions
    and ordering of tasks being listed.  Works in Java, Groovy, and Kotlin engines.
    See `examples/hello*` scripts for sample usage.
@@ -179,14 +181,12 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
    with "-SNAPSHOT".
  - Blaze tasks() returns a `ScriptTask` rather than `String`
 
-#### 0.13.0 - 2016-09-06
-
+## 0.13.0 - 2016-09-06
  - New `blaze-vagrant` module
  - Support for new `vagrant+ssh` scheme to connect via SSH to vagrant
    instances. Simply add the `blaze-vagrant` module to your config.
 
-#### 0.12.0 - 2016-08-29
-
+## 0.12.0 - 2016-08-29
  - Support for SSH proxy/bastion/jump hosts. SSH connects will do a best
    effort at using the `ProxyCommand` value from your ssh config file.  Or you
    can set one programmatically with the `SshConnect.proxy()` method.
@@ -201,18 +201,15 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - groovy from v2.4.6 to v2.4.7
  - kotlin from v1.0.1-2 to v1.0.2
 
-#### 0.11.1 - 2016-06-24
-
+## 0.11.1 - 2016-06-24
  - Support for enabling a pty on SshExec (which helps run certain commands
    execute as you'd expect, but not always needed, so its false by default)
 
-#### 0.11.0 - 2016-05-27
-
+## 0.11.0 - 2016-05-27
  - Bump to kotlin 1.0.2 for blaze-kotlin
  - Support for kotlin v1!
 
-#### 0.10.0 - 2016-04-12
-
+## 0.10.0 - 2016-04-12
  - Bump to zt-exec v1.9 (for an issue we reported and fixed with a PR)
  - Bump to groovy v2.4.6
  - Bump to slf4j v1.7.20
@@ -220,8 +217,7 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
    executable name.  Since Systems.requireExec() and Systems.exec() uses this 
    under-the-hood, this also fixes the same issue with them. 
 
-#### 0.9.2 - 2016-04-08
-
+## 0.9.2 - 2016-04-08
  - Systems.exec and SecureShells.exec support a convenient `runCaptureOutput`
    method to simplify the use-case of capturing the output of a process.
  - Convenience disablePipeInput, disablePipeOutput, and disablePipeError added
@@ -230,13 +226,11 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - Streamables now supports lines() and matchedLines() that produce a Stream
    of Strings.  Useful for grep-like replacement.
 
-#### 0.9.1 - 2016-04-08
-
+## 0.9.1 - 2016-04-08
  - zt-exec now included with blaze-lite jar by default. Allows for faster
    execution by skipping resolver.
 
-#### 0.9.0 - 2016-04-08
-
+## 0.9.0 - 2016-04-08
  - Dependency resolver skipped if all dependencies already resolved.  Huge
    speedup in execution for scripts that don't use additional dependencies.
  - Blaze can execute objects as scripts w/o requiring an engine. Useful for
@@ -250,8 +244,7 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - A `DefaultContext` is now bound by default so users of Blaze as a dependency
    in other projects do not need to bind one.
 
-#### 0.8.2 - 2016-04-04
-
+## 0.8.2 - 2016-04-04
  - blaze-ssh underlying jsch exec would never terminate threads that pumped
    the InputStream to the remote host -- implemented workaround using wrapped
    streams
@@ -259,8 +252,7 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - blaze-ssh sshExec commands correct path delimiter when running on windows
  - Bump to crux-vagrant v0.3.2 for unit testing w/ real ssh virt machines
 
-#### 0.8.1 - 2016-03-28
-
+## 0.8.1 - 2016-03-28
  - Support for placing default script in  `.blaze` sub directory.  From your
    working directory, Blaze will now automatically search `blaze.[ext]` then 
    `blaze/blaze.[ext]` then `.blaze/blaze.[ext]`
@@ -271,15 +263,13 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - Added vagrant for true integration junit testing on various operating systems.
  - Refactored project to have each module in a prefixed dir (e.g. blaze-ssh)
 
-#### 0.8.0 - 2015-11-20
-
+## 0.8.0 - 2015-11-20
  - Refactored actions to return a concrete Result.  run() returns the primary
    result type and runResult() returns the full result.
  - Context.userDir() now checks for environment HOME variable rather than
    Java property "user.home".  Allows running under "sudo" properly.
 
-#### 0.7.0 - 2015-11-18
-
+## 0.7.0 - 2015-11-18
  - Scripts now can throw checked exceptions.  Enables cleaner stacktraces to
    console without using wrapped runtime exceptions.
  - Refactored capturing output from actions (e.g. Exec).  A CaptureOutput needs
@@ -289,13 +279,11 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - Added Pipeline feature - running multiple actions in sequence with streaming
    I/O between
 
-#### 0.6.1 - 2015-11-16
-
+## 0.6.1 - 2015-11-16
  - Windows -i command-line switch installs both blaze.bat and blaze (so it's
    compatible with bash, mingw32, etc.)
 
-#### 0.6.0 - 2015-11-16
-
+## 0.6.0 - 2015-11-16
  - Netbeans plugin support 
  - Default blaze script now searches current dir and then "blaze" subdir
  - Examples adjusted to include shebang on groovy and kotline scripts
@@ -304,14 +292,12 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - blaze.jar supports "-i" command-line switch to install helper blaze or blaze.bat
    scripts to a target directory
 
-#### 0.5.0 - 2015-11-10
-
+## 0.5.0 - 2015-11-10
  - Support for Kotlin and Kotlin scripts
  - Default logging statements optimized (even less by default)
  - Cached compiles now use MD5 hashes vs. timestamps
 
-#### 0.4.0 - 2015-11-05
-
+## 0.4.0 - 2015-11-05
  - System properties with -D are now processed and passed thru to a script
    (e.g. `java -jar blaze.jar task0 task1 -Dmyarg=true`)
  - Config refactored with `value` and `valueList` instead of `find` and `findList`.
@@ -319,18 +305,15 @@ SNAPSHOT or release version, while RELEASE will only pull in latest released ver
  - System.exec now supports the NamedStream class for piping of input, output,
    and error.
 
-#### 0.3.0 - 2015-11-03
- 
+## 0.3.0 - 2015-11-03
  - Feature rich SSH client for both executing commands (exec) and file transfers
    (sftp). Very much like programmatic access to "openssh" but all with pure Java.
    See examples/ssh.java and examples/sftp.java for demos.
  - Excellent "glob" support with com.fizzed.blaze.util.Globber class
    See examples/globber.java for demo.
 
-#### 0.2.1 - 2015-10-28
-
+## 0.2.1 - 2015-10-28
  - Initial public release
 
-#### 0.1.0 - 2013-05-01
-
+## 0.1.0 - 2013-05-01
  - Never released
