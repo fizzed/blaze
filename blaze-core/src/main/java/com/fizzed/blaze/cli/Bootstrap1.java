@@ -240,6 +240,9 @@ public class Bootstrap1 {
         LoggerConfig.setDisplayDateTime(false);
         LoggerConfig.setLogLevel("script", LogLevel.valueOf(scriptLevel.toUpperCase()));
         LoggerConfig.setLogLevel("org.zeroturnaround", LogLevel.OFF);
+        // annoying "port is null" as invalid ERROR logging on jsch (I submitted a PR to fix this, we can back this
+        // out once that PR is pushed out
+        LoggerConfig.setLogLevel("com.jcraft.jsch.OpenSSHConfig", LogLevel.OFF);
 
 
 
