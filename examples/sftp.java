@@ -17,10 +17,10 @@ public class sftp {
     static final private Config config = Contexts.config();
 
     public void main() throws Exception {
-        // for skipping this example in try_all.java
-        boolean in_try_all_example = config.value("examples.try_all", Boolean.class).getOr(false);
-
+        // simple for skipping this example in try_all.java
+        boolean in_try_all_example = config.flag("examples-try-all").getOr(false);
         if (in_try_all_example) {
+            log.info("Skipping example in try_all.java");
             return;
         }
 

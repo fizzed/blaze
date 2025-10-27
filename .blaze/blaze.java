@@ -26,12 +26,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fizzed.buildx.Target;
-import org.slf4j.Logger;
 
 @TaskGroup(value="project", order=1, name="Project")
-@TaskGroup(value="maintainers", order=99999, name="Maintainers Only")
+@TaskGroup(value="maintainers", order=2, name="Maintainers Only")
 public class blaze extends PublicBlaze {
-    static private final Logger log = Contexts.logger();
 
     @Task(group="project", order=1, value="Hello, world! example")
     public void hello() {
@@ -45,6 +43,8 @@ public class blaze extends PublicBlaze {
             .file(withBaseDir("../examples/try_all.java"))
             .build()
             .execute();
+
+        Contexts.withBaseDir(".");
     }
 
     @Task(group="project", order=3, value="Run unit tests across all LTS Java releases")

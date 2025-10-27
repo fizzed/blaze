@@ -8,7 +8,13 @@ public class prompt {
     final private Config config = Contexts.config();
     
     public void main() throws Exception {
-        
+        // simple for skipping this example in try_all.java
+        boolean in_try_all_example = config.flag("examples-try-all").getOr(false);
+        if (in_try_all_example) {
+            log.info("Skipping example in try_all.java");
+            return;
+        }
+
         String s = null;
             
         s = Contexts.prompt()

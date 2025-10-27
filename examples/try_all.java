@@ -5,6 +5,7 @@ import static com.fizzed.blaze.util.Globber.globber;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +31,8 @@ public class try_all {
             .sorted()
             .forEach((p) -> {
                 log.info("Trying {}", p);
-                exec("java", "-Dexamples.try_all=true", "-jar", blazeJarFile, "-f", p).run();
+                exec("java", "-jar", blazeJarFile, "-f", p, "--examples-try-all")
+                    .run();
                 count.incrementAndGet();
             });
         
@@ -38,7 +40,19 @@ public class try_all {
     }
     
     private Path findBlazeJarOnClassPath() throws URISyntaxException {
-        // does the jar already exist on claspath?
+        // we just need to find the blaze.jar
+        final Path baseDir = Contexts.withBaseDir(".");
+        Path blazeJarFile = baseDir.resolve("blaze.jar");
+        if (!Files.exists(blazeJarFile)) {
+            blazeJarFile = baseDir.resolve("../blaze.jar");
+            if (!Files.exists(blazeJarFile)) {
+                return null;
+            }
+        }
+
+        return blazeJarFile;
+
+        /*// does the jar already exist on claspath?
         URLClassLoader urlClassLoader = (URLClassLoader)Thread.currentThread().getContextClassLoader();
 
         for (URL u : urlClassLoader.getURLs()) {
@@ -50,7 +64,7 @@ public class try_all {
             }
         }
         
-        return null;
+        return null;*/
     }
     
 }
