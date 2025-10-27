@@ -65,7 +65,7 @@ public class TaskListRenderer {
                     .filter(t -> Objects.equals(g.getId(), t.getGroup()))
                     .collect(Collectors.toList());
 
-                this.renderGroup(sb, ofNullable(g.getName()).orElse(g.getId()), tasksInGroup, maxTaskNameWidth);
+                this.renderGroup(sb, g.toString(), tasksInGroup, maxTaskNameWidth);
 
                 count++;
             }
