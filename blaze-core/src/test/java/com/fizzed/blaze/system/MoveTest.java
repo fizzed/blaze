@@ -2,6 +2,7 @@ package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.FileNotFoundException;
+import com.fizzed.crux.util.TemporaryPath;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -263,6 +264,80 @@ public class MoveTest extends TestAbstractBase {
         assertThat(Files.isRegularFile(targetDir.resolve("test.java")), is(true));
         assertThat(Files.isDirectory(targetDir.resolve("subdir")), is(true));
         assertThat(Files.isRegularFile(targetDir.resolve("subdir/test.kt")), is(true));
+    }
+
+    @Test
+    public void fileToDirBetweenVolumesOrPartitions() throws Exception {
+        // We need to do our best to find different partitions/volumes, which may trigger a Java exception when
+        // trying to use the Files.move method. In many cases, /tmp will do what we want
+        try (final TemporaryPath sourceTempDir = TemporaryPath.tempDirectory("blaze-unit-test")) {
+            final Path sourceDirFile = createFile(sourceTempDir.getPath().resolve("test1.txt"));
+
+            // create a non-existent directory we want to copy to
+            final Path targetDir = this.testMoveDir.resolve("fileToDirBetweenVolumesOrPartitionsToCopyTo");
+            FileUtils.deleteDirectory(targetDir.toFile());
+            Files.createDirectories(targetDir);
+
+            new Move(this.context)
+                .sources(sourceDirFile)
+                .target(targetDir)
+                .run();
+
+            assertThat(Files.exists(sourceDirFile), is(false));
+            assertThat(Files.exists(targetDir), is(true));
+            assertThat(Files.exists(targetDir.resolve("test1.txt")), is(true));
+        }
+    }
+
+    @Test
+    public void fileToFileBetweenVolumesOrPartitions() throws Exception {
+        // We need to do our best to find different partitions/volumes, which may trigger a Java exception when
+        // trying to use the Files.move method. In many cases, /tmp will do what we want
+        try (final TemporaryPath sourceTempDir = TemporaryPath.tempDirectory("blaze-unit-test")) {
+            final Path sourceDirFile = createFile(sourceTempDir.getPath().resolve("test1.txt"));
+
+            // create a non-existent directory we want to copy to
+            final Path targetDir = this.testMoveDir.resolve("fileToFileBetweenVolumesOrPartitionsToCopyTo");
+            FileUtils.deleteDirectory(targetDir.toFile());
+            Files.createDirectories(targetDir);
+            final Path targetFile = createFile(targetDir.resolve("test1.txt"));
+
+            new Move(this.context)
+                .sources(sourceDirFile)
+                .target(targetFile)
+                .force()
+                .run();
+
+            assertThat(Files.exists(sourceDirFile), is(false));
+            assertThat(Files.exists(targetDir), is(true));
+            assertThat(Files.exists(targetDir.resolve("test1.txt")), is(true));
+        }
+    }
+
+    @Test
+    public void dirToDirBetweenVolumesOrPartitions() throws Exception {
+        // We need to do our best to find different partitions/volumes, which may trigger a Java exception when
+        // trying to use the Files.move method. In many cases, /tmp will do what we want
+        try (final TemporaryPath sourceTempDir = TemporaryPath.tempDirectory("blaze-unit-test")) {
+            final Path sourceDirFile = createFile(sourceTempDir.getPath().resolve("test1.txt"));
+            final Path sourceDirSubDir = createDir(sourceTempDir.getPath().resolve("subdir"));
+            final Path sourceDirSubDirFile = createFile(sourceTempDir.getPath().resolve("subdir/test2.txt"));
+
+            // create a non-existent directory we want to copy to
+            final Path targetDir = this.testMoveDir.resolve("dirToDirBetweenVolumesOrPartitionsToCopyTo");
+            FileUtils.deleteDirectory(targetDir.toFile());
+
+            new Move(this.context)
+                .sources(sourceTempDir.getPath())
+                .target(targetDir)
+                .run();
+
+            assertThat(Files.exists(sourceTempDir.getPath()), is(false));
+            assertThat(Files.exists(targetDir), is(true));
+            assertThat(Files.exists(targetDir.resolve("test1.txt")), is(true));
+            assertThat(Files.exists(targetDir.resolve("subdir")), is(true));
+            assertThat(Files.exists(targetDir.resolve("subdir/test2.txt")), is(true));
+        }
     }
 
 }
