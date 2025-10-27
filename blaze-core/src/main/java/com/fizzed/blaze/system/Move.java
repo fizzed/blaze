@@ -16,7 +16,6 @@
 package com.fizzed.blaze.system;
 
 import com.fizzed.blaze.Context;
-import com.fizzed.blaze.core.DirectoryNotEmptyException;
 import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.util.Globber;
 import com.fizzed.blaze.util.ObjectHelper;
@@ -26,6 +25,7 @@ import com.fizzed.blaze.util.VerboseLogger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -193,7 +193,8 @@ public class Move extends Action<Move.Result,Void> implements VerbosityMixin<Mov
                             // target exists, but is a directory, we can simply copy the source dir to it
                             Path relativeTarget = this.target.resolve(source.getFileName());
 //                            copyDirectory(source, relativeTarget, result);
-                            Files.move(source, relativeTarget, StandardCopyOption.REPLACE_EXISTING);
+                            //Files.move(source, relativeTarget, StandardCopyOption.REPLACE_EXISTING);
+                            this.moveDirectory(source, relativeTarget);
                         } else {
                             // target exists, but is a file!
                             throw new BlazeException("Cannot copy source directory " + source + " to an existing file " + this.target);
@@ -202,7 +203,8 @@ public class Move extends Action<Move.Result,Void> implements VerbosityMixin<Mov
                         // build a new relative target we will perform the copy to
                         log.debug(" mkdir {}", this.target);
 //                        copyDirectory(source, this.target, result);
-                        Files.move(source, this.target, StandardCopyOption.REPLACE_EXISTING);
+                        //Files.move(source, this.target, StandardCopyOption.REPLACE_EXISTING);
+                        this.moveDirectory(source, this.target);
                     }
                 } else {
                     // source is a file
@@ -257,57 +259,52 @@ public class Move extends Action<Move.Result,Void> implements VerbosityMixin<Mov
         return new Move.Result(this, null);
     }
 
-    /*private void copyDirectory(Path sourceDir, Path targetDir, Result result) throws IOException {
-        Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
+    private void moveDirectory(Path source, Path destination) throws IOException {
+        try {
+            // Attempt a simple move first, which works for same-filesystem moves.
+            Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+        } catch (DirectoryNotEmptyException e) {
+            // This exception should not occur for a top-level directory rename
+            // if the move was successful, but is a good catch-all
+            log.debug("Directory is not empty and cannot be moved by rename. Falling back to copy-and-delete.");
+            this.copyThenDelete(source, destination);
+        } catch (FileSystemException e) {
+            // If the simple move fails, it's likely a cross-filesystem move.
+            log.debug("Cross-filesystem move detected. Falling back to copy-and-delete.");
+            this.copyThenDelete(source, destination);
+        }
+    }
+
+    private void copyThenDelete(Path source, Path destination) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-//                log.trace("preVisitDirectory: dir={}", dir);
-                Path relativeDir = sourceDir.relativize(dir);
-//                log.trace("preVisitDirectory: relativeDir={}", relativeDir);
-//                Path resolved = targetDir.resolve(relativeDir).resolve(dir.getFileName());
-                Path resolved = targetDir.resolve(relativeDir);
-//                log.trace("preVisitDirectory: resolved={}", resolved);
-                if (Files.exists(resolved)) {
-                    if (!Move.this.force) {
-                        throw new BlazeException("Copy target " + resolved + " already exists (and force is disabled)");
-                    }
-                } else {
-                    log.debug(" mkdir {}", resolved);
-                    Files.createDirectories(resolved);
-                    result.dirsCreated++;
-                }
-
+                Path targetDir = destination.resolve(source.relativize(dir));
+                Files.createDirectories(targetDir);
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-//                log.trace("visitFile: file={}", file);
-                Path relativeFile = sourceDir.relativize(file);
-//                log.trace("visitFile: relativeFile={}", relativeFile);
-                Path resolved = targetDir.resolve(relativeFile);
-//                log.trace("visitFile: resolved={}", resolved);
-                if (Files.exists(resolved)) {
-                    if (!Move.this.force) {
-                        throw new BlazeException("Copy target " + resolved + " already exists (and force is disabled)");
-                    }
-                    log.debug(" overwrite {} -> {}", file, resolved);
-                    Files.copy(file, resolved, StandardCopyOption.REPLACE_EXISTING);
-                    result.filesOverwritten++;
-                } else {
-                    log.debug(" copy {} -> {}", file, resolved);
-                    Files.copy(file, resolved, StandardCopyOption.REPLACE_EXISTING);
-                    result.filesMoved++;
-                }
+                Files.copy(file, destination.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+        });
 
+        // After copying, delete the source directory.
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult visitFileFailed(Path file, IOException e) {
-                log.error("Failed while copying directory", e);
-                return FileVisitResult.TERMINATE;
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
             }
         });
-    }*/
+    }
+
 }
