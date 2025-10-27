@@ -48,7 +48,7 @@ public class BlazeTaskGroup implements Comparable<BlazeTaskGroup> {
 
     @Override
     public String toString() {
-        return name;
+        return this.name != null ? this.name : this.id;
     }
     
     @Override
@@ -82,7 +82,7 @@ public class BlazeTaskGroup implements Comparable<BlazeTaskGroup> {
         int compareTo = this.order - o.order;
         
         if (compareTo == 0) {
-            compareTo = this.name.compareTo(o.name);
+            compareTo = this.toString().compareTo(o.toString());
         }
         
         return compareTo;

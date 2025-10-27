@@ -20,6 +20,7 @@ import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Context;
 
 import static com.fizzed.blaze.internal.ClassLoaderHelper.currentThreadContextClassLoader;
+import static java.util.Arrays.asList;
 
 import com.fizzed.blaze.jdk.BlazeJdkEngine;
 import com.fizzed.blaze.jdk.TargetObjectScript;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class Blaze {
     static private final Logger log = LoggerFactory.getLogger(Blaze.class);
     
-    static public final List<Path> SEARCH_RELATIVE_DIRECTORIES = Arrays.asList(
+    static public final List<Path> SEARCH_RELATIVE_DIRECTORIES = asList(
         Paths.get("blaze"),
         Paths.get(".blaze")
     );
@@ -390,7 +391,7 @@ public class Blaze {
     }
     
     public void execute(String task) throws Exception {
-        if (task == null || task.equals("")) {
+        if (task == null || task.isEmpty()) {
             task = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
         }
         
@@ -405,22 +406,25 @@ public class Blaze {
     }
     
     public void executeAll(List<String> tasks) throws Exception {
-        // default task?
+        // will we be trying the default task?
         if (tasks == null || tasks.isEmpty()) {
-            this.execute(null);
-        } else {
-            // validate all the tasks exist before trying to execute any of them
-            final List<BlazeTask> validTasks = this.getTasks();
-            for (String task : tasks) {
-                if (!validTasks.stream().anyMatch(t -> t.getName().equals(task))) {
-                    throw new NoSuchTaskException(task);
-                }
+            String defaultTask = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
+            if (defaultTask != null && !defaultTask.isEmpty()) {
+                tasks = asList(defaultTask);
             }
+        }
 
-            // now try to execute all the tasks
-            for (String task : tasks) {
-                this.execute(task);
+        // validate all the tasks exist before trying to execute any of them
+        final List<BlazeTask> validTasks = this.getTasks();
+        for (String task : tasks) {
+            if (!validTasks.stream().anyMatch(t -> t.getName().equals(task))) {
+                throw new NoSuchTaskException(task);
             }
+        }
+
+        // now try to execute all the tasks
+        for (String task : tasks) {
+            this.execute(task);
         }
     }
 }
