@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+## 2.0.3 - 2025-10-30
+ - Fix issue on MacOS where running blaze with `sudo` would retain the calling user's HOME environment variable, causing
+the blaze classes cache to be placed in the user's home directory, but with no ability to delete them.
+ - Polished how the currently executing script path is displayed (to be the shorter of absolute or relative path)
+
 ## 2.0.2 - 2025-10-27
  - Fix mv() command when moving files or directories across partitions / volumes / filesystems. The underlying Files.move
 command was throwing a "DirectoryNotEmptyException" and this special case requires a copy-then-delete strategy.
