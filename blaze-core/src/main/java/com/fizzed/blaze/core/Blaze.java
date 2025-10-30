@@ -392,12 +392,27 @@ public class Blaze {
     
     public void execute(String task) throws Exception {
         if (task == null || task.isEmpty()) {
-            task = context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
+            task = this.context.config().value(Config.KEY_DEFAULT_TASK).getOr(Config.DEFAULT_TASK);
         }
-        
-        final String scriptName = (context.scriptFile() != null ? context.scriptFile().toString() : "");
-        
+
+        // sometimes the script file has a LOT of relative directories... let's try to trim them down
+        final String scriptName;
+        if (this.context.scriptFile() != null) {
+            // we'll use the shorter of absolute or relative script name
+            String relativeScriptName = this.context.scriptFile().toString();
+            // toAbsolutePath() does not remove redundant parts like ".."
+            String absoluteScriptName = this.context.scriptFile().toAbsolutePath().normalize().toString();
+            if (absoluteScriptName.length() <= relativeScriptName.length()) {
+                scriptName = absoluteScriptName;
+            } else {
+                scriptName = relativeScriptName;
+            }
+        } else {
+            scriptName = "";
+        }
+
         log.info("Executing {}:{}...", scriptName, task);
+
         Timer executeTimer = new Timer();
         
         this.script.execute(task);
