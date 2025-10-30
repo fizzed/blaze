@@ -100,6 +100,8 @@ public class IvyDependencyResolver implements DependencyResolver {
         
         MavenSettings mavenSettings = null;
         Path mavenSettingsFile = context.userDir().resolve(".m2/settings.xml");
+        log.debug("Checking for maven settings file {}", mavenSettingsFile);
+        
         if (Files.exists(mavenSettingsFile)) {
             try {
                 mavenSettings = MavenSettings.parse(mavenSettingsFile);
