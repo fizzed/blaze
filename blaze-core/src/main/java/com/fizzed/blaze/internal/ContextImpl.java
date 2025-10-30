@@ -152,6 +152,33 @@ public class ContextImpl implements Context {
     static public Path findUserDir() {
         // environment var is better than java "user.home"
         Optional<Path> dir = dirIfExists(System.getenv("HOME"));
+
+        // on macos, when running under "sudo", it doesn't adjust the HOME directory causing problems
+        // SUDO_USER=jjlauer
+        // HOME=/Users/jjlauer
+        // USER=root
+        String sudoUser = System.getenv("SUDO_USER");
+        if (sudoUser != null) {     // running as sudo?
+            String user = System.getenv("USER");
+            if (user != null && !user.equals(sudoUser) && user.equals("root")) {
+                // does the home dir contain the sudo user?
+                if (dir.isPresent() && dir.get().toString().contains(sudoUser)) {
+                    // let's see if /var/root exists
+                    Path rootHomeDir = Paths.get("/var/root");
+                    if (!Files.isDirectory(rootHomeDir)) {
+                        rootHomeDir = Paths.get("/root");
+                        if (!Files.isDirectory(rootHomeDir)) {
+                            rootHomeDir = null;
+                        }
+                    }
+                    if (rootHomeDir != null) {
+                        dir = dirIfExists(rootHomeDir.toString());
+                    } else {
+                        log.warn("Unable to find user home dir for sudo user {} (using {} as fallback)", sudoUser, dir.get());
+                    }
+                }
+            }
+        }
         
         if (!dir.isPresent()) {
             String homeDrive = System.getenv("HOMEDRIVE");
