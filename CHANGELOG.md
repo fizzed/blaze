@@ -1,6 +1,9 @@
 Blaze by Fizzed
 ===============
 
+## 2.0.4 - 2025-10-30
+ - Maven central broke during the deploy, just bumping the version to publish this one.
+
 ## 2.0.3 - 2025-10-30
  - Fix issue on MacOS where running blaze with `sudo` would retain the calling user's HOME environment variable, causing
 the blaze classes cache to be placed in the user's home directory, but with no ability to delete them.
