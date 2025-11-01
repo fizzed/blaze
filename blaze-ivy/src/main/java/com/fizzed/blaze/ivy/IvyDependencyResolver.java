@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Objects;
 import static java.util.Optional.ofNullable;
 import java.util.Set;
+
+import com.fizzed.blaze.util.MutableUri;
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.cache.ArtifactOrigin;
 import org.apache.ivy.core.cache.CacheDownloadOptions;
@@ -95,7 +97,8 @@ public class IvyDependencyResolver implements DependencyResolver {
 
         
         //
-        // maven settings file?
+        // maven settings file? if it exists, we can use it for server passwords, plus we can setup a mirror of
+        // maven central as well
         //
         
         MavenSettings mavenSettings = null;
@@ -119,8 +122,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         final IvyAuthenticator authenticator = new IvyAuthenticator();
         
         Authenticator.setDefault(authenticator);
-        
-        
+
         // creates an Ivy instance with settings
         Ivy ivy = Ivy.newInstance();
         IvySettings ivySettings = ivy.getSettings();
@@ -166,6 +168,28 @@ public class IvyDependencyResolver implements DependencyResolver {
         mavenCentralResolver.setM2compatible(true);
         mavenCentralResolver.setName("mavenCentral");
         mavenCentralResolver.setUseMavenMetadata(true);
+        // does maven settings have a mirror for maven central?
+        if (mavenSettings != null) {
+            final MavenMirror centralMirror = mavenSettings.findMirrorByMirrorOf("central");
+            if (centralMirror != null && centralMirror.getUrl() != null) {
+                log.debug("Using maven settings mirror for maven central: {}", centralMirror.getUrl());
+                mavenCentralResolver.setRoot(centralMirror.getUrl());
+
+                // enhance the name of it for debugging purposes
+                if (centralMirror.getId() != null) {
+                    mavenCentralResolver.setName(centralMirror.getId() + "-mirrorOf-mavenCentral");
+                }
+
+                // are there any credentials for this mirror?
+                MavenServer mavenServer = mavenSettings.findServerById(centralMirror.getId());
+                if (mavenServer != null) {
+                    String host = new MutableUri(centralMirror.getUrl()).getHost();
+                    log.debug("Using maven settings credentials for id={}, host={}, username={}",
+                        centralMirror.getId(), host, mavenServer.getUsername());
+                    authenticator.addCredentials(host, mavenServer.getUsername(), mavenServer.getPassword());
+                }
+            }
+        }
         
         // any additional upstream repositories?
         final List<IBiblioResolver> additionalResolvers = new ArrayList<>();
@@ -224,9 +248,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
         chainResolver.setDual(true);
-        additionalResolvers.forEach(v -> {
-            chainResolver.add(v);
-        });
+        additionalResolvers.forEach(chainResolver::add);
         
         //chainResolver.setChangingMatcher(PatternMatcher.REGEXP);
         //chainResolver.setChangingPattern(".*-SNAPSHOT");
