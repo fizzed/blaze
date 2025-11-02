@@ -115,16 +115,10 @@ public class IvyDependencyResolver implements DependencyResolver {
         // creates an Ivy instance with settings, and we set the normal ~/.ivy2 dir to actually be within the ~/.blaze dir now
         IvySettings ivySettings = new IvySettings();
         ivySettings.setDefaultIvyUserDir(userIvy2Dir.toFile());
-        ivySettings.setDefaultCache(userIvy2CacheDir.toFile());     // used standard <ivy2>/cache but bettter safe than sorry
+        ivySettings.setDefaultCache(userIvy2CacheDir.toFile());     // used standard <ivy2>/cache but better safe than sorry
         ivySettings.defaultInit();
 
         Ivy ivy = Ivy.newInstance(ivySettings);
-
-        /*URLHandlerDispatcher dispatcher = new URLHandlerDispatcher();
-        TimeoutConstrainedURLHandler httpHandler = URLHandlerRegistry.getHttp();
-        dispatcher.setDownloader("http", httpHandler);
-        dispatcher.setDownloader("https", httpHandler);
-        URLHandlerRegistry.setDefault(dispatcher);*/
 
         // TODO: ivy truly is a piece of junk - unable to figure out how to NOT
         // cache a SNAPSHOT version so this is the workaround for now - allowing you
@@ -219,16 +213,10 @@ public class IvyDependencyResolver implements DependencyResolver {
         chainResolver.setName("default");
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
-        chainResolver.setDual(true);
         additionalResolvers.forEach(chainResolver::add);
-        
-        //chainResolver.setChangingMatcher(PatternMatcher.REGEXP);
-        //chainResolver.setChangingPattern(".*-SNAPSHOT");
-        //chainResolver.setCheckmodified(true);
         
         ivySettings.addResolver(chainResolver);
         ivy.getSettings().setDefaultResolver(chainResolver.getName());
-        //ivy.getSettings().setDefaultCache(userHomeDir.toPath().toAbsolutePath().normalize().resolve(".blaze/ivy2-cache").toFile());
         
         // fake uber module (this project)
         DefaultModuleDescriptor md = DefaultModuleDescriptor.newDefaultInstance(ModuleRevisionId.newInstance("blaze", "blaze", "resolver"));
@@ -251,9 +239,9 @@ public class IvyDependencyResolver implements DependencyResolver {
             final boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
             final DefaultDependencyDescriptor dd = new DefaultDependencyDescriptor(md,
                 ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), isChanging, isChanging, true);
-            // This says: "Our 'compile' configuration depends on this artifact."
-            // For m2compatible repos, mapping to "default" is standard.
-            dd.addDependencyConfiguration("compile", "default");
+            // We must map all of our configurations to the corresponding configurations (Maven scopes) of the dependency.
+            // This says "When I resolve my 'compile' conf, get their 'compile' conf."
+            dd.addDependencyConfiguration("runtime", "default");
             md.addDependency(dd);
         }
 
@@ -277,14 +265,13 @@ public class IvyDependencyResolver implements DependencyResolver {
         
         // filter out artifacts that were already resolved and added to classpath
         final Set<String> alreadyResolved = DependencyHelper.toGroupArtifactSet(resolvedDependencies);
-        
-        // ivy triggers duplicate exclusion calls, this will make sure we only display it once
-        final Set<String> alreadyExcluded = new HashSet<>();
-        
+
         // filter and build list of local jar files to use in classpath
         List<File> jarFiles = new ArrayList<>();
         for (ArtifactDownloadReport adr : report.getAllArtifactsReports()) {
             Artifact artifact = adr.getArtifact();
+
+            //log.debug("Resolved artifact {} (for conf {})", artifact, artifact.getConfigurations());
 
             String key = artifact.getModuleRevisionId().getOrganisation() + ":" + artifact.getModuleRevisionId().getName();
             
