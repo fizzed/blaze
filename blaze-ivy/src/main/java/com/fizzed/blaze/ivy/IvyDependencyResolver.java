@@ -37,6 +37,7 @@ import java.util.Set;
 import com.fizzed.blaze.util.MutableUri;
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.module.descriptor.Artifact;
+import org.apache.ivy.core.module.descriptor.Configuration;
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor;
 import org.apache.ivy.core.module.descriptor.DefaultModuleDescriptor;
 import org.apache.ivy.core.module.id.ModuleRevisionId;
@@ -230,33 +231,41 @@ public class IvyDependencyResolver implements DependencyResolver {
         //ivy.getSettings().setDefaultCache(userHomeDir.toPath().toAbsolutePath().normalize().resolve(".blaze/ivy2-cache").toFile());
         
         // fake uber module (this project)
-        DefaultModuleDescriptor md =
-                DefaultModuleDescriptor.newDefaultInstance(
-                        ModuleRevisionId.newInstance("blaze", "blaze", "resolver"));
+        DefaultModuleDescriptor md = DefaultModuleDescriptor.newDefaultInstance(ModuleRevisionId.newInstance("blaze", "blaze", "resolver"));
 
-        // build list of transitive dependencies to resolve
-        dependencies.stream()
-            .map((d) -> {
-                boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
-                return new DefaultDependencyDescriptor(md,
-                    ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), isChanging, isChanging, true);
-            })
-            .forEach((dd) -> {
-                dd.addDependencyConfiguration("default", "default");
-                md.addDependency(dd);
-            });
+        // setup maven-esque compile, provided, etc.
+        Configuration confCompile = new Configuration("compile");
+        Configuration confProvided = new Configuration("provided");
+        Configuration confRuntime = new Configuration("runtime", Configuration.Visibility.PUBLIC,
+            "Runtime dependencies", new String[]{"compile"}, true, null);
+        Configuration confTest = new Configuration("test", Configuration.Visibility.PRIVATE,
+            "Test dependencies", new String[]{"runtime"}, true, null);
 
-        String[] confs = new String[] { "default" };
+        // Add them to our virtual module
+        md.addConfiguration(confCompile);
+        md.addConfiguration(confProvided);
+        md.addConfiguration(confRuntime);
+        md.addConfiguration(confTest);
 
-        ResolveOptions resolveOptions = new ResolveOptions().setConfs(confs);
+        for (Dependency d : dependencies) {
+            final boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
+            final DefaultDependencyDescriptor dd = new DefaultDependencyDescriptor(md,
+                ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), isChanging, isChanging, true);
+            // This says: "Our 'compile' configuration depends on this artifact."
+            // For m2compatible repos, mapping to "default" is standard.
+            dd.addDependencyConfiguration("compile", "default");
+            md.addDependency(dd);
+        }
 
+        // - new String[]{"compile"} : Gets *only* compile-time dependencies.
+        // - new String[]{"runtime"} : Gets compile *and* runtime (because 'runtime' extends 'compile').
+        // - new String[]{"test"}    : Gets compile, runtime, *and* test (because 'test' extends 'runtime').
+        final String[] configToResolve = new String[] { "runtime" };
+
+        ResolveOptions resolveOptions = new ResolveOptions();
+        resolveOptions.setConfs(configToResolve);
         resolveOptions.setRefresh(true);
-        
-        //resolveOptions.setValidate(true);
-        //resolveOptions.setCheckIfChanged(true);
-        //resolveOptions.setRefresh(true);
-        //resolveOptions.setValidate(true);
-        //resolveOptions.setTransitive(true);
+        resolveOptions.setValidate(true);
         
         ResolveReport report = ivy.resolve(md, resolveOptions);
 
@@ -276,9 +285,8 @@ public class IvyDependencyResolver implements DependencyResolver {
         List<File> jarFiles = new ArrayList<>();
         for (ArtifactDownloadReport adr : report.getAllArtifactsReports()) {
             Artifact artifact = adr.getArtifact();
-            
-            String key = artifact.getModuleRevisionId().getOrganisation()
-                            + ":" + artifact.getModuleRevisionId().getName();
+
+            String key = artifact.getModuleRevisionId().getOrganisation() + ":" + artifact.getModuleRevisionId().getName();
             
             log.trace("Potentially filtering {} with key {}", artifact, key);
                 
