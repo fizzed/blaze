@@ -213,6 +213,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         chainResolver.setName("default");
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
+        chainResolver.setDual(true);
         additionalResolvers.forEach(chainResolver::add);
         
         ivySettings.addResolver(chainResolver);
