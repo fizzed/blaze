@@ -318,7 +318,8 @@ public class IvyDependencyResolver implements DependencyResolver {
             } else if (trimmedMessage.startsWith("downloading ")) {
                 // uppercase the d to match our other logging
                 log.info("D{}", trimmedMessage.substring(1));
-            } else if (trimmedMessage.contains("401")) {
+            } else if (trimmedMessage.contains("401 ") && trimmedMessage.contains("http")) {
+                // we want to only include lines that are 401 errors to http servers
                 // this is as good as it gets for 401 failures, sorta crazy
                 log.error("Authentication failure: {}", trimmedMessage);
             } else {
