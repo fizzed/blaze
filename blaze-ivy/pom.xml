@@ -65,7 +65,7 @@
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
         </dependency>
-        
+
         <!-- testing (hamcrest BEFORE junit is important) -->
         
         <dependency>

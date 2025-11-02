@@ -25,9 +25,6 @@ import com.fizzed.blaze.internal.DependencyHelper;
 import java.io.File;
 import java.io.IOException;
 import java.net.Authenticator;
-import java.net.InetAddress;
-import java.net.PasswordAuthentication;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -35,39 +32,25 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import static java.util.Optional.ofNullable;
 import java.util.Set;
+
+import com.fizzed.blaze.util.MutableUri;
 import org.apache.ivy.Ivy;
-import org.apache.ivy.core.cache.ArtifactOrigin;
-import org.apache.ivy.core.cache.CacheDownloadOptions;
-import org.apache.ivy.core.cache.CacheMetadataOptions;
-import org.apache.ivy.core.cache.CacheResourceOptions;
-import org.apache.ivy.core.cache.DefaultRepositoryCacheManager;
-import org.apache.ivy.core.cache.ModuleDescriptorWriter;
-import org.apache.ivy.core.cache.RepositoryCacheManager;
 import org.apache.ivy.core.module.descriptor.Artifact;
+import org.apache.ivy.core.module.descriptor.Configuration;
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor;
 import org.apache.ivy.core.module.descriptor.DefaultModuleDescriptor;
-import org.apache.ivy.core.module.descriptor.DependencyDescriptor;
-import org.apache.ivy.core.module.descriptor.ModuleDescriptor;
 import org.apache.ivy.core.module.id.ModuleRevisionId;
 import org.apache.ivy.core.report.ArtifactDownloadReport;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
-import org.apache.ivy.core.resolve.ResolvedModuleRevision;
 import org.apache.ivy.core.settings.IvySettings;
 import org.apache.ivy.plugins.matcher.PatternMatcher;
-import org.apache.ivy.plugins.repository.ArtifactResourceResolver;
-import org.apache.ivy.plugins.repository.Repository;
-import org.apache.ivy.plugins.repository.Resource;
-import org.apache.ivy.plugins.repository.ResourceDownloader;
 import org.apache.ivy.plugins.resolver.ChainResolver;
 import org.apache.ivy.plugins.resolver.FileSystemResolver;
 import org.apache.ivy.plugins.resolver.IBiblioResolver;
-import org.apache.ivy.plugins.resolver.util.ResolvedResource;
 import org.apache.ivy.util.DefaultMessageLogger;
 import org.apache.ivy.util.Message;
-import org.apache.ivy.util.url.CredentialsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,13 +76,21 @@ public class IvyDependencyResolver implements DependencyResolver {
         // customize logging (ivy uses a terrible approach)
         Message.setDefaultLogger(new FilteringIvyLogger());
 
-        
+
+        // we leverage ~/.m2 and our own unique replacement for ~/.ivy2
+        final Path userHomeDir = context.userDir();
+        final Path userM2Dir = userHomeDir.resolve(".m2");
+        final Path userBlazeDir = userHomeDir.resolve(".blaze");
+        final Path userIvy2Dir = userBlazeDir.resolve("ivy2");
+        final Path userIvy2CacheDir = userIvy2Dir.resolve("cache");
+
         //
-        // maven settings file?
+        // maven settings file? if it exists, we can use it for server passwords, plus we can setup a mirror of
+        // maven central as well
         //
         
         MavenSettings mavenSettings = null;
-        Path mavenSettingsFile = context.userDir().resolve(".m2/settings.xml");
+        Path mavenSettingsFile = userM2Dir.resolve("settings.xml");
         log.debug("Checking for maven settings file {}", mavenSettingsFile);
         
         if (Files.exists(mavenSettingsFile)) {
@@ -115,16 +106,20 @@ public class IvyDependencyResolver implements DependencyResolver {
         //
         // load up any credentials?
         //
-        
+
+        // create our own authenticator, then make sure to set Java's default authenticator (which is what ivy uses)
         final IvyAuthenticator authenticator = new IvyAuthenticator();
-        
+        // IMPORTANT: without setting this, no auth occurs
         Authenticator.setDefault(authenticator);
-        
-        
-        // creates an Ivy instance with settings
-        Ivy ivy = Ivy.newInstance();
-        IvySettings ivySettings = ivy.getSettings();
-        
+
+        // creates an Ivy instance with settings, and we set the normal ~/.ivy2 dir to actually be within the ~/.blaze dir now
+        IvySettings ivySettings = new IvySettings();
+        ivySettings.setDefaultIvyUserDir(userIvy2Dir.toFile());
+        ivySettings.setDefaultCache(userIvy2CacheDir.toFile());     // used standard <ivy2>/cache but better safe than sorry
+        ivySettings.defaultInit();
+
+        Ivy ivy = Ivy.newInstance(ivySettings);
+
         // TODO: ivy truly is a piece of junk - unable to figure out how to NOT
         // cache a SNAPSHOT version so this is the workaround for now - allowing you
         // to delete the entire cache
@@ -133,11 +128,11 @@ public class IvyDependencyResolver implements DependencyResolver {
             ivy.getResolutionCacheManager().clean();
         }
         
-        // remove any SNAPSHOT artifacts from cache
+        // forcibly remove any SNAPSHOT artifacts from cache
         dependencies.stream().forEach((d) -> {
             // cache pattern ~/.ivy2/cache/com.fizzed/blaze-ssh/jars/blaze-ssh-0.13.1-SNAPSHOT.jar
             if (d.getVersion().endsWith("-SNAPSHOT")) {
-                Path cachedFile = context.userDir().resolve(".ivy2/cache/" + d.getGroupId() + "/" + d.getArtifactId() + "/jars/" + d.getArtifactId() + "-" + d.getVersion() + ".jar");
+                Path cachedFile = userIvy2CacheDir.resolve(d.getGroupId() + "/" + d.getArtifactId() + "/jars/" + d.getArtifactId() + "-" + d.getVersion() + ".jar");
                 if (Files.exists(cachedFile)) {
                     log.trace("Deleting cached snapshot dependency {}", cachedFile);
                     try {
@@ -166,6 +161,16 @@ public class IvyDependencyResolver implements DependencyResolver {
         mavenCentralResolver.setM2compatible(true);
         mavenCentralResolver.setName("mavenCentral");
         mavenCentralResolver.setUseMavenMetadata(true);
+        // does maven settings have a mirror for maven central?
+        if (mavenSettings != null) {
+            final MavenMirror centralMirror = mavenSettings.findMirrorByMirrorOf("central");
+            if (centralMirror != null && centralMirror.getUrl() != null) {
+                log.debug("Using maven settings mirror for maven central: {}", centralMirror.getUrl());
+                mavenCentralResolver.setRoot(centralMirror.getUrl());
+                mavenCentralResolver.setCheckmodified(true);
+                this.addCredentialsFromMavenSettings(mavenSettings, authenticator, centralMirror.getId(), centralMirror.getUrl());
+            }
+        }
         
         // any additional upstream repositories?
         final List<IBiblioResolver> additionalResolvers = new ArrayList<>();
@@ -176,28 +181,18 @@ public class IvyDependencyResolver implements DependencyResolver {
         if (repositoryUrls != null) {
             for (String repositoryUrl : repositoryUrls) {
                 MavenRepositoryUrl mru = MavenRepositoryUrl.parse(repositoryUrl);
-                
-                // are there credentials for this too?
-                MavenServer mavenServer = ofNullable(mavenSettings)
-                    .map(v -> v.findServerById(mru.getId()))
-                    .orElse(null);
-                
+
                 log.debug("Adding extra maven repo: {}->{}", mru.getId(), mru.getUrl());
-                
-                if (mavenServer != null) {
-                    String host = mru.getUrl().getHost();
-                    log.debug("Using maven settings credentials for id={}, host={}, username={}",
-                        mru.getId(), host, mavenServer.getUsername());
-                    
-                    authenticator.addCredentials(host, mavenServer.getUsername(), mavenServer.getPassword());
-                }
-                
+
                 IBiblioResolver additionalResolver = new IBiblioResolver();
                 additionalResolver.setM2compatible(true);
                 additionalResolver.setName(mru.getId());
                 additionalResolver.setUseMavenMetadata(true);
                 additionalResolver.setRoot(mru.getUrl().toString());
+                additionalResolver.setCheckmodified(true);
                 additionalResolvers.add(additionalResolver);
+
+                this.addCredentialsFromMavenSettings(mavenSettings, authenticator, mru.getId(), repositoryUrl);
             }
         }
         
@@ -205,87 +200,81 @@ public class IvyDependencyResolver implements DependencyResolver {
         FileSystemResolver mavenLocalResolver = new FileSystemResolver();
         mavenLocalResolver.setName("mavenLocal");
         mavenLocalResolver.setLocal(true);
-        
-        // it'd be sweet to use the context here, eh?
-        //File userHomeDir = new File(System.getProperty("user.home"));
-        File userHomeDir = context.userDir().toFile();
-        
-        mavenLocalResolver.addArtifactPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]");
-        mavenLocalResolver.addIvyPattern(userHomeDir.getAbsolutePath() + "/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision].pom");
+        mavenLocalResolver.addArtifactPattern(userM2Dir.resolve("repository") + "/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]");
+        mavenLocalResolver.addIvyPattern(userM2Dir.resolve("repository") + "/[organisation]/[module]/[revision]/[module]-[revision].pom");
         mavenLocalResolver.setM2compatible(true);
-        //mavenLocalResolver.setForce(true);
-        mavenLocalResolver.setChangingMatcher(PatternMatcher.REGEXP);
-        mavenLocalResolver.setChangingPattern(".*-SNAPSHOT");
         mavenLocalResolver.setCheckmodified(true);
-        
+        mavenLocalResolver.setValidate(true);
+        mavenLocalResolver.setChangingMatcher(PatternMatcher.REGEXP);
+        mavenLocalResolver.setChangingPattern(".*-SNAPSHOT.*");
+
         // chain resolvers together
         ChainResolver chainResolver = new ChainResolver();
         chainResolver.setName("default");
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
         chainResolver.setDual(true);
-        additionalResolvers.forEach(v -> {
-            chainResolver.add(v);
-        });
-        
-        //chainResolver.setChangingMatcher(PatternMatcher.REGEXP);
-        //chainResolver.setChangingPattern(".*-SNAPSHOT");
-        //chainResolver.setCheckmodified(true);
+        additionalResolvers.forEach(chainResolver::add);
         
         ivySettings.addResolver(chainResolver);
         ivy.getSettings().setDefaultResolver(chainResolver.getName());
         
         // fake uber module (this project)
-        DefaultModuleDescriptor md =
-                DefaultModuleDescriptor.newDefaultInstance(
-                        ModuleRevisionId.newInstance("blaze", "blaze", "resolver"));
+        DefaultModuleDescriptor md = DefaultModuleDescriptor.newDefaultInstance(ModuleRevisionId.newInstance("blaze", "blaze", "resolver"));
 
-        // build list of transitive dependencies to resolve
-        dependencies.stream()
-            .map((d) -> {
-                boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
-                return new DefaultDependencyDescriptor(md,
-                    ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), false, isChanging, true);
-            })
-            .forEach((dd) -> {
-                dd.addDependencyConfiguration("default", "default");
-                md.addDependency(dd);
-            });
+        // setup maven-esque compile, provided, etc.
+        Configuration confCompile = new Configuration("compile");
+        Configuration confProvided = new Configuration("provided");
+        Configuration confRuntime = new Configuration("runtime", Configuration.Visibility.PUBLIC,
+            "Runtime dependencies", new String[]{"compile"}, true, null);
+        Configuration confTest = new Configuration("test", Configuration.Visibility.PRIVATE,
+            "Test dependencies", new String[]{"runtime"}, true, null);
 
-        String[] confs = new String[] { "default" };
+        // Add them to our virtual module
+        md.addConfiguration(confCompile);
+        md.addConfiguration(confProvided);
+        md.addConfiguration(confRuntime);
+        md.addConfiguration(confTest);
 
-        ResolveOptions resolveOptions = new ResolveOptions().setConfs(confs);
+        for (Dependency d : dependencies) {
+            final boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
+            final DefaultDependencyDescriptor dd = new DefaultDependencyDescriptor(md,
+                ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), isChanging, isChanging, true);
+            // We must map all of our configurations to the corresponding configurations (Maven scopes) of the dependency.
+            // This says "When I resolve my 'compile' conf, get their 'compile' conf."
+            dd.addDependencyConfiguration("runtime", "default");
+            md.addDependency(dd);
+        }
 
+        // - new String[]{"compile"} : Gets *only* compile-time dependencies.
+        // - new String[]{"runtime"} : Gets compile *and* runtime (because 'runtime' extends 'compile').
+        // - new String[]{"test"}    : Gets compile, runtime, *and* test (because 'test' extends 'runtime').
+        final String[] configToResolve = new String[] { "runtime" };
+
+        ResolveOptions resolveOptions = new ResolveOptions();
+        resolveOptions.setConfs(configToResolve);
         resolveOptions.setRefresh(true);
-        
-        //resolveOptions.setValidate(true);
-        //resolveOptions.setCheckIfChanged(true);
-        //resolveOptions.setRefresh(true);
-        //resolveOptions.setValidate(true);
-        //resolveOptions.setTransitive(true);
+        resolveOptions.setValidate(true);
         
         ResolveReport report = ivy.resolve(md, resolveOptions);
-        
+
         if (report.hasError()) {
             // grab first message
             String firstMessage = (String)report.getAllProblemMessages().get(0);
             throw new DependencyResolveException(firstMessage);
-        }        
-
+        }
         
         // filter out artifacts that were already resolved and added to classpath
         final Set<String> alreadyResolved = DependencyHelper.toGroupArtifactSet(resolvedDependencies);
-        
-        // ivy triggers duplicate exclusion calls, this will make sure we only display it once
-        final Set<String> alreadyExcluded = new HashSet<>();
-        
+
         // filter and build list of local jar files to use in classpath
         List<File> jarFiles = new ArrayList<>();
         for (ArtifactDownloadReport adr : report.getAllArtifactsReports()) {
             Artifact artifact = adr.getArtifact();
-            
-            String key = artifact.getModuleRevisionId().getOrganisation()
-                            + ":" + artifact.getModuleRevisionId().getName();
+
+            //log.debug("Resolved artifact {} (for conf {})", artifact, artifact.getConfigurations());
+
+            String key = artifact.getModuleRevisionId().getOrganisation() + ":" + artifact.getModuleRevisionId().getName();
             
             log.trace("Potentially filtering {} with key {}", artifact, key);
                 
@@ -298,11 +287,25 @@ public class IvyDependencyResolver implements DependencyResolver {
 
         return jarFiles;
     }
-    
-    public class FilteringIvyLogger extends DefaultMessageLogger {
+
+    private void addCredentialsFromMavenSettings(MavenSettings mavenSettings, IvyAuthenticator authenticator, String serverId, String url) {
+        if (mavenSettings == null) {
+            return;
+        }
+        // are there any credentials for this mirror?
+        MavenServer mavenServer = mavenSettings.findServerById(serverId);
+        if (mavenServer != null) {
+            String host = new MutableUri(url).getHost();
+            log.debug("Using maven settings credentials for id={}, host={}, username={}, password=****",
+                serverId, host, mavenServer.getUsername());
+            authenticator.addCredentials(host, mavenServer.getUsername(), mavenServer.getPassword());
+        }
+    }
+
+    public static class FilteringIvyLogger extends DefaultMessageLogger {
         
         public FilteringIvyLogger() {
-            super(Message.MSG_VERBOSE);
+            super(Message.MSG_DEBUG);
         }
         
         @Override
@@ -315,6 +318,10 @@ public class IvyDependencyResolver implements DependencyResolver {
             } else if (trimmedMessage.startsWith("downloading ")) {
                 // uppercase the d to match our other logging
                 log.info("D{}", trimmedMessage.substring(1));
+            } else if (trimmedMessage.contains("401 ") && trimmedMessage.contains("http")) {
+                // we want to only include lines that are 401 errors to http servers
+                // this is as good as it gets for 401 failures, sorta crazy
+                log.error("Authentication failure: {}", trimmedMessage);
             } else {
                 if (ConfigHelper.isSuperDebugEnabled()) {
                     log.trace(trimmedMessage);

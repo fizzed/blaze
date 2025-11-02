@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 public class MavenSettingsTest {
  
     @Test
-    public void parse() throws Exception {
+    public void getServers() throws Exception {
         Path file = Paths.get("src/test/resources/maven-settings.xml");
         
         MavenSettings settings = MavenSettings.parse(file);
@@ -35,6 +35,20 @@ public class MavenSettingsTest {
         assertThat(settings.getServers().get(3).getId(), is("sonatype-nexus-staging"));
         assertThat(settings.getServers().get(3).getUsername(), is("dude"));
         assertThat(settings.getServers().get(3).getPassword(), is("1&3"));
+    }
+
+    @Test
+    public void getMirrors() throws Exception {
+        Path file = Paths.get("src/test/resources/maven-settings.xml");
+
+        MavenSettings settings = MavenSettings.parse(file);
+
+        assertThat(settings.getMirrors(), hasSize(1));
+
+        assertThat(settings.getMirrors().get(0).getId(), is("example"));
+        assertThat(settings.getMirrors().get(0).getName(), is("Example All Repos"));
+        assertThat(settings.getMirrors().get(0).getUrl(), is("https://example.com/repository/maven-public"));
+        assertThat(settings.getMirrors().get(0).getMirrorOf(), is("central"));
     }
     
 }
