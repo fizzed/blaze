@@ -192,7 +192,7 @@ public class IvyDependencyResolver implements DependencyResolver {
                 additionalResolver.setCheckmodified(true);
                 additionalResolvers.add(additionalResolver);
 
-                this.addCredentialsFromMavenSettings(mavenSettings, authenticator, mru.getId(), repositoryUrl);
+                this.addCredentialsFromMavenSettings(mavenSettings, authenticator, mru.getId(), mru.getUrl().toString());
             }
         }
         
