@@ -204,7 +204,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         mavenLocalResolver.addIvyPattern(userM2Dir.resolve("repository") + "/[organisation]/[module]/[revision]/[module]-[revision].pom");
         mavenLocalResolver.setM2compatible(true);
         mavenLocalResolver.setCheckmodified(true);
-        mavenLocalResolver.setValidate(true);
+        //mavenLocalResolver.setValidate(true);
         mavenLocalResolver.setChangingMatcher(PatternMatcher.REGEXP);
         mavenLocalResolver.setChangingPattern(".*-SNAPSHOT.*");
 
@@ -213,7 +213,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         chainResolver.setName("default");
         chainResolver.add(mavenLocalResolver);
         chainResolver.add(mavenCentralResolver);
-        chainResolver.setDual(true);
+        chainResolver.setDual(true);                // important to make sure we try all repos in the chain
         additionalResolvers.forEach(chainResolver::add);
         
         ivySettings.addResolver(chainResolver);
@@ -223,7 +223,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         DefaultModuleDescriptor md = DefaultModuleDescriptor.newDefaultInstance(ModuleRevisionId.newInstance("blaze", "blaze", "resolver"));
 
         // setup maven-esque compile, provided, etc.
-        Configuration confCompile = new Configuration("compile");
+        /*Configuration confCompile = new Configuration("compile");
         Configuration confProvided = new Configuration("provided");
         Configuration confRuntime = new Configuration("runtime", Configuration.Visibility.PUBLIC,
             "Runtime dependencies", new String[]{"compile"}, true, null);
@@ -234,7 +234,7 @@ public class IvyDependencyResolver implements DependencyResolver {
         md.addConfiguration(confCompile);
         md.addConfiguration(confProvided);
         md.addConfiguration(confRuntime);
-        md.addConfiguration(confTest);
+        md.addConfiguration(confTest);*/
 
         for (Dependency d : dependencies) {
             final boolean isChanging = d.getVersion().endsWith("-SNAPSHOT");
@@ -242,19 +242,19 @@ public class IvyDependencyResolver implements DependencyResolver {
                 ModuleRevisionId.newInstance(d.getGroupId(), d.getArtifactId(), d.getVersion()), isChanging, isChanging, true);
             // We must map all of our configurations to the corresponding configurations (Maven scopes) of the dependency.
             // This says "When I resolve my 'compile' conf, get their 'compile' conf."
-            dd.addDependencyConfiguration("runtime", "default");
+            dd.addDependencyConfiguration("default", "default");
             md.addDependency(dd);
         }
 
         // - new String[]{"compile"} : Gets *only* compile-time dependencies.
         // - new String[]{"runtime"} : Gets compile *and* runtime (because 'runtime' extends 'compile').
         // - new String[]{"test"}    : Gets compile, runtime, *and* test (because 'test' extends 'runtime').
-        final String[] configToResolve = new String[] { "runtime" };
+        final String[] configToResolve = new String[] { "default" };
 
         ResolveOptions resolveOptions = new ResolveOptions();
         resolveOptions.setConfs(configToResolve);
         resolveOptions.setRefresh(true);
-        resolveOptions.setValidate(true);
+        //resolveOptions.setValidate(true);
         
         ResolveReport report = ivy.resolve(md, resolveOptions);
 
