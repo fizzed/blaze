@@ -1,6 +1,14 @@
 Blaze by Fizzed
 ===============
 
+## 2.1.0 - 2025-11-02
+ - Add support for using .m2/settings.xml mirrorOf maven central 
+ - Update maven parent v3.3.0 
+ - Fixed authentication bug with any maven server 
+ - Upstream SNAPSHOT versioned jars now work as dependencies 
+ - Use ~/.blaze/ivy2 as dependency cache 
+ - Dependency resolver defaults to 'runtime' dependencies
+
 ## 2.0.4 - 2025-10-30
  - Maven central broke during the deploy, just bumping the version to publish this one.
 
