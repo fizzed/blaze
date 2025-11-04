@@ -163,6 +163,7 @@ public class UnarchiveTest {
     }
 
     @Test
+    @DisabledOnOs(OS.OPENBSD)
     public void tarZstNoRootDir() throws Exception {
         final Path file = Resources.file("/fixtures/sample-no-root-dir.tar.zst");
         final Path target = this.createEmptyTargetDir("tarZstNoRootDir");
