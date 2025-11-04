@@ -11,8 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.fizzed.blaze.util.TerminalHelper.padRight;
-import static java.util.Optional.ofNullable;
+import static com.fizzed.blaze.util.TerminalHelper.fixedWidthLeft;
 
 public class TaskListRenderer {
 
@@ -85,7 +84,7 @@ public class TaskListRenderer {
         // output task name & description w/ padding
         for (BlazeTask t : tasks) {
             if (t.getDescription() != null) {
-                sb.append("  ").append(padRight(t.getName(), maxTaskNameWidth + 5)).append(t.getDescription()).append("\n");
+                sb.append("  ").append(fixedWidthLeft(t.getName(), maxTaskNameWidth + 5)).append(t.getDescription()).append("\n");
             } else {
                 sb.append("  ").append(t.getName()).append("\n");
             }

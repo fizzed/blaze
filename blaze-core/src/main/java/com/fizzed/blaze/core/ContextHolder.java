@@ -30,7 +30,7 @@ public class ContextHolder {
     private static final ThreadLocal<Context> CONTEXT =
          new ThreadLocal<Context>() {
              @Override protected ContextImpl initialValue() {
-                 log.info("Creating default context for thread " + Thread.currentThread().getName());
+                 //log.debug("Creating default context for thread {}", Thread.currentThread().getName());
                  return new DefaultContext();
          }
     };

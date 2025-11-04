@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 
-import static com.fizzed.blaze.util.TerminalHelper.clearLinePrint;
+import static com.fizzed.blaze.util.TerminalHelper.*;
 
 public class IoHelper {
 
@@ -45,7 +45,7 @@ public class IoHelper {
             if (progressBar != null) {
                 progressBar.update(n);
                 if (progressBar.isRenderStale(1)) {
-                    clearLinePrint(progressBar.render());
+                    System.out.print(clearLine(progressBar.render()));
                 }
             }
         }
@@ -53,9 +53,9 @@ public class IoHelper {
         // we need 1 more render to make sure it shows 100%
         if (progressBar != null) {
             if (clearProgressLineAtEnd) {
-                clearLinePrint();
+                System.out.print(clearLine(""));
             } else {
-                clearLinePrint(progressBar.render());
+                System.out.print(clearLine(progressBar.render()));
             }
         }
     }
