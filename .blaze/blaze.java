@@ -55,9 +55,9 @@ public class blaze extends PublicBlaze {
     @Override
     protected List<Target> crossTestTargets() {
         return super.crossTestTargets().stream()
-            .filter(v -> !v.getArch().contains("riscv64"))
-            .filter(v -> !v.getOs().contains("freebsd"))
-            .filter(v -> !v.getOs().contains("openbsd"))
+            //.filter(v -> !v.getArch().contains("riscv64"))
+            //.filter(v -> !v.getOs().contains("freebsd"))
+            //.filter(v -> !v.getOs().contains("openbsd"))
             .collect(Collectors.toList());
     }
 
