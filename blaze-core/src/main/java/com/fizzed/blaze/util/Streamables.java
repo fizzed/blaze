@@ -196,6 +196,16 @@ public class Streamables {
         Objects.requireNonNull(path, "path cannot be null");
         return new StreamableOutput(new DeferredFileOutputStream(path, useTemporaryFile), path.getFileName().toString(), path, null);
     }
+
+    static public StreamableOutput outputA(File file, boolean append) {
+        Objects.requireNonNull(file, "file cannot be null");
+        return outputA(file.toPath(), append);
+    }
+
+    static public StreamableOutput outputA(Path path, boolean append) {
+        Objects.requireNonNull(path, "path cannot be null");
+        return new StreamableOutput(new DeferredFileOutputStream(path, false, append), path.getFileName().toString(), path, null);
+    }
     
     static public CaptureOutput captureOutput() {
         return captureOutput(true);

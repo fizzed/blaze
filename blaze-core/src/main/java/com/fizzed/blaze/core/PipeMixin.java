@@ -75,6 +75,14 @@ public interface PipeMixin<T> {
     default public T pipeOutput(File file) {
         return pipeOutput(Streamables.output(file));
     }
+
+    default public T pipeOutput(Path path, boolean append) {
+        return pipeOutput(Streamables.outputA(path, append));
+    }
+
+    default public T pipeOutput(File file, boolean append) {
+        return pipeOutput(Streamables.outputA(file, append));
+    }
     
     default public T disablePipeOutput() {
         return pipeOutput((StreamableOutput)null);
