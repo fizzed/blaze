@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+## 2.2.0 - 2025-11-03
+ - Add new and refactor TerminalHelper methods for additional ANSI console utils
+ - Exec.runCaptureOutput now also accepts a boolean to disable stdout
+ - Add new Streamables.outputA to allow for appending to a file rather than truncating
+
 ## 2.1.0 - 2025-11-02
  - Add support for using .m2/settings.xml mirrorOf maven central 
  - Update maven parent v3.3.0 
