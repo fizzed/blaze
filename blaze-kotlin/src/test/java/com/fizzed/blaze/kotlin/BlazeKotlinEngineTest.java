@@ -22,6 +22,7 @@ import com.fizzed.blaze.util.BlazeRunner;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
@@ -37,6 +38,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@DisabledIfSystemProperty(named="os.arch", matches="riscv64")
 public class BlazeKotlinEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeKotlinEngineTest.class);
     
