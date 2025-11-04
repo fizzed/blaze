@@ -2,7 +2,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>blaze-kotlin</artifactId>
-    <name>blaze-kotline</name>
+    <name>blaze-kotlin</name>
     <packaging>jar</packaging>
  
     <parent>
