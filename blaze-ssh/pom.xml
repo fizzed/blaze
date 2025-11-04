@@ -27,8 +27,15 @@
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
         </dependency>
-        
+
         <dependency>
+            <groupId>com.kohlschutter.junixsocket</groupId>
+            <artifactId>junixsocket-core</artifactId>
+            <version>2.10.1</version>
+            <type>pom</type>
+        </dependency>
+
+        <!--<dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch.agentproxy.jsch</artifactId>
             <exclusions>
@@ -50,7 +57,6 @@
             </exclusions>
         </dependency>
 
-        <!-- this pulls in an old JNA, fix it -->
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch.agentproxy.usocket-jna</artifactId>
@@ -78,7 +84,7 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
-        </dependency>
+        </dependency>-->
         
         <!--
         <dependency>

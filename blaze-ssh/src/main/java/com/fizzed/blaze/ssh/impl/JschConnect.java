@@ -20,17 +20,9 @@ import com.fizzed.blaze.Contexts;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.util.MutableUri;
 import com.fizzed.blaze.ssh.SshException;
-import com.jcraft.jsch.ConfigRepository;
+import com.jcraft.jsch.*;
 import com.jcraft.jsch.ConfigRepository.Config;
-import com.jcraft.jsch.HostKey;
-import com.jcraft.jsch.HostKeyRepository;
-import com.jcraft.jsch.Identity;
-import com.jcraft.jsch.IdentityRepository;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.UIKeyboardInteractive;
-import com.jcraft.jsch.UserInfo;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,13 +38,13 @@ import com.fizzed.blaze.ssh.util.ProxyCommand;
 import com.fizzed.blaze.ssh.util.SshCommand;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.Timer;
-import com.jcraft.jsch.Proxy;
-import com.jcraft.jsch.agentproxy.AgentProxy;
+// new jsch lib includes these now
+/*import com.jcraft.jsch.agentproxy.AgentProxy;
 import com.jcraft.jsch.agentproxy.AgentProxyException;
 import com.jcraft.jsch.agentproxy.RemoteIdentityRepository;
 import com.jcraft.jsch.agentproxy.USocketFactory;
 import com.jcraft.jsch.agentproxy.connector.SSHAgentConnector;
-import com.jcraft.jsch.agentproxy.usocket.JNAUSocketFactory;
+import com.jcraft.jsch.agentproxy.usocket.JNAUSocketFactory;*/
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.util.Vector;
 
@@ -343,9 +335,31 @@ public class JschConnect extends SshConnect {
                     }
                 });
             }
-            
-            // enable ssh-agent connector
-            if (SSHAgentConnector.isConnectorAvailable()) {
+
+
+            // enable NEW jsch ssh-agent connector
+            try {
+                SSHAgentConnector sshAgentConnector = new SSHAgentConnector();
+
+                if (sshAgentConnector.isAvailable()) {
+                    log.debug("SSH_AUTH_SOCK env detected, will try to load identities...");
+                    IdentityRepository sshAgentRepository = new AgentIdentityRepository(sshAgentConnector);
+
+                    Vector<Identity> identities = sshAgentRepository.getIdentities();
+                    for (Identity identity : identities) {
+                        jsch.addIdentity(identity, null);
+                    }
+                }
+            } catch (AgentProxyException e) {
+                // ssh agent only runs well on java 8+ on the majority of platforms OR java 16+ on anything that runs java
+                // due to needing unix sockets support. Instead of breaking ssh entirely on those platforms, we will simply
+                // log out the issue as a warning, and the stacktrace as trace
+                log.warn("Unable to load identities from ssh-agent: {} (run with trace logging for full stacktrace)", e.getMessage());
+                log.trace("", e);
+            }
+
+            // old jsch way of loading agent identities...
+            /*if (AgentConnector .isConnectorAvailable()) {
                 log.debug("SSH_AUTH_SOCK env detected, will try to load identities...");
                 try {
                     USocketFactory udsf = new JNAUSocketFactory();
@@ -360,8 +374,7 @@ public class JschConnect extends SshConnect {
                 catch (AgentProxyException e) {
                     throw new BlazeException("Unable to load identities from ssh-agent", e);
                 }
-            }
-            
+            }*/
             
             if (log.isDebugEnabled()) {
                 IdentityRepository ir = jsch.getIdentityRepository();

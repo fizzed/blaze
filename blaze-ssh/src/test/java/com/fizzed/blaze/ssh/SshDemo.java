@@ -15,6 +15,8 @@
  */
 package com.fizzed.blaze.ssh;
 
+import com.fizzed.blaze.logging.LogLevel;
+import com.fizzed.blaze.logging.LoggerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +28,9 @@ public class SshDemo {
     static private final Logger log = LoggerFactory.getLogger(SshDemo.class);
 
     static public void main(String[] args) throws Exception {
+        LoggerConfig.setDefaultLogLevel(LogLevel.TRACE);
+
+        /*// sftp demo
         try (SshSession sshSession = sshConnect("ssh://bmh-jjlauer-4").run()) {
             try (SshSftpSession sftp = sshSftp(sshSession).run()) {
                 for (SshFile f : sftp.ls("/home/jjlauer/Downloads")) {
@@ -40,11 +45,18 @@ public class SshDemo {
                     .target(Paths.get("test.deb"))
                     .run();
 
-                /*sftp.put()
+                *//*sftp.put()
                     .source(Paths.get("test.deb"))
                     .target("test.deb")
-                    .run();*/
+                    .run();*//*
             }
+        }*/
+
+        // shell demo of whether ssh-agent is working
+        // ssh to a machine using a specific identity that won't exist on the target machine
+        try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-ubuntu20-1").run()) {
+            // now to test ssh'ing from that machine somewhere else
+            sshExec(sshSession, "ssh", "-v", "-o", "StrictHostKeyChecking=no", "sshagentdemo@bmh-build-x64-ubuntu24-1", "hostname").run();
         }
     }
 
