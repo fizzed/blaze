@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.fizzed.crux.util.Resources;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -163,7 +165,7 @@ public class UnarchiveTest {
     }
 
     @Test
-    @DisabledOnOs(OS.OPENBSD)
+    @DisabledOnOs(OS.OPENBSD) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
     public void tarZstNoRootDir() throws Exception {
         final Path file = Resources.file("/fixtures/sample-no-root-dir.tar.zst");
         final Path target = this.createEmptyTargetDir("tarZstNoRootDir");
