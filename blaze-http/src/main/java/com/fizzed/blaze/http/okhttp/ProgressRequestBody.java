@@ -10,7 +10,7 @@ import okio.Okio;
 
 import java.io.IOException;
 
-import static com.fizzed.blaze.util.TerminalHelper.clearLinePrint;
+import static com.fizzed.blaze.util.TerminalHelper.clearLine;
 
 /**
  * A custom {@link RequestBody} implementation that wraps an existing {@link RequestBody} and allows
@@ -47,7 +47,7 @@ public class ProgressRequestBody extends RequestBody {
                 super.write(source, byteCount);
                 progressBar.update(byteCount);
                 if (progressBar.isRenderStale(1)) {
-                    clearLinePrint(progressBar.render());
+                    System.out.print(clearLine(progressBar.render()));
                 }
             }
         };
@@ -61,7 +61,7 @@ public class ProgressRequestBody extends RequestBody {
         progressBufferedSink.flush(); // Crucial to ensure all bytes are written
 
         // one last render to clear the line
-        clearLinePrint();
+        System.out.print(clearLine(""));
     }
 
 }

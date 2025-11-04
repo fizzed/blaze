@@ -193,8 +193,9 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
     }
 
     /**
-     * Helper method to make it easier to exec a program and capture its output.
-     * @return The captured output
+     * Helper method to make it easier to exec a program and capture its output. By default this will still also
+     * print out the program output to the console (stdout). You can see {@link #runCaptureOutput(boolean)} to disable this.
+     * @return The captured output stream
      * @throws BlazeException
      */
     public CaptureOutput runCaptureOutput() throws BlazeException {
@@ -206,6 +207,31 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
             captureOutput = (CaptureOutput)output;
         } else {
             captureOutput = Streamables.captureOutput();
+            this.pipeOutput(captureOutput);
+        }
+
+        this.run();
+
+        return captureOutput;
+    }
+
+    /**
+     * Executes the command defined in the current context while capturing its output.
+     * Optionally, the standard output can be included in the captured output.
+     *
+     * @param includeStdOut a boolean indicating whether the standard output will also receive a copy of the captured output
+     * @return the captured output of the executed command encapsulated in a {@link CaptureOutput} instance
+     * @throws BlazeException if an error occurs while executing the command
+     */
+    public CaptureOutput runCaptureOutput(boolean includeStdOut) throws BlazeException {
+        CaptureOutput captureOutput = null;
+        StreamableOutput output = getPipeOutput();
+
+        // already set as capture output?
+        if (output != null && output instanceof CaptureOutput) {
+            captureOutput = (CaptureOutput)output;
+        } else {
+            captureOutput = Streamables.captureOutput(includeStdOut);
             this.pipeOutput(captureOutput);
         }
 

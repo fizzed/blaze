@@ -35,12 +35,21 @@ public class DeferredFileOutputStream extends OutputStream {
 
     private final Path file;
     private final Path temporaryFile;
+    private final boolean append;
     private OutputStream output;
     
     public DeferredFileOutputStream(Path file, boolean useTemporaryFile) {
+        this(file, useTemporaryFile, false);
+    }
+
+    public DeferredFileOutputStream(Path file, boolean useTemporaryFile, boolean append) {
         Objects.requireNonNull(file, "file cannot be null");
         this.file = file;
+        this.append = append;
         if (useTemporaryFile) {
+            if (append) {
+                throw new IllegalArgumentException("Cannot use a temporary file with append enabled");
+            }
             this.temporaryFile = file.resolveSibling(file.getFileName() + ".tmp");
         } else {
             this.temporaryFile = null;
@@ -51,7 +60,11 @@ public class DeferredFileOutputStream extends OutputStream {
         if (this.output == null) {
             try {
                 final Path fileToOpen = this.temporaryFile != null ? this.temporaryFile : this.file;
-                this.output = Files.newOutputStream(fileToOpen, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                if (this.append) {
+                    this.output = Files.newOutputStream(fileToOpen, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                } else {
+                    this.output = Files.newOutputStream(fileToOpen, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                }
             } catch (Exception e) {
                 throw new FileNotFoundException(e.getMessage(), e);
             }

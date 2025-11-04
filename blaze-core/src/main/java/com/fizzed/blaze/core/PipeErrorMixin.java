@@ -44,6 +44,14 @@ public interface PipeErrorMixin<T> extends PipeMixin<T> {
     default T pipeError(File file) {
         return pipeError(Streamables.output(file));
     }
+
+    default T pipeError(Path path, boolean append) {
+        return pipeError(Streamables.outputA(path, append));
+    }
+
+    default T pipeError(File file, boolean append) {
+        return pipeError(Streamables.outputA(file, append));
+    }
     
     default T disablePipeError() {
         return pipeError((StreamableOutput)null);
