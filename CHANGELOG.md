@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ===============
 
+## 2.3.0 - 2025-11-04
+ - Use new jsch library ssh-agent features - removed numerous transitive dependencies and runs without error across
+more platforms.
+ - Disable zstd tests on OpenBSD and riscv64 (zstd-jni is not available on OpenBSD and riscv64
+ - Re-enable cross unit tests on riscv64, freebsd, and openbsd
+
 ## 2.2.0 - 2025-11-03
  - Add new and refactor TerminalHelper methods for additional ANSI console utils
  - Exec.runCaptureOutput now also accepts a boolean to disable stdout
