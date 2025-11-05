@@ -6,3 +6,5 @@ ssh/src/test/java/ssh.*
 examples/pom.xml
 .idea
 .buildx
+.buildx-cache
+.buildx-logs

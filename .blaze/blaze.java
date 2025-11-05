@@ -22,11 +22,6 @@ import com.fizzed.blaze.TaskGroup;
 import com.fizzed.blaze.core.Blaze;
 import com.fizzed.blaze.project.PublicBlaze;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.fizzed.buildx.Target;
-
 @TaskGroup(value="project", order=1, name="Project")
 @TaskGroup(value="maintainers", order=2, name="Maintainers Only")
 public class blaze extends PublicBlaze {

@@ -23,6 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
@@ -38,6 +40,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@DisabledOnOs(value={OS.OPENBSD, OS.FREEBSD}, architectures = "aarch64")        // these are very flaky on these platforms
 @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
 public class BlazeKotlinEngineTest {
     final static private Logger log = LoggerFactory.getLogger(BlazeKotlinEngineTest.class);
