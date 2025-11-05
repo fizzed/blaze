@@ -23,7 +23,7 @@
     <dependency>
       <groupId>com.fizzed</groupId>
       <artifactId>blaze-core</artifactId>
-      <version>2.1.2</version>
+      <version>2.3.0</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -48,7 +48,7 @@
     <dependency>
       <groupId>com.fizzed</groupId>
       <artifactId>blaze-ivy</artifactId>
-      <version>2.1.2</version>
+      <version>2.3.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.ivy</groupId>
@@ -58,12 +58,12 @@
     <dependency>
       <groupId>com.fizzed</groupId>
       <artifactId>blaze-ssh</artifactId>
-      <version>2.1.2</version>
+      <version>2.3.0</version>
     </dependency>
     <dependency>
       <groupId>com.fizzed</groupId>
       <artifactId>blaze-public-project</artifactId>
-      <version>2.0.2-SNAPSHOT</version>
+      <version>3.0.0</version>
     </dependency>
   </dependencies>
 </project>
