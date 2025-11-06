@@ -1,8 +1,10 @@
 Blaze by Fizzed
 ===============
 
-## 2.4.0 - 2025-11-06
+## 2.4.1 - 2025-11-06
+ - Bump jsch to v2.27.6
 
+## 2.4.0 - 2025-11-06
  - New `blaze-maven` module with various Maven integration utility methods and actions. Initial action helps get
 the classpath of the project and/or specific module at various goals & dependency scopes. Useful for then executing
 a Java class directly on a Maven project.
