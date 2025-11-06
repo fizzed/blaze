@@ -14,8 +14,6 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <!--<netbeans.compile.on.save>none</netbeans.compile.on.save>-->
-        <!-- workaround travis ci maven version requirement -->
         <maven.enforce.version>3.2.5</maven.enforce.version>
         <jsch.agentproxy.version>0.0.9</jsch.agentproxy.version>
         <slf4j.version>2.0.17</slf4j.version>
@@ -38,6 +36,7 @@
         <module>blaze-archive</module>
         <module>blaze-postoffice</module>
         <module>blaze-ssh</module>
+        <module>blaze-maven</module>
         <module>blaze-docker</module>
         <module>blaze-haproxy</module>
         <module>blaze-vagrant</module>

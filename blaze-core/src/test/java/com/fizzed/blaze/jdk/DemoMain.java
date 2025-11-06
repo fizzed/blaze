@@ -16,6 +16,8 @@
 package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.internal.ConfigHelper;
+import com.fizzed.blaze.internal.ConfigImpl;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.internal.FileHelper;
 import com.fizzed.blaze.util.Timer;
@@ -33,7 +35,7 @@ public class DemoMain {
     static public void main(String[] args) throws Exception {
         File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");
                 
-        Context context = new ContextImpl(null, null, scriptFile.toPath(), null);
+        Context context = new ContextImpl(null, null, scriptFile.toPath(), ConfigHelper.createEmpty());
                 
         BlazeJdkEngine engine = new BlazeJdkEngine();
         
