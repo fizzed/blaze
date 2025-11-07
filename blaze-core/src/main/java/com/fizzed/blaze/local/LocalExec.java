@@ -78,6 +78,9 @@ public class LocalExec extends Exec {
         
         if (this.exitValues != null && !this.exitValues.isEmpty()) {
             executor.exitValues(IntRangeHelper.toExpandedArray(this.exitValues));
+        } else {
+            // we should ignore the exit values entirely
+            executor.exitValueAny();
         }
         
         if (this.timeoutMillis > 0) {

@@ -99,6 +99,11 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
         return this;
     }
 
+    public Exec env(Map<String,String> environment) {
+        this.environment.putAll(environment);
+        return this;
+    }
+
     public Exec workingDir(Path path) {
         Objects.requireNonNull(path, "path cannot be null");
         this.workingDirectory = path;
