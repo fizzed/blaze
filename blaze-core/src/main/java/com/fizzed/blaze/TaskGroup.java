@@ -17,6 +17,7 @@ package com.fizzed.blaze;
 
 import java.lang.annotation.*;
 
+@Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Repeatable(TaskGroups.class)
