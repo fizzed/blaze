@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+## 2.4.2 - 2025-11-07
+ - Fixed bug with Exec.exitValuesAny() not honoring all exit values
+ - Added Exec.env() that accepts a Map of environment variables to set
+ - @TaskGroup, @Task are now "inherited" so you can define groups on parent classes and child classes will inherit them
+
 ## 2.4.1 - 2025-11-06
  - Bump jsch to v2.27.6
 
