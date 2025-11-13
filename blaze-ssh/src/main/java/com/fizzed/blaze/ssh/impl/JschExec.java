@@ -189,11 +189,10 @@ public class JschExec extends SshExec {
             outputStreamClosedSignal.await();
             errorStreamClosedSignal.await();
             
-            Integer exitValue = channel.getExitStatus();
-            
-            if (!IntRangeHelper.contains(this.exitValues, exitValue)) {
-                throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, exitValue);
-            }
+            final Integer exitValue = channel.getExitStatus();
+
+            // check the exit value (or skip checking if none are defined)
+            UnexpectedExitValueException.checkExitValue(this.exitValues, exitValue);
             
             return new Exec.Result(this, exitValue);
         } catch (JSchException | InterruptedException e) {

@@ -15,6 +15,7 @@
  */
 package com.fizzed.blaze.core;
 
+import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.util.IntRange;
 
 import java.util.List;
@@ -47,7 +48,15 @@ public class UnexpectedExitValueException extends BlazeException {
     public Integer getActual() {
         return actual;
     }
-    
-    
-    
+
+
+    static public void checkExitValue(List<IntRange> exitValues, Integer actual) throws UnexpectedExitValueException {
+        // are any exit values specified?
+        if (exitValues != null && !exitValues.isEmpty()) {
+            if (!IntRangeHelper.contains(exitValues, actual)) {
+                throw new UnexpectedExitValueException("Process exited with unexpected value", exitValues, actual);
+            }
+        }
+    }
+
 }
