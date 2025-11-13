@@ -3,15 +3,17 @@ import com.fizzed.blaze.Contexts
 import com.fizzed.blaze.Contexts.baseDir
 import com.fizzed.blaze.util.Globber.globber
 
-val log = Contexts.logger()
+class globber {
+    val log = Contexts.logger()
 
-fun main() {
-    globber(baseDir(), "*.{java,js,groovy,kt,kts}")
-        .filesOnly()
-        .visibleOnly()
-        .scan()
-        .sorted()
-        .forEach({ p -> 
-            log.info("{}", p)
-        })
+    fun main() {
+        globber(baseDir(), "*.{java,js,groovy,kt,kts}")
+            .filesOnly()
+            .visibleOnly()
+            .scan()
+            .sorted()
+            .forEach({ p ->
+                log.info("{}", p)
+            })
+    }
 }
