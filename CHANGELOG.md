@@ -1,6 +1,11 @@
 Blaze by Fizzed
 ===============
 
+## 2.5.0 - 2025-11-13
+ - Use new helper class to improve escaping arguments via SSH
+ - Fix exitValuesAny() on SshExec
+ - Exec.args now accepts a Collection<> of arguments
+
 ## 2.4.2 - 2025-11-07
  - Fixed bug with Exec.exitValuesAny() not honoring all exit values
  - Added Exec.env() that accepts a Map of environment variables to set
