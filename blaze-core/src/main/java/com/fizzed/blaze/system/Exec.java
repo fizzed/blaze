@@ -93,7 +93,7 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
         return this;
     }
 
-    public Exec args(Collection<Object> arguments) {
+    public Exec args(Collection<?> arguments) {
         this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
         return this;
     }

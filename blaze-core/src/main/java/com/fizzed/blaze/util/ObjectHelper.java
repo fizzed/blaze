@@ -40,7 +40,7 @@ public class ObjectHelper {
         return object.toString();
     }
 
-    static public List<String> nonNullToStringList(Collection<Object> objects) {
+    static public List<String> nonNullToStringList(Collection<?> objects) {
         if (objects == null) {
             return Collections.emptyList();
         }
