@@ -16,6 +16,7 @@
 package com.fizzed.blaze.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,10 +39,29 @@ public class ObjectHelper {
         
         return object.toString();
     }
-    
+
+    static public List<String> nonNullToStringList(Collection<?> objects) {
+        if (objects == null) {
+            return Collections.emptyList();
+        }
+
+        List<String> strings = new ArrayList<>();
+
+        int i = 0;
+        for (Object object : objects) {
+            if (object == null) {
+                throw new IllegalArgumentException("object #" + i + " was null");
+            }
+            strings.add(object.toString());
+            i++;
+        }
+
+        return strings;
+    }
+
     static public List<String> nonNullToStringList(Object[] objects) {
         if (objects == null) {
-            Collections.emptyList();
+            return Collections.emptyList();
         }
         
         List<String> strings = new ArrayList<>();

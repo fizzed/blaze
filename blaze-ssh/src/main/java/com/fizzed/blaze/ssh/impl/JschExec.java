@@ -20,6 +20,7 @@ import com.fizzed.blaze.ssh.*;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.core.BlazeException;
+import com.fizzed.blaze.ssh.util.SshArguments;
 import com.fizzed.blaze.system.Exec;
 import com.fizzed.blaze.util.ObjectHelper;
 import com.fizzed.blaze.util.WrappedOutputStream;
@@ -145,11 +146,11 @@ public class JschExec extends SshExec {
             }
             
             c.add(PathHelper.toString(command));
-            
             c.addAll(this.arguments);
+
+            final String finalCommand = SshArguments.buildEscapedCommand(c);
             
-            
-            // building the command may be a little tricky, not sure about spaces...
+            /*// building the command may be a little tricky, not sure about spaces...
             final StringBuilder sb = new StringBuilder();
             
             c.stream().forEach((arg) -> {
@@ -165,7 +166,7 @@ public class JschExec extends SshExec {
                 }
             });
             
-            String finalCommand = sb.toString();
+            String finalCommand = sb.toString();*/
 
             if (log.isVerbose()) {
                 String workingDir = "";
@@ -188,11 +189,10 @@ public class JschExec extends SshExec {
             outputStreamClosedSignal.await();
             errorStreamClosedSignal.await();
             
-            Integer exitValue = channel.getExitStatus();
-            
-            if (!IntRangeHelper.contains(this.exitValues, exitValue)) {
-                throw new UnexpectedExitValueException("Process exited with unexpected value", this.exitValues, exitValue);
-            }
+            final Integer exitValue = channel.getExitStatus();
+
+            // check the exit value (or skip checking if none are defined)
+            UnexpectedExitValueException.checkExitValue(this.exitValues, exitValue);
             
             return new Exec.Result(this, exitValue);
         } catch (JSchException | InterruptedException e) {
@@ -201,15 +201,6 @@ public class JschExec extends SshExec {
             if (channel != null) {
                 channel.disconnect();
             }
-            
-            /**
-            // cleanup JSCH exec thread if it exists
-            Thread execThread = execThreadRef.get();
-            if (execThread != null) {
-                log.trace("Interrupting thread [{}]", execThread.getName());
-                execThread.interrupt();
-            }
-            */
         }
     }
     
