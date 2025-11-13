@@ -85,7 +85,16 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
     }
 
     public Exec arg(Object argument) {
+        // was this accidentally a collection or array?
+        if (argument != null && (argument instanceof Collection || argument.getClass().isArray())) {
+            throw new IllegalArgumentException("Use args() instead of arg() with a collection or array");
+        }
         this.arguments.add(ObjectHelper.nonNullToString(argument));
+        return this;
+    }
+
+    public Exec args(Collection<Object> arguments) {
+        this.arguments.addAll(ObjectHelper.nonNullToStringList(arguments));
         return this;
     }
 
