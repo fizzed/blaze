@@ -16,12 +16,17 @@
 package com.fizzed.blaze.jdk;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.core.BlazeClassLoader;
+import com.fizzed.blaze.core.Engine;
+import com.fizzed.blaze.core.Script;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ConfigImpl;
 import com.fizzed.blaze.internal.ContextImpl;
 import com.fizzed.blaze.internal.FileHelper;
 import com.fizzed.blaze.util.Timer;
 import java.io.File;
+import java.net.URL;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +41,13 @@ public class DemoMain {
         File scriptFile = FileHelper.resourceAsFile("/jdk/hello.java");
                 
         Context context = new ContextImpl(null, null, scriptFile.toPath(), ConfigHelper.createEmpty());
-                
+
+        // this is the key, this makes all classloading for this thread use the BlazeClassLoader
+        BlazeClassLoader blazeClassLoader = new BlazeClassLoader(new URL[0], Thread.currentThread().getContextClassLoader());
+        Thread.currentThread().setContextClassLoader(blazeClassLoader);
+
         BlazeJdkEngine engine = new BlazeJdkEngine();
-        
+
         engine.init(context);
         
         Timer timer = new Timer();
