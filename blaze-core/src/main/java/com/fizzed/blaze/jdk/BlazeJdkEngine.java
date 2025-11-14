@@ -32,6 +32,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -125,12 +127,33 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         // runtime classpath (not what we started with, but current one)
         String classpath = ClassLoaderHelper.buildClassPathAsString(classLoader);
 
+        // load the java compiler first (so we can get the source versions it supports)
+        final List<String> compilerSpecificOptions = new ArrayList<>();
+        JavaCompiler compiler = loadJavaCompiler(classLoader, context, compilerSpecificOptions);
+
+        // calculate the max java version the compiler supports
+        /*final Set<SourceVersion> compilerSourceVersions = compiler.getSourceVersions();
+        int maxCompilerJavaVersion = 0;
+        for (SourceVersion compilerSourceVersion : compilerSourceVersions) {
+            int majorJavaVersion = compilerSourceVersion.ordinal();
+            //log.trace("Supported Java source version: {}", majorJavaVersion);
+            if (majorJavaVersion > maxCompilerJavaVersion) {
+                maxCompilerJavaVersion = majorJavaVersion;
+            }
+        }*/
+
         List<String> options = new ArrayList<>();
 
         // if we don't include source & target, the script will be evaluated in the java version currently running
         // the key is that we'll want to not use a cached class version if the JVM version changes, we'll add that to
         // the MD5 hash we calculate for cached copies of blaze scripts
         int javaMajorVersion = ConfigHelper.getJavaSourceVersion(context);
+
+        /*if (javaMajorVersion > maxCompilerJavaVersion) {
+            log.warn("Requested java source version {} but compiler only supports up to {} (downgrading to {})", javaMajorVersion, maxCompilerJavaVersion, maxCompilerJavaVersion);
+            javaMajorVersion = maxCompilerJavaVersion;
+        }*/
+
         String sourceVersion = javaMajorVersion <= 8 ? "1."+javaMajorVersion : Integer.toString(javaMajorVersion);
 
         options.add("-source");
@@ -147,11 +170,14 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
         options.add(classesDir.toString());
 
         options.add("-Xlint:unchecked");
+
+        // add the compiler specific options now
+        options.addAll(compilerSpecificOptions);
         
         //
         // java -> class
         //
-        JavaCompiler compiler = loadJavaCompiler(classLoader, context, options);
+
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
@@ -221,13 +247,14 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
             if (!isSystemCompilerAvailable()) {
                 // we need the eclipse compiler
                 log.debug("System compiler missing (running on JRE?). Adding eclipse compiler");
+                // NOTE: this version only supports up to Java 24, not 25
                 return Arrays.asList(new Dependency("org.eclipse.jdt", "ecj", "3.43.0"));
             }
         }
         return null;
     }
     
-    static public JavaCompiler loadJavaCompiler(ClassLoader classLoader, Context context,List<String> options) {
+    static public JavaCompiler loadJavaCompiler(ClassLoader classLoader, Context context, List<String> options) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         
         if (compiler == null) {
