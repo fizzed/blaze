@@ -221,7 +221,7 @@ public class BlazeJdkEngine extends AbstractEngine<BlazeJdkScript> {
             if (!isSystemCompilerAvailable()) {
                 // we need the eclipse compiler
                 log.debug("System compiler missing (running on JRE?). Adding eclipse compiler");
-                return Arrays.asList(new Dependency("org.eclipse.jdt.core.compiler", "ecj", "4.6.1"));
+                return Arrays.asList(new Dependency("org.eclipse.jdt", "ecj", "3.43.0"));
             }
         }
         return null;
