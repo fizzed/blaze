@@ -63,7 +63,7 @@ public class JschExec extends SshExec {
             if (this.pty) {
                 channel.setPty(true);
             }
-            
+
             // setup environment
             if (this.environment != null) {
                 for (Map.Entry<String,String> entry : this.environment.entrySet()) {
@@ -103,8 +103,11 @@ public class JschExec extends SshExec {
                 channel.setOutputStream(new WrappedOutputStream(os) {
                     @Override
                     public void close() throws IOException {
-                        outputStreamClosedSignal.countDown();
-                        super.close();
+                        try {
+                            super.close();
+                        } finally {
+                            outputStreamClosedSignal.countDown();
+                        }
                     }
                 }, false);
             } else {
@@ -116,8 +119,11 @@ public class JschExec extends SshExec {
                 channel.setErrStream(new WrappedOutputStream(es) {
                     @Override
                     public void close() throws IOException {
-                        errorStreamClosedSignal.countDown();
-                        super.close();
+                        try {
+                            super.close();
+                        } finally {
+                            errorStreamClosedSignal.countDown();
+                        }
                     }
                 }, false);
             } else {

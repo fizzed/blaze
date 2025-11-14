@@ -313,6 +313,9 @@ public class SshExecTest extends SshBaseTest {
         assertThat(exitValue, is(0));
         
         // verify all streams were closed
+        // NOTE: due to thread timing, its possible the streams need a tiny bit more time to make sure they are closed
+        // otherwise, this test is a bit brittle across various platforms
+
 //        verify(in).close();
         verify(out).close();
         verify(err).close();
