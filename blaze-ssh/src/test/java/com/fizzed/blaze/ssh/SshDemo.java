@@ -30,10 +30,15 @@ public class SshDemo {
     static public void main(String[] args) throws Exception {
         LoggerConfig.setDefaultLogLevel(LogLevel.TRACE);
 
+        // what paths works
+        // linux -> windows (works with / paths, root dir is /C:/path/as/you/would)
+
         // sftp demo
-        try (SshSession sshSession = sshConnect("ssh://bmh-jjlauer-4").run()) {
+        try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-win11-1").run()) {
             try (SshSftpSession sftp = sshSftp(sshSession).run()) {
-                for (SshFile f : sftp.ls("/home/jjlauer/Downloads")) {
+                log.debug("pwd: {}", sftp.pwd());
+
+                for (SshFile f : sftp.ls("/C:/Users/builder/remote-build/jne")) {
                     log.debug("ls: {}", f.path());
                 }
 /*
@@ -51,6 +56,28 @@ public class SshDemo {
                     .run();*/
             }
         }
+
+
+        /*try (SshSession sshSession = sshConnect("ssh://bmh-jjlauer-4").run()) {
+            try (SshSftpSession sftp = sshSftp(sshSession).run()) {
+                for (SshFile f : sftp.ls("/home/jjlauer/Downloads")) {
+                    log.debug("ls: {}", f.path());
+                }
+*//*
+                sftp.cd("Downloads");
+
+                sftp.get()
+                    .progress()
+                    .source("ubuntu-24.10-desktop-amd64.iso")
+                    .target(Paths.get("test.deb"))
+                    .run();
+
+                sftp.put()
+                    .source(Paths.get("test.deb"))
+                    .target("test.deb")
+                    .run();*//*
+            }
+        }*/
 
         // shell demo of whether ssh-agent is working
         // ssh to a machine using a specific identity that won't exist on the target machine
