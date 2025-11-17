@@ -21,7 +21,11 @@ class RemotePathTest {
 
         final String localPath = remotePathHelper.toLocalPathString(remotePath);
 
-        assertThat(localPath, is(remotePath));
+        if (remotePathHelper.getLocalSpec() == RemotePath.Spec.POSIX) {
+            assertThat(localPath, is(remotePath));
+        } else {
+            assertThat(localPath, is("remote-build\\jne"));
+        }
     }
 
     @Test
