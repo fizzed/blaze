@@ -1,8 +1,6 @@
 package com.fizzed.blaze.ssh.util;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -10,7 +8,7 @@ import java.util.Objects;
  * separators (e.g. working on linux, remote system windows, or vice versa), or perhaps other interesting issues like
  * the "remote" system returning unix-style paths, but with invalid chars (e.g. "/C:/" as root on SFTP running on windows)
  */
-public class RemotePath {
+public class PathTranslator {
 
     public enum Spec {
         // "/" style paths
@@ -33,6 +31,11 @@ public class RemotePath {
         }
 
         public String getWindowsDriveLetter(String path) {
+            // special case of "/win-drive-C/blah"
+            if (path.length() > 11 && path.startsWith("/win-drive-")) {
+                return path.substring(11, 12);
+            }
+
             switch (this) {
                 case WINDOWS:
                     if (path.length() < 3) {
@@ -45,7 +48,7 @@ public class RemotePath {
                         throw new IllegalArgumentException("Path must be at least 10 characters long to get a windows drive letter [path was '" + path + "']");
                     }
                     // e.g. /cygwin/c/path -> c
-                    return path.substring(8, 9);
+                    return path.substring(8, 9).toUpperCase();
                 case WINDOWS_POSIX:
                     // could be either /C:/path/2 or /win-drive-C/path/2
                     if (path.length() < 3) {
@@ -59,53 +62,92 @@ public class RemotePath {
         }
 
         public String getWindowsPathWithoutDriveLetter(String path) {
+            // special case of "/win-drive-C/blah"
+            if (path.length() >= 12 && path.startsWith("/win-drive-")) {
+                return path.substring(12);
+            }
+
             switch (this) {
                 case WINDOWS:
                     // e.g. C:\path\2 -> path\2
-                    return path.substring(3);
+                    return path.substring(2);
                 case WINDOWS_CYGWIN:
                     // e.g. /cygwin/c/path/2 -> path/2
-                    return path.substring(10);
+                    return path.substring(9);
                 case WINDOWS_POSIX:
                     // could be either /C:/path/2 or /win-drive-C/path/2
                     // e.g. /C:/path/2 -> path/2
                     // e.g. /win-drive-C/path/2 -> path/2
-                    return path.substring(4);
+                    return path.substring(3);
                 default:
                     return null;
             }
         }
 
-        public String toPathString(Spec fromSpec, String fromPath) {
+        public String toPath(String fromPath, Spec toSpec) {
+            final Spec fromSpec = this;
+
             // if it's a relative path, the conversion is pretty straightforward
             if (isRelative(fromPath)) {
                 // if the separators are the same, no conversion is needed
-                if (Objects.equals(this.getSeparator(), fromSpec.getSeparator())) {
+                if (Objects.equals(toSpec.getSeparator(), fromSpec.getSeparator())) {
                     return fromPath;
                 } else {
                     // we need to convert the separators, then return the path
-                    return fromPath.replace(this.getSeparator(), fromSpec.getSeparator());
+                    return fromPath.replace(fromSpec.getSeparator(), toSpec.getSeparator());
                 }
             } else {
                 // absolute path, we may need to convert the root path and/or separators
-                if (this == fromSpec) {
+                if (toSpec == fromSpec) {
                     // same specs, nothing to convert
                     return fromPath;
-                } else if (this == Spec.WINDOWS) {
+                } else if (toSpec == Spec.WINDOWS) {
                     if (fromSpec == Spec.WINDOWS_POSIX || fromSpec == Spec.WINDOWS_CYGWIN) {
                         final String windowsDriveLetter = fromSpec.getWindowsDriveLetter(fromPath);
                         final String windowsPathWithoutDriveLetter = fromSpec.getWindowsPathWithoutDriveLetter(fromPath);
-                        return windowsDriveLetter + ":\\" + windowsPathWithoutDriveLetter.replace(fromSpec.getSeparator(), this.getSeparator());
+                        return windowsDriveLetter + ":" + windowsPathWithoutDriveLetter.replace(fromSpec.getSeparator(), toSpec.getSeparator());
                     } else if (fromSpec == Spec.POSIX) {
-                        // i guess we build a fake posix-esque path?
-                        return "C:\\posix-root" + fromPath.replace(fromSpec.getSeparator(), this.getSeparator());
+                        // special case of "/win-drive-C/blah"
+                        if (fromPath.startsWith("/win-drive-")) {
+                            final String windowsDriveLetter = fromSpec.getWindowsDriveLetter(fromPath);
+                            final String windowsPathWithoutDriveLetter = fromSpec.getWindowsPathWithoutDriveLetter(fromPath);
+                            return windowsDriveLetter + ":" + windowsPathWithoutDriveLetter.replace(fromSpec.getSeparator(), toSpec.getSeparator());
+                        }
+
+                        // we can just convert this to a drive-letter-less path
+                        return "" + fromPath.replace(fromSpec.getSeparator(), toSpec.getSeparator());
                     }
-                } else if (this == Spec.POSIX) {
+                } else if (toSpec == Spec.POSIX) {
                     // we only need to convert one spec, the rest can be passed thru
-                    if (fromSpec == Spec.WINDOWS_POSIX) {
+                    if (fromSpec == Spec.WINDOWS || fromSpec == Spec.WINDOWS_POSIX) {
+                        // special case of "C:\\posix-root"
+                        if (fromPath.startsWith("\\")) {
+                        //if (fromPath.startsWith("C:\\posix-root")) {
+                            // strip C:\posix-root off the front, then replace the separators
+//                            return fromPath.substring(13).replace(fromSpec.getSeparator(), toSpec.getSeparator());
+                            return fromPath.replace(fromSpec.getSeparator(), toSpec.getSeparator());
+                        }
+
+                        // otherwise, convert as needed
                         final String windowsDriveLetter = fromSpec.getWindowsDriveLetter(fromPath);
                         final String windowsPathWithoutDriveLetter = fromSpec.getWindowsPathWithoutDriveLetter(fromPath);
-                        return "/win-drive-" + windowsDriveLetter + windowsPathWithoutDriveLetter;
+                        return "/win-drive-" + windowsDriveLetter + windowsPathWithoutDriveLetter.replace(fromSpec.getSeparator(), toSpec.getSeparator());
+                    } else {
+                        return fromPath;
+                    }
+                } else if (toSpec == Spec.WINDOWS_POSIX) {
+                    if (fromSpec == Spec.WINDOWS || fromSpec == Spec.WINDOWS_CYGWIN || fromPath.startsWith("/win-drive-")) {
+                        final String windowsDriveLetter = fromSpec.getWindowsDriveLetter(fromPath);
+                        final String windowsPathWithoutDriveLetter = fromSpec.getWindowsPathWithoutDriveLetter(fromPath);
+                        return "/" + windowsDriveLetter + ":" + windowsPathWithoutDriveLetter.replace(fromSpec.getSeparator(), toSpec.getSeparator());
+                    } else {
+                        return fromPath;
+                    }
+                } else if (toSpec == Spec.WINDOWS_CYGWIN) {
+                    if (fromSpec == Spec.WINDOWS || fromSpec == Spec.WINDOWS_POSIX || fromPath.startsWith("/win-drive-")) {
+                        final String windowsDriveLetter = fromSpec.getWindowsDriveLetter(fromPath);
+                        final String windowsPathWithoutDriveLetter = fromSpec.getWindowsPathWithoutDriveLetter(fromPath);
+                        return "/cygwin/" + windowsDriveLetter.toLowerCase() + windowsPathWithoutDriveLetter.replace(fromSpec.getSeparator(), toSpec.getSeparator());
                     } else {
                         return fromPath;
                     }
@@ -113,7 +155,7 @@ public class RemotePath {
             }
 
             // should never happen
-            throw new UnsupportedOperationException("Unable to convert from path '" + fromPath + "' to spec " + this);
+            throw new UnsupportedOperationException("Unable to convert from spec " + fromSpec + " and path '" + fromPath + "' to spec " + toSpec);
         }
 
         static public Spec detect(String path) {
@@ -145,7 +187,7 @@ public class RemotePath {
     final private Spec localSpec;
     final private Spec remoteSpec;
 
-    private RemotePath(Spec localSpec, Spec remoteSpec) {
+    private PathTranslator(Spec localSpec, Spec remoteSpec) {
         Objects.requireNonNull(localSpec, "localSpec cannot be null");
         Objects.requireNonNull(remoteSpec, "remoteSpec cannot be null");
         this.localSpec = localSpec;
@@ -160,53 +202,13 @@ public class RemotePath {
         return remoteSpec;
     }
 
-    public String toLocalPathString(String remotePath) {
-        return this.remoteSpec.toPathString(this.localSpec, remotePath);
+    public String toLocalPath(String remotePath) {
+        return this.remoteSpec.toPath(remotePath, this.localSpec);
     }
 
-    /*public Path toLocalPath(String remotePath) {
-        // if it's a relative path, the conversion is pretty straightforward
-        if (isRelative(remotePath)) {
-            // if the separators are the same, no conversion is needed
-            if (Objects.equals(this.localSpec.getSeparator(), this.remoteSpec.getSeparator())) {
-                return Paths.get(remotePath);
-            } else {
-                // we need to convert the separators, then return the path
-                return Paths.get(remotePath.replace(this.remoteSpec.getSeparator(), this.localSpec.getSeparator()));
-            }
-        } else {
-            // absolute path, we may need to convert the root path and/or separators
-            if (this.localSpec == this.remoteSpec) {
-                // same specs, nothing to convert
-                return Paths.get(remotePath);
-            } else if (this.localSpec == Spec.WINDOWS) {
-                if (this.remoteSpec == Spec.WINDOWS_POSIX || this.remoteSpec == Spec.WINDOWS_CYGWIN) {
-                    final String windowsDriveLetter = this.remoteSpec.getWindowsDriveLetter(remotePath);
-                    final String windowsPathWithoutDriveLetter = this.remoteSpec.getWindowsPathWithoutDriveLetter(remotePath);
-                    final String newRemotePath = windowsDriveLetter + ":\\" + windowsPathWithoutDriveLetter.replace(this.remoteSpec.getSeparator(), this.localSpec.getSeparator());
-                    return Paths.get(newRemotePath);
-                } else if (this.remoteSpec == Spec.POSIX) {
-                    final String newRemotePath = remotePath.replace(this.remoteSpec.getSeparator(), this.localSpec.getSeparator());
-                    return Paths.get(newRemotePath);
-                }
-
-
-                throw new UnsupportedOperationException("Unable to convert remote path " + remotePath + " to local spec " + this.localSpec);
-            } else if (this.localSpec == Spec.POSIX) {
-                // we only need to convert one spec, the rest can be passed thru
-                if (this.remoteSpec == Spec.WINDOWS_POSIX) {
-                    final String windowsDriveLetter = this.remoteSpec.getWindowsDriveLetter(remotePath);
-                    final String newRemotePath = "/win-drive-" + windowsDriveLetter + remotePath.substring(4);
-                    return Paths.get(newRemotePath);
-                } else {
-                    return Paths.get(remotePath);
-                }
-            } else {
-                // should never happen
-                throw new UnsupportedOperationException("Unable to convert remote path " + remotePath + " to local spec " + this.localSpec);
-            }
-        }
-    }*/
+    public String toRemotePath(String localPath) {
+        return this.localSpec.toPath(localPath, this.remoteSpec);
+    }
 
     static public boolean isRelative(String path) {
         return !isAbsolute(path);
@@ -218,48 +220,10 @@ public class RemotePath {
             || path.length() > 3 && path.charAt(1) == ':' && path.charAt(2) == '\\';
     }
 
-
-
-
-
-    static public RemotePath create(String remotePath) {
+    static public PathTranslator detectLocalRemote(String remotePath) {
         final Spec localSpec = Spec.detectLocal();
         final Spec remoteSpec = Spec.detect(remotePath);
-        return new RemotePath(localSpec, remoteSpec);
+        return new PathTranslator(localSpec, remoteSpec);
     }
-
-
-
-
-    /*static public Path toPath(String path) {
-
-    }
-
-    static public String toString(Path path) {
-        // TODO: figure out path of remote system?
-        // for now assume its linux
-
-        char pathSep = '/';
-
-        StringBuilder s = new StringBuilder();
-
-        // is absolute?  normal path.isAbsolute() doesn't work since local FS
-        // may not match remote FS
-        if (path.startsWith("\\") || path.startsWith("/")) {
-            s.append(pathSep);
-        }
-
-        int count = path.getNameCount();
-        for (int i = 0; i < count; i++) {
-            Path name = path.getName(i);
-            if (i != 0) {
-                s.append(pathSep);
-            }
-            s.append(name.toString());
-        }
-
-        return s.toString();
-    }*/
-
 
 }
