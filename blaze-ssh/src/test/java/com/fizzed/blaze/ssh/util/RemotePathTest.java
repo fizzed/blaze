@@ -12,24 +12,65 @@ import static org.junit.jupiter.api.Assertions.*;
 class RemotePathTest {
 
     @Test
-    public void posixStyleRelativePath() {
-        // windows sftp server sends back paths like this
+    public void posixSpecRelativePath() {
         final String remotePath = "remote-build/jne";
 
         final RemotePath remotePathHelper = RemotePath.create(remotePath);
 
-        assertThat(remotePathHelper.toLocalPath(remotePath), is(Paths.get(remotePath)));
+        assertThat(remotePathHelper.getRemoteSpec(), is(RemotePath.Spec.POSIX));
+
+        final String localPath = remotePathHelper.toLocalPathString(remotePath);
+
+        assertThat(localPath, is(remotePath));
     }
 
     @Test
-    public void windowsStyleRelativePath() {
-        // windows sftp server sends back paths like this
+    public void windowsSpecRelativePath() {
         final String remotePath = "remote-build\\jne";
 
         final RemotePath remotePathHelper = RemotePath.create(remotePath);
 
-        assertThat(remotePathHelper.toLocalPath(remotePath), is(Paths.get("remote-build/jne")));
+        assertThat(remotePathHelper.getRemoteSpec(), is(RemotePath.Spec.WINDOWS));
+
+        final String localPath = remotePathHelper.toLocalPathString(remotePath);
+
+        if (remotePathHelper.getLocalSpec() == RemotePath.Spec.WINDOWS) {
+            assertThat(localPath, is(remotePath));
+        } else {
+            assertThat(localPath, is("remote-build/jne"));
+        }
     }
+
+    /*@Test
+    public void posixSpecAbsolutePath() {
+        final String remotePath = "/home/builder/remote-build/jne";
+
+        final RemotePath remotePathHelper = RemotePath.create(remotePath);
+
+        final Path localPath = remotePathHelper.toLocalPath(remotePath);
+
+        if (remotePathHelper.getLocalSpec() == RemotePath.Spec.POSIX) {
+            assertThat(localPath, is(Paths.get(remotePath)));
+            assertThat(localPath.toString(), is(remotePath));
+            assertThat(localPath.resolve("sub"), is(Paths.get(remotePath).resolve("sub")));
+            assertThat(localPath.resolve("sub").toString(), is("/home/builder/remote-build/jne/sub"));
+        }
+    }
+
+    @Test
+    public void windowsSpecAbsolutePath() {
+        final String remotePath = "C:\\Users\\builder\\remote-build\\jne";
+
+        final RemotePath remotePathHelper = RemotePath.create(remotePath);
+
+        final Path localPath = remotePathHelper.toLocalPath(remotePath);
+
+        if (remotePathHelper.getLocalSpec() == RemotePath.Spec.POSIX) {
+            assertThat(localPath, is(Paths.get(remotePath)));
+            assertThat(localPath.resolve("sub"), is(Paths.get(remotePath).resolve("sub")));
+            assertThat(localPath.resolve("sub").toString(), is( "/win-drive-C/Users/builder/remote-build/sub"));
+        }
+    }*/
 
     /*@Test
     public void windowsSftpServer() {
