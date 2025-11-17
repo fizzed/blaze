@@ -23,20 +23,43 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.*;
 
 import static com.fizzed.blaze.SecureShells.*;
+import static java.util.Arrays.asList;
 
 public class SshDemo {
     static private final Logger log = LoggerFactory.getLogger(SshDemo.class);
 
     static public void main(String[] args) throws Exception {
-        LoggerConfig.setDefaultLogLevel(LogLevel.TRACE);
+        LoggerConfig.setDefaultLogLevel(LogLevel.INFO);
 
-        /*// sftp demo
-        try (SshSession sshSession = sshConnect("ssh://bmh-jjlauer-4").run()) {
+        for (String host : asList("bmh-build-x64-win11-1", "bmh-build-x64-freebsd15-1")) {
+            log.info("####################### {} ########################", host);
+            try (SshSession sshSession = sshConnect("ssh://" + host).run()) {
+                try (SshSftpSession sftp = sshSftp(sshSession).run()) {
+
+                    final Path pwd = sftp.pwd();
+                    log.info("pwd: {}", pwd);
+
+                    final String pwd2 = sftp.pwd2();
+                    log.info("pwd2: {}", pwd2);
+
+                    for (SshFile f : sftp.ls(pwd).subList(0, 3)) {
+                        log.info("ls path: {}", f.path());
+                    }
+
+                    for (SshFile f : sftp.ls(pwd2).subList(0, 3)) {
+                        log.info("ls path2: {}", f.path2());
+                    }
+                }
+            }
+        }
+
+
+        /*try (SshSession sshSession = sshConnect("ssh://bmh-jjlauer-4").run()) {
             try (SshSftpSession sftp = sshSftp(sshSession).run()) {
                 for (SshFile f : sftp.ls("/home/jjlauer/Downloads")) {
                     log.debug("ls: {}", f.path());
                 }
-
+*//*
                 sftp.cd("Downloads");
 
                 sftp.get()
@@ -45,7 +68,7 @@ public class SshDemo {
                     .target(Paths.get("test.deb"))
                     .run();
 
-                *//*sftp.put()
+                sftp.put()
                     .source(Paths.get("test.deb"))
                     .target("test.deb")
                     .run();*//*
@@ -54,10 +77,10 @@ public class SshDemo {
 
         // shell demo of whether ssh-agent is working
         // ssh to a machine using a specific identity that won't exist on the target machine
-        try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-ubuntu20-1").run()) {
+        /*try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-ubuntu20-1").run()) {
             // now to test ssh'ing from that machine somewhere else
             sshExec(sshSession, "ssh", "-v", "-o", "StrictHostKeyChecking=no", "sshagentdemo@bmh-build-x64-ubuntu24-1", "hostname").run();
-        }
+        }*/
     }
 
 }

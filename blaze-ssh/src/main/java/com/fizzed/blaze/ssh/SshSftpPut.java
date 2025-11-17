@@ -19,7 +19,6 @@ import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.ProgressMixin;
 import com.fizzed.blaze.core.VerbosityMixin;
-import com.fizzed.blaze.ssh.impl.PathHelper;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -70,7 +69,7 @@ public class SshSftpPut extends Action<SshSftpPut.Result,Void> implements Verbos
     }
     
     public SshSftpPut target(Path targetFile) {
-        return target(PathHelper.toString(targetFile));
+        return this.target(this.sftp.getPathTranslator().toRemotePath(targetFile));
     }
     
     public SshSftpPut target(File targetFile) {

@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.ssh.impl;
 
-import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.ssh.*;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
@@ -150,8 +149,10 @@ public class JschExec extends SshExec {
                 c.add("sh");
                 c.add("-c");
             }
-            
-            c.add(PathHelper.toString(command));
+
+            // original version used something called PathHelper.toString(), which always sent the command with / 's
+            c.add(command.toString().replace("\\", "/"));
+
             c.addAll(this.arguments);
 
             final String finalCommand = SshArguments.buildEscapedCommand(c);

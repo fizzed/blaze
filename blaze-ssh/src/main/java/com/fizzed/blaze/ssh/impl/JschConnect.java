@@ -351,11 +351,16 @@ public class JschConnect extends SshConnect {
                     }
                 }
             } catch (AgentProxyException e) {
-                // ssh agent only runs well on java 8+ on the majority of platforms OR java 16+ on anything that runs java
-                // due to needing unix sockets support. Instead of breaking ssh entirely on those platforms, we will simply
-                // log out the issue as a warning, and the stacktrace as trace
-                log.warn("Unable to load identities from ssh-agent: {} (run with trace logging for full stacktrace)", e.getMessage());
-                log.trace("", e);
+                // if SSH AUTH SOCK, not defined, do not log this as a warning
+                if (e.getMessage().contains("SSH_AUTH_SOCK is not defined")) {
+                    log.debug("Unable to load identities from ssh-agent: {}", e.getMessage());
+                } else {
+                    // ssh agent only runs well on java 8+ on the majority of platforms OR java 16+ on anything that runs java
+                    // due to needing unix sockets support. Instead of breaking ssh entirely on those platforms, we will simply
+                    // log out the issue as a warning, and the stacktrace as trace
+                    log.warn("Unable to load identities from ssh-agent: {} (run with trace logging for full stacktrace)", e.getMessage());
+                    log.trace("", e);
+                }
             }
 
             // old jsch way of loading agent identities...

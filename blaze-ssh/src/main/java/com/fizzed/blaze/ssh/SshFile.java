@@ -18,25 +18,31 @@ package com.fizzed.blaze.ssh;
 import java.nio.file.Path;
 
 public class SshFile {
-    
+
+    private final String path2;
     private final Path path;
     private final SshFileAttributes attributes;
 
-    public SshFile(Path path, SshFileAttributes attributes) {
+    public SshFile(String path2, Path path, SshFileAttributes attributes) {
+        this.path2 = path2;
         this.path = path;
         this.attributes = attributes;
     }
-    
+
+    public String path2() {
+        return this.path2;
+    }
+
     public Path path() {
-        return path;
+        return this.path;
     }
     
     public String fileName() {
-        return path.getFileName().toString();
+        return this.path.getFileName().toString();
     }
 
     public SshFileAttributes attributes() {
-        return attributes;
+        return this.attributes;
     }
     
 }
