@@ -37,10 +37,12 @@ public class SshDemo {
         try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-win11-1").run()) {
             try (SshSftpSession sftp = sshSftp(sshSession).run()) {
 
-                log.debug("pwd: {}", sftp.pwd());
+                final String pwd = sftp.pwd2();
 
-                for (SshFile f : sftp.ls("/C:/Users/builder/remote-build/jne")) {
-                    log.debug("ls: {}", f.path());
+                log.debug("pwd: {}", pwd);
+
+                for (SshFile f : sftp.ls(pwd)) {
+                    log.debug("ls: {}", f.path2());
                 }
 /*
                 sftp.cd("Downloads");

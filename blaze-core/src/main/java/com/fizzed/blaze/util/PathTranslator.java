@@ -1,6 +1,7 @@
-package com.fizzed.blaze.ssh.util;
+package com.fizzed.blaze.util;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -206,8 +207,16 @@ public class PathTranslator {
         return this.remoteSpec.toPath(remotePath, this.localSpec);
     }
 
+    public String toLocalPath(Path remotePath) {
+        return this.remoteSpec.toPath(remotePath.toString(), this.localSpec);
+    }
+
     public String toRemotePath(String localPath) {
         return this.localSpec.toPath(localPath, this.remoteSpec);
+    }
+
+    public String toRemotePath(Path localPath) {
+        return this.localSpec.toPath(localPath.toString(), this.remoteSpec);
     }
 
     static public boolean isRelative(String path) {

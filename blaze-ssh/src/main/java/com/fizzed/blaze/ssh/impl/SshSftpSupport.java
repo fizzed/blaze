@@ -16,16 +16,18 @@
 package com.fizzed.blaze.ssh.impl;
 
 import com.fizzed.blaze.ssh.SshSftpException;
+import com.fizzed.blaze.util.PathTranslator;
 import com.fizzed.blaze.util.Streamable;
 import com.fizzed.blaze.util.VerboseLogger;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Path;
 
 public interface SshSftpSupport {
-    
-    void get(VerboseLogger log, boolean progress, Path source, Streamable<OutputStream> target) throws SshSftpException;
+
+    PathTranslator getPathTranslator();
+
+    void get(VerboseLogger log, boolean progress, String source, Streamable<OutputStream> target) throws SshSftpException;
     
     void put(VerboseLogger log, boolean progress, Streamable<InputStream> source, String target) throws SshSftpException;
     

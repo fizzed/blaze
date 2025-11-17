@@ -1,4 +1,4 @@
-package com.fizzed.blaze.ssh.util;
+package com.fizzed.blaze.util;
 
 import org.junit.jupiter.api.Test;
 

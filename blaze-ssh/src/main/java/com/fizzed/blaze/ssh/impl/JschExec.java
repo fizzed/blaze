@@ -15,7 +15,6 @@
  */
 package com.fizzed.blaze.ssh.impl;
 
-import com.fizzed.blaze.internal.IntRangeHelper;
 import com.fizzed.blaze.ssh.*;
 import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.UnexpectedExitValueException;
@@ -151,7 +150,7 @@ public class JschExec extends SshExec {
                 c.add("-c");
             }
             
-            c.add(PathHelper.toString(command));
+            c.add(command.toString());
             c.addAll(this.arguments);
 
             final String finalCommand = SshArguments.buildEscapedCommand(c);

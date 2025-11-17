@@ -59,6 +59,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     private boolean closed;
     // in order to run on windows, using a Path variable is not ideal as Path.get() will throw exceptions in some cases
     // so using a String is the safest option
+    private final PathTranslator pathTranslator;
     private String workingDir;
 
     public JschSftpSession(SshSession session, ChannelSftp channel) {
@@ -66,8 +67,9 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
         Objects.requireNonNull(channel, "channel cannot be null");
         this.session = session;
         this.channel = channel;
-        // somewhat unorthodox but we want the current working directory
-        this.pwd2();
+        // somewhat unorthodox, but we want the current working directory, which also helps us translate paths
+        this.workingDir = this.pwd2();
+        this.pathTranslator = PathTranslator.detectLocalRemote(this.workingDir);
     }
     
     @Override
@@ -91,24 +93,32 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
              this.closed = true;
         }
     }
-    
+
+    @Override
+    public PathTranslator getPathTranslator() {
+        return pathTranslator;
+    }
+
     // sub-actions?
     
     @Override
     public final Path pwd() {
-        // TODO: this will throw an exception with windows SFTP servers that return "/C:/path/to/dir" as a path
-        // should we just break pwd() permanently or do we need to fix the conversion to the Path variable like swap "C:" to "/win-drive-C-colon/"
-        return Paths.get(this.pwd2());
+        return Paths.get(this.pathTranslator.toLocalPath(this.pwd2()));
     }
 
     @Override
     public final String pwd2() {
         try {
-            this.workingDir = this.channel.pwd();
-            return this.workingDir;
+            return this.channel.pwd();
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
+    }
+
+    @Override
+    public void cd(Path path) throws SshException {
+        Objects.requireNonNull(path, "path cannot be null");
+        this.cd(this.pathTranslator.toRemotePath(path));
     }
     
     @Override
@@ -122,14 +132,8 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public void cd(Path path) throws SshException {
-        Objects.requireNonNull(path, "path cannot be null");
-        this.cd(PathHelper.toString(path));
-    }
-    
-    @Override
     public SshFileAttributes lstat(Path path) throws SshSftpException {
-        return lstat(PathHelper.toString(path));
+        return lstat(this.pathTranslator.toRemotePath(path));
     }
     
     @Override
@@ -147,7 +151,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public List<SshFile> ls(Path path) {
-        return ls(PathHelper.toString(path));
+        return ls(this.pathTranslator.toRemotePath(path));
     }
     
     @Override
@@ -167,10 +171,10 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
                 }
                 
                 // workingDir + path + fileName
-                // TODO: fix the paths!
-                //Path entryPath = path.resolve(entry.getFilename()).normalize();
+                String _path2 = path + "/" + entry.getFilename();
+                Path _path = Paths.get(this.pathTranslator.toLocalPath(_path2));
                 
-                //files.add(new SshFile(entryPath, new JschFileAttributes(entry.getAttrs())));
+                files.add(new SshFile(_path2, _path, new JschFileAttributes(entry.getAttrs())));
             }
             
             return files;
@@ -185,7 +189,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public void get(VerboseLogger log, boolean progress, Path source, Streamable<OutputStream> target) throws SshException {
+    public void get(VerboseLogger log, boolean progress, String source, Streamable<OutputStream> target) throws SshException {
         try {
             log.verbose("Sftp get: {} -> {}", source, target.path());
 
@@ -193,7 +197,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
             final SftpConsoleIOProgressMonitor progressMonitor = progress ? new SftpConsoleIOProgressMonitor(null) : null;
 
             try {
-                this.channel.get(source.toString(), target.stream(), progressMonitor, ChannelSftp.OVERWRITE, 0);
+                this.channel.get(source, target.stream(), progressMonitor, ChannelSftp.OVERWRITE, 0);
             } finally {
                 IOUtils.closeQuietly(target);
             }  
@@ -233,7 +237,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void chgrp(Path path, int gid) {
-        chgrp(PathHelper.toString(path), gid);
+        chgrp(this.pathTranslator.toRemotePath(path), gid);
     }
     
     @Override
@@ -247,7 +251,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void chown(Path path, int uid) {
-        chown(PathHelper.toString(path), uid);
+        chown(this.pathTranslator.toRemotePath(path), uid);
     }
     
     @Override
@@ -261,7 +265,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void chown(Path path, int uid, int gid) {
-        chown(PathHelper.toString(path), uid, gid);
+        chown(this.pathTranslator.toRemotePath(path), uid, gid);
     }
     
     @Override
@@ -272,7 +276,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void mkdir(Path path) {
-        mkdir(PathHelper.toString(path));
+        mkdir(this.pathTranslator.toRemotePath(path));
     }
     
     @Override
@@ -286,7 +290,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void rm(Path path) {
-        rm(PathHelper.toString(path));
+        rm(this.pathTranslator.toRemotePath(path));
     }
     
     @Override
@@ -300,7 +304,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void rmdir(Path path) {
-        rmdir(PathHelper.toString(path));
+        rmdir(this.pathTranslator.toRemotePath(path));
     }
     
     @Override
@@ -314,7 +318,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void mv(Path source, Path target) {
-        mv(PathHelper.toString(source), PathHelper.toString(target));
+        mv(this.pathTranslator.toRemotePath(source), this.pathTranslator.toRemotePath(target));
     }
     
     @Override
@@ -328,7 +332,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void symlink(Path target, Path link) {
-        symlink(PathHelper.toString(target), PathHelper.toString(link));
+        symlink(this.pathTranslator.toRemotePath(target), this.pathTranslator.toRemotePath(link));
     }    
     
     @Override
@@ -342,14 +346,23 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public Path readlink(Path target) {
-        return readlink(PathHelper.toString(target));
+        return Paths.get(this.pathTranslator.toLocalPath(this.readlink2(target)));
     }    
     
     @Override
     public Path readlink(String target) {
+        return Paths.get(this.pathTranslator.toLocalPath(this.readlink2(target)));
+    }
+
+    @Override
+    public String readlink2(Path target) {
+        return this.readlink2(this.pathTranslator.toRemotePath(target));
+    }
+
+    @Override
+    public String readlink2(String target) {
         try {
-            // TODO: this is a problem
-            return Paths.get(this.channel.readlink(target));
+            return this.channel.readlink(target);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
@@ -357,13 +370,23 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public Path realpath(Path target) {
-        return realpath(PathHelper.toString(target));
+        return Paths.get(this.pathTranslator.toLocalPath(this.realpath2(target)));
     }    
     
     @Override
     public Path realpath(String target) {
+        return Paths.get(this.pathTranslator.toLocalPath(this.realpath2(target)));
+    }
+
+    @Override
+    public String realpath2(Path target) {
+        return this.realpath2(this.pathTranslator.toRemotePath(target));
+    }
+
+    @Override
+    public String realpath2(String target) {
         try {
-            return Paths.get(this.channel.realpath(target));
+            return this.channel.realpath(target);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }

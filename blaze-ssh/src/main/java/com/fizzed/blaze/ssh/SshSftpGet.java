@@ -34,7 +34,7 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements Verbos
     private final VerboseLogger log;
     private final ValueHolder<Boolean> progress;
     private final SshSftpSupport sftp;
-    private Path source;
+    private String source;
     private StreamableOutput target;
     
     public SshSftpGet(SshSftpSession sftp) {
@@ -62,7 +62,8 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements Verbos
      * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
      */
     public SshSftpGet source(String sourceFile) {
-        return source(Paths.get(sourceFile));
+        this.source = sourceFile;
+        return this;
     }
 
     /**
@@ -73,8 +74,7 @@ public class SshSftpGet extends Action<SshSftpGet.Result,Void> implements Verbos
      * @return the current instance of {@code SshSftpGet}, allowing for method chaining.
      */
     public SshSftpGet source(Path sourceFile) {
-        this.source = sourceFile;
-        return this;
+        return this.source(this.sftp.getPathTranslator().toRemotePath(sourceFile));
     }
 
     @Override
