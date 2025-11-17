@@ -57,7 +57,9 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     private final SshSession session;
     private final ChannelSftp channel;
     private boolean closed;
-    private Path workingDir;
+    // in order to run on windows, using a Path variable is not ideal as Path.get() will throw exceptions in some cases
+    // so using a String is the safest option
+    private String workingDir;
 
     public JschSftpSession(SshSession session, ChannelSftp channel) {
         Objects.requireNonNull(session, "session cannot be null");
@@ -65,7 +67,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
         this.session = session;
         this.channel = channel;
         // somewhat unorthodox but we want the current working directory
-        this.pwd();
+        this.pwd2();
     }
     
     @Override
@@ -94,8 +96,15 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public final Path pwd() {
+        // TODO: this will throw an exception with windows SFTP servers that return "/C:/path/to/dir" as a path
+        // should we just break pwd() permanently or do we need to fix the conversion to the Path variable like swap "C:" to "/win-drive-C-colon/"
+        return Paths.get(this.pwd2());
+    }
+
+    @Override
+    public final String pwd2() {
         try {
-            this.workingDir = Paths.get(this.channel.pwd());
+            this.workingDir = this.channel.pwd();
             return this.workingDir;
         } catch (SftpException e) {
             throw convertSftpException(e);
@@ -104,13 +113,8 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     
     @Override
     public void cd(String path) {
-        cd(Paths.get(path));
-    }
-    
-    @Override
-    public void cd(Path path) throws SshException {
         try {
-            this.channel.cd(PathHelper.toString(path));
+            this.channel.cd(path);
             this.workingDir = path;
         } catch (SftpException e) {
             throw convertSftpException(e);
@@ -118,17 +122,22 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public SshFileAttributes lstat(String path) throws SshSftpException {
-        return lstat(Paths.get(path));
+    public void cd(Path path) throws SshException {
+        Objects.requireNonNull(path, "path cannot be null");
+        this.cd(PathHelper.toString(path));
     }
     
     @Override
     public SshFileAttributes lstat(Path path) throws SshSftpException {
+        return lstat(PathHelper.toString(path));
+    }
+    
+    @Override
+    public SshFileAttributes lstat(String path) throws SshSftpException {
         try {
-            String p = PathHelper.toString(path);
-            log.debug("lstat {}", p);
+            log.debug("lstat {}", path);
             
-            SftpATTRS attrs = this.channel.lstat(p);
+            SftpATTRS attrs = this.channel.lstat(path);
             
             return new JschFileAttributes(attrs);
         } catch (SftpException e) {
@@ -137,15 +146,15 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public List<SshFile> ls(String path) {
-        return ls(Paths.get(path));
+    public List<SshFile> ls(Path path) {
+        return ls(PathHelper.toString(path));
     }
     
     @Override
-    public List<SshFile> ls(Path path) throws SshException {
+    public List<SshFile> ls(String path) throws SshException {
         try {
             @SuppressWarnings("UseOfObsoleteCollectionType")
-            java.util.Vector<LsEntry> fileObjects = this.channel.ls(PathHelper.toString(path));
+            java.util.Vector<LsEntry> fileObjects = this.channel.ls(path);
             
             List<SshFile> files = new ArrayList<>();
             
@@ -158,6 +167,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
                 }
                 
                 // workingDir + path + fileName
+                // TODO: fix the paths!
                 Path entryPath = path.resolve(entry.getFilename()).normalize();
                 
                 files.add(new SshFile(entryPath, new JschFileAttributes(entry.getAttrs())));
@@ -222,137 +232,138 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     }
     
     @Override
-    public void chgrp(String path, int gid) {
-        chgrp(Paths.get(path), gid);
+    public void chgrp(Path path, int gid) {
+        chgrp(PathHelper.toString(path), gid);
     }
     
     @Override
-    public void chgrp(Path path, int gid) {
+    public void chgrp(String path, int gid) {
         try {
-            this.channel.chgrp(gid, PathHelper.toString(path));
+            this.channel.chgrp(gid, path);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
-    }
-    
-    @Override
-    public void chown(String path, int uid) {
-        chown(Paths.get(path), uid);
     }
     
     @Override
     public void chown(Path path, int uid) {
+        chown(PathHelper.toString(path), uid);
+    }
+    
+    @Override
+    public void chown(String path, int uid) {
         try {
-            this.channel.chown(uid, PathHelper.toString(path));
+            this.channel.chown(uid, path);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
     }
     
     @Override
-    public void chown(String path, int uid, int gid) {
-        chown(Paths.get(path), uid, gid);
+    public void chown(Path path, int uid, int gid) {
+        chown(PathHelper.toString(path), uid, gid);
     }
     
     @Override
-    public void chown(Path path, int uid, int gid) {
+    public void chown(String path, int uid, int gid) {
         chown(path, uid);
         chgrp(path, gid);
     }
     
     @Override
-    public void mkdir(String path) {
-        mkdir(Paths.get(path));
+    public void mkdir(Path path) {
+        mkdir(PathHelper.toString(path));
     }
     
     @Override
-    public void mkdir(Path path) {
+    public void mkdir(String path) {
         try {
-            this.channel.mkdir(PathHelper.toString(path));
+            this.channel.mkdir(path);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
-    }
-    
-    @Override
-    public void rm(String path) {
-        rm(Paths.get(path));
     }
     
     @Override
     public void rm(Path path) {
-        try {
-            this.channel.rm(PathHelper.toString(path));
-        } catch (SftpException e) {
-            throw convertSftpException(e);
-        }
+        rm(PathHelper.toString(path));
     }
     
     @Override
-    public void rmdir(String path) {
-        rmdir(Paths.get(path));
+    public void rm(String path) {
+        try {
+            this.channel.rm(path);
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
     }
     
     @Override
     public void rmdir(Path path) {
-        try {
-            this.channel.rmdir(PathHelper.toString(path));
-        } catch (SftpException e) {
-            throw convertSftpException(e);
-        }
+        rmdir(PathHelper.toString(path));
     }
     
     @Override
-    public void mv(String source, String target) {
-        mv(Paths.get(source), Paths.get(target));
+    public void rmdir(String path) {
+        try {
+            this.channel.rmdir(path);
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
     }
     
     @Override
     public void mv(Path source, Path target) {
+        mv(PathHelper.toString(source), PathHelper.toString(target));
+    }
+    
+    @Override
+    public void mv(String source, String target) {
         try {
-            this.channel.rename(PathHelper.toString(source), PathHelper.toString(target));
+            this.channel.rename(source, target);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
     }
-    
-    @Override
-    public void symlink(String target, String link) {
-        symlink(Paths.get(target), Paths.get(link));
-    }    
     
     @Override
     public void symlink(Path target, Path link) {
+        symlink(PathHelper.toString(target), PathHelper.toString(link));
+    }    
+    
+    @Override
+    public void symlink(String target, String link) {
         try {
-            this.channel.symlink(PathHelper.toString(target), PathHelper.toString(link));
+            this.channel.symlink(target, link);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
     }
-    
-    @Override
-    public Path readlink(String target) {
-        return readlink(Paths.get(target));
-    }    
     
     @Override
     public Path readlink(Path target) {
+        return readlink(PathHelper.toString(target));
+    }    
+    
+    @Override
+    public Path readlink(String target) {
         try {
-            return Paths.get(this.channel.readlink(PathHelper.toString(target)));
+            // TODO: this is a problem
+            return Paths.get(this.channel.readlink(target));
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
     }
     
     @Override
-    public Path realpath(String target) {
-        return realpath(Paths.get(target));
+    public Path realpath(Path target) {
+        return realpath(PathHelper.toString(target));
     }    
     
     @Override
-    public Path realpath(Path target) {
+    public Path realpath(String target) {
         try {
-            return Paths.get(this.channel.realpath(PathHelper.toString(target)));
+            return Paths.get(this.channel.realpath(target));
         } catch (SftpException e) {
             throw convertSftpException(e);
         }

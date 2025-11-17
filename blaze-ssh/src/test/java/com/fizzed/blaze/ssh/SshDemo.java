@@ -36,6 +36,7 @@ public class SshDemo {
         // sftp demo
         try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-win11-1").run()) {
             try (SshSftpSession sftp = sshSftp(sshSession).run()) {
+
                 log.debug("pwd: {}", sftp.pwd());
 
                 for (SshFile f : sftp.ls("/C:/Users/builder/remote-build/jne")) {

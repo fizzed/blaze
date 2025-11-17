@@ -22,8 +22,11 @@ import java.util.List;
 public abstract class SshSftpSession implements SshSupport {
 
     abstract public SshSession session();
-    
+
+    @Deprecated
     abstract public Path pwd() throws SshException;
+
+    abstract public String pwd2() throws SshException;
     
     abstract public void cd(String path) throws SshException;
     
