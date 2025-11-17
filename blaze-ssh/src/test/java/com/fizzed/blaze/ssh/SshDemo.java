@@ -23,40 +23,33 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.*;
 
 import static com.fizzed.blaze.SecureShells.*;
+import static java.util.Arrays.asList;
 
 public class SshDemo {
     static private final Logger log = LoggerFactory.getLogger(SshDemo.class);
 
     static public void main(String[] args) throws Exception {
-        LoggerConfig.setDefaultLogLevel(LogLevel.TRACE);
+        LoggerConfig.setDefaultLogLevel(LogLevel.INFO);
 
-        // what paths works
-        // linux -> windows (works with / paths, root dir is /C:/path/as/you/would)
+        for (String host : asList("bmh-build-x64-win11-1", "bmh-build-x64-freebsd15-1")) {
+            log.info("####################### {} ########################", host);
+            try (SshSession sshSession = sshConnect("ssh://" + host).run()) {
+                try (SshSftpSession sftp = sshSftp(sshSession).run()) {
 
-        // sftp demo
-        try (SshSession sshSession = sshConnect("ssh://bmh-build-x64-win11-1").run()) {
-            try (SshSftpSession sftp = sshSftp(sshSession).run()) {
+                    final Path pwd = sftp.pwd();
+                    log.info("pwd: {}", pwd);
 
-                final String pwd = sftp.pwd2();
+                    final String pwd2 = sftp.pwd2();
+                    log.info("pwd2: {}", pwd2);
 
-                log.debug("pwd: {}", pwd);
+                    for (SshFile f : sftp.ls(pwd).subList(0, 3)) {
+                        log.info("ls path: {}", f.path());
+                    }
 
-                for (SshFile f : sftp.ls(pwd)) {
-                    log.debug("ls: {}", f.path2());
+                    for (SshFile f : sftp.ls(pwd2).subList(0, 3)) {
+                        log.info("ls path2: {}", f.path2());
+                    }
                 }
-/*
-                sftp.cd("Downloads");
-
-                sftp.get()
-                    .progress()
-                    .source("ubuntu-24.10-desktop-amd64.iso")
-                    .target(Paths.get("test.deb"))
-                    .run();
-
-                sftp.put()
-                    .source(Paths.get("test.deb"))
-                    .target("test.deb")
-                    .run();*/
             }
         }
 
