@@ -1,6 +1,12 @@
 Blaze by Fizzed
 ===============
 
+## 2.6.0 - 2025-11-17
+ - Refactored SSH SFTP to leverage new PathTranslator utility class to translate paths to/from remote system paths
+ - Refactored SSH SFTP to use String methods first, rather than Path methods, to help avoid issues with path translations
+ - New methods in SSH SFTP such as pwd2() or reallink2() to provide raw String paths, which allow you to use SFTP w/o
+having any path translations dones
+
 ## 2.5.0 - 2025-11-13
  - Use new helper class to improve escaping arguments via SSH
  - Fix exitValuesAny() on SshExec
