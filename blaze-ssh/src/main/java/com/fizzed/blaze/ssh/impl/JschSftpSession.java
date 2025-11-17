@@ -168,9 +168,9 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
                 
                 // workingDir + path + fileName
                 // TODO: fix the paths!
-                Path entryPath = path.resolve(entry.getFilename()).normalize();
+                //Path entryPath = path.resolve(entry.getFilename()).normalize();
                 
-                files.add(new SshFile(entryPath, new JschFileAttributes(entry.getAttrs())));
+                //files.add(new SshFile(entryPath, new JschFileAttributes(entry.getAttrs())));
             }
             
             return files;

@@ -18,7 +18,17 @@ public class RemotePath {
     }
 
     public Path toPath(String remotePath) {
-        
+        if (remotePath.startsWith("/")) {
+            // e.g. /home/builder,
+            // unix-style path
+            separator =  "/";
+            absolutePath = "/";
+        } else if (path.length() > 3 && path.charAt(1) == ':' && path.charAt(2) == '\\') {
+            separator =  "\\";
+            absolutePath = path.substring(0, 3);
+        }
+
+
     }
 
     static public RemotePath create(String path) {
