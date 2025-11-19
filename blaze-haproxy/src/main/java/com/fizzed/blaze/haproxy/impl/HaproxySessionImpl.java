@@ -50,7 +50,7 @@ public class HaproxySessionImpl implements HaproxySession {
             .sudo(this.sudo)
             .pipeInput(command + "\r\n");
 
-        final String result = exec.runCaptureOutput()
+        final String result = exec.runCaptureOutput(false)
             .asString()
             .trim();
         
