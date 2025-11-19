@@ -1,6 +1,9 @@
 Blaze by Fizzed
 ===============
 
+## 2.6.1 - 2025-11-18
+ - Haproxy commands now suppress stdout 'tee'-ing of their output (since it is captured) (@mgager)
+
 ## 2.6.0 - 2025-11-17
  - Refactored SSH SFTP to leverage new PathTranslator utility class to translate paths to/from remote system paths
  - Refactored SSH SFTP to use String methods first, rather than Path methods, to help avoid issues with path translations
