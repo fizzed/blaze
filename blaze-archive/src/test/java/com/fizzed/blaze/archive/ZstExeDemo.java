@@ -1,5 +1,6 @@
 package com.fizzed.blaze.archive;
 
+import com.fizzed.blaze.archive.zstd.ZstdNativeInputStream;
 import com.fizzed.crux.util.Resources;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class ZstExeDemo {
         // echo "Hello World from ZSTD" | zstd > test.txt.zst
 
         try (java.io.FileInputStream fileIn = new java.io.FileInputStream(file.toFile());
-             ZstdExternalInputStream zstdIn = new ZstdExternalInputStream(fileIn)) {
+             ZstdNativeInputStream zstdIn = new ZstdNativeInputStream(fileIn)) {
 
             byte[] buffer = new byte[1024];
             int len;

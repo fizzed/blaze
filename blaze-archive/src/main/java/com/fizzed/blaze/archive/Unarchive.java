@@ -16,10 +16,12 @@
 package com.fizzed.blaze.archive;
 
 import com.fizzed.blaze.Context;
+import com.fizzed.blaze.archive.zstd.ZstdNativeInputStream;
+import com.fizzed.blaze.archive.zstd.ZstdUtils;
 import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.util.*;
-import com.typesafe.config.ConfigException;
+import com.github.luben.zstd.ZstdInputStream;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -406,14 +408,28 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     }
 
     private InputStream openUncompressedStream(Compressor compressor, InputStream compressedStream) throws BlazeException {
-        try {
-            if (compressor == Compressor.ZSTD) {
-                return new ZstdExternalInputStream(compressedStream);
+        // special case for zstd, we have two methods we can leverage
+        if (compressor == Compressor.ZSTD) {
+            log.debug("Detecting if zstd-jni library is available...");
+            if (ZstdUtils.isZstdJniAvailable()) {
+                try {
+                    return new ZstdInputStream(compressedStream);
+                } catch (IOException e) {
+                    throw new BlazeException("Unable to uncompress source", e);
+                }
             }
-        } catch (IOException e) {
-            throw new BlazeException("Unable to uncompress source", e);
+
+            log.debug("Detecting if zstd-native library is available...");
+            if (ZstdUtils.isZstdNativeAvailable()) {
+                try {
+                    return new ZstdNativeInputStream(compressedStream);
+                } catch (IOException e) {
+                    throw new BlazeException("Unable to uncompress source", e);
+                }
+            }
         }
 
+        // otherwise, fallback to commons archive
         try {
             String compressorName = ArchiveHelper.getCommonsCompressorName(compressor);
 

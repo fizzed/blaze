@@ -3,22 +3,22 @@ Buildx Results
 
 Cross platform tests based on https://github.com/fizzed/buildx
 
-Commit: 32f3433cffc3545cfd498a1d95beae2fb4f30b19
-Date: 2025-11-20T14:34:35.483505767Z[UTC]
+Commit: 0cb5a8ac1e75b04c440dcf0b49c96922385b847c
+Date: 2025-11-20T16:41:35.822882525Z[UTC]
 
-openbsd-x64 (OpenBSD 7.8).................................................. success
+freebsd-x64 (FreeBSD 13)................................................... success
 
 Details =>
 
-Job #0 for openbsd-x64 (OpenBSD 7.8)
-  log file: .buildx-logs/1763649174590/job-0-openbsd-x64.log
-  host: bmh-build-x64-openbsd-latest
-    os: openbsd
+Job #0 for freebsd-x64 (FreeBSD 13)
+  log file: .buildx-logs/1763656826840/job-0-freebsd-x64.log
+  host: bmh-build-x64-freebsd-baseline
+    os: freebsd
     arch: x64
-    name: OpenBSD 7.8
-    uname: OpenBSD bmh-build-x64-openbsd78-1 7.8 GENERIC.MP#54 amd64
+    name: FreeBSD 13.5-RELEASE-p6
+    uname: FreeBSD bmh-build-x64-freebsd13-1 13.5-RELEASE-p6 FreeBSD 13.5-RELEASE-p6 GENERIC amd64
     podman: <not installed>
-  tags: [latest]
+  tags: [baseline]
   data: <none>
   container: <none>
 

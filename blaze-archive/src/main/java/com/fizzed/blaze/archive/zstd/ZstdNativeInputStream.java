@@ -1,4 +1,4 @@
-package com.fizzed.blaze.archive;
+package com.fizzed.blaze.archive.zstd;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 2. Starts a background thread to pipe raw compressed bytes into the process (stdin).
  * 3. Reads decompressed bytes from the process output (stdout).
  */
-public class ZstdExternalInputStream extends InputStream {
+public class ZstdNativeInputStream extends InputStream {
 
     private final Process process;
     private final InputStream processStdout; // The decompressed data we read
@@ -29,7 +29,7 @@ public class ZstdExternalInputStream extends InputStream {
      * * @param source The input stream containing compressed zstd data.
      * @throws IOException If the process cannot be started.
      */
-    public ZstdExternalInputStream(InputStream source) throws IOException {
+    public ZstdNativeInputStream(InputStream source) throws IOException {
         this(source, "zstd");
     }
 
@@ -39,7 +39,7 @@ public class ZstdExternalInputStream extends InputStream {
      * @param zstdCommand The command or path to the zstd executable (e.g., "/usr/bin/zstd").
      * @throws IOException If the process cannot be started.
      */
-    public ZstdExternalInputStream(InputStream source, String zstdCommand) throws IOException {
+    public ZstdNativeInputStream(InputStream source, String zstdCommand) throws IOException {
         this.sourceStream = source;
 
         // -d: decompress
