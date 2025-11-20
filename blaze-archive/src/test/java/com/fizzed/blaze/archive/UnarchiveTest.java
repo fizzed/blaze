@@ -1,10 +1,12 @@
 package com.fizzed.blaze.archive;
 
 import com.fizzed.blaze.Config;
+import com.fizzed.blaze.archive.zstd.ZstdUtils;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.internal.ConfigHelper;
 import com.fizzed.blaze.internal.ContextImpl;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.condition.OS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.spy;
 
 public class UnarchiveTest {
@@ -165,8 +168,9 @@ public class UnarchiveTest {
     }
 
     @Test
-    @DisabledOnOs({OS.OPENBSD, OS.FREEBSD}) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
     public void tarZstNoRootDir() throws Exception {
+        assumeTrue(ZstdUtils.isZstdAvailable(), "Neither zstd-jni or 'zstd' executable are present for this platform");
+
         final Path file = Resources.file("/fixtures/sample-no-root-dir.tar.zst");
         final Path target = this.createEmptyTargetDir("tarZstNoRootDir");
 
@@ -204,8 +208,9 @@ public class UnarchiveTest {
     }
 
     @Test
-    @DisabledOnOs({OS.OPENBSD, OS.FREEBSD}) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
     public void zstdFileOnly() throws Exception {
+        assumeTrue(ZstdUtils.isZstdAvailable(), "Neither zstd-jni or 'zstd' executable are present for this platform");
+
         final Path file = Resources.file("/fixtures/hello.txt.zst");
         final Path target = this.createEmptyTargetDir("zstdFileOnly");
 
