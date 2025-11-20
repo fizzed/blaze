@@ -170,7 +170,7 @@ public class UnarchiveTest {
     @Test
     public void tarZstNoRootDir() throws Exception {
         assumeTrue(ZstdUtils.isZstdAvailable(), "Neither zstd-jni or 'zstd' executable are present for this platform");
-        
+
         final Path file = Resources.file("/fixtures/sample-no-root-dir.tar.zst");
         final Path target = this.createEmptyTargetDir("tarZstNoRootDir");
 
