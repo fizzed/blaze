@@ -19,6 +19,7 @@ import com.fizzed.blaze.Context;
 import com.fizzed.blaze.core.*;
 import com.fizzed.blaze.core.FileNotFoundException;
 import com.fizzed.blaze.util.*;
+import com.typesafe.config.ConfigException;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -405,6 +406,14 @@ public class Unarchive extends Action<Unarchive.Result,Void> implements Verbosit
     }
 
     private InputStream openUncompressedStream(Compressor compressor, InputStream compressedStream) throws BlazeException {
+        try {
+            if (compressor == Compressor.ZSTD) {
+                return new ZstdExternalInputStream(compressedStream);
+            }
+        } catch (IOException e) {
+            throw new BlazeException("Unable to uncompress source", e);
+        }
+
         try {
             String compressorName = ArchiveHelper.getCommonsCompressorName(compressor);
 

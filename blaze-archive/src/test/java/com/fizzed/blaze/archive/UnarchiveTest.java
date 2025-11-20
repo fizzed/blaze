@@ -165,7 +165,7 @@ public class UnarchiveTest {
     }
 
     @Test
-    @DisabledOnOs({OS.OPENBSD, OS.FREEBSD}) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
+    //@DisabledOnOs({OS.OPENBSD, OS.FREEBSD}) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
     public void tarZstNoRootDir() throws Exception {
         final Path file = Resources.file("/fixtures/sample-no-root-dir.tar.zst");
         final Path target = this.createEmptyTargetDir("tarZstNoRootDir");
@@ -204,7 +204,7 @@ public class UnarchiveTest {
     }
 
     @Test
-    @DisabledOnOs({OS.OPENBSD, OS.FREEBSD}) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
+    //@DisabledOnOs({OS.OPENBSD, OS.FREEBSD}) @DisabledIfSystemProperty(named="os.arch", matches="riscv64")
     public void zstdFileOnly() throws Exception {
         final Path file = Resources.file("/fixtures/hello.txt.zst");
         final Path target = this.createEmptyTargetDir("zstdFileOnly");
