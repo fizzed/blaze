@@ -17,6 +17,8 @@ package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.logging.LogLevel;
 import com.fizzed.blaze.logging.LoggerConfig;
+import com.fizzed.blaze.system.Exec;
+import com.fizzed.blaze.util.CaptureOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +28,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.fizzed.blaze.SecureShells.sshConnect;
@@ -39,7 +39,7 @@ public class SftpRsyncDemo {
     static private final Logger log = LoggerFactory.getLogger(SftpRsyncDemo.class);
 
     static public void main(String[] args) throws Exception {
-        LoggerConfig.setDefaultLogLevel(LogLevel.INFO);
+        LoggerConfig.setDefaultLogLevel(LogLevel.DEBUG);
 
         final Path sourceDir = Paths.get("/home/jjlauer/test-sync");
         final String targetDir = "test-sync";
@@ -48,7 +48,8 @@ public class SftpRsyncDemo {
 
         final VirtualFileSystem sourceFS = new LocalFileSystem();
 
-        final SshSession sshSession = sshConnect("ssh://bmh-build-x64-ubuntu24-1").run();
+//        final SshSession sshSession = sshConnect("ssh://bmh-build-x64-ubuntu24-1").run();
+        final SshSession sshSession = sshConnect("ssh://bmh-build-x64-win11-1").run();
         final SshSftpSession sftp = sshSftp(sshSession).run();
         final VirtualFileSystem targetFS = new SftpFileSystem(sshSession, sftp);
 
@@ -78,6 +79,10 @@ public class SftpRsyncDemo {
 
         sortPaths(sourceChildPaths);
         sortPaths(targetChildPaths);
+
+        // list of files that need synced that exist on both sides
+        final List<VirtualPath> existingSourceFiles = new ArrayList<>();
+        final List<VirtualPath> existingTargetFiles = new ArrayList<>();
 
         // calculate paths new / changed / same
         for (VirtualPath sourceChildPath : sourceChildPaths) {
@@ -110,14 +115,27 @@ public class SftpRsyncDemo {
                 } else if (sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
                     // both are directories, nothing for us to do (will sync them later in this method)
                 } else {
-                    // both are files, do they need synced?
-                    // assume we need to update it
-                    syncFile(sourceFS, sourceChildPath, targetFS, targetChildPath);
+                    // accumulate this file as something we need to sync, so we can bulk request checksums
+                    existingSourceFiles.add(sourceChildPath);
+                    existingTargetFiles.add(targetChildPath);
                 }
             }
 
             if (sourceChildPath.isDirectory()) {
                 syncDirectory(sourceFS, sourceChildPath, targetFS, targetChildPath, delete);
+            }
+        }
+
+        // now handle existing files
+        if (!existingSourceFiles.isEmpty()) {
+            // we need checksums now
+            sourceFS.cksums(existingSourceFiles);
+            targetFS.cksums(existingTargetFiles);
+
+            for (int i = 0; i < existingTargetFiles.size(); i++) {
+                final VirtualPath sourceFile = existingSourceFiles.get(i);
+                final VirtualPath targetFile = existingTargetFiles.get(i);
+                syncFile(sourceFS, sourceFile, targetFS, targetFile);
             }
         }
 
@@ -145,8 +163,8 @@ public class SftpRsyncDemo {
     static public void syncFile(VirtualFileSystem sourceFS, VirtualPath sourceFile, VirtualFileSystem targetFS, VirtualPath targetFile) throws IOException {
         if (sourceFile.getStats() != null && targetFile.getStats() != null) {
             if (sourceFile.getStats().getSize() == targetFile.getStats().getSize()
-                    && sourceFile.getStats().getModifiedTime() < targetFile.getStats().getModifiedTime()) {     // this is kinda flaky...
-                log.debug("Skipping file {} (sizes match, source modified time < target modified time)", targetFile);
+                    && sourceFile.getStats().getCksum() == targetFile.getStats().getCksum()) {
+                log.debug("Skipping file {} (sizes & cksums match)", sourceFile);
                 return;
             }
         }
@@ -450,30 +468,52 @@ public class SftpRsyncDemo {
         public void cksums(List<VirtualPath> paths) throws IOException {
             // we need to be smart about how many files we request in bulk, as the command line can only be so long
             // we can leverage the "workingDir" so that the paths stay shorter, if we're simply in the same dir
-
-            String workingDir = null;
+            String pathPrefix = null;
+            Exec exec = null;
+            int commandLength = 0;
+            Map<String,VirtualPath> fileMapping = new HashMap<>();
 
             for (int i = 0; i < paths.size(); i ++) {
                 final VirtualPath path = paths.get(i);
-                if (workingDir == null) {
-                    workingDir
+
+                // create new or add to request?
+                if (exec == null) {
+                    // first file sequence establishes the "workingDir"
+                    fileMapping.clear();
+                    commandLength = 0;
+                    exec = this.ssh.newExec().command("cksum");
+                    /*String parentPath = path.getParentPath();
+                    if (parentPath != null && !parentPath.isEmpty()) {
+                        exec.workingDir(parentPath);
+                        pathPrefix = parentPath + "/";
+                    }*/
                 }
-            }
 
+                String fullPath = path.toFullPath();
+                String shortenedPath = fullPath;
+                /*if (pathPrefix != null && shortenedPath.startsWith(pathPrefix)) {
+                    shortenedPath = fullPath.substring(pathPrefix.length());
+                }*/
 
+                exec.arg(shortenedPath);
 
+                fileMapping.put(shortenedPath, path);
 
+                commandLength += shortenedPath.length();
 
-            // we will leverage the "cksum" binary that's more than likely available on the other end
-            ssh.newExec().command("cksum")
-                .ar
-                .run();
+                // should we send this request?
+                if (commandLength > 256 || (i == paths.size() - 1)) {
+                     final String output = exec.runCaptureOutput(false)
+                         .toString();
 
-
-            for (VirtualPath path : paths) {
-                try (InputStream is = this.readFile(path)) {
-                    long v = cksum(is);
-                    path.getStats().setCksum(v);
+                    final String[] lines = output.split("\n");
+                    for (String line : lines) {
+                        final String[] parts = line.split(" ");
+                        long cksum = Long.parseLong(parts[0].trim());
+                        long size = Long.parseLong(parts[1].trim());
+                        String file = parts[2].trim();
+                        fileMapping.get(file).getStats().setCksum(cksum);
+                    }
                 }
             }
         }
