@@ -35,6 +35,7 @@
         <module>blaze-archive</module>
         <module>blaze-postoffice</module>
         <module>blaze-ssh</module>
+        <module>blaze-jsync</module>
         <module>blaze-maven</module>
         <module>blaze-docker</module>
         <module>blaze-haproxy</module>

@@ -1,0 +1,46 @@
+package com.fizzed.blaze.jsync;
+
+import com.fizzed.blaze.logging.LogLevel;
+import com.fizzed.blaze.logging.LoggerConfig;
+import com.fizzed.blaze.ssh.*;
+import com.fizzed.blaze.vfs.LocalFileSystem;
+import com.fizzed.blaze.vfs.SftpFileSystem;
+import com.fizzed.blaze.vfs.VirtualFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.file.Paths;
+
+import static com.fizzed.blaze.SecureShells.sshConnect;
+
+public class JsyncDemo {
+    static private final Logger log = LoggerFactory.getLogger(JsyncDemo.class);
+
+    static public void main(String[] args) throws Exception {
+        LoggerConfig.setDefaultLogLevel(LogLevel.TRACE);
+
+        final String sourceDir = Paths.get("/home/jjlauer/test-sync").toString();
+        final String targetDir = "test-sync";
+        final boolean delete = true;
+
+        final SshSession ssh = sshConnect("ssh://bmh-build-x64-ubuntu24-1").run();
+
+
+
+        final VirtualFileSystem sourceFS = LocalFileSystem.open();
+        log.info("Opened source fs: type={}, remote={}, pwd={}", sourceFS.getClass().getSimpleName(), sourceFS.isRemote(), sourceFS.pwd());
+
+        final VirtualFileSystem targetFS = SftpFileSystem.open(ssh);
+        log.info("Opened target fs: type={}, remote={}, pwd={}", targetFS.getClass().getSimpleName(), targetFS.isRemote(), targetFS.pwd());
+
+
+        new JsyncEngine()
+            .delete(delete)
+            .sync(sourceFS, sourceDir, targetFS, targetDir);
+
+        log.info("Done, sync successful!");
+
+        ssh.close();
+    }
+
+}
