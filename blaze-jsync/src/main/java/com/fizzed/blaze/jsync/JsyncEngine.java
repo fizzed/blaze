@@ -3,24 +3,27 @@ package com.fizzed.blaze.jsync;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.vfs.VirtualFileSystem;
 import com.fizzed.blaze.vfs.VirtualPath;
+import com.fizzed.blaze.vfs.util.VirtualPathPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 public class JsyncEngine {
     static private final Logger log = LoggerFactory.getLogger(JsyncEngine.class);
 
     // options for syncing, try to mimic defaults for how rsync works
+    final private List<Checksum> preferredChecksums;
     private boolean delete;
 
     public JsyncEngine() {
         this.delete = false;
+        this.preferredChecksums = new ArrayList<>(asList(Checksum.CK, Checksum.MD5));
     }
 
     public boolean isDelete() {
@@ -29,6 +32,16 @@ public class JsyncEngine {
 
     public JsyncEngine delete(boolean delete) {
         this.delete = delete;
+        return this;
+    }
+
+    public List<Checksum> getPreferredChecksums() {
+        return preferredChecksums;
+    }
+
+    public JsyncEngine preferredChecksums(Checksum... checksum) {
+        this.preferredChecksums.clear();
+        this.preferredChecksums.addAll(asList(checksum));
         return this;
     }
 
@@ -50,12 +63,46 @@ public class JsyncEngine {
             targetPathWithStats = targetFS.stat(targetPathWithoutStats);
         }
 
-        log.info("Syncing {} -> {} (delete={})", sourcePathWithStats, targetPathWithStats, this.delete);
+        // negotiate the checksums to use
+        Checksum checksum = null;
+        List<Checksum> sourceChecksumsSupported = new ArrayList<>();
+        List<Checksum> targetChecksumsSupported = new ArrayList<>();
 
-        syncDirectory(sourceFS, sourcePathWithStats, targetFS, targetPathWithStats, this.delete);
+        for (Checksum preferredChecksum : this.preferredChecksums) {
+            // check supported checksums, keep a tally of which are supported by both sides, so we can log them out
+            boolean sourceSupported = sourceFS.isSupported(preferredChecksum);
+            if (sourceSupported) {
+                sourceChecksumsSupported.add(preferredChecksum);
+            }
+
+            boolean targetSupported = targetFS.isSupported(preferredChecksum);
+            if (targetSupported) {
+                targetChecksumsSupported.add(preferredChecksum);
+            }
+
+            if (sourceSupported && targetSupported) {
+                checksum = preferredChecksum;
+                break;
+            }
+        }
+
+        if (checksum == null) {
+            throw new IOException("Unable to find a checksum that is supported by both source and target. " +
+                "Source virtual filesystem " + sourceFS.getName() + " supports checksums " + sourceChecksumsSupported
+                + " and target virtual filesystem " + targetFS.getName() + " supports checksums " + targetChecksumsSupported);
+        }
+
+        log.info("Syncing {} -> {} (checksum={}, delete={})", sourcePathWithStats, targetPathWithStats, checksum, this.delete);
+
+        // as we process files, only a subset may require more advanced methods of detecting whether they were modified
+        // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
+        // until we have a chance to do some bulk processing of checksums, etc.
+        final List<VirtualPathPair> filesMaybeModified = new ArrayList<>();
+
+        syncDirectory(0, filesMaybeModified, sourceFS, sourcePathWithStats, targetFS, targetPathWithStats, checksum);
     }
 
-    protected void syncDirectory(VirtualFileSystem sourceFS, VirtualPath sourcePath, VirtualFileSystem targetFS, VirtualPath targetPath, boolean delete) throws IOException {
+    protected void syncDirectory(final int level, final List<VirtualPathPair> filesMaybeModified, VirtualFileSystem sourceFS, VirtualPath sourcePath, VirtualFileSystem targetFS, VirtualPath targetPath, Checksum checksum) throws IOException {
         // we need a list of files in both directories, so we can see what to add/delete
         final List<VirtualPath> sourceChildPaths = sourceFS.ls(sourcePath);
         final List<VirtualPath> targetChildPaths = targetFS.ls(targetPath);
@@ -63,12 +110,6 @@ public class JsyncEngine {
         // its better to work with all dirs first, then files, so we sort the files before we process them
         this.sortPaths(sourceChildPaths);
         this.sortPaths(targetChildPaths);
-
-        // as we process files, only a subset may require more advanced methods of detecting whether they were modified
-        // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
-        // until we have a chance to do some bulk processing of checksums, etc.
-        final List<VirtualPath> sourceFilesMaybeModified = new ArrayList<>();
-        final List<VirtualPath> targetFilesMaybeModified = new ArrayList<>();
 
         // calculate paths new / changed / same
         for (VirtualPath sourceChildPath : sourceChildPaths) {
@@ -108,27 +149,33 @@ public class JsyncEngine {
 
                     if (!wasSynced) {
                         // we will need more "expensive" checks to determine if this file needs synced
-                        sourceFilesMaybeModified.add(sourceChildPath);
-                        targetFilesMaybeModified.add(targetChildPath);
+                        filesMaybeModified.add(new VirtualPathPair(sourceChildPath, targetChildPath));
                     }
                 }
             }
 
             if (sourceChildPath.isDirectory()) {
-                syncDirectory(sourceFS, sourceChildPath, targetFS, targetChildPath, delete);
+                syncDirectory(level+1, filesMaybeModified, sourceFS, sourceChildPath, targetFS, targetChildPath, checksum);
             }
         }
 
-        // now handle existing files that may have been modified
-        if (!sourceFilesMaybeModified.isEmpty()) {
-            // we need checksums now
-            sourceFS.cksums(sourceFilesMaybeModified);
-            targetFS.cksums(targetFilesMaybeModified);
+        // handle existing files that may have been modified, but ONLY at level 0 (so we batch as many as possible)
+        if (level == 0 && !filesMaybeModified.isEmpty()) {
+            // we need calculate checksums for source and target files
+            final List<VirtualPath> sourceFiles = filesMaybeModified.stream()
+                .map(VirtualPathPair::getSource)
+                .collect(toList());
 
-            for (int i = 0; i < targetFilesMaybeModified.size(); i++) {
-                final VirtualPath sourceFile = sourceFilesMaybeModified.get(i);
-                final VirtualPath targetFile = targetFilesMaybeModified.get(i);
-                syncFile(sourceFS, sourceFile, targetFS, targetFile);
+            sourceFS.checksums(checksum, sourceFiles);
+
+            final List<VirtualPath> targetFiles = filesMaybeModified.stream()
+                .map(VirtualPathPair::getTarget)
+                .collect(toList());
+
+            targetFS.checksums(checksum, targetFiles);
+
+            for (VirtualPathPair pair : filesMaybeModified) {
+                syncFile(sourceFS, pair.getSource(), targetFS, pair.getTarget());
             }
         }
 
@@ -174,6 +221,20 @@ public class JsyncEngine {
         if (sourceFile.getStats().getCksum() != null && targetFile.getStats().getCksum() != null
                 && !sourceFile.getStats().getCksum().equals(targetFile.getStats().getCksum())) {
             log.trace("Source file {} cksum {} != target chksum {} (so is modified)", sourceFile, sourceFile.getStats().getCksum(), targetFile.getStats().getCksum());
+            return true;
+        }
+
+        // if we have "md5" values on both sides, we can compare those
+        if (sourceFile.getStats().getMd5() != null && targetFile.getStats().getMd5() != null
+            && !sourceFile.getStats().getMd5().equalsIgnoreCase(targetFile.getStats().getMd5())) {
+            log.trace("Source file {} md5 {} != target md5 {} (so is modified)", sourceFile, sourceFile.getStats().getMd5(), targetFile.getStats().getMd5());
+            return true;
+        }
+
+        // if we have "sha1" values on both sides, we can compare those
+        if (sourceFile.getStats().getSha1() != null && targetFile.getStats().getSha1() != null
+            && !sourceFile.getStats().getSha1().equalsIgnoreCase(targetFile.getStats().getSha1())) {
+            log.trace("Source file {} sha1 {} != target sha1 {} (so is modified)", sourceFile, sourceFile.getStats().getSha1(), targetFile.getStats().getSha1());
             return true;
         }
 

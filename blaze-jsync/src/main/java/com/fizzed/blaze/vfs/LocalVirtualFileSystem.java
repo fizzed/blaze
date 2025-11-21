@@ -1,8 +1,9 @@
 package com.fizzed.blaze.vfs;
 
+import com.fizzed.blaze.jsync.Checksum;
 import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.util.Streamables;
-import com.fizzed.blaze.vfs.util.Cksums;
+import com.fizzed.blaze.vfs.util.Checksums;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,16 +16,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class LocalFileSystem implements VirtualFileSystem {
-    static private final Logger log = LoggerFactory.getLogger(LocalFileSystem.class);
+public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
+    static private final Logger log = LoggerFactory.getLogger(LocalVirtualFileSystem.class);
 
-    private final VirtualPath pwd;
-
-    public LocalFileSystem(VirtualPath pwd) {
-        this.pwd = pwd;
+    public LocalVirtualFileSystem(VirtualPath pwd) {
+        super("<local>", pwd);
     }
 
-    static public LocalFileSystem open() {
+    static public LocalVirtualFileSystem open() {
         // current working directory is our "pwd"
         final Path currentWorkingDir = Paths.get(".").toAbsolutePath().normalize();
 
@@ -32,7 +31,7 @@ public class LocalFileSystem implements VirtualFileSystem {
 
         final VirtualPath pwd = VirtualPath.parse(currentWorkingDir.toString(), true);
 
-        return new LocalFileSystem(pwd);
+        return new LocalVirtualFileSystem(pwd);
     }
 
     private VirtualPath toVirtualPathWithStats(VirtualPath path) throws IOException {
@@ -51,11 +50,6 @@ public class LocalFileSystem implements VirtualFileSystem {
     @Override
     public boolean isRemote() {
         return false;
-    }
-
-    @Override
-    public VirtualPath pwd() throws IOException {
-        return this.pwd;
     }
 
     @Override
@@ -113,11 +107,40 @@ public class LocalFileSystem implements VirtualFileSystem {
     }
 
     @Override
+    public boolean isSupported(Checksum checksum) throws IOException {
+        // all are supported!
+        return true;
+    }
+
+    @Override
     public void cksums(List<VirtualPath> paths) throws IOException {
         for (VirtualPath path : paths) {
             try (StreamableInput input = this.readFile(path)) {
-                long cksum = Cksums.cksum(input.stream());
+                long cksum = Checksums.cksum(input.stream());
                 path.getStats().setCksum(cksum);
+            }
+        }
+    }
+
+    @Override
+    public void md5sums(List<VirtualPath> paths) throws IOException {
+        this.hashFiles("MD5", paths);
+    }
+
+    @Override
+    public void sha1sums(List<VirtualPath> paths) throws IOException {
+        this.hashFiles("SHA1", paths);
+    }
+
+    protected void hashFiles(String algorithm, List<VirtualPath> paths) throws IOException {
+        for (VirtualPath path : paths) {
+            try (StreamableInput input = this.readFile(path)) {
+                String digest = Checksums.hash(algorithm, input.stream());
+                if ("MD5".equals(algorithm)) {
+                    path.getStats().setMd5(digest);
+                } else if ("SHA1".equals(algorithm)) {
+                    path.getStats().setSha1(digest);
+                }
             }
         }
     }

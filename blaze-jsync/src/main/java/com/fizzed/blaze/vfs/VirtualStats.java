@@ -6,6 +6,8 @@ public class VirtualStats {
     final private long modifiedTime;
     // there are values that can be populated later
     private Long cksum;
+    private String md5;
+    private String sha1;
 
     public VirtualStats(long size, long modifiedTime) {
         this.size = size;
@@ -26,6 +28,24 @@ public class VirtualStats {
 
     public VirtualStats setCksum(Long cksum) {
         this.cksum = cksum;
+        return this;
+    }
+
+    public String getMd5() {
+        return md5;
+    }
+
+    public VirtualStats setMd5(String md5) {
+        this.md5 = md5;
+        return this;
+    }
+
+    public String getSha1() {
+        return sha1;
+    }
+
+    public VirtualStats setSha1(String sha1) {
+        this.sha1 = sha1;
         return this;
     }
 
