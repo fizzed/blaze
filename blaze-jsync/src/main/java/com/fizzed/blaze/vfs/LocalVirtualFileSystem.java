@@ -19,8 +19,8 @@ import java.util.stream.Stream;
 public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     static private final Logger log = LoggerFactory.getLogger(LocalVirtualFileSystem.class);
 
-    public LocalVirtualFileSystem(VirtualPath pwd) {
-        super("<local>", pwd);
+    public LocalVirtualFileSystem(VirtualPath pwd, boolean caseSensitive) {
+        super("<local>", pwd, caseSensitive);
     }
 
     static public LocalVirtualFileSystem open() {
@@ -31,7 +31,10 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
 
         final VirtualPath pwd = VirtualPath.parse(currentWorkingDir.toString(), true);
 
-        return new LocalVirtualFileSystem(pwd);
+        // everything is case-sensitive except windows
+        final boolean caseSensitive = !System.getProperty("os.name").toLowerCase().contains("windows");
+
+        return new LocalVirtualFileSystem(pwd, caseSensitive);
     }
 
     private VirtualPath toVirtualPathWithStats(VirtualPath path) throws IOException {
@@ -65,6 +68,12 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
             try (Stream<Path> files = Files.list(p)) {
                 for (Iterator<Path> it = files.iterator(); it.hasNext(); ) {
                     Path file = it.next();
+                    // TDOO: should we skip handling symlinks??
+                    if (Files.isSymbolicLink(file)) {
+                        log.warn("Skipping symlink {} (unsupported at this time)", file);
+                        continue;
+                    }
+
                     // dir true/false doesn't matter, stats call next will correct it
                     VirtualPath childPathWithoutStats = path.resolve(file.getFileName().toString(), false);
                     VirtualPath childPath = this.toVirtualPathWithStats(childPathWithoutStats);
@@ -97,12 +106,12 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public StreamableInput readFile(VirtualPath path) throws IOException {
+    public StreamableInput readFile(VirtualPath path, boolean progress) throws IOException {
         return Streamables.input(Paths.get(path.toString()));
     }
 
     @Override
-    public void writeFile(StreamableInput input, VirtualPath path) throws IOException {
+    public void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException {
         Files.copy(input.stream(), Paths.get(path.toString()));
     }
 
@@ -115,7 +124,7 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     @Override
     public void cksums(List<VirtualPath> paths) throws IOException {
         for (VirtualPath path : paths) {
-            try (StreamableInput input = this.readFile(path)) {
+            try (StreamableInput input = this.readFile(path, false)) {
                 long cksum = Checksums.cksum(input.stream());
                 path.getStats().setCksum(cksum);
             }
@@ -134,7 +143,7 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
 
     protected void hashFiles(String algorithm, List<VirtualPath> paths) throws IOException {
         for (VirtualPath path : paths) {
-            try (StreamableInput input = this.readFile(path)) {
+            try (StreamableInput input = this.readFile(path, false)) {
                 String digest = Checksums.hash(algorithm, input.stream());
                 if ("MD5".equals(algorithm)) {
                     path.getStats().setMd5(digest);

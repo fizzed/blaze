@@ -28,10 +28,11 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     private final boolean windows;
 
     protected SftpVirtualFileSystem(String name, VirtualPath pwd, SshSession ssh, SshSftpSession sftp, boolean windows) {
-        super(name, pwd);
+        // everything but windows is case sensitive
+        super(name, pwd, !windows);
         this.ssh = ssh;
         this.sftp = sftp;
-        this.maxCommandLength = 8000;       // windows shell limit is 8,191, linux/mac/bsd is effectively unlimited
+        this.maxCommandLength = 7000;       // windows shell limit is 8,191, linux/mac/bsd is effectively unlimited
         this.windows = windows;
     }
 
@@ -195,15 +196,17 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public StreamableInput readFile(VirtualPath path) throws IOException {
+    public StreamableInput readFile(VirtualPath path, boolean progress) throws IOException {
         throw new UnsupportedOperationException("readFile");
     }
 
     @Override
-    public void writeFile(StreamableInput input, VirtualPath path) throws IOException {
+    public void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException {
         this.sftp.put()
             .source(input)
             .target(path.toString())
+            .progress(progress)
+            .verbose()
             .run();
     }
 
@@ -252,7 +255,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
         }
 
         // we need to be smart about how many files we request in bulk, as the command line can only be so long
-        final Map<String,VirtualPath> fileMapping = new HashMap<>();
+        final Map<String,VirtualPath> fileMappings = new HashMap<>();
         Exec exec = null;
         int commandLength = 0;
 
@@ -267,10 +270,15 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
 
             final String fullPath = path.toString();
 
-            exec.arg(fullPath);
+            // TODO: it turns out $s are interpreted on the server!, we need to escape the fullPath
+            if (fullPath.contains("$")) {
+                exec.arg("'" + fullPath + "'");
+            } else {
+                exec.arg(fullPath);
+            }
 
-            fileMapping.put(fullPath, path);
 
+            fileMappings.put(fullPath, path);
             commandLength += fullPath.length();
 
             // should we send this request?
@@ -281,7 +289,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                         .toString();
                 } catch (UnexpectedExitValueException e) {
                     // this likely means the command doesn't exist, either way we will need to flag this isn't supported
-                    throw new UnsupportedChecksumException("Checksum algorithm CK is not supported on virtual filesystem " + this.getName(), e);
+                    throw new UnsupportedChecksumException("Checksum algorithm " + checksum + " is not supported on virtual filesystem " + this.getName(), e);
                 }
 
                 // parse output into entries
@@ -298,10 +306,14 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                         throw new UnsupportedChecksumException("Unsupported checksum '" + checksum + "' on posix is not supported", null);
                 }
 
+                /*log.error("fileMappings: {}", fileMappings);
+                log.error("entries: {}", entries);*/
+
                 for (Checksums.HashEntry entry : entries) {
-                    final VirtualPath entryPath = fileMapping.get(entry.getFile());
+                    final VirtualPath entryPath = fileMappings.get(entry.getFile());
 
                     if (entryPath == null) {
+                        //log.error("Something may be wrong parsing this output: {}", output);
                         throw new IllegalStateException("Unable to associate hash result with virtual path for '" + entry.getFile() + "'");
                     }
 
@@ -319,7 +331,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                 // reset everything for next run
                 exec = null;
                 commandLength = 0;
-                fileMapping.clear();
+                fileMappings.clear();
             }
         }
     }

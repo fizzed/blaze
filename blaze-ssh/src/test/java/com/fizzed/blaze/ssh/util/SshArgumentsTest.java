@@ -29,4 +29,11 @@ class SshArgumentsTest {
         assertThat(cmd, is("a \" b \" \" \\\"c \""));
     }
 
+    /*@Test
+    public void dollarSignNeedsEscaping() {
+        String cmd = SshArguments.buildEscapedCommand(asList("a", "My$file", " \"c "));
+
+        assertThat(cmd, is("a \" My$file \" \" \\\"c \""));
+    }*/
+
 }

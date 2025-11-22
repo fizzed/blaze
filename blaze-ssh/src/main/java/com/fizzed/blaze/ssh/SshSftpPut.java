@@ -26,7 +26,7 @@ import java.nio.file.Paths;
 import com.fizzed.blaze.ssh.impl.SshSftpSupport;
 import com.fizzed.blaze.util.*;
 
-public class SshSftpPut extends Action<SshSftpPut.Result,Void> implements VerbosityMixin<SshSftpGet>, ProgressMixin<SshSftpGet> {
+public class SshSftpPut extends Action<SshSftpPut.Result,Void> implements VerbosityMixin<SshSftpPut>, ProgressMixin<SshSftpPut> {
 
     private final VerboseLogger log;
     private final ValueHolder<Boolean> progress;

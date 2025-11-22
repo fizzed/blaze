@@ -8,6 +8,12 @@ import java.util.List;
 
 public class Checksums {
 
+    // 8KB is the standard optimal buffer size for most file systems
+    static private final int BUFFER_SIZE = 32768;
+
+    // Lookup table for fast hex conversion (lowercase to match linux md5sum)
+    static private final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
+
     // The standard POSIX CRC polynomial (0x04C11DB7)
     static private final int[] CRC_TABLE = new int[256];
     static {
@@ -34,17 +40,27 @@ public class Checksums {
     static public long cksum(InputStream input) throws IOException {
         int crc = 0;
         long length = 0;
-        int b;
 
-        // 1. Process all file bytes
-        while ((b = input.read()) != -1) {
-            crc = (crc << 8) ^ CRC_TABLE[((crc >>> 24) ^ b) & 0xFF];
-            length++;
+        // Optimization: Create a buffer to read 8KB chunks
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead;
+
+        // 1. Process file in chunks
+        while ((bytesRead = input.read(buffer)) != -1) {
+            length += bytesRead;
+
+            // Process the chunk in memory (Fast CPU loop, no I/O overhead)
+            for (int i = 0; i < bytesRead; i++) {
+                // IMPORTANT: buffer[i] is a signed byte (-128 to 127).
+                // We use & 0xFF to convert it to an unsigned int (0 to 255)
+                // just like input.read() would have returned.
+                int b = buffer[i] & 0xFF;
+                crc = (crc << 8) ^ CRC_TABLE[((crc >>> 24) ^ b) & 0xFF];
+            }
         }
 
         // 2. POSIX requirement: Append the length of the file to the stream.
-        // We append the length in Little Endian byte order, one byte at a time,
-        // stripping high-order null bytes, but ensuring at least one byte is written.
+        // (This logic remains exactly the same as your original code)
         long tempLength = length;
         do {
             int byteVal = (int) (tempLength & 0xFF);
@@ -53,14 +69,8 @@ public class Checksums {
         } while (tempLength > 0);
 
         // 3. Final bit inversion
-        return (~crc) & 0xFFFFFFFFL; // Mask to return as unsigned 32-bit integer
+        return (~crc) & 0xFFFFFFFFL;
     }
-
-    // 8KB is the standard optimal buffer size for most file systems
-    private static final int BUFFER_SIZE = 8192;
-
-    // Lookup table for fast hex conversion (lowercase to match linux md5sum)
-    private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
 
     /**
      * Calculates the MD5 hash of an InputStream.
@@ -126,6 +136,11 @@ public class Checksums {
 
         public String getFile() {
             return file;
+        }
+
+        @Override
+        public String toString() {
+            return "HashEntry{" + "cksum=" + cksum + ", hash=" + hash + ", file=" + file + '}';
         }
     }
 
@@ -195,23 +210,41 @@ public class Checksums {
             }
 
             int colonPos = line.indexOf(":");
-            final String key = line.substring(0, colonPos).trim();
-            final String value = line.substring(colonPos + 1).trim();
 
-            if (key.equalsIgnoreCase("hash")) {
-                hash = value;
-            } else if (key.equalsIgnoreCase("path")) {
-                file = value;
+            if (colonPos < 0) {
+                // this line probably represents a "wrapped" file name
+                String fileToAppend = line.trim();
+                // file MUST not be null
+                if (file == null) {
+                    throw new RuntimeException("Unexpected null file name in powershell hash file output - unable to parse " + output);
+                }
+                file += fileToAppend;
             } else {
-                throw new RuntimeException("Unexpected key '" + key + "' in powershell hash file output");
-            }
+                // we are ready to keep whatever we read last
+                if (hash != null && file != null) {
+                    // always use lowercase for hash
+                    entries.add(new HashEntry(0L, hash.toLowerCase(), file));
+                    hash = null;
+                    file = null;
+                }
 
-            if (hash != null && file != null) {
-                // always use lowercase for hash
-                entries.add(new HashEntry(0L, hash.toLowerCase(), file));
-                hash = null;
-                file = null;
+                final String key = line.substring(0, colonPos).trim();
+                final String value = line.substring(colonPos + 1).trim();
+
+                if (key.equalsIgnoreCase("hash")) {
+                    hash = value;
+                } else if (key.equalsIgnoreCase("path")) {
+                    file = value;
+                } else {
+                    throw new RuntimeException("Unexpected key '" + key + "' in powershell hash file output");
+                }
             }
+        }
+
+        // we are ready to keep whatever we read last
+        if (hash != null && file != null) {
+            // always use lowercase for hash
+            entries.add(new HashEntry(0L, hash.toLowerCase(), file));
         }
 
         return entries;

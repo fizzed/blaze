@@ -20,9 +20,11 @@ public class JsyncEngine {
     // options for syncing, try to mimic defaults for how rsync works
     final private List<Checksum> preferredChecksums;
     private boolean delete;
+    private boolean progress;
 
     public JsyncEngine() {
         this.delete = false;
+        this.progress = false;
         this.preferredChecksums = new ArrayList<>(asList(Checksum.CK, Checksum.MD5));
     }
 
@@ -30,8 +32,17 @@ public class JsyncEngine {
         return delete;
     }
 
-    public JsyncEngine delete(boolean delete) {
+    public JsyncEngine setDelete(boolean delete) {
         this.delete = delete;
+        return this;
+    }
+
+    public boolean isProgress() {
+        return progress;
+    }
+
+    public JsyncEngine setProgress(boolean progress) {
+        this.progress = progress;
         return this;
     }
 
@@ -39,7 +50,7 @@ public class JsyncEngine {
         return preferredChecksums;
     }
 
-    public JsyncEngine preferredChecksums(Checksum... checksum) {
+    public JsyncEngine setPreferredChecksums(Checksum... checksum) {
         this.preferredChecksums.clear();
         this.preferredChecksums.addAll(asList(checksum));
         return this;
@@ -115,7 +126,7 @@ public class JsyncEngine {
         for (VirtualPath sourceChildPath : sourceChildPaths) {
             // find a matching target path entirely by name
             VirtualPath targetChildPath = targetChildPaths.stream()
-                .filter(p -> p.getName().equals(sourceChildPath.getName()))
+                .filter(p -> targetFS.areFileNamesEqual(p.getName(), sourceChildPath.getName()))
                 .findFirst()
                 .orElse(null);
 
@@ -123,8 +134,8 @@ public class JsyncEngine {
                 // target path does not exist, we need to create it as a directory or just sync the file
                 if (sourceChildPath.isDirectory()) {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
+                    log.info("Creating dir: {}", targetChildPath);
                     targetFS.mkdir(targetChildPath);
-                    log.info("Created dir: {}", targetChildPath);
                 } else {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
                     syncFile(sourceFS, sourceChildPath, targetFS, targetChildPath);
@@ -159,24 +170,33 @@ public class JsyncEngine {
             }
         }
 
-        // handle existing files that may have been modified, but ONLY at level 0 (so we batch as many as possible)
-        if (level == 0 && !filesMaybeModified.isEmpty()) {
+//        log.info("filesMaybeModified size now {}", filesMaybeModified.size());
+
+        // handle existing files that may have been modified, but we want to batch as many as possible, but not wait
+        // too long, otherwise the array will get massive
+        if (filesMaybeModified.size() > 256) {
+//            log.debug("Calculating checksums...");
+
             // we need calculate checksums for source and target files
             final List<VirtualPath> sourceFiles = filesMaybeModified.stream()
                 .map(VirtualPathPair::getSource)
                 .collect(toList());
 
+//            log.debug("Calculating checksums for {} source files", sourceFiles.size());
             sourceFS.checksums(checksum, sourceFiles);
 
             final List<VirtualPath> targetFiles = filesMaybeModified.stream()
                 .map(VirtualPathPair::getTarget)
                 .collect(toList());
 
+//            log.debug("Calculating checksums for {} target files", targetFiles.size());
             targetFS.checksums(checksum, targetFiles);
 
             for (VirtualPathPair pair : filesMaybeModified) {
                 syncFile(sourceFS, pair.getSource(), targetFS, pair.getTarget());
             }
+
+            filesMaybeModified.clear();
         }
 
         if (delete) {
@@ -184,7 +204,7 @@ public class JsyncEngine {
             for (VirtualPath targetChildPath : targetChildPaths) {
                 // find a matching source path entirely by name
                 final VirtualPath sourceChildPath = sourceChildPaths.stream()
-                    .filter(p -> p.getName().equals(targetChildPath.getName()))
+                    .filter(p -> sourceFS.areFileNamesEqual(p.getName(), targetChildPath.getName()))
                     .findFirst()
                     .orElse(null);
 
@@ -203,7 +223,14 @@ public class JsyncEngine {
     protected boolean isFileContentModified(VirtualFileSystem sourceFS, VirtualPath sourceFile, VirtualFileSystem targetFS, VirtualPath targetFile) throws IOException {
         // source "stats" MUST exist
         Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
-        Objects.requireNonNull(sourceFile.getStats(), "sourceFile.getStats() cannot be null");
+
+        if (sourceFile.getStats() == null) {
+            log.error("Source file {} missing 'stats' (it must not exist yet on source)", sourceFile);
+            throw new IllegalArgumentException("sourceFile must have a 'stats' object");
+        }
+
+
+        //Objects.requireNonNull(sourceFile.getStats(), "sourceFile.getStats() cannot be null");
 
         // if the targetFile "stats" are null then we know it must not even exist yet
         if (targetFile.getStats() == null) {
@@ -255,8 +282,8 @@ public class JsyncEngine {
         }
 
         // transfer the file
-        try (StreamableInput input = sourceFS.readFile(sourceFile)) {
-            targetFS.writeFile(input, targetFile);
+        try (StreamableInput input = sourceFS.readFile(sourceFile, this.progress)) {
+            targetFS.writeFile(input, targetFile, this.progress);
         }
 
         return true;

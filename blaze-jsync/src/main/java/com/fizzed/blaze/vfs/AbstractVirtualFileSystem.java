@@ -4,10 +4,12 @@ abstract public class AbstractVirtualFileSystem implements VirtualFileSystem {
 
     protected final String name;
     protected final VirtualPath pwd;
+    protected final boolean caseSensitive;
 
-    public AbstractVirtualFileSystem(String name, VirtualPath pwd) {
+    public AbstractVirtualFileSystem(String name, VirtualPath pwd, boolean caseSensitive) {
         this.name = name;
         this.pwd = pwd;
+        this.caseSensitive = caseSensitive;
     }
 
     @Override
@@ -18,6 +20,11 @@ abstract public class AbstractVirtualFileSystem implements VirtualFileSystem {
     @Override
     public VirtualPath pwd() {
         return this.pwd;
+    }
+
+    @Override
+    public boolean isCaseSensitive() {
+        return this.caseSensitive;
     }
 
     @Override

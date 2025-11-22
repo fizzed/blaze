@@ -12,6 +12,16 @@ public interface VirtualFileSystem {
 
     boolean isRemote();
 
+    boolean isCaseSensitive();
+
+    default boolean areFileNamesEqual(String name1, String name2) {
+        if (this.isCaseSensitive()) {
+            return name1.equals(name2);
+        } else {
+            return name1.equalsIgnoreCase(name2);
+        }
+    }
+
     VirtualPath pwd();
 
     VirtualPath stat(VirtualPath path) throws IOException;
@@ -36,9 +46,9 @@ public interface VirtualFileSystem {
         this.rmdir(path.toFullPath());
     }
 
-    StreamableInput readFile(VirtualPath path) throws IOException;
+    StreamableInput readFile(VirtualPath path, boolean progress) throws IOException;
 
-    void writeFile(StreamableInput input, VirtualPath path) throws IOException;
+    void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException;
 
     boolean isSupported(Checksum checksum) throws IOException;
 

@@ -18,7 +18,7 @@ public class TerminalIOProgressBar {
      * @param totalBytes The total number of bytes expected in the operation.
      */
     public TerminalIOProgressBar(long totalBytes) {
-        if (totalBytes == 0) {
+        if (totalBytes < 0) {
             throw new IllegalArgumentException("Total bytes must be a positive number.");
         }
         this.totalBytes = totalBytes;
