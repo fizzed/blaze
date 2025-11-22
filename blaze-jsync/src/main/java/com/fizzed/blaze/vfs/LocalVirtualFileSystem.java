@@ -37,14 +37,18 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
         return new LocalVirtualFileSystem(pwd, caseSensitive);
     }
 
-    private VirtualPath toVirtualPathWithStats(VirtualPath path) throws IOException {
-        Path p = Paths.get(path.toString());
-        boolean isDirectory = Files.isDirectory(p);
+    protected Path toNativePath(VirtualPath path) {
+        return Paths.get(path.toString());
+    }
+
+    protected VirtualPath toVirtualPathWithStats(VirtualPath path) throws IOException {
+        Path nativePath = this.toNativePath(path);
+        boolean isDirectory = Files.isDirectory(nativePath);
         VirtualStats stats = null;
         if (!isDirectory) {
             // create stats
-            final long size = Files.size(p);
-            final long modifiedTime = Files.getLastModifiedTime(p).toMillis();
+            final long size = Files.size(nativePath);
+            final long modifiedTime = Files.getLastModifiedTime(nativePath).toMillis();
             stats = new VirtualStats(size, modifiedTime);
         }
         return new VirtualPath(path.getParentPath(), path.getName(), isDirectory, stats);
@@ -62,20 +66,22 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
 
     @Override
     public List<VirtualPath> ls(VirtualPath path) throws IOException {
-        final Path p = Paths.get(path.toString());
-        if (Files.isDirectory(p)) {
+        final Path nativePath = this.toNativePath(path);
+        if (Files.isDirectory(nativePath)) {
             List<VirtualPath> childPaths = new ArrayList<>();
-            try (Stream<Path> files = Files.list(p)) {
+            try (Stream<Path> files = Files.list(nativePath)) {
                 for (Iterator<Path> it = files.iterator(); it.hasNext(); ) {
-                    Path file = it.next();
+                    Path nativeChildPath = it.next();
+
+                    // dir true/false doesn't matter, stats call next will correct it
+                    VirtualPath childPathWithoutStats = path.resolve(nativeChildPath.getFileName().toString(), false);
+
                     // TDOO: should we skip handling symlinks??
-                    if (Files.isSymbolicLink(file)) {
-                        log.warn("Skipping symlink {} (unsupported at this time)", file);
+                    if (Files.isSymbolicLink(nativeChildPath)) {
+                        log.warn("Skipping symlink {} (unsupported at this time)", childPathWithoutStats);
                         continue;
                     }
 
-                    // dir true/false doesn't matter, stats call next will correct it
-                    VirtualPath childPathWithoutStats = path.resolve(file.getFileName().toString(), false);
                     VirtualPath childPath = this.toVirtualPathWithStats(childPathWithoutStats);
                     childPaths.add(childPath);
                 }
@@ -87,32 +93,35 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public void mkdir(String path) throws IOException {
-        final Path _path = Paths.get(path);
-        Files.createDirectory(_path);
+    public void mkdir(VirtualPath path) throws IOException {
+        final Path nativePath = this.toNativePath(path);
+        // to mirror what sftp provides, this should NOT make parents automatically
+        Files.createDirectory(nativePath);
     }
 
     @Override
-    public void rm(String path) throws IOException {
-        final Path _path = Paths.get(path);
-        Files.delete(_path);
+    public void rm(VirtualPath path) throws IOException {
+        final Path nativePath = this.toNativePath(path);
+        Files.delete(nativePath);
     }
 
     @Override
-    public void rmdir(String path) throws IOException {
-        // TODO: this needs to support recursive
-        final Path _path = Paths.get(path);
-        Files.delete(_path);
+    public void rmdir(VirtualPath path) throws IOException {
+        final Path nativePath = this.toNativePath(path);
+        // to mirror what sftp provides, this should NOT make parents automatically
+        Files.delete(nativePath);
     }
 
     @Override
     public StreamableInput readFile(VirtualPath path, boolean progress) throws IOException {
-        return Streamables.input(Paths.get(path.toString()));
+        final Path nativePath = this.toNativePath(path);
+        return Streamables.input(nativePath);
     }
 
     @Override
     public void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException {
-        Files.copy(input.stream(), Paths.get(path.toString()));
+        final Path nativePath = this.toNativePath(path);
+        Files.copy(input.stream(), nativePath);
     }
 
     @Override

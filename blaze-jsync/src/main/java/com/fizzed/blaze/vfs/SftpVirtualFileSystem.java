@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static com.fizzed.blaze.SecureShells.sshSftp;
@@ -145,11 +143,6 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public VirtualPath pwd() {
-        return this.pwd;
-    }
-
-    @Override
     public VirtualPath stat(VirtualPath path) throws IOException {
         try {
             // TODO: safer using full path resolved against pwd?
@@ -179,20 +172,18 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public void mkdir(String path) throws IOException {
-        this.sftp.mkdir(path);
+    public void mkdir(VirtualPath path) throws IOException {
+        this.sftp.mkdir(path.toString());
     }
 
     @Override
-    public void rm(String path) throws IOException {
-        final Path _path = Paths.get(path);
-        this.sftp.rm(path);
+    public void rm(VirtualPath path) throws IOException {
+        this.sftp.rm(path.toString());
     }
 
     @Override
-    public void rmdir(String path) throws IOException {
-        // TODO: this needs to support recursive
-        this.sftp.rmdir(path);
+    public void rmdir(VirtualPath path) throws IOException {
+        this.sftp.rmdir(path.toString());
     }
 
     @Override
@@ -205,8 +196,8 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
         this.sftp.put()
             .source(input)
             .target(path.toString())
-            .progress(progress)
-            .verbose()
+//            .progress(progress)
+//            .verbose()
             .run();
     }
 
@@ -271,6 +262,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
             final String fullPath = path.toString();
 
             // TODO: it turns out $s are interpreted on the server!, we need to escape the fullPath
+            // alternatively, we need to handle smart commands better
             if (fullPath.contains("$")) {
                 exec.arg("'" + fullPath + "'");
             } else {

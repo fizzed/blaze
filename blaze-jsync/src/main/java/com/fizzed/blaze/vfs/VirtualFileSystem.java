@@ -28,23 +28,11 @@ public interface VirtualFileSystem {
 
     List<VirtualPath> ls(VirtualPath path) throws IOException;
 
-    void mkdir(String path) throws IOException;
+    void mkdir(VirtualPath path) throws IOException;
 
-    default void mkdir(VirtualPath path) throws IOException {
-        this.mkdir(path.toFullPath());
-    }
+    void rm(VirtualPath path) throws IOException;
 
-    void rm(String path) throws IOException;
-
-    default void rm(VirtualPath path) throws IOException {
-        this.rm(path.toFullPath());
-    }
-
-    void rmdir(String path) throws IOException;
-
-    default void rmdir(VirtualPath path) throws IOException {
-        this.rmdir(path.toFullPath());
-    }
+    void rmdir(VirtualPath path) throws IOException;
 
     StreamableInput readFile(VirtualPath path, boolean progress) throws IOException;
 

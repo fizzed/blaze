@@ -17,12 +17,19 @@ public class VirtualPath {
         this.stats = stats;
     }
 
+    static public VirtualPath parse(String path) {
+        return parse(path, null, null);
+    }
+
     static public VirtualPath parse(String path, Boolean directory) {
         return parse(path, directory, null);
     }
 
     static public VirtualPath parse(String path, Boolean directory, VirtualStats stats) {
         Objects.requireNonNull(path, "path cannot be null");
+
+        // normalize windows paths to use /'s to simplify logic
+        path = path.replace('\\', '/');
 
         int lastSlashPos = path.lastIndexOf('/');
 
@@ -47,7 +54,10 @@ public class VirtualPath {
 
     public boolean isAbsolute() {
         return this.parentPath != null &&
-            (this.parentPath.isEmpty() || this.parentPath.charAt(0) == '/');
+            (this.parentPath.isEmpty()                                                   // handles posix / case
+                || this.parentPath.charAt(0) == '/'                                      // handles posix / case
+                || (this.parentPath.length() > 1 && this.parentPath.charAt(1) == ':')   // handles windows
+            );
     }
 
     public boolean isRelative() {
