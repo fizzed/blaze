@@ -80,6 +80,8 @@ public class JsyncEngine {
         List<Checksum> targetChecksumsSupported = new ArrayList<>();
 
         for (Checksum preferredChecksum : this.preferredChecksums) {
+            log.info("Detecting if {} checksum is supported on both source & target", preferredChecksum);
+
             // check supported checksums, keep a tally of which are supported by both sides, so we can log them out
             boolean sourceSupported = sourceFS.isSupported(preferredChecksum);
             if (sourceSupported) {
@@ -90,6 +92,8 @@ public class JsyncEngine {
             if (targetSupported) {
                 targetChecksumsSupported.add(preferredChecksum);
             }
+
+            log.info("Supported on source={}, target={}", sourceSupported, targetSupported);
 
             if (sourceSupported && targetSupported) {
                 checksum = preferredChecksum;
