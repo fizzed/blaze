@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.fizzed.blaze.SecureShells.sshSftp;
-import static com.fizzed.blaze.Systems.exec;
 import static com.fizzed.blaze.util.Streamables.nullOutput;
 
 public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
@@ -48,7 +47,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
 
         // this is likely a "windows" system if the 2nd char is :
         if (pwd2.length() > 2 && pwd2.charAt(2) == ':') {
-            // TODO: should we confirm by running a command that does exist on windows?
+            // TODO: should we confirm by running a command that exists only windows to confirm?
             // for now we'll just assume it is
             windows = true;
         }

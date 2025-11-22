@@ -34,11 +34,11 @@ public class JsyncDemo {
         final SshSession ssh = sshConnect("ssh://bmh-build-x64-freebsd15-1").run();
 //        final SshSession ssh = sshConnect("ssh://bmh-build-x64-win11-1").run();
 
-        final VirtualFileSystem sourceFS = LocalVirtualFileSystem.open();
-        log.info("Opened source fs: type={}, remote={}, pwd={}", sourceFS.getClass().getSimpleName(), sourceFS.isRemote(), sourceFS.pwd());
+        final VirtualFileSystem sourceVfs = LocalVirtualFileSystem.open();
+        log.info("Opened source fs: type={}, remote={}, pwd={}", sourceVfs.getClass().getSimpleName(), sourceVfs.isRemote(), sourceVfs.pwd());
 
-        final VirtualFileSystem targetFS = SftpVirtualFileSystem.open(ssh);
-        log.info("Opened target fs: type={}, remote={}, pwd={}", targetFS.getClass().getSimpleName(), targetFS.isRemote(), targetFS.pwd());
+        final VirtualFileSystem targetVfs = SftpVirtualFileSystem.open(ssh);
+        log.info("Opened target fs: type={}, remote={}, pwd={}", targetVfs.getClass().getSimpleName(), targetVfs.isRemote(), targetVfs.pwd());
 
 
         new JsyncEngine()
@@ -47,7 +47,7 @@ public class JsyncDemo {
 //            .preferredChecksums(Checksum.SHA1)
             .setDelete(delete)
 //            .setProgress(true)
-            .sync(sourceFS, sourceDir, targetFS, targetDir);
+            .sync(sourceVfs, sourceDir, targetVfs, targetDir, JsyncMode.MERGE);
 
         log.info("Done, sync successful!");
 
