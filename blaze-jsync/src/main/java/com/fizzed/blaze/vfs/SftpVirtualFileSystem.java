@@ -84,7 +84,8 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
         switch (checksum) {
             case CK:
                 try {
-                    exec("cksum", "--version")
+                    this.ssh.newExec().command("cksum")
+                        .arg("--version")
                         .pipeOutput(nullOutput())
                         .pipeError(nullOutput())
                         .run();
@@ -94,7 +95,8 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                 }
             case MD5:
                 try {
-                    exec("md5sum", "--version")
+                    this.ssh.newExec().command("md5sum")
+                        .arg("--version")
                         .pipeOutput(nullOutput())
                         .pipeError(nullOutput())
                         .run();
@@ -104,7 +106,8 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                 }
             case SHA1:
                 try {
-                    exec("sha1sum", "--version")
+                    this.ssh.newExec().command("sha1sum")
+                        .arg("--version")
                         .pipeOutput(nullOutput())
                         .pipeError(nullOutput())
                         .run();
