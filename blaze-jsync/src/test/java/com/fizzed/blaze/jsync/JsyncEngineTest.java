@@ -290,4 +290,62 @@ class JsyncEngineTest {
         assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
     }
 
+    @Test
+    public void syncContentModifiedBySize() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        // sync so we have a replica of source
+        new JsyncEngine()
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // update b.txt in source with same file size though
+        Files.write(sourceADirBFile, "hello yo".getBytes());
+
+        // sync which should require a checksum to sync properly
+        final JsyncResult result = new JsyncEngine()
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // we should now have target/a/b if MERGE worked
+        Path targetBFile = this.syncTargetDir.resolve("a/b.txt");
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+
+        assertThat(result.getFilesCreated()).isEqualTo(0);
+        assertThat(result.getFilesDeleted()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(1);
+        assertThat(result.getChecksums()).isEqualTo(0);
+    }
+
+    @Test
+    public void syncContentModifiedRequiringChecksum() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        // sync so we have a replica of source
+        new JsyncEngine()
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // update b.txt in source with same file size though
+        Files.write(sourceADirBFile, "hellp".getBytes());
+
+        // sync which should require a checksum to sync properly
+        final JsyncResult result = new JsyncEngine()
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // we should now have target/a/b if MERGE worked
+        Path targetBFile = this.syncTargetDir.resolve("a/b.txt");
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+
+        assertThat(result.getFilesCreated()).isEqualTo(0);
+        assertThat(result.getFilesDeleted()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(1);
+        assertThat(result.getChecksums()).isEqualTo(1);
+    }
+
 }

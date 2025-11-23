@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -127,7 +128,8 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     @Override
     public void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException {
         final Path nativePath = this.toNativePath(path);
-        Files.copy(input.stream(), nativePath);
+        // its important we allow replacing existing files
+        Files.copy(input.stream(), nativePath, StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override

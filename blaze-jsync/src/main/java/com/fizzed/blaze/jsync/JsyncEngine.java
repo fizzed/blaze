@@ -22,6 +22,7 @@ public class JsyncEngine {
     private boolean force;
     private boolean parents;
     private boolean progress;
+    private int maxFilesMaybeModifiedLimit;
 
     public JsyncEngine() {
         this.delete = false;
@@ -29,6 +30,7 @@ public class JsyncEngine {
         this.progress = false;
         this.parents = false;
         this.preferredChecksums = new ArrayList<>(asList(Checksum.CK, Checksum.MD5));
+        this.maxFilesMaybeModifiedLimit = 256;
     }
 
     public boolean isDelete() {
@@ -77,13 +79,25 @@ public class JsyncEngine {
         return this;
     }
 
-    public void sync(Path sourcePath, Path targetPath, JsyncMode mode) throws IOException {
-        // local -> local
-        final LocalVirtualFileSystem localVfs = LocalVirtualFileSystem.open();
-        this.sync(localVfs, sourcePath.toString(), localVfs, targetPath.toString(), mode);
+    public int getMaxFilesMaybeModifiedLimit() {
+        return maxFilesMaybeModifiedLimit;
     }
 
-    public void sync(VirtualFileSystem sourceVfs, String sourcePath, VirtualFileSystem targetVfs, String targetPath, JsyncMode mode) throws IOException {
+    public JsyncEngine setMaxFilesMaybeModifiedLimit(int maxFilesMaybeModifiedLimit) {
+        this.maxFilesMaybeModifiedLimit = maxFilesMaybeModifiedLimit;
+        return this;
+    }
+
+    public JsyncResult sync(Path sourcePath, Path targetPath, JsyncMode mode) throws IOException {
+        // local -> local
+        final LocalVirtualFileSystem localVfs = LocalVirtualFileSystem.open();
+
+        return this.sync(localVfs, sourcePath.toString(), localVfs, targetPath.toString(), mode);
+    }
+
+    public JsyncResult sync(VirtualFileSystem sourceVfs, String sourcePath, VirtualFileSystem targetVfs, String targetPath, JsyncMode mode) throws IOException {
+        final JsyncResult result = new JsyncResult();
+
         // source MUST exist
         final VirtualPath sourcePathRaw = VirtualPath.parse(sourcePath);
         final VirtualPath sourcePathAbsWithoutStats = sourceVfs.pwd().resolve(sourcePathRaw);
@@ -113,13 +127,13 @@ public class JsyncEngine {
         if (targetPathAbs == null) {
             if (targetPathAbsWithoutStats.isDirectory()) {
                 // we're dealing with directories, so we need to ensure this dir exists
-                this.createDirectory(targetVfs, targetPathAbsWithoutStats, true, this.parents);
+                this.createDirectory(result, targetVfs, targetPathAbsWithoutStats, true, this.parents);
             } else {
                 // we're dealing with files, so we just need to ensure the parent dir exists
                 final VirtualPath parentDir = targetPathAbsWithoutStats.resolveParent();
                 // check if it exists first, if not then we will create it
                 if (targetVfs.exists(parentDir) == null) {
-                    this.createDirectory(targetVfs, parentDir, true, this.parents);
+                    this.createDirectory(result, targetVfs, parentDir, true, this.parents);
                 }
             }
 
@@ -157,16 +171,18 @@ public class JsyncEngine {
             // until we have a chance to do some bulk processing of checksums, etc.
             final List<VirtualPathPair> filesMaybeModified = new ArrayList<>();
 
-            this.syncDirectory(0, filesMaybeModified, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
+            this.syncDirectory(0, result, filesMaybeModified, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
         } else {
             // we are only syncing a file, we may need to do some more expensive checks to determine if it needs to be updated
-            this.syncFile(sourceVfs, sourcePathAbs, targetVfs, targetPathAbs);
+            this.syncFile(result, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs);
         }
+
+        return result;
     }
 
 
 
-    protected void syncDirectory(final int level, final List<VirtualPathPair> filesMaybeModified, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
+    protected void syncDirectory(final int level, final JsyncResult result, final List<VirtualPathPair> filesMaybeModified, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
         // we need a list of files in both directories, so we can see what to add/delete
         final List<VirtualPath> sourceChildPaths = sourceVfs.ls(sourcePath);
         final List<VirtualPath> targetChildPaths = targetVfs.ls(targetPath);
@@ -187,10 +203,10 @@ public class JsyncEngine {
                 // target path does not exist, we need to create it as a directory or just sync the file
                 if (sourceChildPath.isDirectory()) {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
-                    this.createDirectory(targetVfs, targetChildPath, false, false);
+                    this.createDirectory(result, targetVfs, targetChildPath, false, false);
                 } else {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    this.syncFile(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
                 }
             } else {
                 // target path exists, we need to check if it needs to be updated
@@ -204,10 +220,11 @@ public class JsyncEngine {
                     // delete the target file
                     log.info("Deleting file {}", targetChildPath);
                     targetVfs.rm(targetChildPath);
+                    result.incrementFilesDeleted();
 
                     // create the target dir new
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
-                    this.createDirectory(targetVfs, targetChildPath, false, false);
+                    this.createDirectory(result, targetVfs, targetChildPath, false, false);
 
                 } else if (!sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
                    log.warn("Source '{}' is a file, target '{}' is a directory!", sourceChildPath, targetChildPath);
@@ -216,18 +233,18 @@ public class JsyncEngine {
                     }
 
                     // delete the target dir
-                    this.deleteDirectory(0, targetVfs, targetChildPath);
+                    this.deleteDirectory(0, result, targetVfs, targetChildPath);
 
                     // sync the target child path
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    this.syncFile(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
 
                 } else if (sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
                     // both are directories, nothing for us to do (will sync them later in this method)
                 } else {
                     // the file may need synced, and its possible we don't need anything expensive here to check, if
                     // something as easy as the file size has changed
-                    boolean wasSynced = this.syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    boolean wasSynced = this.syncFile(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
 
                     if (!wasSynced) {
                         // we will need more "expensive" checks to determine if this file needs synced
@@ -237,16 +254,13 @@ public class JsyncEngine {
             }
 
             if (sourceChildPath.isDirectory()) {
-                syncDirectory(level+1, filesMaybeModified, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
+                syncDirectory(level+1, result, filesMaybeModified, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
             }
         }
 
-//        log.info("filesMaybeModified size now {}", filesMaybeModified.size());
 
-        // handle existing files that may have been modified, but we want to batch as many as possible, but not wait
-        // too long, otherwise the array will get massive
-        // TODO: bug -- we will miss files that are modified if less than 256!
-        if (filesMaybeModified.size() > 256) {
+        // handle existing files that may have been modified, but we want to batch as many as possible, but not wait too long, otherwise the array will get massive
+        if (level == 0 || filesMaybeModified.size() >= this.maxFilesMaybeModifiedLimit) {
 //            log.debug("Calculating checksums...");
 
             // we need calculate checksums for source and target files
@@ -264,8 +278,10 @@ public class JsyncEngine {
 //            log.debug("Calculating checksums for {} target files", targetFiles.size());
             targetVfs.checksums(checksum, targetFiles);
 
+            result.incrementChecksums(targetFiles.size());
+
             for (VirtualPathPair pair : filesMaybeModified) {
-                syncFile(sourceVfs, pair.getSource(), targetVfs, pair.getTarget());
+                syncFile(result, sourceVfs, pair.getSource(), targetVfs, pair.getTarget());
             }
 
             filesMaybeModified.clear();
@@ -282,10 +298,11 @@ public class JsyncEngine {
 
                 if (sourceChildPath == null) {
                     if (targetChildPath.isDirectory()) {
-                        deleteDirectory(0, targetVfs, targetChildPath);
+                        deleteDirectory(0, result, targetVfs, targetChildPath);
                     } else {
                         log.info("Deleting file {}", targetChildPath);
                         targetVfs.rm(targetChildPath);
+                        result.incrementFilesDeleted();
                     }
                 }
             }
@@ -338,7 +355,7 @@ public class JsyncEngine {
         return false;
     }
 
-    protected boolean syncFile(VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
+    protected boolean syncFile(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
         if (!this.isFileContentModified(sourceFile, targetFile)) {
             return false;
         }
@@ -355,10 +372,17 @@ public class JsyncEngine {
             targetVfs.writeFile(input, targetFile, this.progress);
         }
 
+        // update results after we know operation was successful
+        if (targetFile.getStats() == null) {
+            result.incrementFilesCreated();
+        } else {
+            result.incrementFilesUpdated();
+        }
+
         return true;
     }
 
-    protected void createDirectory(VirtualFileSystem vfs, VirtualPath path, boolean verifyParentExists, boolean parents) throws IOException {
+    protected void createDirectory(JsyncResult result, VirtualFileSystem vfs, VirtualPath path, boolean verifyParentExists, boolean parents) throws IOException {
         // if parents is enabled, we want to make any parent dirs that are also missing
         if (parents) {
             List<VirtualPath> parentDirsMissing = new ArrayList<>();
@@ -381,6 +405,7 @@ public class JsyncEngine {
                     VirtualPath parentPathMissing = parentDirsMissing.get(i);
                     log.debug("Creating parent dir: {}", parentPathMissing);
                     vfs.mkdir(parentPathMissing);
+                    result.incrementDirsCreated();
                 }
             }
         } else if (verifyParentExists) {
@@ -399,19 +424,21 @@ public class JsyncEngine {
         // finally we can create the directory
         log.info("Creating dir {}", path);
         vfs.mkdir(path);
+        result.incrementDirsCreated();
     }
 
-    protected void deleteDirectory(int level, VirtualFileSystem vfs, VirtualPath path) throws IOException {
+    protected void deleteDirectory(int level, JsyncResult result, VirtualFileSystem vfs, VirtualPath path) throws IOException {
         // we need a list of files in both directories, since we'll need to recurse thru dirs
         final List<VirtualPath> childPaths = vfs.ls(path);
         sortPaths(childPaths);
 
         for (VirtualPath childPath : childPaths) {
             if (childPath.isDirectory()) {
-                deleteDirectory(level+1, vfs, childPath);     // do not log this, that will happen in the below statement via recursion
+                deleteDirectory(level+1, result, vfs, childPath);     // do not log this, that will happen in the below statement via recursion
             } else {
                 log.debug("Deleting file {}", childPath);
                 vfs.rm(childPath);
+                result.incrementFilesDeleted();
             }
         }
 
@@ -422,6 +449,7 @@ public class JsyncEngine {
             log.info("Deleting dir {}", path);
         }
         vfs.rmdir(path);
+        result.incrementDirsDeleted();
     }
 
     protected Checksum negotiateChecksum(VirtualFileSystem sourceVfs, VirtualFileSystem targetVfs) throws IOException {
