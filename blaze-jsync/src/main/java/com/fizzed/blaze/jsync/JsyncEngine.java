@@ -1,10 +1,7 @@
 package com.fizzed.blaze.jsync;
 
 import com.fizzed.blaze.util.StreamableInput;
-import com.fizzed.blaze.vfs.LocalVirtualFileSystem;
-import com.fizzed.blaze.vfs.ParentDirectoryMissingException;
-import com.fizzed.blaze.vfs.VirtualFileSystem;
-import com.fizzed.blaze.vfs.VirtualPath;
+import com.fizzed.blaze.vfs.*;
 import com.fizzed.blaze.vfs.util.VirtualPathPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,6 +115,14 @@ public class JsyncEngine {
 
             // we know the file doesn't exist yet, so we will use the path without stats
             targetPathAbs = targetPathAbsWithoutStats;
+        } else {
+            // we need to validate that we're not trying to sync a directory to a file or vice versa
+            // this mimics rsync behavior where they will not automatically overwrite different file/dir types
+            if (targetPathAbs.isDirectory() && !sourcePathAbs.isDirectory()) {
+                throw new PathOverwriteException("Cannot overwrite target '" + targetPathAbs + "' since its a directory with source '" + sourcePathAbs + "' that is a file. If you intend to replace the directory with the file, you must manually delete the target directory first.");
+            } else if (!targetPathAbs.isDirectory() && sourcePathAbs.isDirectory()) {
+                throw new PathOverwriteException("Cannot overwrite target '" + targetPathAbs + "' since its a file with source '" + sourcePathAbs + "' that is a directory. If you intend to replace the file with the directory, you must manually delete the target file first.");
+            }
         }
 
         //
@@ -351,8 +356,13 @@ public class JsyncEngine {
         } else if (verifyParentExists) {
             // if parents is disabled, we want to make sure the parent dir exists, so we can throw a better exception
             VirtualPath parentPath = path.resolveParent();
-            if (parentPath != null && vfs.exists(parentPath) == null) {
-                throw new ParentDirectoryMissingException("Unable to create directory '" + path + "' since its parent directory does not exist (did you forget to use 'parents' option?)");
+            if (parentPath != null) {
+                final VirtualPath parentPathStats = vfs.exists(parentPath);
+                if (parentPathStats == null) {
+                    throw new ParentDirectoryMissingException("Unable to create directory '" + path + "' since its parent directory does not exist (did you forget to use 'parents' option?)");
+                } else if (!parentPathStats.isDirectory()) {
+                    throw new PathOverwriteException("Unable to create directory '" + path + "' since its parent directory exists, but is not a directory!");
+                }
             }
         }
 

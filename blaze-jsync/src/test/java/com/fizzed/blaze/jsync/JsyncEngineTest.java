@@ -1,6 +1,7 @@
 package com.fizzed.blaze.jsync;
 
 import com.fizzed.blaze.vfs.ParentDirectoryMissingException;
+import com.fizzed.blaze.vfs.PathOverwriteException;
 import com.fizzed.crux.util.MoreFiles;
 import com.fizzed.crux.util.Resources;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class JsyncEngineTest {
@@ -163,13 +165,10 @@ class JsyncEngineTest {
         Files.write(sourceADirBFile, "hello".getBytes());
 
         // NOTE: this should fail if "parents" is not set to true
-        try {
+        assertThrows(ParentDirectoryMissingException.class, () -> {
             new JsyncEngine()
                 .sync(sourceADir, this.syncTargetDir.resolve("sub-target/sub-target2"), JsyncMode.MERGE);
-            fail();
-        } catch (ParentDirectoryMissingException e) {
-            // expected
-        }
+        });
 
         // should work with parents set to true
         new JsyncEngine()
@@ -178,6 +177,51 @@ class JsyncEngineTest {
 
         // we should now have target/b.txt if MERGE worked
         Path targetBFile = this.syncTargetDir.resolve("sub-target/sub-target2/b.txt");
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+    }
+
+    @Test
+    public void syncDirectoryToAnExistingFile() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        // create a file in the target dir
+        Path subTargetFile = this.syncTargetDir.resolve("sub-target");
+        Files.write(subTargetFile, "hello".getBytes());
+
+        assertThrows(PathOverwriteException.class, () -> {
+            new JsyncEngine()
+                .sync(sourceADir, subTargetFile, JsyncMode.MERGE);
+        });
+
+        // nest mode should also fail
+        assertThrows(PathOverwriteException.class, () -> {
+            new JsyncEngine()
+                .sync(sourceADir, subTargetFile, JsyncMode.NEST);
+        });
+    }
+
+    @Test
+    public void mergeFileToAnExistingDirectory() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        assertThrows(PathOverwriteException.class, () -> {
+            new JsyncEngine()
+                .sync(sourceADirBFile, this.syncTargetDir, JsyncMode.MERGE);
+        });
+
+        // nest mode should actually work
+        new JsyncEngine()
+            .sync(sourceADirBFile, this.syncTargetDir, JsyncMode.NEST);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetBFile = this.syncTargetDir.resolve("b.txt");
         assertThat(targetBFile).exists().isNotEmptyFile();
         assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
     }
