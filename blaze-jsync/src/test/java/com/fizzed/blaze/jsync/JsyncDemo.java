@@ -42,6 +42,7 @@ public class JsyncDemo {
 //            .preferredChecksums(Checksum.MD5, Checksum.SHA1)
 //            .preferredChecksums(Checksum.SHA1)
             .setDelete(delete)
+            .setParents(true)
 //            .setProgress(true)
             .sync(sourceVfs, sourceDir, targetVfs, targetDir, JsyncMode.MERGE);
 

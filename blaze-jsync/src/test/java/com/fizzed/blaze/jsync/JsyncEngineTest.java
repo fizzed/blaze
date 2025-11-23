@@ -205,7 +205,7 @@ class JsyncEngineTest {
     }
 
     @Test
-    public void mergeFileToAnExistingDirectory() throws Exception {
+    public void syncFileToAnExistingDirectory() throws Exception {
         Path sourceADir = this.syncSourceDir.resolve("a");
         Files.createDirectories(sourceADir);
         Path sourceADirBFile = sourceADir.resolve("b.txt");
@@ -222,6 +222,70 @@ class JsyncEngineTest {
 
         // we should now have target/b.txt if MERGE worked
         Path targetBFile = this.syncTargetDir.resolve("b.txt");
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+    }
+
+    @Test
+    public void syncIncludesSourceDirToExistingTargetFile() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBDir = sourceADir.resolve("b");
+        Files.createDirectories(sourceADirBDir);
+        Path sourceADirBDirCFile = sourceADirBDir.resolve("c.txt");
+        Files.write(sourceADirBDirCFile, "hello".getBytes());
+
+        // create a file in the target dir, named "b" that's actually a file
+        Path targetADir = this.syncTargetDir.resolve("a");
+        Files.createDirectories(targetADir);
+        Path targetADirBFile = targetADir.resolve("b");
+        Files.write(targetADirBFile, "hello".getBytes());
+
+        // should fail with overwrite exception (w/o force flag set)
+        assertThrows(PathOverwriteException.class, () -> {
+            new JsyncEngine()
+                .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+        });
+
+        // should work with force flag set
+        new JsyncEngine()
+            .setForce(true)
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetCFile = this.syncTargetDir.resolve("a/b/c.txt");
+        assertThat(targetCFile).exists().isNotEmptyFile();
+        assertThat(targetCFile).hasSameTextualContentAs(sourceADirBDirCFile);
+    }
+
+    @Test
+    public void syncIncludesSourceFileToExistingTargetDirectory() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        // create a file in the target dir, named "b" that's actually a file
+        Path targetADir = this.syncTargetDir.resolve("a");
+        Files.createDirectories(targetADir);
+        Path targetADirBDir = targetADir.resolve("b");
+        Files.createDirectories(targetADirBDir);
+        Path targetADirBDirCFile = targetADirBDir.resolve("c.txt");
+        Files.write(targetADirBDirCFile, "hello".getBytes());
+
+        // should fail with overwrite exception (w/o force flag set)
+        assertThrows(PathOverwriteException.class, () -> {
+            new JsyncEngine()
+                .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+        });
+
+        // should work with force flag set
+        new JsyncEngine()
+            .setForce(true)
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // we should now have target/a/b if MERGE worked
+        Path targetBFile = this.syncTargetDir.resolve("a/b");
         assertThat(targetBFile).exists().isNotEmptyFile();
         assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
     }

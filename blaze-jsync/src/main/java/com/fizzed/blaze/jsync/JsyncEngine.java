@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -20,11 +19,13 @@ public class JsyncEngine {
     // options for syncing, try to mimic defaults for how rsync works
     final private List<Checksum> preferredChecksums;
     private boolean delete;
+    private boolean force;
     private boolean parents;
     private boolean progress;
 
     public JsyncEngine() {
         this.delete = false;
+        this.force = false;
         this.progress = false;
         this.parents = false;
         this.preferredChecksums = new ArrayList<>(asList(Checksum.CK, Checksum.MD5));
@@ -36,6 +37,15 @@ public class JsyncEngine {
 
     public JsyncEngine setDelete(boolean delete) {
         this.delete = delete;
+        return this;
+    }
+
+    public boolean isForce() {
+        return force;
+    }
+
+    public JsyncEngine setForce(boolean force) {
+        this.force = force;
         return this;
     }
 
@@ -177,22 +187,41 @@ public class JsyncEngine {
                 // target path does not exist, we need to create it as a directory or just sync the file
                 if (sourceChildPath.isDirectory()) {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
-                    createDirectory(targetVfs, targetChildPath, false, false);
+                    this.createDirectory(targetVfs, targetChildPath, false, false);
                 } else {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    this.syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
                 }
             } else {
                 // target path exists, we need to check if it needs to be updated
                 // is there a file/dir mismatch?
                 if (sourceChildPath.isDirectory() && !targetChildPath.isDirectory()) {
-                    log.info("Source is a directory, target is a file! (target {})", targetChildPath);
-                    // TODO: delete the target file and re-crate it as a directory
-                    log.error("TODO: delete the target file, then create it as a directory");
+                    log.warn("Source '{}' is a directory, target '{}' is a file!", sourceChildPath, targetChildPath);
+                    if (!this.force) {
+                        throw new PathOverwriteException("Cannot overwrite target '" + targetChildPath + "' since its a directory with source '" + sourceChildPath + "' that is a file. If you intend to replace the directory with the file (you can use the 'force' option to do this)");
+                    }
+
+                    // delete the target file
+                    log.info("Deleting file {}", targetChildPath);
+                    targetVfs.rm(targetChildPath);
+
+                    // create the target dir new
+                    targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
+                    this.createDirectory(targetVfs, targetChildPath, false, false);
+
                 } else if (!sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
-                    log.info("Source is a file, target is a directory! (target {})", targetChildPath);
-                    // TODO: delete the target file and re-crate it as a directory
-                    log.error("TODO: delete the target dir, and transfer the file");
+                   log.warn("Source '{}' is a file, target '{}' is a directory!", sourceChildPath, targetChildPath);
+                    if (!this.force) {
+                        throw new PathOverwriteException("Cannot overwrite target '" + targetChildPath + "' since its a file with source '" + sourceChildPath + "' that is a directory. If you intend to replace the file with the directory (you can use the 'force' option to do this)");
+                    }
+
+                    // delete the target dir
+                    this.deleteDirectory(0, targetVfs, targetChildPath);
+
+                    // sync the target child path
+                    targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
+                    this.syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+
                 } else if (sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
                     // both are directories, nothing for us to do (will sync them later in this method)
                 } else {
@@ -216,6 +245,7 @@ public class JsyncEngine {
 
         // handle existing files that may have been modified, but we want to batch as many as possible, but not wait
         // too long, otherwise the array will get massive
+        // TODO: bug -- we will miss files that are modified if less than 256!
         if (filesMaybeModified.size() > 256) {
 //            log.debug("Calculating checksums...");
 
@@ -254,8 +284,8 @@ public class JsyncEngine {
                     if (targetChildPath.isDirectory()) {
                         deleteDirectory(0, targetVfs, targetChildPath);
                     } else {
+                        log.info("Deleting file {}", targetChildPath);
                         targetVfs.rm(targetChildPath);
-                        log.info("Deleted file: {}", targetChildPath);
                     }
                 }
             }
@@ -315,9 +345,9 @@ public class JsyncEngine {
 
         // if target file has no "stats", then we have no info on it yet, and know we're going to create it fresh
         if (targetFile.getStats() == null) {
-            log.info("Create file: {}", targetFile);
+            log.info("Creating file: {}", targetFile);
         } else {
-            log.info("Update file: {}", targetFile);
+            log.info("Updating file: {}", targetFile);
         }
 
         // transfer the file
