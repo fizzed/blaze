@@ -44,6 +44,16 @@ public class VirtualPath {
         }
     }
 
+    public VirtualPath resolveParent() {
+        // is there a parent?
+        if (this.parentPath == null || this.parentPath.isEmpty()) {
+            return null;
+        }
+
+        // just parse the parent path, and it will always be a dir
+        return parse(this.parentPath, true);
+    }
+
     public String toFullPath() {
         if (this.parentPath == null) {
             return this.name;

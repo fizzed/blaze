@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -66,44 +67,68 @@ public class JsyncEngine {
 
     public void sync(VirtualFileSystem sourceVfs, String sourcePath, VirtualFileSystem targetVfs, String targetPath, JsyncMode mode) throws IOException {
         // source MUST exist
-        final VirtualPath sourcePathDirty = VirtualPath.parse(sourcePath);
-        final VirtualPath sourcePathAbsWithoutStats = sourceVfs.pwd().resolve(sourcePathDirty);
+        final VirtualPath sourcePathRaw = VirtualPath.parse(sourcePath);
+        final VirtualPath sourcePathAbsWithoutStats = sourceVfs.pwd().resolve(sourcePathRaw);
         // NOTE: this will throw an exception if the source dir/file does not exist
-        final VirtualPath sourcePathAbsWithStats = sourceVfs.stat(sourcePathAbsWithoutStats);
+        final VirtualPath sourcePathAbs = sourceVfs.stat(sourcePathAbsWithoutStats);
 
-        // target may or may not exist
+
         // its better to use absolute paths on source & target since the checksum methods on any host require full paths
-        final VirtualPath targetPathDirty = VirtualPath.parse(targetPath, sourcePathAbsWithStats.isDirectory());
+        final VirtualPath targetPathRaw = VirtualPath.parse(targetPath, sourcePathAbs.isDirectory());
         // based on NEST vs. MERGE, we will have a slightly different path we are going to sync to
         final VirtualPath targetPathAbsWithoutStats;
         if (mode == JsyncMode.MERGE) {
-            targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathDirty);
+            targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathRaw);
         } else {
             // nested mode, so the target we're going to is going to be named the "name" of the source
-            targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathDirty.resolve(sourcePathAbsWithStats.getName(), sourcePathAbsWithStats.isDirectory()));
+            targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathRaw.resolve(sourcePathAbs.getName(), sourcePathAbs.isDirectory()));
         }
+
+
+        log.info("targetPathAbsWithoutStats: {}", targetPathAbsWithoutStats);
+
+
         VirtualPath targetPathAbsWithStats = null;
         // the target may or may not exist, which is not an error yet
         try {
             targetPathAbsWithStats = targetVfs.stat(targetPathAbsWithoutStats);
-        } catch (FileNotFoundException e) {
-            log.info("Target dir not found, creating {}", targetPath);
-            targetVfs.mkdir(targetPathAbsWithoutStats);
-            targetPathAbsWithStats = targetVfs.stat(targetPathAbsWithoutStats);
+            // target dir/file already exists
+        } catch (FileNotFoundException | NoSuchFileException e) {
+            // target dir/file does not exist
         }
+
+        if (targetPathAbsWithStats == null) {
+            if (targetPathAbsWithoutStats.isDirectory()) {
+                log.info("Creating dir {}", targetPathAbsWithoutStats);
+                targetVfs.mkdir(targetPathAbsWithoutStats);
+                targetPathAbsWithStats = targetVfs.stat(targetPathAbsWithoutStats);
+            } else {
+                final VirtualPath parentDir = targetPathAbsWithoutStats.resolveParent();
+                log.info("Creating dir {}", parentDir);
+                targetVfs.mkdir(parentDir);
+            }
+        }
+
+
+
+
+
+
 
         // find the best common checksum to use
         final Checksum checksum = this.negotiateChecksum(sourceVfs, targetVfs);
 
         log.info("Syncing {}:{} -> {}:{} (mode={}, checksum={}, delete={})",
-            sourceVfs, sourcePathAbsWithStats, targetVfs, targetPathAbsWithStats, mode, checksum, this.delete);
+            sourceVfs, sourcePathAbs, targetVfs, targetPathAbsWithStats, mode, checksum, this.delete);
+
+
 
         // as we process files, only a subset may require more advanced methods of detecting whether they were modified
         // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
         // until we have a chance to do some bulk processing of checksums, etc.
         final List<VirtualPathPair> filesMaybeModified = new ArrayList<>();
 
-        this.syncDirectory(0, filesMaybeModified, sourceVfs, sourcePathAbsWithStats, targetVfs, targetPathAbsWithStats, checksum);
+        this.syncDirectory(0, filesMaybeModified, sourceVfs, sourcePathAbs, targetVfs, targetPathAbsWithStats, checksum);
     }
 
 
@@ -281,6 +306,18 @@ public class JsyncEngine {
         return true;
     }
 
+    protected void createDirectory(int level, VirtualFileSystem vfs, VirtualPath path, boolean parents) throws IOException {
+        // if parents is enabled, we want to make any parent dirs that are also missing
+        if (parents) {
+            List<VirtualPath> parentDirsMissing = new ArrayList<>();
+            
+        }
+
+        // finally we can create the directory
+        log.info("Creating dir: {}", path);
+        vfs.mkdir(path);
+    }
+
     protected void deleteDirectory(int level, VirtualFileSystem vfs, VirtualPath path) throws IOException {
         // we need a list of files in both directories, since we'll need to recurse thru dirs
         final List<VirtualPath> childPaths = vfs.ls(path);
@@ -296,8 +333,8 @@ public class JsyncEngine {
         }
 
         // finally we can delete the directory
+        log.info("Deleting dir: {}", path);
         vfs.rmdir(path);
-        log.info("Deleted dir: {}", path);
     }
 
     protected Checksum negotiateChecksum(VirtualFileSystem sourceVfs, VirtualFileSystem targetVfs) throws IOException {

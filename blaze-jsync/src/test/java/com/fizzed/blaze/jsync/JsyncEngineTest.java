@@ -35,7 +35,7 @@ class JsyncEngineTest {
     }
 
     @Test
-    public void mergeLocalToLocal() throws Exception {
+    public void mergeOneLevelDirectory() throws Exception {
         Path sourceADir = this.syncSourceDir.resolve("a");
         Files.createDirectories(sourceADir);
         Path sourceADirBFile = sourceADir.resolve("b.txt");
@@ -51,7 +51,7 @@ class JsyncEngineTest {
     }
 
     @Test
-    public void nestLocalToLocal() throws Exception {
+    public void nestOneLevelDirectory() throws Exception {
         Path sourceADir = this.syncSourceDir.resolve("a");
         Files.createDirectories(sourceADir);
         Path sourceADirBFile = sourceADir.resolve("b.txt");
@@ -68,5 +68,37 @@ class JsyncEngineTest {
         assertThat(targetADirBFile).hasSameTextualContentAs(sourceADirBFile);
     }
 
+    @Test
+    public void mergeOneLevelFile() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        Path targetBFile = this.syncTargetDir.resolve("b.txt");
+
+        new JsyncEngine()
+            .sync(sourceADirBFile, targetBFile, JsyncMode.MERGE);
+
+        // we should now have target/b.txt if MERGE worked
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+    }
+
+    @Test
+    public void nestOneLevelFile() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        new JsyncEngine()
+            .sync(sourceADirBFile, this.syncTargetDir, JsyncMode.NEST);
+
+        Path targetBFile = this.syncTargetDir.resolve("b.txt");
+        // we should now have target/b.txt if MERGE worked
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+    }
 
 }
