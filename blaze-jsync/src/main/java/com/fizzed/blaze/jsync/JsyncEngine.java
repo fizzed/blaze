@@ -1,6 +1,7 @@
 package com.fizzed.blaze.jsync;
 
 import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.vfs.LocalVirtualFileSystem;
 import com.fizzed.blaze.vfs.VirtualFileSystem;
 import com.fizzed.blaze.vfs.VirtualPath;
 import com.fizzed.blaze.vfs.util.VirtualPathPair;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Arrays.asList;
@@ -56,17 +58,30 @@ public class JsyncEngine {
         return this;
     }
 
+    public void sync(Path sourcePath, Path targetPath, JsyncMode mode) throws IOException {
+        // local -> local
+        final LocalVirtualFileSystem localVfs = LocalVirtualFileSystem.open();
+        this.sync(localVfs, sourcePath.toString(), localVfs, targetPath.toString(), mode);
+    }
+
     public void sync(VirtualFileSystem sourceVfs, String sourcePath, VirtualFileSystem targetVfs, String targetPath, JsyncMode mode) throws IOException {
         // source MUST exist
-        final VirtualPath sourcePathAbsOrRelWithoutStats = VirtualPath.parse(sourcePath);
-        final VirtualPath sourcePathAbsWithoutStats = sourceVfs.pwd().resolve(sourcePathAbsOrRelWithoutStats);
+        final VirtualPath sourcePathDirty = VirtualPath.parse(sourcePath);
+        final VirtualPath sourcePathAbsWithoutStats = sourceVfs.pwd().resolve(sourcePathDirty);
         // NOTE: this will throw an exception if the source dir/file does not exist
         final VirtualPath sourcePathAbsWithStats = sourceVfs.stat(sourcePathAbsWithoutStats);
 
         // target may or may not exist
         // its better to use absolute paths on source & target since the checksum methods on any host require full paths
-        final VirtualPath targetPathAbsOrRelWithoutStats = VirtualPath.parse(targetPath);
-        final VirtualPath targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathAbsOrRelWithoutStats);
+        final VirtualPath targetPathDirty = VirtualPath.parse(targetPath, sourcePathAbsWithStats.isDirectory());
+        // based on NEST vs. MERGE, we will have a slightly different path we are going to sync to
+        final VirtualPath targetPathAbsWithoutStats;
+        if (mode == JsyncMode.MERGE) {
+            targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathDirty);
+        } else {
+            // nested mode, so the target we're going to is going to be named the "name" of the source
+            targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathDirty.resolve(sourcePathAbsWithStats.getName(), sourcePathAbsWithStats.isDirectory()));
+        }
         VirtualPath targetPathAbsWithStats = null;
         // the target may or may not exist, which is not an error yet
         try {
@@ -77,55 +92,26 @@ public class JsyncEngine {
             targetPathAbsWithStats = targetVfs.stat(targetPathAbsWithoutStats);
         }
 
-        // negotiate the checksums to use
-        Checksum checksum = null;
-        List<Checksum> sourceChecksumsSupported = new ArrayList<>();
-        List<Checksum> targetChecksumsSupported = new ArrayList<>();
+        // find the best common checksum to use
+        final Checksum checksum = this.negotiateChecksum(sourceVfs, targetVfs);
 
-        for (Checksum preferredChecksum : this.preferredChecksums) {
-            log.info("Detecting if {} checksum is supported on both source & target", preferredChecksum);
-
-            // check supported checksums, keep a tally of which are supported by both sides, so we can log them out
-            boolean sourceSupported = sourceVfs.isSupported(preferredChecksum);
-            if (sourceSupported) {
-                sourceChecksumsSupported.add(preferredChecksum);
-            }
-
-            boolean targetSupported = targetVfs.isSupported(preferredChecksum);
-            if (targetSupported) {
-                targetChecksumsSupported.add(preferredChecksum);
-            }
-
-            log.info("Supported on source={}, target={}", sourceSupported, targetSupported);
-
-            if (sourceSupported && targetSupported) {
-                checksum = preferredChecksum;
-                break;
-            }
-        }
-
-        if (checksum == null) {
-            throw new IOException("Unable to find a checksum that is supported by both source and target. " +
-                "Source virtual filesystem " + sourceVfs.getName() + " supports checksums " + sourceChecksumsSupported
-                + " and target virtual filesystem " + targetVfs.getName() + " supports checksums " + targetChecksumsSupported);
-        }
-
-        log.info("Syncing {} -> {} (checksum={}, delete={})", sourcePathAbsWithStats, targetPathAbsWithStats, checksum, this.delete);
+        log.info("Syncing {}:{} -> {}:{} (mode={}, checksum={}, delete={})",
+            sourceVfs, sourcePathAbsWithStats, targetVfs, targetPathAbsWithStats, mode, checksum, this.delete);
 
         // as we process files, only a subset may require more advanced methods of detecting whether they were modified
         // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
         // until we have a chance to do some bulk processing of checksums, etc.
         final List<VirtualPathPair> filesMaybeModified = new ArrayList<>();
 
-        syncDirectory(0, filesMaybeModified, sourceVfs, sourcePathAbsWithStats, targetVfs, targetPathAbsWithStats, checksum);
+        this.syncDirectory(0, filesMaybeModified, sourceVfs, sourcePathAbsWithStats, targetVfs, targetPathAbsWithStats, checksum);
     }
 
 
 
-    protected void syncDirectory(final int level, final List<VirtualPathPair> filesMaybeModified, VirtualFileSystem sourceFS, VirtualPath sourcePath, VirtualFileSystem targetFS, VirtualPath targetPath, Checksum checksum) throws IOException {
+    protected void syncDirectory(final int level, final List<VirtualPathPair> filesMaybeModified, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
         // we need a list of files in both directories, so we can see what to add/delete
-        final List<VirtualPath> sourceChildPaths = sourceFS.ls(sourcePath);
-        final List<VirtualPath> targetChildPaths = targetFS.ls(targetPath);
+        final List<VirtualPath> sourceChildPaths = sourceVfs.ls(sourcePath);
+        final List<VirtualPath> targetChildPaths = targetVfs.ls(targetPath);
 
         // its better to work with all dirs first, then files, so we sort the files before we process them
         this.sortPaths(sourceChildPaths);
@@ -135,7 +121,7 @@ public class JsyncEngine {
         for (VirtualPath sourceChildPath : sourceChildPaths) {
             // find a matching target path entirely by name
             VirtualPath targetChildPath = targetChildPaths.stream()
-                .filter(p -> targetFS.areFileNamesEqual(p.getName(), sourceChildPath.getName()))
+                .filter(p -> targetVfs.areFileNamesEqual(p.getName(), sourceChildPath.getName()))
                 .findFirst()
                 .orElse(null);
 
@@ -144,10 +130,10 @@ public class JsyncEngine {
                 if (sourceChildPath.isDirectory()) {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
                     log.info("Creating dir: {}", targetChildPath);
-                    targetFS.mkdir(targetChildPath);
+                    targetVfs.mkdir(targetChildPath);
                 } else {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    syncFile(sourceFS, sourceChildPath, targetFS, targetChildPath);
+                    syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
                 }
             } else {
                 // target path exists, we need to check if it needs to be updated
@@ -165,7 +151,7 @@ public class JsyncEngine {
                 } else {
                     // the file may need synced, and its possible we don't need anything expensive here to check, if
                     // something as easy as the file size has changed
-                    boolean wasSynced = this.syncFile(sourceFS, sourceChildPath, targetFS, targetChildPath);
+                    boolean wasSynced = this.syncFile(sourceVfs, sourceChildPath, targetVfs, targetChildPath);
 
                     if (!wasSynced) {
                         // we will need more "expensive" checks to determine if this file needs synced
@@ -175,7 +161,7 @@ public class JsyncEngine {
             }
 
             if (sourceChildPath.isDirectory()) {
-                syncDirectory(level+1, filesMaybeModified, sourceFS, sourceChildPath, targetFS, targetChildPath, checksum);
+                syncDirectory(level+1, filesMaybeModified, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
             }
         }
 
@@ -192,36 +178,36 @@ public class JsyncEngine {
                 .collect(toList());
 
 //            log.debug("Calculating checksums for {} source files", sourceFiles.size());
-            sourceFS.checksums(checksum, sourceFiles);
+            sourceVfs.checksums(checksum, sourceFiles);
 
             final List<VirtualPath> targetFiles = filesMaybeModified.stream()
                 .map(VirtualPathPair::getTarget)
                 .collect(toList());
 
 //            log.debug("Calculating checksums for {} target files", targetFiles.size());
-            targetFS.checksums(checksum, targetFiles);
+            targetVfs.checksums(checksum, targetFiles);
 
             for (VirtualPathPair pair : filesMaybeModified) {
-                syncFile(sourceFS, pair.getSource(), targetFS, pair.getTarget());
+                syncFile(sourceVfs, pair.getSource(), targetVfs, pair.getTarget());
             }
 
             filesMaybeModified.clear();
         }
 
-        if (delete) {
+        if (this.delete) {
             // calculate paths deleted
             for (VirtualPath targetChildPath : targetChildPaths) {
                 // find a matching source path entirely by name
                 final VirtualPath sourceChildPath = sourceChildPaths.stream()
-                    .filter(p -> sourceFS.areFileNamesEqual(p.getName(), targetChildPath.getName()))
+                    .filter(p -> sourceVfs.areFileNamesEqual(p.getName(), targetChildPath.getName()))
                     .findFirst()
                     .orElse(null);
 
                 if (sourceChildPath == null) {
                     if (targetChildPath.isDirectory()) {
-                        deleteDirectory(targetFS, targetChildPath);
+                        deleteDirectory(0, targetVfs, targetChildPath);
                     } else {
-                        targetFS.rm(targetChildPath);
+                        targetVfs.rm(targetChildPath);
                         log.info("Deleted file: {}", targetChildPath);
                     }
                 }
@@ -229,7 +215,7 @@ public class JsyncEngine {
         }
     }
 
-    protected boolean isFileContentModified(VirtualFileSystem sourceFS, VirtualPath sourceFile, VirtualFileSystem targetFS, VirtualPath targetFile) throws IOException {
+    protected boolean isFileContentModified(VirtualPath sourceFile, VirtualPath targetFile) throws IOException {
         // source "stats" MUST exist
         Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
 
@@ -237,9 +223,6 @@ public class JsyncEngine {
             log.error("Source file {} missing 'stats' (it must not exist yet on source)", sourceFile);
             throw new IllegalArgumentException("sourceFile must have a 'stats' object");
         }
-
-
-        //Objects.requireNonNull(sourceFile.getStats(), "sourceFile.getStats() cannot be null");
 
         // if the targetFile "stats" are null then we know it must not even exist yet
         if (targetFile.getStats() == null) {
@@ -278,8 +261,8 @@ public class JsyncEngine {
         return false;
     }
 
-    protected boolean syncFile(VirtualFileSystem sourceFS, VirtualPath sourceFile, VirtualFileSystem targetFS, VirtualPath targetFile) throws IOException {
-        if (!this.isFileContentModified(sourceFS, sourceFile, targetFS, targetFile)) {
+    protected boolean syncFile(VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
+        if (!this.isFileContentModified(sourceFile, targetFile)) {
             return false;
         }
 
@@ -291,30 +274,71 @@ public class JsyncEngine {
         }
 
         // transfer the file
-        try (StreamableInput input = sourceFS.readFile(sourceFile, this.progress)) {
-            targetFS.writeFile(input, targetFile, this.progress);
+        try (StreamableInput input = sourceVfs.readFile(sourceFile, this.progress)) {
+            targetVfs.writeFile(input, targetFile, this.progress);
         }
 
         return true;
     }
 
-    protected void deleteDirectory(VirtualFileSystem fs, VirtualPath path) throws IOException {
+    protected void deleteDirectory(int level, VirtualFileSystem vfs, VirtualPath path) throws IOException {
         // we need a list of files in both directories, since we'll need to recurse thru dirs
-        final List<VirtualPath> childPaths = fs.ls(path);
+        final List<VirtualPath> childPaths = vfs.ls(path);
         sortPaths(childPaths);
 
         for (VirtualPath childPath : childPaths) {
             if (childPath.isDirectory()) {
-                deleteDirectory(fs, childPath);     // do not log this, that will happen in the below statement via recursion
+                deleteDirectory(level+1, vfs, childPath);     // do not log this, that will happen in the below statement via recursion
             } else {
-                fs.rm(childPath);
+                vfs.rm(childPath);
                 log.info("Deleted file: {}", childPath);
             }
         }
 
         // finally we can delete the directory
-        fs.rmdir(path);
+        vfs.rmdir(path);
         log.info("Deleted dir: {}", path);
+    }
+
+    protected Checksum negotiateChecksum(VirtualFileSystem sourceVfs, VirtualFileSystem targetVfs) throws IOException {
+        log.debug("Negotiating checksums supported on both source and target filesystems...");
+
+        // negotiate the checksums to use
+        Checksum checksum = null;
+        List<Checksum> sourceChecksumsSupported = new ArrayList<>();
+        List<Checksum> targetChecksumsSupported = new ArrayList<>();
+
+        for (Checksum preferredChecksum : this.preferredChecksums) {
+            log.debug("Detecting if {} checksum is supported on source/target", preferredChecksum);
+
+            // check supported checksums, keep a tally of which are supported by both sides, so we can log them out
+            boolean sourceSupported = sourceVfs.isSupported(preferredChecksum);
+
+            if (sourceSupported) {
+                sourceChecksumsSupported.add(preferredChecksum);
+            }
+
+            boolean targetSupported = targetVfs.isSupported(preferredChecksum);
+
+            if (targetSupported) {
+                targetChecksumsSupported.add(preferredChecksum);
+            }
+
+            log.info("Detected {} checksum supported on source={}, target={}", preferredChecksum, sourceSupported, targetSupported);
+
+            if (sourceSupported && targetSupported) {
+                checksum = preferredChecksum;
+                break;
+            }
+        }
+
+        if (checksum == null) {
+            throw new IOException("Unable to find a checksum that is supported by both source and target filesystems. " +
+                "Source filesystem " + sourceVfs.getName() + " supports checksums " + sourceChecksumsSupported
+                + " and target filesystem " + targetVfs.getName() + " supports checksums " + targetChecksumsSupported);
+        }
+
+        return checksum;
     }
 
     protected void sortPaths(List<VirtualPath> paths) {

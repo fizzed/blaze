@@ -22,24 +22,20 @@ public class JsyncDemo {
 //        LoggerConfig.setDefaultLogLevel(LogLevel.DEBUG);
 
 //        final String sourceDir = Paths.get("/home/jjlauer/test-sync").toString();
+        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
-//        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
-        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\test-sync").toString();
+//        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\test-sync").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\workspace\\third-party\\tokyocabinet-1.4.48").toString();
 
         final String targetDir = "test-sync";
         final boolean delete = true;
 
-//        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-fedora43-1").run();
-        final SshSession ssh = sshConnect("ssh://bmh-build-x64-freebsd15-1").run();
+        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-fedora43-1").run();
+//        final SshSession ssh = sshConnect("ssh://bmh-build-x64-freebsd15-1").run();
 //        final SshSession ssh = sshConnect("ssh://bmh-build-x64-win11-1").run();
 
         final VirtualFileSystem sourceVfs = LocalVirtualFileSystem.open();
-        log.info("Opened source fs: type={}, remote={}, pwd={}", sourceVfs.getClass().getSimpleName(), sourceVfs.isRemote(), sourceVfs.pwd());
-
         final VirtualFileSystem targetVfs = SftpVirtualFileSystem.open(ssh);
-        log.info("Opened target fs: type={}, remote={}, pwd={}", targetVfs.getClass().getSimpleName(), targetVfs.isRemote(), targetVfs.pwd());
-
 
         new JsyncEngine()
 //            .preferredChecksums(Checksum.CK)

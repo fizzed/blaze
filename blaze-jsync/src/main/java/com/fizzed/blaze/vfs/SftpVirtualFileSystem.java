@@ -34,6 +34,10 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     static public SftpVirtualFileSystem open(SshSession ssh) {
+        final String name = ssh.uri().toString().replace("ssh://", "sftp://");
+
+        log.info("Opening filesystem {}...", name);
+
         final SshSftpSession sftp = sshSftp(ssh)
             .run();
 
@@ -41,7 +45,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
 
         final VirtualPath pwd = VirtualPath.parse(pwd2, true);
 
-        log.trace("Sftp pwd: {}", pwd);
+        log.debug("Detected filesystem {} has pwd {}", name, pwd);
 
         boolean windows = false;
 
@@ -50,9 +54,8 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
             // TODO: should we confirm by running a command that exists only windows to confirm?
             // for now we'll just assume it is
             windows = true;
+            log.debug("Detected filesystem {} is running on windows (changes standard checksums, native filepaths, case sensitivity, etc.)", name);
         }
-
-        final String name = ssh.uri().toString().replace("ssh://", "sftp://");
 
         return new SftpVirtualFileSystem(name, pwd, ssh, sftp, windows);
     }

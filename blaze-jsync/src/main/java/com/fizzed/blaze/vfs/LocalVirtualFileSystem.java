@@ -19,22 +19,28 @@ import java.util.stream.Stream;
 public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     static private final Logger log = LoggerFactory.getLogger(LocalVirtualFileSystem.class);
 
-    public LocalVirtualFileSystem(VirtualPath pwd, boolean caseSensitive) {
-        super("<local>", pwd, caseSensitive);
+    public LocalVirtualFileSystem(String name, VirtualPath pwd, boolean caseSensitive) {
+        super(name, pwd, caseSensitive);
     }
 
     static public LocalVirtualFileSystem open() {
+        final String name = "<local>";
+
+        log.info("Opening filesystem {}...", name);
+
         // current working directory is our "pwd"
         final Path currentWorkingDir = Paths.get(".").toAbsolutePath().normalize();
 
-        log.debug("Local pwd: {}", currentWorkingDir);
-
         final VirtualPath pwd = VirtualPath.parse(currentWorkingDir.toString(), true);
+
+        log.debug("Detected filesystem {} has pwd {}", name, pwd);
 
         // everything is case-sensitive except windows
         final boolean caseSensitive = !System.getProperty("os.name").toLowerCase().contains("windows");
 
-        return new LocalVirtualFileSystem(pwd, caseSensitive);
+        log.debug("Detected filesystem {} is case-sensitive={}", name, caseSensitive);
+
+        return new LocalVirtualFileSystem(name, pwd, caseSensitive);
     }
 
     protected Path toNativePath(VirtualPath path) {
