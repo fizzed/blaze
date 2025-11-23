@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.*;
 
 import static com.fizzed.blaze.SecureShells.sshSftp;
@@ -155,7 +156,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
 
             return this.toVirtualPathWithStats(path, file);
         } catch (SshSftpNoSuchFileException e) {
-            throw new FileNotFoundException();
+            throw new NoSuchFileException("The path '" + path + "' does not exist (sftp error " + e.getMessage() + ")");
         }
     }
 

@@ -4,6 +4,7 @@ import com.fizzed.blaze.jsync.Checksum;
 import com.fizzed.blaze.util.StreamableInput;
 
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 
 public interface VirtualFileSystem {
@@ -24,6 +25,32 @@ public interface VirtualFileSystem {
 
     VirtualPath pwd();
 
+    /**
+     * Checks if the specified virtual path exists in the virtual file system.
+     * If the path exists, it returns the enriched {@link VirtualPath} object with metadata.
+     * If the path does not exist, it returns null.
+     *
+     * @param path the virtual path to check for existence.
+     * @return a {@link VirtualPath} object if the path exists, or null if the path does not exist.
+     * @throws IOException if an I/O error occurs while attempting to check the path.
+     */
+    default VirtualPath exists(VirtualPath path) throws IOException {
+        try {
+            return this.stat(path);
+        } catch (NoSuchFileException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the metadata (statistics) for the specified virtual path. The metadata includes information such as
+     * whether the path is a directory, size, modified time, and optionally checksum.
+     *
+     * @param path the virtual path whose metadata is to be retrieved.
+     * @return a {@link VirtualPath} object representing the specified path, enriched with its metadata.
+     * @throws IOException if an I/O error occurs while retrieving metadata
+     * @throws java.nio.file.NoSuchFileException if the path does not exist
+     */
     VirtualPath stat(VirtualPath path) throws IOException;
 
     List<VirtualPath> ls(VirtualPath path) throws IOException;

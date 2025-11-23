@@ -1,5 +1,6 @@
 package com.fizzed.blaze.jsync;
 
+import com.fizzed.blaze.vfs.ParentDirectoryMissingException;
 import com.fizzed.crux.util.MoreFiles;
 import com.fizzed.crux.util.Resources;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class JsyncEngineTest {
     static private final Logger log = LoggerFactory.getLogger(JsyncEngineTest.class);
@@ -97,6 +99,85 @@ class JsyncEngineTest {
 
         Path targetBFile = this.syncTargetDir.resolve("b.txt");
         // we should now have target/b.txt if MERGE worked
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+    }
+
+    @Test
+    public void mergeTwoLevelDirectory() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBDir = sourceADir.resolve("b");
+        Files.createDirectories(sourceADirBDir);
+        Path sourceADirBDirCFile = sourceADirBDir.resolve("c.txt");
+        Files.write(sourceADirBDirCFile, "hello".getBytes());
+
+        new JsyncEngine()
+            .sync(sourceADir, this.syncTargetDir, JsyncMode.MERGE);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetCFile = this.syncTargetDir.resolve("b/c.txt");
+        assertThat(targetCFile).exists().isNotEmptyFile();
+        assertThat(targetCFile).hasSameTextualContentAs(sourceADirBDirCFile);
+    }
+
+    @Test
+    public void nestTwoLevelDirectory() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBDir = sourceADir.resolve("b");
+        Files.createDirectories(sourceADirBDir);
+        Path sourceADirBDirCFile = sourceADirBDir.resolve("c.txt");
+        Files.write(sourceADirBDirCFile, "hello".getBytes());
+
+        new JsyncEngine()
+            .sync(sourceADir, this.syncTargetDir, JsyncMode.NEST);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetCFile = this.syncTargetDir.resolve("a/b/c.txt");
+        assertThat(targetCFile).exists().isNotEmptyFile();
+        assertThat(targetCFile).hasSameTextualContentAs(sourceADirBDirCFile);
+    }
+
+    @Test
+    public void mergeOneLevelDirectoryToOneLevelDirectory() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        new JsyncEngine()
+            .sync(sourceADir, this.syncTargetDir.resolve("sub-target"), JsyncMode.MERGE);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetBFile = this.syncTargetDir.resolve("sub-target/b.txt");
+        assertThat(targetBFile).exists().isNotEmptyFile();
+        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+    }
+
+    @Test
+    public void mergeOneLevelDirectoryToTwoLevelDirectory() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Files.createDirectories(sourceADir);
+        Path sourceADirBFile = sourceADir.resolve("b.txt");
+        Files.write(sourceADirBFile, "hello".getBytes());
+
+        // NOTE: this should fail if "parents" is not set to true
+        try {
+            new JsyncEngine()
+                .sync(sourceADir, this.syncTargetDir.resolve("sub-target/sub-target2"), JsyncMode.MERGE);
+            fail();
+        } catch (ParentDirectoryMissingException e) {
+            // expected
+        }
+
+        // should work with parents set to true
+        new JsyncEngine()
+            .setParents(true)
+            .sync(sourceADir, this.syncTargetDir.resolve("sub-target/sub-target2"), JsyncMode.MERGE);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetBFile = this.syncTargetDir.resolve("sub-target/sub-target2/b.txt");
         assertThat(targetBFile).exists().isNotEmptyFile();
         assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
     }
