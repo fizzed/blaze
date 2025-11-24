@@ -9,7 +9,6 @@ import com.fizzed.blaze.vfs.util.Checksums;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.*;
@@ -133,15 +132,28 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     private VirtualPath toVirtualPathWithStats(VirtualPath path, SshFileAttributes attributes) throws IOException {
-        boolean isDirectory = attributes.isDirectory();
-        VirtualStats stats = null;
-        if (!isDirectory) {
-            long size = attributes.size();
-            long modifiedTime = attributes.lastModifiedTime().toMillis();
-            long accessedTime = attributes.lastAccessTime().toMillis();
-            stats = new VirtualStats(size, modifiedTime, accessedTime);
+        final long size = attributes.size();
+        final long modifiedTime = attributes.lastModifiedTime().toMillis();
+        final long accessedTime = attributes.lastAccessTime().toMillis();
+
+        final VirtualFileType type;
+        if (attributes.isDirectory()) {
+            type = VirtualFileType.DIR;
+        } else if (attributes.isRegularFile()) {
+            type = VirtualFileType.FILE;
+        } else if (attributes.isSymbolicLink()) {
+            type = VirtualFileType.SYMLINK;
+        } else if (attributes.isOther()) {
+            type = VirtualFileType.OTHER;
+        } else {
+            // should be all the types, but just in case
+            log.warn("Unknown file type mapping for path: {} (defaulting to other)", path);
+            type = VirtualFileType.OTHER;
         }
-        return new VirtualPath(path.getParentPath(), path.getName(), isDirectory, stats);
+
+        final VirtualFileStat stat = new VirtualFileStat(type, size, modifiedTime, accessedTime);
+
+        return new VirtualPath(path.getParentPath(), path.getName(), type == VirtualFileType.DIR, stat);
     }
 
     @Override
@@ -160,18 +172,18 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public void updateStat(VirtualPath path, VirtualStats stats) throws IOException {
+    public void updateStat(VirtualPath path, VirtualFileStat stat) throws IOException {
         try {
-            // are we updating uid/gid?
+            // TODO: are we updating uid/gid?
             Integer uid = null;
             Integer gid = null;
 
-            // are we updating permissions?
+            // TODO: are we updating permissions?
             Integer perms = null;
 
             // are we updating mtime/atime?d
-            Integer mtime = (int)(stats.getModifiedTime()/1000);
-            Integer atime = (int)(stats.getAccessedTime()/1000);
+            Integer mtime = (int)(stat.getModifiedTime()/1000);
+            Integer atime = (int)(stat.getAccessedTime()/1000);
 
             this.sftp.attrs(path.toString(), uid, gid, perms, mtime, atime);
         } catch (SshSftpNoSuchFileException e) {
@@ -334,11 +346,11 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                     }
 
                     if (checksum == Checksum.CK) {
-                        entryPath.getStats().setCksum(entry.getCksum());
+                        entryPath.getStat().setCksum(entry.getCksum());
                     } else if (checksum == Checksum.MD5) {
-                        entryPath.getStats().setMd5(entry.getHash());
+                        entryPath.getStat().setMd5(entry.getHash());
                     } else if (checksum == Checksum.SHA1) {
-                        entryPath.getStats().setSha1(entry.getHash());
+                        entryPath.getStat().setSha1(entry.getHash());
                     } else {
                         throw new UnsupportedChecksumException("Unsupported checksum '" + checksum + "' on posix is not supported", null);
                     }
@@ -408,9 +420,9 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
                     }
 
                     if (checksum == Checksum.MD5) {
-                        entryPath.getStats().setMd5(entry.getHash());
+                        entryPath.getStat().setMd5(entry.getHash());
                     } else if (checksum == Checksum.SHA1) {
-                        entryPath.getStats().setSha1(entry.getHash());
+                        entryPath.getStat().setSha1(entry.getHash());
                     } else {
                         throw new UnsupportedChecksumException("Checksum '" + checksum + "' on windows is not supported", null);
                     }

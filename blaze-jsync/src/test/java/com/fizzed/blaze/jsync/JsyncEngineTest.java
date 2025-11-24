@@ -4,6 +4,7 @@ import com.fizzed.blaze.vfs.ParentDirectoryMissingException;
 import com.fizzed.blaze.vfs.PathOverwriteException;
 import com.fizzed.crux.util.MoreFiles;
 import com.fizzed.crux.util.Resources;
+import org.assertj.core.data.TemporalOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -13,10 +14,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class JsyncEngineTest {
     static private final Logger log = LoggerFactory.getLogger(JsyncEngineTest.class);
@@ -39,20 +42,31 @@ class JsyncEngineTest {
         Files.createDirectories(this.syncTargetDir);
     }
 
+    protected void writeFile(Path path, String content) throws IOException {
+        Files.createDirectories(path.getParent());
+        Files.write(path, content.getBytes());
+    }
+
+    protected void touch(Path path, Instant ts) throws IOException {
+        Files.setLastModifiedTime(path, FileTime.from(ts));
+    }
+
+    protected Instant modifiedTime(Path path) throws IOException {
+        return Files.getLastModifiedTime(path).toInstant();
+    }
+
     @Test
     public void mergeOneLevelDirectory() throws Exception {
-        Path sourceADir = this.syncSourceDir.resolve("a");
-        Files.createDirectories(sourceADir);
-        Path sourceADirBFile = sourceADir.resolve("b.txt");
-        Files.write(sourceADirBFile, "hello".getBytes());
+        Path sourceBFile = this.syncSourceDir.resolve("a/b.txt");
+        this.writeFile(sourceBFile, "hello");
 
         new JsyncEngine()
-            .sync(sourceADir, this.syncTargetDir, JsyncMode.MERGE);
+            .sync(this.syncSourceDir.resolve("a"), this.syncTargetDir, JsyncMode.MERGE);
 
         // we should now have target/b.txt if MERGE worked
         Path targetBFile = this.syncTargetDir.resolve("b.txt");
         assertThat(targetBFile).exists().isNotEmptyFile();
-        assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+        assertThat(targetBFile).hasSameTextualContentAs(sourceBFile);
     }
 
     @Test
@@ -388,6 +402,50 @@ class JsyncEngineTest {
         assertThat(result.getFilesDeleted()).isEqualTo(0);
         assertThat(result.getFilesUpdated()).isEqualTo(1);
         assertThat(result.getChecksums()).isEqualTo(1);
+    }
+
+    @Test
+    public void syncFileTimestamp() throws Exception {
+        Path sourceAFile = this.syncSourceDir.resolve("a.txt");
+        Files.write(sourceAFile, "hello".getBytes());
+
+        Path targetAFile = this.syncTargetDir.resolve("a.txt");
+        Files.write(targetAFile, "hello".getBytes());
+
+        Instant ts = Instant.parse("2023-03-11T01:02:03.000Z");
+        this.touch(sourceAFile, ts);
+
+        JsyncResult result = new JsyncEngine()
+            .setIgnoreTimes(true)
+            .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
+
+        assertThat(modifiedTime(targetAFile)).isCloseTo(ts, within(2, ChronoUnit.SECONDS));
+        assertThat(result.getStatUpdated()).isEqualTo(1);
+        assertThat(result.getFilesCreated()).isEqualTo(0);
+        assertThat(result.getFilesDeleted()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(0);
+        assertThat(result.getChecksums()).isEqualTo(1);
+    }
+
+    @Test
+    public void syncDirTimestamp() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Path sourceBFile = this.syncSourceDir.resolve("a/b.txt");
+        this.writeFile(sourceBFile, "hello");
+
+        Path targetADir = this.syncTargetDir.resolve("a");
+        Path targetBFile = this.syncTargetDir.resolve("a/b.txt");
+        this.writeFile(targetBFile, "helloy");  // make size different so this file is synced, causing the dir "modified" time to change
+
+        // only difference will be timestamps of "a" dir
+        Instant ts = Instant.parse("2023-03-11T01:02:03.000Z");
+        this.touch(sourceADir, ts);
+
+        final JsyncResult result = new JsyncEngine()
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        assertThat(result.getStatUpdated()).isEqualTo(1);
+        assertThat(modifiedTime(targetADir)).isCloseTo(ts, within(2, ChronoUnit.SECONDS));
     }
 
 }

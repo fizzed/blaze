@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.*;
 
 import static java.util.Arrays.asList;
@@ -111,9 +112,9 @@ public class JsyncEngine {
 
         // source MUST exist
         final VirtualPath sourcePathRaw = VirtualPath.parse(sourcePath);
-        final VirtualPath sourcePathAbsWithoutStats = sourceVfs.pwd().resolve(sourcePathRaw);
+        final VirtualPath sourcePathAbsWithoutStat = sourceVfs.pwd().resolve(sourcePathRaw);
         // NOTE: this will throw an exception if the source dir/file does not exist
-        final VirtualPath sourcePathAbs = sourceVfs.stat(sourcePathAbsWithoutStats);
+        final VirtualPath sourcePathAbs = sourceVfs.stat(sourcePathAbsWithoutStat);
 
 
         // its better to use absolute paths on source & target since the checksum methods on any host require full paths
@@ -125,38 +126,34 @@ public class JsyncEngine {
             targetPathRaw = targetPathRaw.resolve(sourcePathAbs.getName(), sourcePathAbs.isDirectory());
         }
 
-        final VirtualPath targetPathAbsWithoutStats = targetVfs.pwd().resolve(targetPathRaw);
+        final VirtualPath targetPathAbsWithoutStat = targetVfs.pwd().resolve(targetPathRaw);
 
         //
         // Create parent directories of target if necessary
         //
 
         // the target may or may not exist yet (which is not yet an error, so we use 'exists' for stats)
-        VirtualPath targetPathAbs = targetVfs.exists(targetPathAbsWithoutStats);
+        VirtualPath targetPathAbs = targetVfs.exists(targetPathAbsWithoutStat);
 
         // if the target is missing, we will need to make sure it exists or its parent dirs exist
         if (targetPathAbs == null) {
-            if (targetPathAbsWithoutStats.isDirectory()) {
+            if (targetPathAbsWithoutStat.isDirectory()) {
                 // we're dealing with directories, so we need to ensure this dir exists
-                this.createDirectory(result, targetVfs, targetPathAbsWithoutStats, true, this.parents);
+                this.createDirectory(result, targetVfs, targetPathAbsWithoutStat, true, this.parents);
+
+                // we need to make sure we have this directory, with stats
+                targetPathAbs = targetVfs.stat(targetPathAbsWithoutStat);
             } else {
                 // we're dealing with files, so we just need to ensure the parent dir exists
-                final VirtualPath parentDir = targetPathAbsWithoutStats.resolveParent();
+                final VirtualPath parentDir = targetPathAbsWithoutStat.resolveParent();
+
                 // check if it exists first, if not then we will create it
                 if (targetVfs.exists(parentDir) == null) {
                     this.createDirectory(result, targetVfs, parentDir, true, this.parents);
                 }
-            }
 
-            // we know the file doesn't exist yet, so we will use the path without stats
-            targetPathAbs = targetPathAbsWithoutStats;
-        } else {
-            // we need to validate that we're not trying to sync a directory to a file or vice versa
-            // this mimics rsync behavior where they will not automatically overwrite different file/dir types
-            if (targetPathAbs.isDirectory() && !sourcePathAbs.isDirectory()) {
-                throw new PathOverwriteException("Cannot overwrite target '" + targetPathAbs + "' since its a directory with source '" + sourcePathAbs + "' that is a file. If you intend to replace the directory with the file, you must manually delete the target directory first.");
-            } else if (!targetPathAbs.isDirectory() && sourcePathAbs.isDirectory()) {
-                throw new PathOverwriteException("Cannot overwrite target '" + targetPathAbs + "' since its a file with source '" + sourcePathAbs + "' that is a directory. If you intend to replace the file with the directory, you must manually delete the target file first.");
+                // we know the file doesn't exist yet, so we will use the path without stats
+                targetPathAbs = targetPathAbsWithoutStat;
             }
         }
 
@@ -192,17 +189,46 @@ public class JsyncEngine {
         return result;
     }
 
-    protected void syncFile(JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
-        // we may know if the file definitely needs synced or just possibly needs synced
-        final JsyncFileModified fileContentModified = this.isFileContentModified(sourceFile, targetFile);
+    protected void syncFile(JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath) throws IOException {
+        // source needs to be a file
+        if (sourcePath.isDirectory()) {
+            throw new IllegalArgumentException("Source path " + sourcePath + " must be a file");
+        }
 
-        if (fileContentModified == JsyncFileModified.YES) {
-            // we can immediately sync the file content and stats w/o deferring processing
-            this.syncFileContent(result, sourceVfs, sourceFile, targetVfs, targetFile, true);
-        } else if (fileContentModified == JsyncFileModified.MAYBE) {
-            // defer the sync of this file until we have a chance to do more expensive checks in bulk
-            // we will need to calculate checksums for both source and target files
-            deferredFiles.add(new VirtualPathPair(sourceFile, targetFile));
+        // target needs to be a file
+        if (targetPath.isDirectory()) {
+            log.warn("Type mismatch: source {} is a file but target {} is a directory!", sourcePath, targetPath);
+
+            if (!this.force) {
+                throw new PathOverwriteException("Type mismatch: source " + sourcePath + " is a file but target " + targetPath + " is a directory. Either delete the target directory manually or use the 'force' option to have jsync do it for you.");
+            }
+
+            // delete the target dir
+            this.deleteDirectory(0, result, targetVfs, targetPath);
+
+            // create a new target path that's a file and will be "missing"
+            targetPath = new VirtualPath(targetPath.getParentPath(), sourcePath.getName(), false, null);
+        }
+
+        // detect what changes exists between source & target paths
+        final JsyncPathChanges changes = this.detectChanges(sourcePath, targetPath);
+
+        log.info("Itemized changes from {} to {}: {}", sourcePath, targetPath, changes);
+
+        // first, check if we should defer syncing the file till later on
+        if (deferredFiles != null && changes.isDeferredProcessing(this.ignoreTimes)) {
+            deferredFiles.add(new VirtualPathPair(sourcePath, targetPath));
+            return;
+        }
+
+        // do we need to sync the file content now?
+        if (changes.isContentModified(this.ignoreTimes)) {
+            this.syncFileContent(result, sourceVfs, sourcePath, targetVfs, targetPath);
+        }
+
+        if (changes.isStatModified()) {
+            // stat will need updated if the dir is new OR if the dir stats have changed
+            this.syncPathStat(result, sourcePath, targetVfs, targetPath);
         }
     }
 
@@ -223,24 +249,51 @@ public class JsyncEngine {
         result.incrementChecksums(targetFiles.size());
 
         for (VirtualPathPair pair : deferredFiles) {
-            final JsyncFileModified fileContentModified = this.isFileContentModified(pair.getSource(), pair.getTarget());
-
-            if (fileContentModified == JsyncFileModified.YES || fileContentModified == JsyncFileModified.MAYBE) {
-                this.syncFileContent(result, sourceVfs, pair.getSource(), targetVfs, pair.getTarget(), true);
-            } else {
-                // the content was the same (awesome), but the stats may have changed and should be synced
-                final JsyncStatsModified fileStatsModified = this.isFileStatsModified(pair.getSource(), pair.getTarget());
-                if (fileStatsModified.isAny()) {
-                    log.info("Updating file stats {}", pair.getTarget());
-                    this.syncFileStats(result, pair.getSource(), targetVfs, pair.getTarget());
-                }
-            }
+            // call sync file with deferred processing disabled
+            this.syncFile(result, null, sourceVfs, pair.getSource(), targetVfs, pair.getTarget());
         }
 
         deferredFiles.clear();
     }
 
     protected void syncDirectory(int level, JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
+
+        // source needs to be a directory
+        if (!sourcePath.isDirectory()) {
+            throw new IllegalArgumentException("Source path " + sourcePath + " must be a directory");
+        }
+
+        // target needs to be a directory
+        if (!targetPath.isDirectory()) {
+            log.warn("Type mismatch: source {} is a directory but target '{}' is a file!", sourcePath, targetPath);
+
+            if (!this.force) {
+                throw new PathOverwriteException("Type mismatch: source " + sourcePath + " is a directory but target " + targetPath + " is a file. Either delete the target file manually or use the 'force' option to have jsync do it for you.");
+            }
+
+            // delete the target file
+            log.info("Deleting file {}", targetPath);
+            targetVfs.rm(targetPath);
+            result.incrementFilesDeleted();
+
+            // create a new target path that's a directory and will be "missing"
+            targetPath = new VirtualPath(targetPath.getParentPath(), sourcePath.getName(), true, null);
+        }
+
+        // detect what changes exists between source & target paths
+        final JsyncPathChanges changes = this.detectChanges(sourcePath, targetPath);
+
+        log.info("Itemized changes from {} to {}: {}", sourcePath, targetPath, changes);
+
+        if (changes.isMissing()) {
+            this.createDirectory(result, targetVfs, targetPath, false, false);
+        }
+
+
+        // NOTE: stat must be changed last - AFTER all files within the directory are guaranteed to not be touched
+        // further, otherwise the operating system will update the modified timestamp when files are changed in the dir
+
+
         // we need a list of files in both directories, so we can see what to add/delete
         final List<VirtualPath> sourceChildPaths = sourceVfs.ls(sourcePath);
         final List<VirtualPath> targetChildPaths = targetVfs.ls(targetPath);
@@ -251,72 +304,33 @@ public class JsyncEngine {
 
         // calculate paths new / changed / same
         for (VirtualPath sourceChildPath : sourceChildPaths) {
+
             // find a matching target path entirely by name
             VirtualPath targetChildPath = targetChildPaths.stream()
                 .filter(p -> targetVfs.areFileNamesEqual(p.getName(), sourceChildPath.getName()))
                 .findFirst()
                 .orElse(null);
 
+            // if the child path is missing, create it and have it take the type of the source
             if (targetChildPath == null) {
-                // target path does not exist, we need to create it as a directory or just sync the file
-                if (sourceChildPath.isDirectory()) {
-                    targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
-                    this.createDirectory(result, targetVfs, targetChildPath, false, false);
-                } else {
-                    targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
-                }
-            } else {
-                // if the target path exists, we need to check if it needs to be updated
-                // is there a file/dir mismatch?
-                if (sourceChildPath.isDirectory() && !targetChildPath.isDirectory()) {
-                    log.warn("Source '{}' is a directory, target '{}' is a file!", sourceChildPath, targetChildPath);
-                    if (!this.force) {
-                        throw new PathOverwriteException("Cannot overwrite target '" + targetChildPath + "' since its a directory with source '" + sourceChildPath + "' that is a file. If you intend to replace the directory with the file (you can use the 'force' option to do this)");
-                    }
-
-                    // delete the target file
-                    log.info("Deleting file {}", targetChildPath);
-                    targetVfs.rm(targetChildPath);
-                    result.incrementFilesDeleted();
-
-                    // create the target dir new
-                    targetChildPath = targetPath.resolve(sourceChildPath.getName(), true, null);
-                    this.createDirectory(result, targetVfs, targetChildPath, false, false);
-
-                } else if (!sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
-                   log.warn("Source '{}' is a file, target '{}' is a directory!", sourceChildPath, targetChildPath);
-                    if (!this.force) {
-                        throw new PathOverwriteException("Cannot overwrite target '" + targetChildPath + "' since its a file with source '" + sourceChildPath + "' that is a directory. If you intend to replace the file with the directory (you can use the 'force' option to do this)");
-                    }
-
-                    // delete the target dir
-                    this.deleteDirectory(0, result, targetVfs, targetChildPath);
-
-                    // sync the target child path
-                    targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
-
-                } else if (sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
-                    // both are directories, nothing for us to do (will sync them later in this method)
-                } else {
-                    this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
-                }
+                targetChildPath = targetPath.resolve(sourceChildPath.getName(), sourceChildPath.isDirectory(), null);
             }
 
             if (sourceChildPath.isDirectory()) {
                 this.syncDirectory(level+1, result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
+            } else {
+                // NOTE: it's possible syncFile will "defer" processing if a checksum is required
+                this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
             }
         }
 
-
-        // handle existing files that may have been modified, but we want to batch as many as possible, but not wait too long, otherwise the array will get massive
+        // handle any deferred files that need to be processed
         if (level == 0 || deferredFiles.size() >= this.maxFilesMaybeModifiedLimit) {
             this.syncDeferredFiles(result, deferredFiles, sourceVfs, targetVfs, checksum);
         }
 
+        // handle any paths that need to be deleted
         if (this.delete) {
-            // calculate paths deleted
             for (VirtualPath targetChildPath : targetChildPaths) {
                 // find a matching source path entirely by name
                 final VirtualPath sourceChildPath = sourceChildPaths.stream()
@@ -326,6 +340,7 @@ public class JsyncEngine {
 
                 if (sourceChildPath == null) {
                     if (targetChildPath.isDirectory()) {
+                        // NOTE: this method handles recursion
                         deleteDirectory(0, result, targetVfs, targetChildPath);
                     } else {
                         log.info("Deleting file {}", targetChildPath);
@@ -335,108 +350,89 @@ public class JsyncEngine {
                 }
             }
         }
+
+        // last step is to update the stat of the target dir
+        if (changes.isStatModified()) {
+            // stat will need updated if the dir is new OR if the dir stats have changed
+            this.syncPathStat(result, sourcePath, targetVfs, targetPath);
+        }
     }
 
-    protected JsyncFileModified isFileContentModified(VirtualPath sourceFile, VirtualPath targetFile) throws IOException {
+    protected JsyncPathChanges detectChanges(VirtualPath sourcePath, VirtualPath targetPath) throws IOException {
         // source "stats" MUST exist
-        Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
+        Objects.requireNonNull(sourcePath, "sourceFile cannot be null");
 
-        if (sourceFile.getStats() == null) {
-            log.error("Source file {} missing 'stats' (it must not exist yet on source)", sourceFile);
-            throw new IllegalArgumentException("sourceFile must have a 'stats' object");
+        if (sourcePath.getStat() == null) {
+            log.error("Source file {} missing 'stat' (it must not exist yet on source)", sourcePath);
+            throw new IllegalArgumentException("sourceFile must have a 'stat' object");
         }
 
-        // if the targetFile "stats" are null then we know it must not even exist yet
-        if (targetFile.getStats() == null) {
-            log.trace("Target file {} missing 'stats' (new file)", targetFile);
-            return JsyncFileModified.YES;
+        // if the targetFile "stat" are null then we know it must not even exist yet
+        if (targetPath == null || targetPath.getStat() == null) {
+            log.trace("Target path {} missing (new dir/file)", targetPath);
+            // we can immediately return the changes since the stat object doesn't exist
+            return new JsyncPathChanges(true, false, false, false, false, null);
         }
+
+        // the remaining properties can all now be calculate
+        boolean size = false;
+        boolean timestamps = false;
+        boolean ownership = false;
+        boolean permissions = false;
+        Boolean checksums = null;           // unknown
 
         // are file sizes different? if they are then this is a cheap way of figuring out a sync is needed
-        if (sourceFile.getStats().getSize() != targetFile.getStats().getSize()) {
-            log.trace("Source file {} size {} != target size {} (modified file)", sourceFile, sourceFile.getStats().getSize(), targetFile.getStats().getSize());
-            return JsyncFileModified.YES;
-        }
-
-        // if we have "cksum" values on both sides, we can compare those
-        if (sourceFile.getStats().getCksum() != null && targetFile.getStats().getCksum() != null) {
-            if (!sourceFile.getStats().getCksum().equals(targetFile.getStats().getCksum())) {
-                log.trace("Source file {} cksum {} != target chksum {} (modified file)", sourceFile, sourceFile.getStats().getCksum(), targetFile.getStats().getCksum());
-                return JsyncFileModified.YES;
-            } else {
-                // we know for sure the file isn't modified
-                return JsyncFileModified.NO;
-            }
-        }
-
-        // if we have "md5" values on both sides, we can compare those
-        if (sourceFile.getStats().getMd5() != null && targetFile.getStats().getMd5() != null) {
-            if (!sourceFile.getStats().getMd5().equalsIgnoreCase(targetFile.getStats().getMd5())) {
-                log.trace("Source file {} md5 {} != target md5 {} (modified file)", sourceFile, sourceFile.getStats().getMd5(), targetFile.getStats().getMd5());
-                return JsyncFileModified.YES;
-            } else {
-                // we know for sure the file isn't modified
-                return JsyncFileModified.NO;
-            }
-        }
-
-        // if we have "sha1" values on both sides, we can compare those
-        if (sourceFile.getStats().getSha1() != null && targetFile.getStats().getSha1() != null) {
-            if (!sourceFile.getStats().getSha1().equalsIgnoreCase(targetFile.getStats().getSha1())) {
-                log.trace("Source file {} sha1 {} != target sha1 {} (modified file)", sourceFile, sourceFile.getStats().getSha1(), targetFile.getStats().getSha1());
-                return JsyncFileModified.YES;
-            } else {
-                // we know for sure the file isn't modified
-                return JsyncFileModified.NO;
+        // only try to compare sizes if they are not dirs
+        if (!sourcePath.isDirectory()) {
+            if (sourcePath.getStat().getSize() != targetPath.getStat().getSize()) {
+                log.trace("Source path {} size {} != target size {} (modified file)", sourcePath, sourcePath.getStat().getSize(), targetPath.getStat().getSize());
+                size = true;
             }
         }
 
         // if we can take modified timestamps into account, this is a cheap way of figuring out a file changed
-        if (!this.ignoreTimes) {
-            // due to lack of millis precision in filesystems, we need to allow a larger delta of difference
-            if (Math.abs(sourceFile.getStats().getModifiedTime() - targetFile.getStats().getModifiedTime()) > 2000L) {
-                log.trace("Source file {} size {} != target size {} (maybe modified file)", sourceFile, sourceFile.getStats().getSize(), targetFile.getStats().getSize());
-                return JsyncFileModified.MAYBE;
-            } else {
-                // The timestamps match and the file sizes match, so we know the file hasn't likely been modified
-                // on either side.  However, if you're paranoid, the user could force the use of checksums by ignoring times
-                return JsyncFileModified.NO;
-            }
-        }
-
-        // file may be modified, no checksums were evaluated, or ignoreTimes was specified, and all we know then is
-        // that the file sizes match each other, but nothing else
-        return JsyncFileModified.MAYBE;
-    }
-
-    protected JsyncStatsModified isFileStatsModified(VirtualPath sourceFile, VirtualPath targetFile) throws IOException {
-        // source "stats" MUST exist
-        Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
-
-        if (sourceFile.getStats() == null) {
-            throw new IllegalArgumentException("sourceFile must have a 'stats' object");
-        }
-
-        if (targetFile.getStats() == null) {
-            // everything needs modified
-            return new JsyncStatsModified(true, true, true);
-        }
-
-        boolean ownership = false;          // not supported yet
-        boolean permissions = false;        // not supported yet
-        boolean timestamps = false;
-
         // due to lack of millis precision in filesystems, we need to allow a larger delta of difference
-        if (Math.abs(sourceFile.getStats().getModifiedTime() - targetFile.getStats().getModifiedTime()) > 2000L) {
+        if (Math.abs(sourcePath.getStat().getModifiedTime() - targetPath.getStat().getModifiedTime()) > 2000L) {
+            log.trace("Source path {} modified time {} != target modified time {} (maybe modified file)", sourcePath, sourcePath.getStat().getModifiedTime(), targetPath.getStat().getModifiedTime());
             timestamps = true;
         }
 
-        return new JsyncStatsModified(ownership, permissions, timestamps);
+        // if we have "cksum" values on both sides, we can compare those
+        if (sourcePath.getStat().getCksum() != null && targetPath.getStat().getCksum() != null) {
+            if (!sourcePath.getStat().getCksum().equals(targetPath.getStat().getCksum())) {
+                log.trace("Source path {} cksum {} != target chksum {} (modified file)", sourcePath, sourcePath.getStat().getCksum(), targetPath.getStat().getCksum());
+                checksums = true;
+            } else {
+                checksums = false;
+            }
+        }
+
+        // if we have "md5" values on both sides, we can compare those
+        if (sourcePath.getStat().getMd5() != null && targetPath.getStat().getMd5() != null) {
+            if (!sourcePath.getStat().getMd5().equalsIgnoreCase(targetPath.getStat().getMd5())) {
+                log.trace("Source path {} md5 {} != target md5 {} (modified file)", sourcePath, sourcePath.getStat().getMd5(), targetPath.getStat().getMd5());
+                checksums = true;
+            } else {
+                checksums = false;
+            }
+        }
+
+        // if we have "sha1" values on both sides, we can compare those
+        if (sourcePath.getStat().getSha1() != null && targetPath.getStat().getSha1() != null) {
+            if (!sourcePath.getStat().getSha1().equalsIgnoreCase(targetPath.getStat().getSha1())) {
+                log.trace("Source path {} sha1 {} != target sha1 {} (modified file)", sourcePath, sourcePath.getStat().getSha1(), targetPath.getStat().getSha1());
+                checksums = true;
+            } else {
+                checksums = false;
+            }
+        }
+
+        return new JsyncPathChanges(false, size, timestamps, ownership, permissions, checksums);
     }
 
-    protected void syncFileContent(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile, boolean includeStats) throws IOException {
+    protected void syncFileContent(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
         // if the target file has no "stats", then we have no info on it yet, and know we're going to create it fresh
-        if (targetFile.getStats() == null) {
+        if (targetFile.getStat() == null) {
             log.info("Creating file: {}", targetFile);
         } else {
             log.info("Updating file: {}", targetFile);
@@ -448,24 +444,19 @@ public class JsyncEngine {
         }
 
         // update results after we know the operation was successful
-        if (targetFile.getStats() == null) {
+        if (targetFile.getStat() == null) {
             result.incrementFilesCreated();
         } else {
             result.incrementFilesUpdated();
         }
-
-        if (includeStats) {
-            this.syncFileStats(result, sourceFile, targetVfs, targetFile);
-        }
     }
 
-    protected void syncFileStats(JsyncResult result, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
-        // update the attributes with the source
-        // TODO: we need to figure out what all we want to update in one fell swoop, which could include uid/gid, perms, and times
-        // we'll want to build a "stats" object that possibly decides what all we want to update
-        targetVfs.updateStat(targetFile, sourceFile.getStats());
+    protected void syncPathStat(JsyncResult result, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath) throws IOException {
+        log.info("Updating stat {}: modifiedTime={}", targetPath, Instant.ofEpochMilli(sourcePath.getStat().getModifiedTime()));
 
-        result.incrementStatsUpdated();
+        targetVfs.updateStat(targetPath, sourcePath.getStat());
+
+        result.incrementStatUpdated();
     }
 
     protected void createDirectory(JsyncResult result, VirtualFileSystem vfs, VirtualPath path, boolean verifyParentExists, boolean parents) throws IOException {

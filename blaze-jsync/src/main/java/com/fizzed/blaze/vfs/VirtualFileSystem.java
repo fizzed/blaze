@@ -53,7 +53,7 @@ public interface VirtualFileSystem {
      */
     VirtualPath stat(VirtualPath path) throws IOException;
 
-    void updateStat(VirtualPath path, VirtualStats stats) throws IOException;
+    void updateStat(VirtualPath path, VirtualFileStat stats) throws IOException;
 
     List<VirtualPath> ls(VirtualPath path) throws IOException;
 

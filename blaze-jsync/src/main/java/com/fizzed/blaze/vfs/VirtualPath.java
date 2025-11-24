@@ -7,14 +7,14 @@ public class VirtualPath {
     private final String parentPath;
     private final String name;
     private final Boolean directory;
-    private final VirtualStats stats;
+    private final VirtualFileStat stat;
 
-    public VirtualPath(String parentPath, String name, Boolean directory, VirtualStats stats) {
+    public VirtualPath(String parentPath, String name, Boolean directory, VirtualFileStat stat) {
         Objects.requireNonNull(name, "name cannot be null");
         this.parentPath = parentPath;
         this.name = name;
         this.directory = directory;
-        this.stats = stats;
+        this.stat = stat;
     }
 
     static public VirtualPath parse(String path) {
@@ -25,7 +25,7 @@ public class VirtualPath {
         return parse(path, directory, null);
     }
 
-    static public VirtualPath parse(String path, Boolean directory, VirtualStats stats) {
+    static public VirtualPath parse(String path, Boolean directory, VirtualFileStat stat) {
         Objects.requireNonNull(path, "path cannot be null");
 
         // normalize windows paths to use /'s to simplify logic
@@ -40,7 +40,7 @@ public class VirtualPath {
             // split the parent path and name
             String parentPath = path.substring(0, lastSlashPos);
             String name = path.substring(lastSlashPos + 1);
-            return new VirtualPath(parentPath, name, directory, stats);
+            return new VirtualPath(parentPath, name, directory, stat);
         }
     }
 
@@ -98,15 +98,15 @@ public class VirtualPath {
      * @return the VirtualStats object containing information about size, modified time, and optionally checksum.
      *         Returns null if no stats are associated with this path.
      */
-    public VirtualStats getStats() {
-        return this.stats;
+    public VirtualFileStat getStat() {
+        return this.stat;
     }
 
     public VirtualPath resolve(String path, boolean directory) {
         return this.resolve(path, directory, null);
     }
 
-    public VirtualPath resolve(String path, boolean directory, VirtualStats stats) {
+    public VirtualPath resolve(String path, boolean directory, VirtualFileStat stats) {
         Objects.requireNonNull(path, "path cannot be null");
 
         VirtualPath otherPath = VirtualPath.parse(path, directory, stats);
@@ -124,7 +124,7 @@ public class VirtualPath {
             String thisFullPath = this.toFullPath();
             String pathFullPath = path.toFullPath();
             String newFullPath = thisFullPath + "/" + pathFullPath;
-            return VirtualPath.parse(newFullPath, path.isDirectory(), path.getStats());
+            return VirtualPath.parse(newFullPath, path.isDirectory(), path.getStat());
         }
     }
 

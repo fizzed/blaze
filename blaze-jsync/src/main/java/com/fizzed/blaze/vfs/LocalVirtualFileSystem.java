@@ -48,22 +48,37 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
         return Paths.get(path.toString());
     }
 
-    protected VirtualPath toVirtualPathWithStats(VirtualPath path) throws IOException {
-        Path nativePath = this.toNativePath(path);
-        boolean isDirectory = Files.isDirectory(nativePath);
-        VirtualStats stats = null;
-        if (!isDirectory) {
-            // 1. Fetch all attributes in ONE operation
-            final BasicFileAttributes attrs = Files.readAttributes(nativePath, BasicFileAttributes.class);
-            // TODO: if we're on posix, we can also do this
-            // fetches size, times, PLUS owner, group, and permissions
-            // PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
-            final long size = attrs.size();
-            final long modifiedTime = attrs.lastModifiedTime().toMillis();
-            final long accessedTime = attrs.lastAccessTime().toMillis();
-            stats = new VirtualStats(size, modifiedTime, accessedTime);
+    protected VirtualPath toVirtualPathWithStat(VirtualPath path) throws IOException {
+        final Path nativePath = this.toNativePath(path);
+
+        // 1. Fetch all attributes in ONE operation
+        final BasicFileAttributes attrs = Files.readAttributes(nativePath, BasicFileAttributes.class);
+        // TODO: if we're on posix, we can also do this
+        // fetches size, times, PLUS owner, group, and permissions
+        // PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
+        final long size = attrs.size();
+        final long modifiedTime = attrs.lastModifiedTime().toMillis();
+        final long accessedTime = attrs.lastAccessTime().toMillis();
+
+        // map file type
+        final VirtualFileType type;
+        if (attrs.isDirectory()) {
+            type = VirtualFileType.DIR;
+        } else if (attrs.isRegularFile()) {
+            type = VirtualFileType.FILE;
+        } else if (attrs.isSymbolicLink()) {
+            type = VirtualFileType.SYMLINK;
+        } else if (attrs.isOther()) {
+            type = VirtualFileType.OTHER;
+        } else {
+            // should be all the types, but just in case
+            log.warn("Unknown file type mapping for path: {} (defaulting to other)", path);
+            type = VirtualFileType.OTHER;
         }
-        return new VirtualPath(path.getParentPath(), path.getName(), isDirectory, stats);
+
+        final VirtualFileStat stat = new VirtualFileStat(type, size, modifiedTime, accessedTime);
+
+        return new VirtualPath(path.getParentPath(), path.getName(), type == VirtualFileType.DIR, stat);
     }
 
     @Override
@@ -73,19 +88,19 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
 
     @Override
     public VirtualPath stat(VirtualPath path) throws IOException {
-        return this.toVirtualPathWithStats(path);
+        return this.toVirtualPathWithStat(path);
     }
 
     @Override
-    public void updateStat(VirtualPath path, VirtualStats stats) throws IOException {
+    public void updateStat(VirtualPath path, VirtualFileStat stat) throws IOException {
         final Path nativePath = this.toNativePath(path);
 
         //  Get the "View" (This is a lightweight handle to the attributes)
         BasicFileAttributeView view = Files.getFileAttributeView(nativePath, BasicFileAttributeView.class);
 
         // 2. Prepare the times
-        FileTime newModifiedTime = FileTime.fromMillis(stats.getModifiedTime());
-        FileTime newAccessedTime = FileTime.fromMillis(stats.getAccessedTime());
+        FileTime newModifiedTime = FileTime.fromMillis(stat.getModifiedTime());
+        FileTime newAccessedTime = FileTime.fromMillis(stat.getAccessedTime());
 
         // 3. Update all three in ONE operation
         // Signature: setTimes(lastModified, lastAccess, createTime)
@@ -112,7 +127,7 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
                         continue;
                     }
 
-                    VirtualPath childPath = this.toVirtualPathWithStats(childPathWithoutStats);
+                    VirtualPath childPath = this.toVirtualPathWithStat(childPathWithoutStats);
                     childPaths.add(childPath);
                 }
             }
@@ -166,7 +181,7 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
         for (VirtualPath path : paths) {
             try (StreamableInput input = this.readFile(path, false)) {
                 long cksum = Checksums.cksum(input.stream());
-                path.getStats().setCksum(cksum);
+                path.getStat().setCksum(cksum);
             }
         }
     }
@@ -186,9 +201,9 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
             try (StreamableInput input = this.readFile(path, false)) {
                 String digest = Checksums.hash(algorithm, input.stream());
                 if ("MD5".equals(algorithm)) {
-                    path.getStats().setMd5(digest);
+                    path.getStat().setMd5(digest);
                 } else if ("SHA1".equals(algorithm)) {
-                    path.getStats().setSha1(digest);
+                    path.getStat().setSha1(digest);
                 }
             }
         }

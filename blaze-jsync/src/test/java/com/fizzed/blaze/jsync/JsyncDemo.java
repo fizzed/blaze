@@ -23,7 +23,6 @@ public class JsyncDemo {
 
 //        final String sourceDir = Paths.get("/home/jjlauer/test-sync").toString();
         final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
-//        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\test-sync").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\workspace\\third-party\\tokyocabinet-1.4.48").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/tokyocabinet-1.4.48").toString();
@@ -31,8 +30,8 @@ public class JsyncDemo {
         final String targetDir = "test-sync";
         final boolean delete = true;
 
-        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-indy25-1").run();
-//        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-fedora43-1").run();
+//        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-indy25-1").run();
+        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-fedora43-1").run();
 //        final SshSession ssh = sshConnect("ssh://bmh-build-x64-freebsd15-1").run();
 //        final SshSession ssh = sshConnect("ssh://bmh-build-x64-win11-1").run();
 
