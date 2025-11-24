@@ -176,25 +176,71 @@ public class JsyncEngine {
         // Ready to start sync, the only part that matters is if we're syncing a director or a file
         //
 
+        final List<VirtualPathPair> deferredFiles = new ArrayList<>();
+
         if (sourcePathAbs.isDirectory()) {
             // as we process files, only a subset may require more advanced methods of detecting whether they were modified
             // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
             // until we have a chance to do some bulk processing of checksums, etc.
-            final List<VirtualPathPair> filesMaybeModified = new ArrayList<>();
-
-            this.syncDirectory(0, result, filesMaybeModified, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
+            this.syncDirectory(0, result, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
         } else {
             // we are only syncing a file, we may need to do some more expensive checks to determine if it needs to be updated
-            // TODO: we will need to do checksems, etc.
-            this.syncFileContent(result, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, true);
+            this.syncFile(result, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs);
+            this.syncDeferredFiles(result, deferredFiles, sourceVfs, targetVfs, checksum);
         }
 
         return result;
     }
 
+    protected void syncFile(JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
+        // we may know if the file definitely needs synced or just possibly needs synced
+        final JsyncFileModified fileContentModified = this.isFileContentModified(sourceFile, targetFile);
 
+        if (fileContentModified == JsyncFileModified.YES) {
+            // we can immediately sync the file content and stats w/o deferring processing
+            this.syncFileContent(result, sourceVfs, sourceFile, targetVfs, targetFile, true);
+        } else if (fileContentModified == JsyncFileModified.MAYBE) {
+            // defer the sync of this file until we have a chance to do more expensive checks in bulk
+            // we will need to calculate checksums for both source and target files
+            deferredFiles.add(new VirtualPathPair(sourceFile, targetFile));
+        }
+    }
 
-    protected void syncDirectory(final int level, final JsyncResult result, final List<VirtualPathPair> filesMaybeModified, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
+    protected void syncDeferredFiles(JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualFileSystem targetVfs, Checksum checksum) throws IOException {
+        // we need to calculate checksums for source and target files
+        final List<VirtualPath> sourceFiles = deferredFiles.stream()
+            .map(VirtualPathPair::getSource)
+            .collect(toList());
+
+        sourceVfs.checksums(checksum, sourceFiles);
+
+        final List<VirtualPath> targetFiles = deferredFiles.stream()
+            .map(VirtualPathPair::getTarget)
+            .collect(toList());
+
+        targetVfs.checksums(checksum, targetFiles);
+
+        result.incrementChecksums(targetFiles.size());
+
+        for (VirtualPathPair pair : deferredFiles) {
+            final JsyncFileModified fileContentModified = this.isFileContentModified(pair.getSource(), pair.getTarget());
+
+            if (fileContentModified == JsyncFileModified.YES || fileContentModified == JsyncFileModified.MAYBE) {
+                this.syncFileContent(result, sourceVfs, pair.getSource(), targetVfs, pair.getTarget(), true);
+            } else {
+                // the content was the same (awesome), but the stats may have changed and should be synced
+                final JsyncStatsModified fileStatsModified = this.isFileStatsModified(pair.getSource(), pair.getTarget());
+                if (fileStatsModified.isAny()) {
+                    log.info("Updating file stats {}", pair.getTarget());
+                    this.syncFileStats(result, pair.getSource(), targetVfs, pair.getTarget());
+                }
+            }
+        }
+
+        deferredFiles.clear();
+    }
+
+    protected void syncDirectory(int level, JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
         // we need a list of files in both directories, so we can see what to add/delete
         final List<VirtualPath> sourceChildPaths = sourceVfs.ls(sourcePath);
         final List<VirtualPath> targetChildPaths = targetVfs.ls(targetPath);
@@ -218,7 +264,7 @@ public class JsyncEngine {
                     this.createDirectory(result, targetVfs, targetChildPath, false, false);
                 } else {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFileContent(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath, true);
+                    this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
                 }
             } else {
                 // if the target path exists, we need to check if it needs to be updated
@@ -249,64 +295,24 @@ public class JsyncEngine {
 
                     // sync the target child path
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFileContent(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath, true);
+                    this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
 
                 } else if (sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
                     // both are directories, nothing for us to do (will sync them later in this method)
                 } else {
-                    // we may know if the file definitely needs synced or just possibly needs synced
-                    final JsyncFileModified fileContentModified = this.isFileContentModified(sourceChildPath, targetChildPath);
-
-                    if (fileContentModified == JsyncFileModified.YES) {
-                        // we can immediately sync the file content and stats w/o deferring processing
-                        this.syncFileContent(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath, true);
-                    } else if (fileContentModified == JsyncFileModified.MAYBE) {
-                        // defer the sync of this file until we have a chance to do more expensive checks in bulk
-                        // we will need to calculate checksums for both source and target files
-                        filesMaybeModified.add(new VirtualPathPair(sourceChildPath, targetChildPath));
-                    }
+                    this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
                 }
             }
 
             if (sourceChildPath.isDirectory()) {
-                syncDirectory(level+1, result, filesMaybeModified, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
+                this.syncDirectory(level+1, result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
             }
         }
 
 
         // handle existing files that may have been modified, but we want to batch as many as possible, but not wait too long, otherwise the array will get massive
-        if (level == 0 || filesMaybeModified.size() >= this.maxFilesMaybeModifiedLimit) {
-            // we need to calculate checksums for source and target files
-            final List<VirtualPath> sourceFiles = filesMaybeModified.stream()
-                .map(VirtualPathPair::getSource)
-                .collect(toList());
-
-            sourceVfs.checksums(checksum, sourceFiles);
-
-            final List<VirtualPath> targetFiles = filesMaybeModified.stream()
-                .map(VirtualPathPair::getTarget)
-                .collect(toList());
-
-            targetVfs.checksums(checksum, targetFiles);
-
-            result.incrementChecksums(targetFiles.size());
-
-            for (VirtualPathPair pair : filesMaybeModified) {
-                final JsyncFileModified fileContentModified = this.isFileContentModified(pair.getSource(), pair.getTarget());
-
-                if (fileContentModified == JsyncFileModified.YES || fileContentModified == JsyncFileModified.MAYBE) {
-                    this.syncFileContent(result, sourceVfs, pair.getSource(), targetVfs, pair.getTarget(), true);
-                } else {
-                    // the content was the same (awesome), but the stats may have changed and should be synced
-                    final JsyncStatsModified fileStatsModified = this.isFileStatsModified(pair.getSource(), pair.getTarget());
-                    if (fileStatsModified.isAny()) {
-                        log.info("Updating file stats {}", pair.getTarget());
-                        this.syncFileStats(result, pair.getSource(), targetVfs, pair.getTarget());
-                    }
-                }
-            }
-
-            filesMaybeModified.clear();
+        if (level == 0 || deferredFiles.size() >= this.maxFilesMaybeModifiedLimit) {
+            this.syncDeferredFiles(result, deferredFiles, sourceVfs, targetVfs, checksum);
         }
 
         if (this.delete) {

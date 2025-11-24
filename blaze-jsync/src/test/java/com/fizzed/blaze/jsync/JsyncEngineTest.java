@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -197,8 +198,8 @@ class JsyncEngineTest {
                 .sync(sourceADir, subTargetFile, JsyncMode.MERGE);
         });
 
-        // nest mode should also fail
-        assertThrows(PathOverwriteException.class, () -> {
+        // nest mode should also fail (various exceptions depending on filesystems)
+        assertThrows(Exception.class, () -> {
             new JsyncEngine()
                 .sync(sourceADir, subTargetFile, JsyncMode.NEST);
         });
@@ -342,6 +343,46 @@ class JsyncEngineTest {
         Path targetBFile = this.syncTargetDir.resolve("a/b.txt");
         assertThat(targetBFile).exists().isNotEmptyFile();
         assertThat(targetBFile).hasSameTextualContentAs(sourceADirBFile);
+
+        assertThat(result.getFilesCreated()).isEqualTo(0);
+        assertThat(result.getFilesDeleted()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(1);
+        assertThat(result.getChecksums()).isEqualTo(1);
+    }
+
+    @Test
+    public void syncFileCreated() throws Exception {
+        Path sourceAFile = this.syncSourceDir.resolve("a.txt");
+        Files.write(sourceAFile, "hello".getBytes());
+
+        JsyncResult result = new JsyncEngine()
+            .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
+
+        // we should now have target/b.txt if MERGE worked
+        Path targetAFile = this.syncTargetDir.resolve("a.txt");
+        assertThat(targetAFile).exists().isNotEmptyFile();
+        assertThat(targetAFile).hasSameTextualContentAs(sourceAFile);
+
+        assertThat(result.getFilesCreated()).isEqualTo(1);
+        assertThat(result.getFilesDeleted()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(0);
+        assertThat(result.getChecksums()).isEqualTo(0);
+    }
+
+    @Test
+    public void syncFileUpdatedViaTimestamp() throws Exception {
+        Path sourceAFile = this.syncSourceDir.resolve("a.txt");
+        Files.write(sourceAFile, "hello".getBytes());
+
+        Path targetAFile = this.syncTargetDir.resolve("a.txt");
+        Files.write(targetAFile, "hellp".getBytes());
+        Files.setLastModifiedTime(targetAFile, FileTime.fromMillis(System.currentTimeMillis()-60000L));
+
+        JsyncResult result = new JsyncEngine()
+            .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
+
+        assertThat(targetAFile).exists().isNotEmptyFile();
+        assertThat(targetAFile).hasSameTextualContentAs(sourceAFile);
 
         assertThat(result.getFilesCreated()).isEqualTo(0);
         assertThat(result.getFilesDeleted()).isEqualTo(0);
