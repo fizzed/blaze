@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -555,6 +556,24 @@ class JsyncEngineTest {
         assertThat(result.getFilesCreated()).isEqualTo(1);
         assertThat(targetADir).doesNotExist();
         assertThat(this.syncTargetDir.resolve("b/d.txt")).hasContent("hello");
+    }
+
+    @Test
+    public void syncExcludeNonRegularFiles() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Path sourceBFile = this.syncSourceDir.resolve("a/b.txt");
+        Path sourceCFile = this.syncSourceDir.resolve("a/c.txt");
+        this.writeFile(sourceBFile, "hello");
+        Files.createSymbolicLink(sourceCFile, sourceBFile);
+
+        final JsyncResult result = new JsyncEngine()
+            .verbose()
+            .setDelete(true)
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        assertThat(result.getFilesCreated()).isEqualTo(1);
+        assertThat(this.syncTargetDir.resolve("a/c.txt")).doesNotExist();
+        assertThat(this.syncTargetDir.resolve("a/b.txt")).hasContent("hello");
     }
 
 }

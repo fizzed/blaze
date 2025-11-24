@@ -60,8 +60,8 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     protected VirtualPath toVirtualPathWithStat(VirtualPath path) throws IOException {
         final Path nativePath = this.toNativePath(path);
 
-        // 1. Fetch all attributes in ONE operation
-        final BasicFileAttributes attrs = Files.readAttributes(nativePath, BasicFileAttributes.class);
+        // Fetch all attributes in ONE operation (and don't follow symlinks, we need to know the type)
+        final BasicFileAttributes attrs = Files.readAttributes(nativePath, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
         // TODO: if we're on posix, we can also do this
         // fetches size, times, PLUS owner, group, and permissions
         // PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
@@ -129,12 +129,6 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
 
                     // dir true/false doesn't matter, stats call next will correct it
                     VirtualPath childPathWithoutStats = path.resolve(nativeChildPath.getFileName().toString(), false);
-
-                    // TDOO: should we skip handling symlinks??
-                    if (Files.isSymbolicLink(nativeChildPath)) {
-                        log.warn("Skipping symlink {} (unsupported at this time)", childPathWithoutStats);
-                        continue;
-                    }
 
                     VirtualPath childPath = this.toVirtualPathWithStat(childPathWithoutStats);
                     childPaths.add(childPath);

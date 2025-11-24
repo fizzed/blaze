@@ -344,6 +344,19 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
                 }
                 return true;
             })
+            // apply filter to excluding non-regular files (such as symlinks)
+            .filter(v -> {
+                switch (v.getStat().getType()) {
+                    case SYMLINK:
+                        log.warn("Excluding symlink {} (not supported at this time)", v);
+                        return false;
+                    case OTHER:
+                        log.warn("Excluding non-regular file {} (not supported at this time)", v);
+                        return false;
+                    default:
+                        return true;
+                }
+            })
             .collect(toList());
 
         final List<VirtualPath> targetChildPaths = targetVfs.ls(targetPath);
