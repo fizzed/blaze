@@ -4,7 +4,6 @@ import com.fizzed.blaze.vfs.ParentDirectoryMissingException;
 import com.fizzed.blaze.vfs.PathOverwriteException;
 import com.fizzed.crux.util.MoreFiles;
 import com.fizzed.crux.util.Resources;
-import org.assertj.core.data.TemporalOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -365,42 +364,64 @@ class JsyncEngineTest {
     }
 
     @Test
-    public void syncFileCreated() throws Exception {
+    public void syncFileMissing() throws Exception {
         Path sourceAFile = this.syncSourceDir.resolve("a.txt");
         Files.write(sourceAFile, "hello".getBytes());
+
+        Path targetAFile = this.syncTargetDir.resolve("a.txt");
+        // don't write it yet
 
         JsyncResult result = new JsyncEngine()
             .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
 
-        // we should now have target/b.txt if MERGE worked
-        Path targetAFile = this.syncTargetDir.resolve("a.txt");
         assertThat(targetAFile).exists().isNotEmptyFile();
         assertThat(targetAFile).hasSameTextualContentAs(sourceAFile);
-
         assertThat(result.getFilesCreated()).isEqualTo(1);
         assertThat(result.getFilesDeleted()).isEqualTo(0);
         assertThat(result.getFilesUpdated()).isEqualTo(0);
-        assertThat(result.getChecksums()).isEqualTo(0);
+        assertThat(result.getStatsUpdated()).isEqualTo(1);
+        assertThat(result.getChecksums()).isEqualTo(0);         // no checksums either, size alone was enough
     }
 
     @Test
-    public void syncFileUpdatedViaTimestamp() throws Exception {
+    public void syncFileSizeMismatch() throws Exception {
+        Path sourceAFile = this.syncSourceDir.resolve("a.txt");
+        Files.write(sourceAFile, "hello".getBytes());
+
+        Path targetAFile = this.syncTargetDir.resolve("a.txt");
+        Files.write(targetAFile, "helloy".getBytes());
+
+        JsyncResult result = new JsyncEngine()
+            .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
+
+        assertThat(targetAFile).exists().isNotEmptyFile();
+        assertThat(targetAFile).hasSameTextualContentAs(sourceAFile);
+        assertThat(result.getFilesCreated()).isEqualTo(0);
+        assertThat(result.getFilesDeleted()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(1);
+        assertThat(result.getStatsUpdated()).isEqualTo(0);       // timestamps didn't need updating
+        assertThat(result.getChecksums()).isEqualTo(0);         // no checksums either, size alone was enough
+    }
+
+    @Test
+    public void syncFileTimestampMismatch() throws Exception {
         Path sourceAFile = this.syncSourceDir.resolve("a.txt");
         Files.write(sourceAFile, "hello".getBytes());
 
         Path targetAFile = this.syncTargetDir.resolve("a.txt");
         Files.write(targetAFile, "hellp".getBytes());
-        Files.setLastModifiedTime(targetAFile, FileTime.fromMillis(System.currentTimeMillis()-60000L));
+
+        this.touch(targetAFile, Instant.now().minusSeconds(60));
 
         JsyncResult result = new JsyncEngine()
             .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
 
         assertThat(targetAFile).exists().isNotEmptyFile();
         assertThat(targetAFile).hasSameTextualContentAs(sourceAFile);
-
         assertThat(result.getFilesCreated()).isEqualTo(0);
         assertThat(result.getFilesDeleted()).isEqualTo(0);
         assertThat(result.getFilesUpdated()).isEqualTo(1);
+        assertThat(result.getStatsUpdated()).isEqualTo(1);
         assertThat(result.getChecksums()).isEqualTo(1);
     }
 
@@ -416,14 +437,13 @@ class JsyncEngineTest {
         this.touch(sourceAFile, ts);
 
         JsyncResult result = new JsyncEngine()
-            .setIgnoreTimes(true)
             .sync(sourceAFile, this.syncTargetDir, JsyncMode.NEST);
 
         assertThat(modifiedTime(targetAFile)).isCloseTo(ts, within(2, ChronoUnit.SECONDS));
-        assertThat(result.getStatUpdated()).isEqualTo(1);
+        assertThat(result.getStatsUpdated()).isEqualTo(1);
         assertThat(result.getFilesCreated()).isEqualTo(0);
         assertThat(result.getFilesDeleted()).isEqualTo(0);
-        assertThat(result.getFilesUpdated()).isEqualTo(0);
+        assertThat(result.getFilesUpdated()).isEqualTo(0);      // important: checksum should mean we don't transfer file, just its stat
         assertThat(result.getChecksums()).isEqualTo(1);
     }
 
@@ -444,7 +464,7 @@ class JsyncEngineTest {
         final JsyncResult result = new JsyncEngine()
             .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
 
-        assertThat(result.getStatUpdated()).isEqualTo(1);
+        assertThat(result.getStatsUpdated()).isEqualTo(1);
         assertThat(modifiedTime(targetADir)).isCloseTo(ts, within(2, ChronoUnit.SECONDS));
     }
 

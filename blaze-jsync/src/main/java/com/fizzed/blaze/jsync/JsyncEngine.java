@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.*;
 
 import static java.util.Arrays.asList;
@@ -433,9 +432,9 @@ public class JsyncEngine {
     protected void syncFileContent(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
         // if the target file has no "stats", then we have no info on it yet, and know we're going to create it fresh
         if (targetFile.getStat() == null) {
-            log.info("Creating file: {}", targetFile);
+            log.info("Creating file {}", targetFile);
         } else {
-            log.info("Updating file: {}", targetFile);
+            log.info("Updating file {}", targetFile);
         }
 
         // transfer the file
@@ -452,11 +451,11 @@ public class JsyncEngine {
     }
 
     protected void syncPathStat(JsyncResult result, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath) throws IOException {
-        log.info("Updating stat {}: modifiedTime={}", targetPath, Instant.ofEpochMilli(sourcePath.getStat().getModifiedTime()));
+        log.info("Updating stat {}", targetPath);
 
         targetVfs.updateStat(targetPath, sourcePath.getStat());
 
-        result.incrementStatUpdated();
+        result.incrementStatsUpdated();
     }
 
     protected void createDirectory(JsyncResult result, VirtualFileSystem vfs, VirtualPath path, boolean verifyParentExists, boolean parents) throws IOException {

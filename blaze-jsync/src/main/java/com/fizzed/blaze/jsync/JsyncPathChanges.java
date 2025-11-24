@@ -58,7 +58,6 @@ public class JsyncPathChanges {
     public boolean isContentModified(boolean ignoreTimes) {
         return this.missing
             || this.size
-            || (!ignoreTimes && this.timestamps)
             || (checksum != null && checksum);
     }
 
