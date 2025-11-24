@@ -4,6 +4,8 @@ import com.fizzed.blaze.jsync.Checksum;
 import com.fizzed.blaze.util.StreamableInput;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.NoSuchFileException;
 import java.util.List;
 
@@ -63,9 +65,11 @@ public interface VirtualFileSystem {
 
     void rmdir(VirtualPath path) throws IOException;
 
-    StreamableInput readFile(VirtualPath path, boolean progress) throws IOException;
+    InputStream readFile(VirtualPath path) throws IOException;
 
-    void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException;
+    void writeFile(InputStream input, VirtualPath path) throws IOException;
+
+    OutputStream writeStream(VirtualPath path) throws IOException;
 
     boolean isSupported(Checksum checksum) throws IOException;
 

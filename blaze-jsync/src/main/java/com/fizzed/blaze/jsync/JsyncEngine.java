@@ -1,22 +1,24 @@
 package com.fizzed.blaze.jsync;
 
-import com.fizzed.blaze.util.StreamableInput;
+import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.util.IoHelper;
+import com.fizzed.blaze.util.VerboseLogger;
 import com.fizzed.blaze.vfs.*;
 import com.fizzed.blaze.vfs.util.VirtualPathPair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-public class JsyncEngine {
-    static private final Logger log = LoggerFactory.getLogger(JsyncEngine.class);
+public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
 
     // options for syncing, try to mimic defaults for how rsync works
+    final private VerboseLogger log;
     final private List<Checksum> preferredChecksums;
     private boolean delete;
     private boolean force;
@@ -26,6 +28,7 @@ public class JsyncEngine {
     private int maxFilesMaybeModifiedLimit;
 
     public JsyncEngine() {
+        this.log = new VerboseLogger(this);
         this.delete = false;
         this.force = false;
         this.progress = false;
@@ -35,8 +38,13 @@ public class JsyncEngine {
         this.maxFilesMaybeModifiedLimit = 256;
     }
 
+    @Override
+    public VerboseLogger getVerboseLogger() {
+        return this.log;
+    }
+
     public boolean isDelete() {
-        return delete;
+        return this.delete;
     }
 
     public JsyncEngine setDelete(boolean delete) {
@@ -45,7 +53,7 @@ public class JsyncEngine {
     }
 
     public boolean isForce() {
-        return force;
+        return this.force;
     }
 
     public JsyncEngine setForce(boolean force) {
@@ -54,7 +62,7 @@ public class JsyncEngine {
     }
 
     public boolean isParents() {
-        return parents;
+        return this.parents;
     }
 
     public JsyncEngine setParents(boolean parents) {
@@ -63,7 +71,7 @@ public class JsyncEngine {
     }
 
     public boolean isIgnoreTimes() {
-        return ignoreTimes;
+        return this.ignoreTimes;
     }
 
     public JsyncEngine setIgnoreTimes(boolean ignoreTimes) {
@@ -72,7 +80,7 @@ public class JsyncEngine {
     }
 
     public boolean isProgress() {
-        return progress;
+        return this.progress;
     }
 
     public JsyncEngine setProgress(boolean progress) {
@@ -81,7 +89,7 @@ public class JsyncEngine {
     }
 
     public List<Checksum> getPreferredChecksums() {
-        return preferredChecksums;
+        return this.preferredChecksums;
     }
 
     public JsyncEngine setPreferredChecksums(Checksum... checksum) {
@@ -91,7 +99,7 @@ public class JsyncEngine {
     }
 
     public int getMaxFilesMaybeModifiedLimit() {
-        return maxFilesMaybeModifiedLimit;
+        return this.maxFilesMaybeModifiedLimit;
     }
 
     public JsyncEngine setMaxFilesMaybeModifiedLimit(int maxFilesMaybeModifiedLimit) {
@@ -212,7 +220,7 @@ public class JsyncEngine {
         // detect what changes exists between source & target paths
         final JsyncPathChanges changes = this.detectChanges(sourcePath, targetPath);
 
-        log.info("Itemized changes from {} to {}: {}", sourcePath, targetPath, changes);
+        log.debug("Itemized changes to {}: {}", targetPath, changes);
 
         // first, check if we should defer syncing the file till later on
         if (deferredFiles != null && changes.isDeferredProcessing(this.ignoreTimes)) {
@@ -271,7 +279,7 @@ public class JsyncEngine {
             }
 
             // delete the target file
-            log.info("Deleting file {}", targetPath);
+            log.verbose("Deleting file {}", targetPath);
             targetVfs.rm(targetPath);
             result.incrementFilesDeleted();
 
@@ -282,7 +290,7 @@ public class JsyncEngine {
         // detect what changes exists between source & target paths
         final JsyncPathChanges changes = this.detectChanges(sourcePath, targetPath);
 
-        log.info("Itemized changes from {} to {}: {}", sourcePath, targetPath, changes);
+        log.debug("Itemized changes to {}: {}", targetPath, changes);
 
         if (changes.isMissing()) {
             this.createDirectory(result, targetVfs, targetPath, false, false);
@@ -342,7 +350,7 @@ public class JsyncEngine {
                         // NOTE: this method handles recursion
                         deleteDirectory(0, result, targetVfs, targetChildPath);
                     } else {
-                        log.info("Deleting file {}", targetChildPath);
+                        log.verbose("Deleting file {}", targetChildPath);
                         targetVfs.rm(targetChildPath);
                         result.incrementFilesDeleted();
                     }
@@ -351,6 +359,7 @@ public class JsyncEngine {
         }
 
         // last step is to update the stat of the target dir
+        // To successfully preserve directory timestamps, you must set the directory attributes after you have finished touching every single file inside that directory.
         if (changes.isStatModified()) {
             // stat will need updated if the dir is new OR if the dir stats have changed
             this.syncPathStat(result, sourcePath, targetVfs, targetPath);
@@ -432,14 +441,19 @@ public class JsyncEngine {
     protected void syncFileContent(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
         // if the target file has no "stats", then we have no info on it yet, and know we're going to create it fresh
         if (targetFile.getStat() == null) {
-            log.info("Creating file {}", targetFile);
+            log.verbose("Creating file {}", targetFile);
         } else {
-            log.info("Updating file {}", targetFile);
+            log.verbose("Updating file {}", targetFile);
         }
 
+        // progress is only enabled if verbose is too
+        final boolean progress = this.getVerboseLogger().isVerbose() && this.progress;
+
         // transfer the file
-        try (StreamableInput input = sourceVfs.readFile(sourceFile, this.progress)) {
-            targetVfs.writeFile(input, targetFile, this.progress);
+        try (InputStream input = sourceVfs.readFile(sourceFile)) {
+            try (OutputStream output = targetVfs.writeStream(targetFile)) {
+                IoHelper.copy(input, output, progress, true, sourceFile.getStat().getSize());
+            }
         }
 
         // update results after we know the operation was successful
@@ -451,7 +465,7 @@ public class JsyncEngine {
     }
 
     protected void syncPathStat(JsyncResult result, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath) throws IOException {
-        log.info("Updating stat {}", targetPath);
+        log.debug("Updating stat {}", targetPath);
 
         targetVfs.updateStat(targetPath, sourcePath.getStat());
 
@@ -498,7 +512,7 @@ public class JsyncEngine {
         }
 
         // finally we can create the directory
-        log.info("Creating dir {}", path);
+        log.verbose("Creating dir {}", path);
         vfs.mkdir(path);
         result.incrementDirsCreated();
     }
@@ -520,9 +534,9 @@ public class JsyncEngine {
 
         // finally we can delete the directory, if level 0, we log as info, but anything else is considered debugging
         if (level > 0) {
-            log.debug("Deleting dir {}", path);
+            log.debug("Deleting child dir {}", path);
         } else {
-            log.info("Deleting dir {}", path);
+            log.verbose("Deleting dir {}", path);
         }
         vfs.rmdir(path);
         result.incrementDirsDeleted();
@@ -552,7 +566,7 @@ public class JsyncEngine {
                 targetChecksumsSupported.add(preferredChecksum);
             }
 
-            log.info("Detected {} checksum supported on source={}, target={}", preferredChecksum, sourceSupported, targetSupported);
+            log.verbose("Detected {} checksum supported on source={}, target={}", preferredChecksum, sourceSupported, targetSupported);
 
             if (sourceSupported && targetSupported) {
                 checksum = preferredChecksum;

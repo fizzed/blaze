@@ -10,7 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static com.fizzed.blaze.SecureShells.sshSftp;
@@ -223,18 +228,21 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public StreamableInput readFile(VirtualPath path, boolean progress) throws IOException {
-        throw new UnsupportedOperationException("readFile");
+    public InputStream readFile(VirtualPath path) throws IOException {
+        return this.sftp.getStream(path.toString());
     }
 
     @Override
-    public void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException {
+    public void writeFile(InputStream input, VirtualPath path) throws IOException {
         this.sftp.put()
             .source(input)
             .target(path.toString())
-//            .progress(progress)
-//            .verbose()
             .run();
+    }
+
+    @Override
+    public OutputStream writeStream(VirtualPath path) throws IOException {
+        return this.sftp.putStream(path.toString());
     }
 
     @Override

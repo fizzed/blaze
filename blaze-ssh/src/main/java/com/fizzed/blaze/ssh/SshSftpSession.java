@@ -16,6 +16,9 @@
 package com.fizzed.blaze.ssh;
 
 import com.fizzed.blaze.ssh.impl.SshSupport;
+
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -124,4 +127,9 @@ public abstract class SshSftpSession implements SshSupport {
      * @param atime The access time to set, expressed as a timestamp in seconds since the epoch. Can be null to leave unchanged.
      */
     abstract public void attrs(String path, Integer uid, Integer gid, Integer permissions, Integer mtime, Integer atime);
+
+    abstract public InputStream getStream(String path);
+
+    abstract public OutputStream putStream(String path);
+
 }

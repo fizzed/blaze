@@ -193,7 +193,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     @Override
     public void get(VerboseLogger log, boolean progress, String source, Streamable<OutputStream> target) throws SshException {
         try {
-            log.verbose("Sftp get: {} -> {}", source, target.path());
+            log.verbose("SFTP Get: {} -> {}", source, target.path());
 
             // if progress is desired, provide an impl where total bytes is unknown (but eventually provided by JSCH)
             final SftpConsoleIOProgressMonitor progressMonitor = progress ? new SftpConsoleIOProgressMonitor(null) : null;
@@ -207,7 +207,16 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
             throw convertSftpException(e);
         }
     }
-    
+
+    @Override
+    public InputStream getStream(String path) {
+        try {
+            return this.channel.get(path, null, 0L);
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
+    }
+
     @Override
     public SshSftpPut put() throws SshException {
         return new SshSftpPut(this);
@@ -216,7 +225,7 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     @Override
     public void put(VerboseLogger log, boolean progress, Streamable<InputStream> source, String target) throws SshException {
         try {
-            log.verbose("Sftp put: {} -> {}", source.path(), target);
+            log.verbose("SFTP Put: {} -> {}", source.path(), target);
 
             // if progress is desired, provide an impl where total bytes is unknown (but eventually provided by JSCH)
             final SftpConsoleIOProgressMonitor progressMonitor = progress ? new SftpConsoleIOProgressMonitor(source.size()) : null;
@@ -236,7 +245,16 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
             throw convertSftpException(e);
         }
     }
-    
+
+    @Override
+    public OutputStream putStream(String path) {
+        try {
+            return this.channel.put(path, null, ChannelSftp.OVERWRITE, 0);
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
+    }
+
     @Override
     public void chgrp(Path path, int gid) {
         chgrp(this.pathTranslator.toRemotePath(path), gid);

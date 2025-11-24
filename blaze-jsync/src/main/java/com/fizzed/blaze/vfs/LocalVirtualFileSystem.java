@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -158,16 +160,23 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
-    public StreamableInput readFile(VirtualPath path, boolean progress) throws IOException {
+    public InputStream readFile(VirtualPath path) throws IOException {
         final Path nativePath = this.toNativePath(path);
-        return Streamables.input(nativePath);
+        return Files.newInputStream(nativePath);
     }
 
     @Override
-    public void writeFile(StreamableInput input, VirtualPath path, boolean progress) throws IOException {
+    public void writeFile(InputStream input, VirtualPath path) throws IOException {
         final Path nativePath = this.toNativePath(path);
         // its important we allow replacing existing files
-        Files.copy(input.stream(), nativePath, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(input, nativePath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    @Override
+    public OutputStream writeStream(VirtualPath path) throws IOException {
+        final Path nativePath = this.toNativePath(path);
+        // it's important we allow replacing existing files
+        return Files.newOutputStream(nativePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     @Override
@@ -179,8 +188,8 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     @Override
     public void cksums(List<VirtualPath> paths) throws IOException {
         for (VirtualPath path : paths) {
-            try (StreamableInput input = this.readFile(path, false)) {
-                long cksum = Checksums.cksum(input.stream());
+            try (InputStream input = this.readFile(path)) {
+                long cksum = Checksums.cksum(input);
                 path.getStat().setCksum(cksum);
             }
         }
@@ -198,8 +207,8 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
 
     protected void hashFiles(String algorithm, List<VirtualPath> paths) throws IOException {
         for (VirtualPath path : paths) {
-            try (StreamableInput input = this.readFile(path, false)) {
-                String digest = Checksums.hash(algorithm, input.stream());
+            try (InputStream input = this.readFile(path)) {
+                String digest = Checksums.hash(algorithm, input);
                 if ("MD5".equals(algorithm)) {
                     path.getStat().setMd5(digest);
                 } else if ("SHA1".equals(algorithm)) {
