@@ -3,21 +3,22 @@ Buildx Results
 
 Cross platform tests based on https://github.com/fizzed/buildx
 
-Commit: c4146cc2db89e163c07891ca2400127146bbdfdf
-Date: 2025-11-24T21:48:10.398442612Z[UTC]
+Commit: c145066225ea0a8cee00d3a906124c05f3c9cdc2
+Date: 2025-11-24T22:01:55.554029675Z[UTC]
 
-macos-x64 (MacOS 15)....................................................... success
-macos-x64 (MacOS 11)....................................................... success
+freebsd-x64 (FreeBSD 15)................................................... success
+freebsd-x64 (FreeBSD 13)................................................... success
+openbsd-x64 (OpenBSD 7.8).................................................. success
 
 Details =>
 
-Job #0 for macos-x64 (MacOS 15)
-  log file: .buildx-logs/1764020791562/job-0-macos-x64.log
-  host: bmh-build-x64-macos-latest
-    os: macos
+Job #0 for freebsd-x64 (FreeBSD 15)
+  log file: .buildx-logs/1764021601481/job-0-freebsd-x64.log
+  host: bmh-build-x64-freebsd-latest
+    os: freebsd
     arch: x64
-    name: macOS 15.1 (Sequoia)
-    uname: Darwin bmh-build-x64-macos15-1.lauer.lan 24.1.0 Darwin Kernel Version 24.1.0: Thu Oct 10 21:02:27 PDT 2024; root:xnu-11215.41.3~2/RELEASE_X86_64 x86_64
+    name: FreeBSD 15.0-ALPHA1
+    uname: FreeBSD bmh-build-x64-freebsd15-1 15.0-ALPHA1 FreeBSD 15.0-ALPHA1 #0 stable/15-n280099-0b3d82579a01: Sat Sep  6 19:04:24 -00 2025     root@releng3.nyi.freebsd.org:/usr/obj/usr/src/amd64.amd64/sys/GENERIC amd64
     podman: <not installed>
   tags: [latest]
   data: <none>
@@ -25,15 +26,29 @@ Job #0 for macos-x64 (MacOS 15)
 
   status: success
 
-Job #1 for macos-x64 (MacOS 11)
-  log file: .buildx-logs/1764020791562/job-1-macos-x64.log
-  host: bmh-build-x64-macos-baseline
-    os: macos
+Job #1 for freebsd-x64 (FreeBSD 13)
+  log file: .buildx-logs/1764021601481/job-1-freebsd-x64.log
+  host: bmh-build-x64-freebsd-baseline
+    os: freebsd
     arch: x64
-    name: macOS 11.7.2 (Big Sur)
-    uname: Darwin bmh-build-x64-macos11-1.lauer.lan 20.6.0 Darwin Kernel Version 20.6.0: Sun Nov  6 23:17:00 PST 2022; root:xnu-7195.141.46~1/RELEASE_X86_64 x86_64
+    name: FreeBSD 13.5-RELEASE-p6
+    uname: FreeBSD bmh-build-x64-freebsd13-1 13.5-RELEASE-p6 FreeBSD 13.5-RELEASE-p6 GENERIC amd64
     podman: <not installed>
   tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #2 for openbsd-x64 (OpenBSD 7.8)
+  log file: .buildx-logs/1764021601481/job-2-openbsd-x64.log
+  host: bmh-build-x64-openbsd-latest
+    os: openbsd
+    arch: x64
+    name: OpenBSD 7.8
+    uname: OpenBSD bmh-build-x64-openbsd78-1 7.8 GENERIC.MP#54 amd64
+    podman: <not installed>
+  tags: [latest]
   data: <none>
   container: <none>
 

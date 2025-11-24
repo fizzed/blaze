@@ -133,8 +133,17 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         return this.sync(localVfs, sourcePath.toString(), localVfs, targetPath.toString(), mode);
     }
 
+    public JsyncResult sync(VirtualVolume source, VirtualVolume target, JsyncMode mode) throws Exception {
+        // create source and target virtual filesystems
+        try (VirtualFileSystem sourceVfs = source.openFileSystem()) {
+            try (VirtualFileSystem targetVfs = target.openFileSystem()) {
+                return this.sync(sourceVfs, source.getPath(), targetVfs, target.getPath(), mode);
+            }
+        }
+    }
+
     public JsyncResult sync(VirtualFileSystem sourceVfs, String sourcePath, VirtualFileSystem targetVfs, String targetPath, JsyncMode mode) throws IOException {
-        final JsyncResult result = new JsyncResult();
+        final JsyncResult result = new JsyncResult(mode);
 
         // source MUST exist
         final VirtualPath sourcePathRaw = VirtualPath.parse(sourcePath);

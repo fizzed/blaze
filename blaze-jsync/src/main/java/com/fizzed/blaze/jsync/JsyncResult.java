@@ -2,6 +2,7 @@ package com.fizzed.blaze.jsync;
 
 public class JsyncResult {
 
+    final private JsyncMode mode;
     private int checksums;
     private int filesCreated;
     private int filesUpdated;
@@ -9,6 +10,14 @@ public class JsyncResult {
     private int dirsCreated;
     private int dirsDeleted;
     private int statsUpdated;
+
+    public JsyncResult(JsyncMode mode) {
+        this.mode = mode;
+    }
+
+    public JsyncMode getMode() {
+        return mode;
+    }
 
     public int getChecksums() {
         return checksums;
