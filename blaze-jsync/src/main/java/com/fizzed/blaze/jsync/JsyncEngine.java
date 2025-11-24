@@ -22,6 +22,7 @@ public class JsyncEngine {
     private boolean force;
     private boolean parents;
     private boolean progress;
+    private boolean ignoreTimes;
     private int maxFilesMaybeModifiedLimit;
 
     public JsyncEngine() {
@@ -29,6 +30,7 @@ public class JsyncEngine {
         this.force = false;
         this.progress = false;
         this.parents = false;
+        this.ignoreTimes = false;
         this.preferredChecksums = new ArrayList<>(asList(Checksum.CK, Checksum.MD5));
         this.maxFilesMaybeModifiedLimit = 256;
     }
@@ -57,6 +59,15 @@ public class JsyncEngine {
 
     public JsyncEngine setParents(boolean parents) {
         this.parents = parents;
+        return this;
+    }
+
+    public boolean isIgnoreTimes() {
+        return ignoreTimes;
+    }
+
+    public JsyncEngine setIgnoreTimes(boolean ignoreTimes) {
+        this.ignoreTimes = ignoreTimes;
         return this;
     }
 
@@ -174,7 +185,8 @@ public class JsyncEngine {
             this.syncDirectory(0, result, filesMaybeModified, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
         } else {
             // we are only syncing a file, we may need to do some more expensive checks to determine if it needs to be updated
-            this.syncFile(result, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs);
+            // TODO: we will need to do checksems, etc.
+            this.syncFileContent(result, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, true);
         }
 
         return result;
@@ -206,10 +218,10 @@ public class JsyncEngine {
                     this.createDirectory(result, targetVfs, targetChildPath, false, false);
                 } else {
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFile(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    this.syncFileContent(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath, true);
                 }
             } else {
-                // target path exists, we need to check if it needs to be updated
+                // if the target path exists, we need to check if it needs to be updated
                 // is there a file/dir mismatch?
                 if (sourceChildPath.isDirectory() && !targetChildPath.isDirectory()) {
                     log.warn("Source '{}' is a directory, target '{}' is a file!", sourceChildPath, targetChildPath);
@@ -237,17 +249,20 @@ public class JsyncEngine {
 
                     // sync the target child path
                     targetChildPath = targetPath.resolve(sourceChildPath.getName(), false, null);
-                    this.syncFile(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    this.syncFileContent(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath, true);
 
                 } else if (sourceChildPath.isDirectory() && targetChildPath.isDirectory()) {
                     // both are directories, nothing for us to do (will sync them later in this method)
                 } else {
-                    // the file may need synced, and its possible we don't need anything expensive here to check, if
-                    // something as easy as the file size has changed
-                    boolean wasSynced = this.syncFile(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath);
+                    // we may know if the file definitely needs synced or just possibly needs synced
+                    final JsyncFileModified fileContentModified = this.isFileContentModified(sourceChildPath, targetChildPath);
 
-                    if (!wasSynced) {
-                        // we will need more "expensive" checks to determine if this file needs synced
+                    if (fileContentModified == JsyncFileModified.YES) {
+                        // we can immediately sync the file content and stats w/o deferring processing
+                        this.syncFileContent(result, sourceVfs, sourceChildPath, targetVfs, targetChildPath, true);
+                    } else if (fileContentModified == JsyncFileModified.MAYBE) {
+                        // defer the sync of this file until we have a chance to do more expensive checks in bulk
+                        // we will need to calculate checksums for both source and target files
                         filesMaybeModified.add(new VirtualPathPair(sourceChildPath, targetChildPath));
                     }
                 }
@@ -261,27 +276,34 @@ public class JsyncEngine {
 
         // handle existing files that may have been modified, but we want to batch as many as possible, but not wait too long, otherwise the array will get massive
         if (level == 0 || filesMaybeModified.size() >= this.maxFilesMaybeModifiedLimit) {
-//            log.debug("Calculating checksums...");
-
-            // we need calculate checksums for source and target files
+            // we need to calculate checksums for source and target files
             final List<VirtualPath> sourceFiles = filesMaybeModified.stream()
                 .map(VirtualPathPair::getSource)
                 .collect(toList());
 
-//            log.debug("Calculating checksums for {} source files", sourceFiles.size());
             sourceVfs.checksums(checksum, sourceFiles);
 
             final List<VirtualPath> targetFiles = filesMaybeModified.stream()
                 .map(VirtualPathPair::getTarget)
                 .collect(toList());
 
-//            log.debug("Calculating checksums for {} target files", targetFiles.size());
             targetVfs.checksums(checksum, targetFiles);
 
             result.incrementChecksums(targetFiles.size());
 
             for (VirtualPathPair pair : filesMaybeModified) {
-                syncFile(result, sourceVfs, pair.getSource(), targetVfs, pair.getTarget());
+                final JsyncFileModified fileContentModified = this.isFileContentModified(pair.getSource(), pair.getTarget());
+
+                if (fileContentModified == JsyncFileModified.YES || fileContentModified == JsyncFileModified.MAYBE) {
+                    this.syncFileContent(result, sourceVfs, pair.getSource(), targetVfs, pair.getTarget(), true);
+                } else {
+                    // the content was the same (awesome), but the stats may have changed and should be synced
+                    final JsyncStatsModified fileStatsModified = this.isFileStatsModified(pair.getSource(), pair.getTarget());
+                    if (fileStatsModified.isAny()) {
+                        log.info("Updating file stats {}", pair.getTarget());
+                        this.syncFileStats(result, pair.getSource(), targetVfs, pair.getTarget());
+                    }
+                }
             }
 
             filesMaybeModified.clear();
@@ -309,7 +331,7 @@ public class JsyncEngine {
         }
     }
 
-    protected boolean isFileContentModified(VirtualPath sourceFile, VirtualPath targetFile) throws IOException {
+    protected JsyncFileModified isFileContentModified(VirtualPath sourceFile, VirtualPath targetFile) throws IOException {
         // source "stats" MUST exist
         Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
 
@@ -320,47 +342,94 @@ public class JsyncEngine {
 
         // if the targetFile "stats" are null then we know it must not even exist yet
         if (targetFile.getStats() == null) {
-            log.trace("Target file {} missing 'stats' (it must not exist yet on target)", targetFile);
-            return true;
+            log.trace("Target file {} missing 'stats' (new file)", targetFile);
+            return JsyncFileModified.YES;
         }
 
-        // do the file sizes match?
+        // are file sizes different? if they are then this is a cheap way of figuring out a sync is needed
         if (sourceFile.getStats().getSize() != targetFile.getStats().getSize()) {
-            log.trace("Source file {} size {} != target size {} (so is modified)", sourceFile, sourceFile.getStats().getSize(), targetFile.getStats().getSize());
-            return true;
+            log.trace("Source file {} size {} != target size {} (modified file)", sourceFile, sourceFile.getStats().getSize(), targetFile.getStats().getSize());
+            return JsyncFileModified.YES;
         }
 
         // if we have "cksum" values on both sides, we can compare those
-        if (sourceFile.getStats().getCksum() != null && targetFile.getStats().getCksum() != null
-                && !sourceFile.getStats().getCksum().equals(targetFile.getStats().getCksum())) {
-            log.trace("Source file {} cksum {} != target chksum {} (so is modified)", sourceFile, sourceFile.getStats().getCksum(), targetFile.getStats().getCksum());
-            return true;
+        if (sourceFile.getStats().getCksum() != null && targetFile.getStats().getCksum() != null) {
+            if (!sourceFile.getStats().getCksum().equals(targetFile.getStats().getCksum())) {
+                log.trace("Source file {} cksum {} != target chksum {} (modified file)", sourceFile, sourceFile.getStats().getCksum(), targetFile.getStats().getCksum());
+                return JsyncFileModified.YES;
+            } else {
+                // we know for sure the file isn't modified
+                return JsyncFileModified.NO;
+            }
         }
 
         // if we have "md5" values on both sides, we can compare those
-        if (sourceFile.getStats().getMd5() != null && targetFile.getStats().getMd5() != null
-            && !sourceFile.getStats().getMd5().equalsIgnoreCase(targetFile.getStats().getMd5())) {
-            log.trace("Source file {} md5 {} != target md5 {} (so is modified)", sourceFile, sourceFile.getStats().getMd5(), targetFile.getStats().getMd5());
-            return true;
+        if (sourceFile.getStats().getMd5() != null && targetFile.getStats().getMd5() != null) {
+            if (!sourceFile.getStats().getMd5().equalsIgnoreCase(targetFile.getStats().getMd5())) {
+                log.trace("Source file {} md5 {} != target md5 {} (modified file)", sourceFile, sourceFile.getStats().getMd5(), targetFile.getStats().getMd5());
+                return JsyncFileModified.YES;
+            } else {
+                // we know for sure the file isn't modified
+                return JsyncFileModified.NO;
+            }
         }
 
         // if we have "sha1" values on both sides, we can compare those
-        if (sourceFile.getStats().getSha1() != null && targetFile.getStats().getSha1() != null
-            && !sourceFile.getStats().getSha1().equalsIgnoreCase(targetFile.getStats().getSha1())) {
-            log.trace("Source file {} sha1 {} != target sha1 {} (so is modified)", sourceFile, sourceFile.getStats().getSha1(), targetFile.getStats().getSha1());
-            return true;
+        if (sourceFile.getStats().getSha1() != null && targetFile.getStats().getSha1() != null) {
+            if (!sourceFile.getStats().getSha1().equalsIgnoreCase(targetFile.getStats().getSha1())) {
+                log.trace("Source file {} sha1 {} != target sha1 {} (modified file)", sourceFile, sourceFile.getStats().getSha1(), targetFile.getStats().getSha1());
+                return JsyncFileModified.YES;
+            } else {
+                // we know for sure the file isn't modified
+                return JsyncFileModified.NO;
+            }
         }
 
-        // file must not be modified
-        return false;
+        // if we can take modified timestamps into account, this is a cheap way of figuring out a file changed
+        if (!this.ignoreTimes) {
+            // due to lack of millis precision in filesystems, we need to allow a larger delta of difference
+            if (Math.abs(sourceFile.getStats().getModifiedTime() - targetFile.getStats().getModifiedTime()) > 2000L) {
+                log.trace("Source file {} size {} != target size {} (maybe modified file)", sourceFile, sourceFile.getStats().getSize(), targetFile.getStats().getSize());
+                return JsyncFileModified.MAYBE;
+            } else {
+                // The timestamps match and the file sizes match, so we know the file hasn't likely been modified
+                // on either side.  However, if you're paranoid, the user could force the use of checksums by ignoring times
+                return JsyncFileModified.NO;
+            }
+        }
+
+        // file may be modified, no checksums were evaluated, or ignoreTimes was specified, and all we know then is
+        // that the file sizes match each other, but nothing else
+        return JsyncFileModified.MAYBE;
     }
 
-    protected boolean syncFile(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
-        if (!this.isFileContentModified(sourceFile, targetFile)) {
-            return false;
+    protected JsyncStatsModified isFileStatsModified(VirtualPath sourceFile, VirtualPath targetFile) throws IOException {
+        // source "stats" MUST exist
+        Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
+
+        if (sourceFile.getStats() == null) {
+            throw new IllegalArgumentException("sourceFile must have a 'stats' object");
         }
 
-        // if target file has no "stats", then we have no info on it yet, and know we're going to create it fresh
+        if (targetFile.getStats() == null) {
+            // everything needs modified
+            return new JsyncStatsModified(true, true, true);
+        }
+
+        boolean ownership = false;          // not supported yet
+        boolean permissions = false;        // not supported yet
+        boolean timestamps = false;
+
+        // due to lack of millis precision in filesystems, we need to allow a larger delta of difference
+        if (Math.abs(sourceFile.getStats().getModifiedTime() - targetFile.getStats().getModifiedTime()) > 2000L) {
+            timestamps = true;
+        }
+
+        return new JsyncStatsModified(ownership, permissions, timestamps);
+    }
+
+    protected void syncFileContent(JsyncResult result, VirtualFileSystem sourceVfs, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile, boolean includeStats) throws IOException {
+        // if the target file has no "stats", then we have no info on it yet, and know we're going to create it fresh
         if (targetFile.getStats() == null) {
             log.info("Creating file: {}", targetFile);
         } else {
@@ -372,14 +441,25 @@ public class JsyncEngine {
             targetVfs.writeFile(input, targetFile, this.progress);
         }
 
-        // update results after we know operation was successful
+        // update results after we know the operation was successful
         if (targetFile.getStats() == null) {
             result.incrementFilesCreated();
         } else {
             result.incrementFilesUpdated();
         }
 
-        return true;
+        if (includeStats) {
+            this.syncFileStats(result, sourceFile, targetVfs, targetFile);
+        }
+    }
+
+    protected void syncFileStats(JsyncResult result, VirtualPath sourceFile, VirtualFileSystem targetVfs, VirtualPath targetFile) throws IOException {
+        // update the attributes with the source
+        // TODO: we need to figure out what all we want to update in one fell swoop, which could include uid/gid, perms, and times
+        // we'll want to build a "stats" object that possibly decides what all we want to update
+        targetVfs.updateStat(targetFile, sourceFile.getStats());
+
+        result.incrementStatsUpdated();
     }
 
     protected void createDirectory(JsyncResult result, VirtualFileSystem vfs, VirtualPath path, boolean verifyParentExists, boolean parents) throws IOException {

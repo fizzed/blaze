@@ -138,7 +138,8 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
         if (!isDirectory) {
             long size = attributes.size();
             long modifiedTime = attributes.lastModifiedTime().toMillis();
-            stats = new VirtualStats(size, modifiedTime);
+            long accessedTime = attributes.lastAccessTime().toMillis();
+            stats = new VirtualStats(size, modifiedTime, accessedTime);
         }
         return new VirtualPath(path.getParentPath(), path.getName(), isDirectory, stats);
     }
@@ -151,9 +152,7 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     @Override
     public VirtualPath stat(VirtualPath path) throws IOException {
         try {
-            // TODO: safer using full path resolved against pwd?
             final SshFileAttributes file = this.sftp.lstat(path.toString());
-
             return this.toVirtualPathWithStats(path, file);
         } catch (SshSftpNoSuchFileException e) {
             throw new NoSuchFileException("The path '" + path + "' does not exist (sftp error " + e.getMessage() + ")");
@@ -161,8 +160,27 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
+    public void updateStat(VirtualPath path, VirtualStats stats) throws IOException {
+        try {
+            // are we updating uid/gid?
+            Integer uid = null;
+            Integer gid = null;
+
+            // are we updating permissions?
+            Integer perms = null;
+
+            // are we updating mtime/atime?d
+            Integer mtime = (int)(stats.getModifiedTime()/1000);
+            Integer atime = (int)(stats.getAccessedTime()/1000);
+
+            this.sftp.attrs(path.toString(), uid, gid, perms, mtime, atime);
+        } catch (SshSftpNoSuchFileException e) {
+            throw new NoSuchFileException("The path '" + path + "' does not exist (sftp error " + e.getMessage() + ")");
+        }
+    }
+
+    @Override
     public List<VirtualPath> ls(VirtualPath path) throws IOException {
-        // TODO: safer using full path resolved against pwd?
         final List<SshFile> files = this.sftp.ls(path.toString());
 
         final List<VirtualPath> childPaths = new ArrayList<>();

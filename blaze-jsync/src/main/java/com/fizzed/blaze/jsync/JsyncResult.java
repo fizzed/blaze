@@ -8,6 +8,7 @@ public class JsyncResult {
     private int filesDeleted;
     private int dirsCreated;
     private int dirsDeleted;
+    private int statsUpdated;
 
     public int getChecksums() {
         return checksums;
@@ -31,6 +32,10 @@ public class JsyncResult {
 
     public int getDirsDeleted() {
         return dirsDeleted;
+    }
+
+    public int getStatsUpdated() {
+        return statsUpdated;
     }
 
     // increment methods for all
@@ -59,9 +64,13 @@ public class JsyncResult {
         dirsDeleted++;
     }
 
+    public void incrementStatsUpdated() {
+        statsUpdated++;
+    }
+
     @Override
     public String toString() {
-        return "checksums=" + checksums + ", filesCreated=" + filesCreated + ", filesUpdated=" + filesUpdated + ", filesDeleted=" + filesDeleted + ", dirsCreated=" + dirsCreated + ", dirsDeleted=" + dirsDeleted ;
+        return "checksums=" + checksums + ", filesCreated=" + filesCreated + ", filesUpdated=" + filesUpdated + ", filesDeleted=" + filesDeleted + ", dirsCreated=" + dirsCreated + ", dirsDeleted=" + dirsDeleted + ", statsUpdated=" + statsUpdated;
     }
 
 }

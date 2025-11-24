@@ -111,5 +111,17 @@ public abstract class SshSftpSession implements SshSupport {
     abstract public String realpath2(String target);
 
     abstract public String realpath2(Path target);
-    
+
+    /**
+     * Sets the attributes for a file or directory in one bulk request. You can pick what attributes you want to set
+     * by leaving some of them null.  The uid/gid must be set as a pair, as well as mtime/atime.
+     *
+     * @param path The path of the file or directory whose attributes are to be set.
+     * @param uid The user ID to set for the file or directory. Can be null to leave unchanged.
+     * @param gid The group ID to set for the file or directory. Can be null to leave unchanged.
+     * @param permissions The file permissions to set, typically expressed as an integer. Can be null to leave unchanged.
+     * @param mtime The modification time to set, expressed as a timestamp in seconds since the epoch. Can be null to leave unchanged.
+     * @param atime The access time to set, expressed as a timestamp in seconds since the epoch. Can be null to leave unchanged.
+     */
+    abstract public void attrs(String path, Integer uid, Integer gid, Integer permissions, Integer mtime, Integer atime);
 }

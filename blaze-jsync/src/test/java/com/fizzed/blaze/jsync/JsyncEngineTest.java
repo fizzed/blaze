@@ -335,6 +335,7 @@ class JsyncEngineTest {
 
         // sync which should require a checksum to sync properly
         final JsyncResult result = new JsyncEngine()
+            .setIgnoreTimes(true)       // due to how quickly the files are modified they look similar
             .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
 
         // we should now have target/a/b if MERGE worked

@@ -4,14 +4,16 @@ public class VirtualStats {
 
     final private long size;
     final private long modifiedTime;
+    final private long accessedTime;
     // there are values that can be populated later
     private Long cksum;
     private String md5;
     private String sha1;
 
-    public VirtualStats(long size, long modifiedTime) {
+    public VirtualStats(long size, long modifiedTime, long accessedTime) {
         this.size = size;
         this.modifiedTime = modifiedTime;
+        this.accessedTime = accessedTime;
     }
 
     public long getSize() {
@@ -20,6 +22,10 @@ public class VirtualStats {
 
     public long getModifiedTime() {
         return modifiedTime;
+    }
+
+    public long getAccessedTime() {
+        return accessedTime;
     }
 
     public Long getCksum() {

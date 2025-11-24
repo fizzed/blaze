@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -53,10 +53,15 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
         boolean isDirectory = Files.isDirectory(nativePath);
         VirtualStats stats = null;
         if (!isDirectory) {
-            // create stats
-            final long size = Files.size(nativePath);
-            final long modifiedTime = Files.getLastModifiedTime(nativePath).toMillis();
-            stats = new VirtualStats(size, modifiedTime);
+            // 1. Fetch all attributes in ONE operation
+            final BasicFileAttributes attrs = Files.readAttributes(nativePath, BasicFileAttributes.class);
+            // TODO: if we're on posix, we can also do this
+            // fetches size, times, PLUS owner, group, and permissions
+            // PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
+            final long size = attrs.size();
+            final long modifiedTime = attrs.lastModifiedTime().toMillis();
+            final long accessedTime = attrs.lastAccessTime().toMillis();
+            stats = new VirtualStats(size, modifiedTime, accessedTime);
         }
         return new VirtualPath(path.getParentPath(), path.getName(), isDirectory, stats);
     }
@@ -72,9 +77,27 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     @Override
+    public void updateStat(VirtualPath path, VirtualStats stats) throws IOException {
+        final Path nativePath = this.toNativePath(path);
+
+        //  Get the "View" (This is a lightweight handle to the attributes)
+        BasicFileAttributeView view = Files.getFileAttributeView(nativePath, BasicFileAttributeView.class);
+
+        // 2. Prepare the times
+        FileTime newModifiedTime = FileTime.fromMillis(stats.getModifiedTime());
+        FileTime newAccessedTime = FileTime.fromMillis(stats.getAccessedTime());
+
+        // 3. Update all three in ONE operation
+        // Signature: setTimes(lastModified, lastAccess, createTime)
+        // Pass 'null' if you want to leave a specific timestamp unchanged.
+        view.setTimes(newModifiedTime, newAccessedTime, null);
+    }
+
+    @Override
     public List<VirtualPath> ls(VirtualPath path) throws IOException {
         final Path nativePath = this.toNativePath(path);
         if (Files.isDirectory(nativePath)) {
+            // TODO: apparently walkFileTree is way faster on windows as it includes BasicFileAttributes, negating the need for a 2nd kernel system call
             List<VirtualPath> childPaths = new ArrayList<>();
             try (Stream<Path> files = Files.list(nativePath)) {
                 for (Iterator<Path> it = files.iterator(); it.hasNext(); ) {

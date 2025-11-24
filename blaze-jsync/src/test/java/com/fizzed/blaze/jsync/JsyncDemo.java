@@ -26,6 +26,7 @@ public class JsyncDemo {
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\test-sync").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\workspace\\third-party\\tokyocabinet-1.4.48").toString();
+//        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/tokyocabinet-1.4.48").toString();
 
         final String targetDir = "test-sync";
         final boolean delete = true;
@@ -37,16 +38,24 @@ public class JsyncDemo {
         final VirtualFileSystem sourceVfs = LocalVirtualFileSystem.open();
         final VirtualFileSystem targetVfs = SftpVirtualFileSystem.open(ssh);
 
-        new JsyncEngine()
+        final JsyncResult result = new JsyncEngine()
 //            .preferredChecksums(Checksum.CK)
 //            .preferredChecksums(Checksum.MD5, Checksum.SHA1)
 //            .preferredChecksums(Checksum.SHA1)
             .setDelete(delete)
             .setParents(true)
+            .setForce(true)
+            //.setIgnoreTimes(true)
 //            .setProgress(true)
             .sync(sourceVfs, sourceDir, targetVfs, targetDir, JsyncMode.MERGE);
 
+        log.info("");
         log.info("Done, sync successful!");
+        log.info("Result: {}", result);
+        log.info("");
+
+        String rsyncCommand = "rsync -ivrt --delete --mkpath --force " + sourceDir + "/ " + ssh.uri().getHost() + ":" + targetDir + "/";
+        log.info("Rsync command: {}", rsyncCommand);
 
         ssh.close();
 

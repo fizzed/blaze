@@ -33,6 +33,7 @@ import com.jcraft.jsch.SftpProgressMonitor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
@@ -42,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -387,6 +389,78 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
     public String realpath2(String target) {
         try {
             return this.channel.realpath(target);
+        } catch (SftpException e) {
+            throw convertSftpException(e);
+        }
+    }
+
+
+    static private final AtomicReference<Constructor<SftpATTRS>> SFTP_ATTRS_CONSTRUCTOR_REF = new AtomicReference<>();
+
+    static protected SftpATTRS createSftpATTRS() {
+        Constructor<SftpATTRS> sftpATTRSConstructor = SFTP_ATTRS_CONSTRUCTOR_REF.get();
+
+        if (sftpATTRSConstructor == null) {
+            synchronized (SFTP_ATTRS_CONSTRUCTOR_REF) {
+                sftpATTRSConstructor = SFTP_ATTRS_CONSTRUCTOR_REF.get();
+                // double lock
+                if (sftpATTRSConstructor == null) {
+                    try {
+                        // SftpATTRS has private access for some fucking reason (no idea why)
+                        // can we use reflection instead?
+                        // 2. Get the Class object
+                        Class<SftpATTRS> clazz = SftpATTRS.class;
+
+                        // 3. Get the specific constructor
+                        // Note: Use getDeclaredConstructor(), NOT getConstructor()
+                        // getConstructor() only finds PUBLIC constructors.
+                        Constructor<SftpATTRS> constructor = clazz.getDeclaredConstructor();
+
+                        // 4. The "Magic" Step: Force access
+                        constructor.setAccessible(true);
+
+                        sftpATTRSConstructor = constructor;
+                        SFTP_ATTRS_CONSTRUCTOR_REF.set(sftpATTRSConstructor);
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Unable to use reflection to get SftpATTRS instance", t);
+                    }
+                }
+            }
+        }
+
+        try {
+            return sftpATTRSConstructor.newInstance();
+        } catch (Throwable t) {
+            throw new RuntimeException("Unable to create SftpATTRS instance", t);
+        }
+    }
+
+    @Override
+    public void attrs(String path, Integer uid, Integer gid, Integer permissions, Integer mtime, Integer atime) {
+        SftpATTRS attrs = createSftpATTRS();
+
+        // handle setting uid & gid
+        if (uid != null || gid != null) {
+            if (uid == null || gid == null) {
+                throw new IllegalArgumentException("uid and gid must both be specified");
+            }
+            attrs.setUIDGID(uid, gid);
+        }
+
+        if (permissions != null) {
+            attrs.setPERMISSIONS(permissions);
+        }
+
+        // handle setting mtime & atime
+        if (mtime != null || atime != null) {
+            if (mtime == null || atime == null) {
+                throw new IllegalArgumentException("mtime and atime must both be specified");
+            }
+            attrs.setACMODTIME(atime, mtime);
+        }
+
+        try {
+            this.channel.setStat(path, attrs);
         } catch (SftpException e) {
             throw convertSftpException(e);
         }
