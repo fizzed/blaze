@@ -6,6 +6,7 @@ public class VirtualPath {
 
     private final String parentPath;
     private final String name;
+    private final String fullPath;
     private final Boolean directory;
     private final VirtualFileStat stat;
 
@@ -15,6 +16,11 @@ public class VirtualPath {
         this.name = name;
         this.directory = directory;
         this.stat = stat;
+        if (this.parentPath == null) {
+            this.fullPath = name;
+        } else {
+            this.fullPath = parentPath + "/" + name;
+        }
     }
 
     static public VirtualPath parse(String path) {
@@ -55,11 +61,7 @@ public class VirtualPath {
     }
 
     public String toFullPath() {
-        if (this.parentPath == null) {
-            return this.name;
-        }
-        // otherwise, return the full name
-        return this.parentPath + "/" + this.name;
+        return this.fullPath;
     }
 
     public boolean isAbsolute() {
@@ -90,6 +92,14 @@ public class VirtualPath {
      */
     public Boolean isDirectory() {
         return this.directory;
+    }
+
+    public boolean startsWith(VirtualPath path) {
+        return this.fullPath.startsWith(path.toFullPath());
+    }
+
+    public boolean startsWith(String path) {
+        return this.fullPath.startsWith(path);
     }
 
     /**

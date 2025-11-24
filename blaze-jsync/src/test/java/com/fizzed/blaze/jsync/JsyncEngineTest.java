@@ -528,4 +528,33 @@ class JsyncEngineTest {
         assertThat(modifiedTime(targetADir)).isCloseTo(ts, within(2, ChronoUnit.SECONDS));
     }
 
+    @Test
+    public void syncExcludeDir() throws Exception {
+        Path sourceADir = this.syncSourceDir.resolve("a");
+        Path sourceBFile = this.syncSourceDir.resolve("a/b.txt");
+        this.writeFile(sourceBFile, "hello");
+
+        Path sourceBDir = this.syncSourceDir.resolve("b");
+        Path sourceCFile = this.syncSourceDir.resolve("b/c.txt");
+        Path sourceDFile = this.syncSourceDir.resolve("b/d.txt");
+        this.writeFile(sourceCFile, "hello");
+        this.writeFile(sourceDFile, "hello");
+
+        // with directory "a" fully excluded, it actually should be deleted with --exclude
+        Path targetADir = this.syncTargetDir.resolve("a");
+        Path targetBFile = this.syncTargetDir.resolve("a/b.txt");
+        this.writeFile(targetBFile, "hello");
+
+        final JsyncResult result = new JsyncEngine()
+            .verbose()
+            .addExclude("a")
+            .addExclude("b/c.txt")
+            .setDelete(true)
+            .sync(this.syncSourceDir, this.syncTargetDir, JsyncMode.MERGE);
+
+        assertThat(result.getFilesCreated()).isEqualTo(1);
+        assertThat(targetADir).doesNotExist();
+        assertThat(this.syncTargetDir.resolve("b/d.txt")).hasContent("hello");
+    }
+
 }

@@ -1,7 +1,6 @@
 package com.fizzed.blaze.vfs;
 
 import com.fizzed.blaze.jsync.Checksum;
-import com.fizzed.blaze.util.StreamableInput;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +8,7 @@ import java.io.OutputStream;
 import java.nio.file.NoSuchFileException;
 import java.util.List;
 
-public interface VirtualFileSystem {
+public interface VirtualFileSystem extends AutoCloseable {
 
     String getName();
 

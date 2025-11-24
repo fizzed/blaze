@@ -4,20 +4,18 @@ import com.fizzed.blaze.core.UnexpectedExitValueException;
 import com.fizzed.blaze.jsync.Checksum;
 import com.fizzed.blaze.ssh.*;
 import com.fizzed.blaze.system.Exec;
-import com.fizzed.blaze.util.StreamableInput;
 import com.fizzed.blaze.vfs.util.Checksums;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
+import static com.fizzed.blaze.SecureShells.sshConnect;
 import static com.fizzed.blaze.SecureShells.sshSftp;
 import static com.fizzed.blaze.util.Streamables.nullOutput;
 
@@ -25,26 +23,53 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
     static private final Logger log = LoggerFactory.getLogger(SftpVirtualFileSystem.class);
 
     private final SshSession ssh;
+    private final boolean closeSsh;
     private final SshSftpSession sftp;
+    private final boolean closeSftp;
     private int maxCommandLength;
     private final boolean windows;
 
-    protected SftpVirtualFileSystem(String name, VirtualPath pwd, SshSession ssh, SshSftpSession sftp, boolean windows) {
+    protected SftpVirtualFileSystem(String name, VirtualPath pwd, SshSession ssh, boolean closeSsh, SshSftpSession sftp, boolean closeSftp, boolean windows) {
         // everything but windows is case sensitive
         super(name, pwd, !windows);
         this.ssh = ssh;
+        this.closeSsh = closeSsh;
         this.sftp = sftp;
+        this.closeSftp = closeSftp;
         this.maxCommandLength = 7000;       // windows shell limit is 8,191, linux/mac/bsd is effectively unlimited
         this.windows = windows;
     }
 
-    static public SftpVirtualFileSystem open(SshSession ssh) {
-        final String name = ssh.uri().toString().replace("ssh://", "sftp://");
+    static public SftpVirtualFileSystem open(String host) {
+        // do we need to prepend "ssh://" to it?
+        if (!host.startsWith("ssh://")) {
+            host = "ssh://" + host;
+        }
 
-        log.info("Opening filesystem {}...", name);
+        final SshSession ssh = sshConnect(host)
+            .run();
 
         final SshSftpSession sftp = sshSftp(ssh)
             .run();
+
+        return open(ssh, true, sftp, true);
+    }
+
+    static public SftpVirtualFileSystem open(SshSession ssh) {
+        final SshSftpSession sftp = sshSftp(ssh)
+            .run();
+
+        return open(ssh, false, sftp, true);
+    }
+
+    static public SftpVirtualFileSystem open(SshSession ssh, SshSftpSession sftp) {
+        return open(ssh, false, sftp, false);
+    }
+
+    static public SftpVirtualFileSystem open(SshSession ssh, boolean closeSsh, SshSftpSession sftp, boolean closeSftp) {
+        final String name = ssh.uri().toString().replace("ssh://", "sftp://");
+
+        log.info("Opening filesystem {}...", name);
 
         final String pwd2 = sftp.pwd2();
 
@@ -62,7 +87,17 @@ public class SftpVirtualFileSystem extends AbstractVirtualFileSystem {
             log.debug("Detected filesystem {} is running on windows (changes standard checksums, native filepaths, case sensitivity, etc.)", name);
         }
 
-        return new SftpVirtualFileSystem(name, pwd, ssh, sftp, windows);
+        return new SftpVirtualFileSystem(name, pwd, ssh, closeSsh, sftp, closeSftp, windows);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (this.closeSftp) {
+            IOUtils.closeQuietly(this.sftp);
+        }
+        if (this.closeSsh) {
+            IOUtils.closeQuietly(this.ssh);
+        }
     }
 
     @Override

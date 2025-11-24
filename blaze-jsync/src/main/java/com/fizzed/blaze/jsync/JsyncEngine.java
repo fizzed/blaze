@@ -26,6 +26,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
     private boolean progress;
     private boolean ignoreTimes;
     private int maxFilesMaybeModifiedLimit;
+    private List<String> excludes;
 
     public JsyncEngine() {
         this.log = new VerboseLogger(this);
@@ -36,6 +37,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         this.ignoreTimes = false;
         this.preferredChecksums = new ArrayList<>(asList(Checksum.CK, Checksum.MD5));
         this.maxFilesMaybeModifiedLimit = 256;
+        this.excludes = null;
     }
 
     @Override
@@ -104,6 +106,23 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
 
     public JsyncEngine setMaxFilesMaybeModifiedLimit(int maxFilesMaybeModifiedLimit) {
         this.maxFilesMaybeModifiedLimit = maxFilesMaybeModifiedLimit;
+        return this;
+    }
+
+    public List<String> getExcludes() {
+        return excludes;
+    }
+
+    public JsyncEngine setExcludes(List<String> excludes) {
+        this.excludes = excludes;
+        return this;
+    }
+
+    public JsyncEngine addExclude(String exclude) {
+        if (this.excludes == null) {
+            this.excludes = new ArrayList<>();
+        }
+        this.excludes.add(exclude);
         return this;
     }
 
@@ -183,10 +202,21 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         final List<VirtualPathPair> deferredFiles = new ArrayList<>();
 
         if (sourcePathAbs.isDirectory()) {
+            // any excludes, let's resolve them against pwd of the source to make it easier to exclude them
+            final List<VirtualPath> excludePaths;
+            if (this.excludes != null) {
+                excludePaths = this.excludes.stream()
+                    .map(VirtualPath::parse)
+                    .map(sourcePathAbs::resolve)
+                    .collect(toList());
+            } else {
+                excludePaths = Collections.emptyList();
+            }
+
             // as we process files, only a subset may require more advanced methods of detecting whether they were modified
             // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
             // until we have a chance to do some bulk processing of checksums, etc.
-            this.syncDirectory(0, result, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
+            this.syncDirectory(0, result, excludePaths, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
         } else {
             // we are only syncing a file, we may need to do some more expensive checks to determine if it needs to be updated
             this.syncFile(result, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs);
@@ -263,7 +293,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         deferredFiles.clear();
     }
 
-    protected void syncDirectory(int level, JsyncResult result, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
+    protected void syncDirectory(int level, JsyncResult result, List<VirtualPath> excludePaths, List<VirtualPathPair> deferredFiles, VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, Checksum checksum) throws IOException {
 
         // source needs to be a directory
         if (!sourcePath.isDirectory()) {
@@ -302,7 +332,20 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
 
 
         // we need a list of files in both directories, so we can see what to add/delete
-        final List<VirtualPath> sourceChildPaths = sourceVfs.ls(sourcePath);
+        List<VirtualPath> sourceChildPaths = sourceVfs.ls(sourcePath).stream()
+            // apply filter to source files if they are on the exclude list
+            .filter(v -> {
+                //log.info("Checking for exlcude of path {} with excludes {}", v, excludePaths);
+                for (VirtualPath excludePath : excludePaths) {
+                    if (v.startsWith(excludePath)) {
+                        log.verbose("Excluding path {}", v);
+                        return false;
+                    }
+                }
+                return true;
+            })
+            .collect(toList());
+
         final List<VirtualPath> targetChildPaths = targetVfs.ls(targetPath);
 
         // its better to work with all dirs first, then files, so we sort the files before we process them
@@ -310,8 +353,8 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         this.sortPaths(targetChildPaths);
 
         // calculate paths new / changed / same
+        CHILD_LOOP:
         for (VirtualPath sourceChildPath : sourceChildPaths) {
-
             // find a matching target path entirely by name
             VirtualPath targetChildPath = targetChildPaths.stream()
                 .filter(p -> targetVfs.areFileNamesEqual(p.getName(), sourceChildPath.getName()))
@@ -324,7 +367,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
             }
 
             if (sourceChildPath.isDirectory()) {
-                this.syncDirectory(level+1, result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
+                this.syncDirectory(level+1, result, excludePaths, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath, checksum);
             } else {
                 // NOTE: it's possible syncFile will "defer" processing if a checksum is required
                 this.syncFile(result, deferredFiles, sourceVfs, sourceChildPath, targetVfs, targetChildPath);

@@ -1,8 +1,6 @@
 package com.fizzed.blaze.vfs;
 
 import com.fizzed.blaze.jsync.Checksum;
-import com.fizzed.blaze.util.StreamableInput;
-import com.fizzed.blaze.util.Streamables;
 import com.fizzed.blaze.vfs.util.Checksums;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +25,16 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
     }
 
     static public LocalVirtualFileSystem open() {
+        return open(Paths.get("."));
+    }
+
+    static public LocalVirtualFileSystem open(Path workingDir) {
         final String name = "<local>";
 
         log.info("Opening filesystem {}...", name);
 
         // current working directory is our "pwd"
-        final Path currentWorkingDir = Paths.get(".").toAbsolutePath().normalize();
+        final Path currentWorkingDir = workingDir.toAbsolutePath().normalize();
 
         final VirtualPath pwd = VirtualPath.parse(currentWorkingDir.toString(), true);
 
@@ -44,6 +46,11 @@ public class LocalVirtualFileSystem extends AbstractVirtualFileSystem {
         log.debug("Detected filesystem {} is case-sensitive={}", name, caseSensitive);
 
         return new LocalVirtualFileSystem(name, pwd, caseSensitive);
+    }
+
+    @Override
+    public void close() throws Exception {
+        // nothing to do
     }
 
     protected Path toNativePath(VirtualPath path) {
