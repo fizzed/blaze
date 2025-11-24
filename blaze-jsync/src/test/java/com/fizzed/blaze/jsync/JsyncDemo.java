@@ -3,6 +3,7 @@ package com.fizzed.blaze.jsync;
 import com.fizzed.blaze.logging.LogLevel;
 import com.fizzed.blaze.logging.LoggerConfig;
 import com.fizzed.blaze.ssh.*;
+import com.fizzed.blaze.util.Timer;
 import com.fizzed.blaze.vfs.LocalVirtualFileSystem;
 import com.fizzed.blaze.vfs.SftpVirtualFileSystem;
 import com.fizzed.blaze.vfs.VirtualFileSystem;
@@ -22,7 +23,9 @@ public class JsyncDemo {
 //        LoggerConfig.setDefaultLogLevel(LogLevel.DEBUG);
 
 //        final String sourceDir = Paths.get("/home/jjlauer/test-sync").toString();
-        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
+//        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
+//        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/coredns").toString();
+        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/nats.java").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\test-sync").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\workspace\\third-party\\tokyocabinet-1.4.48").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/tokyocabinet-1.4.48").toString();
@@ -35,14 +38,15 @@ public class JsyncDemo {
 
         final String targetDir = "test-sync";
 
-//        final SshSession ssh = sshConnect("ssh://bmh-dev-x64-indy25-1").run();
-        final String sshHost = "bmh-dev-x64-fedora43-1";
-//        final SshSession ssh = sshConnect("ssh://bmh-build-x64-freebsd15-1").run();
-//        final SshSession ssh = sshConnect("ssh://bmh-build-x64-win11-1").run();
+//        final String sshHost = "bmh-dev-x64-indy25-1";
+//        final String sshHost = "bmh-dev-x64-fedora43-1";
+//        final String sshHost = "bmh-build-x64-freebsd15-1";
+        final String sshHost = "bmh-build-x64-win11-1";
 
         final VirtualFileSystem targetVfs = SftpVirtualFileSystem.open(sshHost);
 
 
+        final Timer timer = new Timer();
 
         final JsyncResult result = new JsyncEngine()
             .verbose()
@@ -59,11 +63,11 @@ public class JsyncDemo {
 //            .sync(targetVfs, targetDir, sourceVfs, sourceDir, JsyncMode.NEST);
 
         log.info("");
-        log.info("Done, sync successful!");
+        log.info("Done, sync successful in {}!", timer);
         log.info("Result: {}", result);
         log.info("");
 
-        String rsyncCommand = "rsync -ivrt --delete --mkpath --force " + sourceDir + "/ " + sshHost + ":" + targetDir + "/";
+        String rsyncCommand = "rsync -ivrt --delete --mkpath --force " + sourceDir + " " + sshHost + ":" + targetDir + "/";
         log.info("Rsync command: {}", rsyncCommand);
 
 
