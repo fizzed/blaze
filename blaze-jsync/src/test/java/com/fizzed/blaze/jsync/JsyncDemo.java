@@ -31,7 +31,7 @@ public class JsyncDemo {
 //        final String sourceDir = Paths.get("/home/jjlauer/Downloads/haiku-r1beta5-x86_64-anyboot.iso").toString();
 
 
-        final String targetDir = "test-sync";
+        final String targetDir = "./////test-sync";
 
 //        final String sshHost = "bmh-dev-x64-indy25-1";
 //        final String sshHost = "bmh-dev-x64-fedora43-1";

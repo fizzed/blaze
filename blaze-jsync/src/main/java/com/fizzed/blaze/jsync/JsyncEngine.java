@@ -192,8 +192,10 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
             }
         }
 
-        // always cleanup target
-        //targetPathAbs = targetPathAbs.normalize();
+
+        // final cleanup of all paths
+        final VirtualPath sourcePathAbsFinal = sourcePathAbs.normalize();
+        final VirtualPath targetPathAbsFinal = targetPathAbs.normalize();
 
 
         //
@@ -205,7 +207,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
 
 
         log.info("Syncing {}:{} -> {}:{} (mode={}, checksum={}, delete={})",
-            sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, mode, checksum, this.delete);
+            sourceVfs, sourcePathAbsFinal, targetVfs, targetPathAbsFinal, mode, checksum, this.delete);
 
 
         //
@@ -214,13 +216,13 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
 
         final List<VirtualPathPair> deferredFiles = new ArrayList<>();
 
-        if (sourcePathAbs.isDirectory()) {
+        if (sourcePathAbsFinal.isDirectory()) {
             // any excludes, let's resolve them against pwd of the source to make it easier to exclude them
             final List<VirtualPath> excludePaths;
             if (this.excludes != null) {
                 excludePaths = this.excludes.stream()
                     .map(VirtualPath::parse)
-                    .map(sourcePathAbs::resolve)
+                    .map(sourcePathAbsFinal::resolve)
                     .collect(toList());
             } else {
                 excludePaths = Collections.emptyList();
@@ -229,10 +231,10 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
             // as we process files, only a subset may require more advanced methods of detecting whether they were modified
             // since that process could be "expensive", we keep a list of files on source/target that we will defer processing
             // until we have a chance to do some bulk processing of checksums, etc.
-            this.syncDirectory(0, result, excludePaths, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs, checksum);
+            this.syncDirectory(0, result, excludePaths, deferredFiles, sourceVfs, sourcePathAbsFinal, targetVfs, targetPathAbsFinal, checksum);
         } else {
             // we are only syncing a file, we may need to do some more expensive checks to determine if it needs to be updated
-            this.syncFile(result, deferredFiles, sourceVfs, sourcePathAbs, targetVfs, targetPathAbs);
+            this.syncFile(result, deferredFiles, sourceVfs, sourcePathAbsFinal, targetVfs, targetPathAbsFinal);
             this.syncDeferredFiles(result, deferredFiles, sourceVfs, targetVfs, checksum);
         }
 
