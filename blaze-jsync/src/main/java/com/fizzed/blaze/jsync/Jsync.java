@@ -167,7 +167,7 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         return this;
     }
 
-    public Jsync exclude(List<String> excludes) {
+    public Jsync excludes(List<String> excludes) {
         for (String exclude : excludes) {
             this.exclude(exclude);
         }

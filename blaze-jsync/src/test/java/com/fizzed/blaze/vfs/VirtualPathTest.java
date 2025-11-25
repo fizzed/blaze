@@ -118,4 +118,53 @@ class VirtualPathTest {
         assertThat(vp.isRelative(), is(false));
     }
 
+    @Test
+    public void normalize() {
+        VirtualPath vp;
+
+        vp = VirtualPath.parse("a/./b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("a/b"));
+
+        vp = VirtualPath.parse("./b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("b"));
+
+        vp = new VirtualPath(null, "b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("b"));
+
+        vp = VirtualPath.parse("a/../b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("b"));
+
+        /*
+        /a/./b/../../c/	/c	. ignored, b popped, a popped.
+        //a//b//	/a/b	Multiple slashes (//) collapsed.
+                    /../	/	Cannot traverse above root.
+        ../a/b	../a/b	Preserves .. in relative paths.
+        ./foo	foo	Leading . removed.
+        a/b/../c	a/c	b removed by ...
+        */
+        vp = VirtualPath.parse("/a/./b/../../c/", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("/c"));
+
+        vp = VirtualPath.parse("//a//b//", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("/a/b"));
+
+        vp = VirtualPath.parse("/../", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("/"));
+
+        vp = VirtualPath.parse("../a/b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("../a/b"));
+
+        vp = VirtualPath.parse("a/b/../c", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("a/c"));
+    }
+
 }

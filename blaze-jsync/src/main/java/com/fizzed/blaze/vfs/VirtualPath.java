@@ -1,5 +1,6 @@
 package com.fizzed.blaze.vfs;
 
+import java.util.LinkedList;
 import java.util.Objects;
 
 public class VirtualPath {
@@ -110,6 +111,71 @@ public class VirtualPath {
      */
     public VirtualFileStat getStat() {
         return this.stat;
+    }
+
+    public VirtualPath normalize() {
+        final boolean isAbsolute = this.isAbsolute();
+
+        // 2. Split by slash
+        String[] parts = this.fullPath.split("/");
+
+        // 3. Use a LinkedList as a stack to process parts
+        LinkedList<String> stack = new LinkedList<>();
+
+        for (String part : parts) {
+            // Skip empty parts (caused by //) and current dir (.)
+            if (part.isEmpty() || ".".equals(part)) {
+                continue;
+            }
+
+            // Handle parent dir (..)
+            if ("..".equals(part)) {
+                if (!stack.isEmpty() && !stack.getLast().equals("..")) {
+                    // If we have a path to go back from, pop it
+                    stack.removeLast();
+                } else if (!isAbsolute) {
+                    // If it's relative (and stack is empty or has ..), we keep the ..
+                    // Example: "../../file.txt" -> we must keep the dots
+                    stack.add(part);
+                }
+                // If it IS absolute and stack is empty, we ignore the ..
+                // (You can't go higher than root in Unix: /../ -> /)
+            } else {
+                // Regular filename/folder
+                stack.add(part);
+            }
+        }
+
+        // 4. Reassemble
+        String normalized = String.join("/", stack);
+
+        if (isAbsolute) {
+            normalized =  "/" + normalized;
+        } else {
+            normalized = normalized.isEmpty() ? "." : normalized;
+        }
+
+        return VirtualPath.parse(normalized, this.directory, this.stat);
+
+        /*// we just need to check the parent path for /./ and /../ sequences
+        String normalizedFullPath = this.fullPath;
+
+        // handle the unique part if it starts with it
+        if (normalizedFullPath.startsWith("./")) {
+            normalizedFullPath = normalizedFullPath.substring(2);
+        }
+
+        // any occurrences in the middle
+        normalizedFullPath = normalizedFullPath.replace("/./", "/");
+
+        int dotDotSlashPos = normalizedFullPath.indexOf("/../");
+        while (dotDotSlashPos >= 0) {
+            int nextSlashPos = normalizedFullPath.indexOf("/", dotDotSlashPos + 4);
+            normalizedFullPath = normalizedFullPath.substring(0, dotDotSlashPos) + normalizedFullPath.substring(nextSlashPos);
+            dotDotSlashPos = normalizedFullPath.indexOf("/../");
+        }*/
+
+//        return VirtualPath.parse(normalizedFullPath, this.directory, this.stat);
     }
 
     public VirtualPath resolve(String path, boolean directory) {

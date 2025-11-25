@@ -19,7 +19,7 @@ public class SftpVirtualVolume implements VirtualVolume {
 
     @Override
     public String getPath() {
-        return this.path.toString();
+        return this.path;
     }
 
     @Override
