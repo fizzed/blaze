@@ -167,6 +167,16 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         return this;
     }
 
+    /**
+     * Adds multiple files or directories to the list of excluded items
+     * for the synchronization process. The specified list of files or directories
+     * will not be included in the synchronization. If deletion is enabled,
+     * these excluded items will also cause any extraneous files to be deleted
+     * from the target directory.
+     *
+     * @param excludes a list of file or directory patterns to be excluded from synchronization.
+     * @return the current instance of {@code Jsync} for method chaining.
+     */
     public Jsync excludes(List<String> excludes) {
         for (String exclude : excludes) {
             this.exclude(exclude);
