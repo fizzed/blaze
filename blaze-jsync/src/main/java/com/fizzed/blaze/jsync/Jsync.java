@@ -9,6 +9,7 @@ import com.fizzed.blaze.util.ValueHolder;
 import com.fizzed.blaze.util.VerboseLogger;
 import com.fizzed.blaze.vfs.VirtualVolume;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Jsync extends Action<Jsync.Result,JsyncResult> implements VerbosityMixin<Jsync>, ProgressMixin<Jsync> {
@@ -163,6 +164,13 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
      */
     public Jsync exclude(String exclude) {
         this.engine.addExclude(exclude);
+        return this;
+    }
+
+    public Jsync exclude(List<String> excludes) {
+        for (String exclude : excludes) {
+            this.exclude(exclude);
+        }
         return this;
     }
 
