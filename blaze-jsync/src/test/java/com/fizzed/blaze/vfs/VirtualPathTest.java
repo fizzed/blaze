@@ -167,4 +167,25 @@ class VirtualPathTest {
         assertThat(vp.normalize().toFullPath(), is("a/c"));
     }
 
+    @Test
+    public void normalizeWindows() {
+        VirtualPath vp;
+
+        vp = VirtualPath.parse("a\\.\\b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("a/b"));
+
+        vp = VirtualPath.parse(".\\b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("b"));
+
+        vp = new VirtualPath(null, "b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("b"));
+
+        vp = VirtualPath.parse("C:/b", true, null);
+
+        assertThat(vp.normalize().toFullPath(), is("C:/b"));
+    }
+
 }

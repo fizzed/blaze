@@ -116,8 +116,16 @@ public class VirtualPath {
     public VirtualPath normalize() {
         final boolean isAbsolute = this.isAbsolute();
 
+        String p = this.fullPath;
+        String dl = null;
+        // handle windows case, where we'll chop off drive letter and add it back
+        if (this.fullPath.length() > 2 && this.fullPath.charAt(1) == ':') {
+            dl = this.fullPath.substring(0, 2);
+            p = this.fullPath.substring(2);
+        }
+
         // 2. Split by slash
-        String[] parts = this.fullPath.split("/");
+        String[] parts = p.split("/");
 
         // 3. Use a LinkedList as a stack to process parts
         LinkedList<String> stack = new LinkedList<>();
@@ -151,31 +159,14 @@ public class VirtualPath {
 
         if (isAbsolute) {
             normalized =  "/" + normalized;
+            if (dl != null) {
+                normalized = dl + normalized;
+            }
         } else {
             normalized = normalized.isEmpty() ? "." : normalized;
         }
 
         return VirtualPath.parse(normalized, this.directory, this.stat);
-
-        /*// we just need to check the parent path for /./ and /../ sequences
-        String normalizedFullPath = this.fullPath;
-
-        // handle the unique part if it starts with it
-        if (normalizedFullPath.startsWith("./")) {
-            normalizedFullPath = normalizedFullPath.substring(2);
-        }
-
-        // any occurrences in the middle
-        normalizedFullPath = normalizedFullPath.replace("/./", "/");
-
-        int dotDotSlashPos = normalizedFullPath.indexOf("/../");
-        while (dotDotSlashPos >= 0) {
-            int nextSlashPos = normalizedFullPath.indexOf("/", dotDotSlashPos + 4);
-            normalizedFullPath = normalizedFullPath.substring(0, dotDotSlashPos) + normalizedFullPath.substring(nextSlashPos);
-            dotDotSlashPos = normalizedFullPath.indexOf("/../");
-        }*/
-
-//        return VirtualPath.parse(normalizedFullPath, this.directory, this.stat);
     }
 
     public VirtualPath resolve(String path, boolean directory) {
