@@ -161,7 +161,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
             targetPathRaw = targetPathRaw.resolve(sourcePathAbs.getName(), sourcePathAbs.isDirectory());
         }
 
-        final VirtualPath targetPathAbsWithoutStat = targetVfs.pwd().resolve(targetPathRaw).normalize();
+        final VirtualPath targetPathAbsWithoutStat = targetVfs.pwd().resolve(targetPathRaw);
 
         //
         // Create parent directories of target if necessary
@@ -193,7 +193,7 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         }
 
         // always cleanup target
-        targetPathAbs = targetPathAbs.normalize();
+        //targetPathAbs = targetPathAbs.normalize();
 
 
         //
