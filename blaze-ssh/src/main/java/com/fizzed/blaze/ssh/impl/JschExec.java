@@ -155,25 +155,7 @@ public class JschExec extends SshExec {
 
             c.addAll(this.arguments);
 
-            final String finalCommand = SshArguments.buildEscapedCommand(c);
-            
-            /*// building the command may be a little tricky, not sure about spaces...
-            final StringBuilder sb = new StringBuilder();
-            
-            c.stream().forEach((arg) -> {
-                if (sb.length() > 0) {
-                    sb.append(" ");
-                }
-                if (arg.contains(" ")) {
-                    sb.append("'");
-                    sb.append(arg);
-                    sb.append("'");
-                } else {
-                    sb.append(arg);
-                }
-            });
-            
-            String finalCommand = sb.toString();*/
+            final String finalCommand = SshArguments.smartEscapedCommandLine(c, this.disableArgumentSmartEscaping);
 
             if (log.isVerbose()) {
                 String workingDir = "";

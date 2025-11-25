@@ -2,6 +2,7 @@ package com.fizzed.blaze.jsync;
 
 import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.util.IoHelper;
+import com.fizzed.blaze.util.Timer;
 import com.fizzed.blaze.util.VerboseLogger;
 import com.fizzed.blaze.vfs.*;
 import com.fizzed.blaze.vfs.util.VirtualPathPair;
@@ -10,7 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -209,6 +213,8 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
         log.info("Syncing {}:{} -> {}:{} (mode={}, checksum={}, delete={})",
             sourceVfs, sourcePathAbsFinal, targetVfs, targetPathAbsFinal, mode, checksum, this.delete);
 
+        final Timer timer = new Timer();
+
 
         //
         // Ready to start sync, the only part that matters is if we're syncing a director or a file
@@ -237,6 +243,9 @@ public class JsyncEngine implements VerbosityMixin<JsyncEngine> {
             this.syncFile(result, deferredFiles, sourceVfs, sourcePathAbsFinal, targetVfs, targetPathAbsFinal);
             this.syncDeferredFiles(result, deferredFiles, sourceVfs, targetVfs, checksum);
         }
+
+        log.verbose("Synced {} new {} updated {} deleted files, {} new {} deleted dirs (in {})", result.getFilesCreated(),
+            result.getFilesUpdated(), result.getFilesDeleted(),result.getDirsCreated(), result.getDirsDeleted(), timer);
 
         return result;
     }

@@ -10,23 +10,37 @@ class SshArgumentsTest {
 
     @Test
     public void noEscapes() {
-        String cmd = SshArguments.buildEscapedCommand(asList("a", "b", "c"));
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a", "b", "c"), false);
 
         assertThat(cmd, is("a b c"));
     }
 
     @Test
-    public void passthroughEscapes() {
-        String cmd = SshArguments.buildEscapedCommand(asList("a", "'b'", "\"c\""));
+    public void disableEscaping() {
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a", " b ", "c"), true);
 
-        assertThat(cmd, is("a 'b' \"c\""));
+        assertThat(cmd, is("a  b  c"));
+    }
+
+    @Test
+    public void passthroughEscapes() {
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a", "'b'", "\"c $i-know-what-i'm-doing\""), false);
+
+        assertThat(cmd, is("a 'b' \"c $i-know-what-i'm-doing\""));
     }
 
     @Test
     public void escapeSpaces() {
-        String cmd = SshArguments.buildEscapedCommand(asList("a", " b ", " \"c "));
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a", " b ", " \"c "), false);
 
-        assertThat(cmd, is("a \" b \" \" \\\"c \""));
+        assertThat(cmd, is("a ' b ' ' \"c '"));
+    }
+
+    @Test
+    public void escapeDollarSigns() {
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a", "$b.class", "c"), false);
+
+        assertThat(cmd, is("a '$b.class' c"));
     }
 
     /*@Test
