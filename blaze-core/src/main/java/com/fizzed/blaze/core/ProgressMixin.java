@@ -16,7 +16,6 @@
 package com.fizzed.blaze.core;
 
 import com.fizzed.blaze.util.ValueHolder;
-import com.fizzed.blaze.util.VerboseLogger;
 
 /**
  * The {@code VerbosityMixin} interface provides a mechanism for managing verbosity levels

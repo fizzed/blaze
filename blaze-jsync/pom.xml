@@ -1,0 +1,52 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>blaze-jsync</artifactId>
+    <name>blaze-jsync</name>
+    <packaging>jar</packaging>
+ 
+    <parent>
+        <groupId>com.fizzed</groupId>
+        <artifactId>blaze</artifactId>
+        <version>2.6.2-SNAPSHOT</version>
+    </parent>
+    
+    <properties>
+        <main.java.package>com.fizzed.blaze.jsync</main.java.package>
+        <jsync.version>1.0.0</jsync.version>
+    </properties>
+    
+    <dependencies>
+        
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>blaze-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>blaze-ssh</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>jsync-engine</artifactId>
+            <version>${jsync.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>jsync-vfs</artifactId>
+            <version>${jsync.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>jsync-sftp</artifactId>
+            <version>${jsync.version}</version>
+        </dependency>
+
+        <!-- all testing done in jsync git repo -->
+
+    </dependencies>
+</project>

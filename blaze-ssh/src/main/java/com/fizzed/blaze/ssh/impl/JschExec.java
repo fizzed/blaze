@@ -54,7 +54,12 @@ public class JschExec extends SshExec {
         
         ObjectHelper.requireNonNull(jschSession, "ssh session must be established first");
         ObjectHelper.requireNonNull(command, "ssh command cannot be null");
-        
+
+        // workingDir is NOT supported on ssh exec, warn if it was set
+        if (this.workingDirectory != null) {
+            log.error("Working directory is not supported on ssh exec, ignoring {}", this.workingDirectory);
+        }
+
         ChannelExec channel = null;
         try {
             channel = (ChannelExec)jschSession.openChannel("exec");
@@ -155,38 +160,16 @@ public class JschExec extends SshExec {
 
             c.addAll(this.arguments);
 
-            final String finalCommand = SshArguments.buildEscapedCommand(c);
-            
-            /*// building the command may be a little tricky, not sure about spaces...
-            final StringBuilder sb = new StringBuilder();
-            
-            c.stream().forEach((arg) -> {
-                if (sb.length() > 0) {
-                    sb.append(" ");
-                }
-                if (arg.contains(" ")) {
-                    sb.append("'");
-                    sb.append(arg);
-                    sb.append("'");
-                } else {
-                    sb.append(arg);
-                }
-            });
-            
-            String finalCommand = sb.toString();*/
+            final String finalCommand = SshArguments.smartEscapedCommandLine(c, this.disableArgumentSmartEscaping);
 
             if (log.isVerbose()) {
-                String workingDir = "";
                 String env = "";
-                if (this.workingDirectory != null) {
-                    workingDir = " in working dir [" + this.workingDirectory + "]";
-                }
                 if (!this.environment.isEmpty()) {
                     env = " with env " + this.environment;
                 }
-                log.verbose("SshExec [{}]{}{}", finalCommand, workingDir, env);
+                log.verbose("SshExec [{}]{}", finalCommand, env);
             }
-            
+
             channel.setCommand(finalCommand);
             
             // this connects and sends command
