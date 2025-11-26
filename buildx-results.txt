@@ -3,17 +3,305 @@ Buildx Results
 
 Cross platform tests based on https://github.com/fizzed/buildx
 
-Commit: c145066225ea0a8cee00d3a906124c05f3c9cdc2
-Date: 2025-11-24T22:01:55.554029675Z[UTC]
+Commit: b7bb5e90b90bd8a7820b827ddfb6dc93cf60d131
+Date: 2025-11-26T16:00:41.08937409Z[UTC]
 
+linux-x64 (Ubuntu 22.04)................................................... success
+linux-x64 (Ubuntu 24.04)................................................... success
+linux-x64 (Ubuntu 20.04)................................................... success
+linux-arm64 (Ubuntu 24.04)................................................. success
+linux-arm64 (Ubuntu 20.04)................................................. success
+linux-riscv64 (Ubuntu 24.04)............................................... failed: Process exited with unexpected value (expected = [0->0]; actual = 1)
+linux_musl-x64 (Alpine 3.22)............................................... success
+linux_musl-x64 (Alpine 3.15)............................................... success
+linux_musl-arm64 (Alpine 3.22)............................................. success
+linux_musl-arm64 (Alpine 3.15)............................................. success
+linux_musl-riscv64 (Alpine 3.22)........................................... success
+macos-x64 (MacOS 15)....................................................... success
+macos-x64 (MacOS 11)....................................................... success
+macos-arm64 (MacOS 15)..................................................... success
+macos-arm64 (MacOS 12)..................................................... success
+windows-x64 (Windows 11)................................................... success
+windows-x64 (Windows 10)................................................... success
+windows-arm64 (Windows 11)................................................. success
 freebsd-x64 (FreeBSD 15)................................................... success
 freebsd-x64 (FreeBSD 13)................................................... success
+freebsd-arm64 (FreeBSD 15)................................................. success
+freebsd-arm64 (FreeBSD 14)................................................. success
 openbsd-x64 (OpenBSD 7.8).................................................. success
+openbsd-arm64 (OpenBSD 7.8)................................................ success
 
 Details =>
 
-Job #0 for freebsd-x64 (FreeBSD 15)
-  log file: .buildx-logs/1764021601481/job-0-freebsd-x64.log
+Job #0 for linux-x64 (Ubuntu 22.04)
+  log file: .buildx-logs/1764172478483/job-0-linux-x64.log
+  host: <local>
+    os: linux
+    arch: x64
+    name: Ubuntu 25.10 (Questing Quokka)
+    libc: glibc 2.42
+    uname: Linux bmh-jjlauer-4 6.17.0-6-generic #6-Ubuntu SMP PREEMPT_DYNAMIC Tue Oct  7 13:34:17 UTC 2025 x86_64 GNU/Linux
+    podman: 5.4.2
+  tags: [container]
+  data: <none>
+  container: docker.io/fizzed/buildx:x64-ubuntu22-jdk21
+    os: linux
+    arch: x64
+    name: ubuntu 22.04.5 lts (jammy jellyfish)
+    libc: glibc 2.35
+
+  status: success
+
+Job #1 for linux-x64 (Ubuntu 24.04)
+  log file: .buildx-logs/1764172478483/job-1-linux-x64.log
+  host: bmh-build-x64-linux-latest
+    os: linux
+    arch: x64
+    name: Ubuntu 24.04.3 LTS (Noble Numbat)
+    libc: glibc 2.39
+    uname: Linux bmh-build-x64-ubuntu24-1 6.8.0-87-generic #88-Ubuntu SMP PREEMPT_DYNAMIC Sat Oct 11 09:28:41 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+    podman: 4.9.3
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #2 for linux-x64 (Ubuntu 20.04)
+  log file: .buildx-logs/1764172478483/job-2-linux-x64.log
+  host: bmh-build-x64-linux-baseline
+    os: linux
+    arch: x64
+    name: Ubuntu 20.04.6 LTS (Focal Fossa)
+    libc: glibc 2.31
+    uname: Linux bmh-build-x64-ubuntu20-1 5.4.0-216-generic #236-Ubuntu SMP Fri Apr 11 19:53:21 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #3 for linux-arm64 (Ubuntu 24.04)
+  log file: .buildx-logs/1764172478483/job-3-linux-arm64.log
+  host: bmh-build-arm64-linux-latest
+    os: linux
+    arch: arm64
+    name: Ubuntu 24.04.3 LTS (Noble Numbat)
+    libc: glibc 2.39
+    uname: Linux bmh-build-arm64-ubuntu24-1 6.8.0-87-generic #88-Ubuntu SMP PREEMPT_DYNAMIC Sat Oct 11 09:16:38 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux
+    podman: 4.9.3
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #4 for linux-arm64 (Ubuntu 20.04)
+  log file: .buildx-logs/1764172478483/job-4-linux-arm64.log
+  host: bmh-build-arm64-linux-baseline
+    os: linux
+    arch: arm64
+    name: Ubuntu 20.04.6 LTS (Focal Fossa)
+    libc: glibc 2.31
+    uname: Linux bmh-build-arm64-ubuntu20-1 5.4.0-216-generic #236-Ubuntu SMP Fri Apr 11 19:55:34 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #5 for linux-riscv64 (Ubuntu 24.04)
+  log file: .buildx-logs/1764172478483/job-5-linux-riscv64.log
+  host: bmh-build-riscv64-linux-latest
+    os: linux
+    arch: riscv64
+    name: Ubuntu 24.04.3 LTS (Noble Numbat)
+    libc: glibc 2.39
+    uname: Linux bmh-build-riscv64-ubuntu24-1 6.14.0-35-generic #35.1~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Oct 16 08:15:18 UTC riscv64 riscv64 riscv64 GNU/Linux
+    podman: 4.9.3
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: failed
+
+Job #6 for linux_musl-x64 (Alpine 3.22)
+  log file: .buildx-logs/1764172478483/job-6-linux_musl-x64.log
+  host: bmh-build-x64-linux-musl-latest
+    os: linux
+    arch: x64
+    name: Alpine Linux v3.22
+    libc: musl 1.2.5
+    uname: Linux bmh-build-x64-alpine322-1 6.12.55-0-virt #1-Alpine SMP PREEMPT_DYNAMIC 2025-10-27 09:36:08 x86_64 Linux
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #7 for linux_musl-x64 (Alpine 3.15)
+  log file: .buildx-logs/1764172478483/job-7-linux_musl-x64.log
+  host: bmh-build-x64-linux-musl-baseline
+    os: linux
+    arch: x64
+    name: Alpine Linux v3.15
+    libc: musl 1.2.2
+    uname: Linux bmh-build-x64-alpine315-1 5.15.140-0-virt #1-Alpine SMP Wed, 29 Nov 2023 21:47:33 +0000 x86_64 Linux
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #8 for linux_musl-arm64 (Alpine 3.22)
+  log file: .buildx-logs/1764172478483/job-8-linux_musl-arm64.log
+  host: bmh-build-arm64-linux-musl-latest
+    os: linux
+    arch: arm64
+    name: Alpine Linux v3.22
+    libc: musl 1.2.5
+    uname: Linux bmh-build-arm64-alpine322-1 6.12.55-0-virt #1-Alpine SMP PREEMPT_DYNAMIC 2025-10-27 09:36:08 aarch64 Linux
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #9 for linux_musl-arm64 (Alpine 3.15)
+  log file: .buildx-logs/1764172478483/job-9-linux_musl-arm64.log
+  host: bmh-build-arm64-linux-musl-baseline
+    os: linux
+    arch: arm64
+    name: Alpine Linux v3.15
+    libc: musl 1.2.2
+    uname: Linux bmh-build-arm64-alpine315-1 5.15.140-0-virt #1-Alpine SMP Wed, 29 Nov 2023 21:47:33 +0000 aarch64 Linux
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #10 for linux_musl-riscv64 (Alpine 3.22)
+  log file: .buildx-logs/1764172478483/job-10-linux_musl-riscv64.log
+  host: bmh-build-riscv64-linux-musl-latest
+    os: linux
+    arch: riscv64
+    name: Alpine Linux v3.22
+    libc: musl 1.2.5
+    uname: Linux bmh-build-riscv64-alpine322-1 6.12.55-0-lts #1-Alpine SMP PREEMPT_DYNAMIC 2025-10-27 09:36:08 riscv64 Linux
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #11 for macos-x64 (MacOS 15)
+  log file: .buildx-logs/1764172478483/job-11-macos-x64.log
+  host: bmh-build-x64-macos-latest
+    os: macos
+    arch: x64
+    name: macOS 15.1 (Sequoia)
+    uname: Darwin bmh-build-x64-macos15-1.lauer.lan 24.1.0 Darwin Kernel Version 24.1.0: Thu Oct 10 21:02:27 PDT 2024; root:xnu-11215.41.3~2/RELEASE_X86_64 x86_64
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #12 for macos-x64 (MacOS 11)
+  log file: .buildx-logs/1764172478483/job-12-macos-x64.log
+  host: bmh-build-x64-macos-baseline
+    os: macos
+    arch: x64
+    name: macOS 11.7.2 (Big Sur)
+    uname: Darwin bmh-build-x64-macos11-1.lauer.lan 20.6.0 Darwin Kernel Version 20.6.0: Sun Nov  6 23:17:00 PST 2022; root:xnu-7195.141.46~1/RELEASE_X86_64 x86_64
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #13 for macos-arm64 (MacOS 15)
+  log file: .buildx-logs/1764172478483/job-13-macos-arm64.log
+  host: bmh-build-arm64-macos-latest
+    os: macos
+    arch: arm64
+    name: macOS 15.7.1 (Sequoia)
+    uname: Darwin bmh-dev-arm64-macos15-1.lauer.lan 24.6.0 Darwin Kernel Version 24.6.0: Mon Aug 11 21:16:05 PDT 2025; root:xnu-11417.140.69.701.11~1/RELEASE_ARM64_VMAPPLE arm64
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #14 for macos-arm64 (MacOS 12)
+  log file: .buildx-logs/1764172478483/job-14-macos-arm64.log
+  host: bmh-build-arm64-macos-baseline
+    os: macos
+    arch: arm64
+    name: macOS 12.7.6 (Monterey)
+    uname: Darwin bmh-build-arm64-macos12-1.lauer.lan 21.6.0 Darwin Kernel Version 21.6.0: Mon Jun 24 00:58:51 PDT 2024; root:xnu-8020.240.18.709.2~1/RELEASE_ARM64_VMAPPLE arm64
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #15 for windows-x64 (Windows 11)
+  log file: .buildx-logs/1764172478483/job-15-windows-x64.log
+  host: bmh-build-x64-windows-latest
+    os: windows
+    arch: x64
+    name: Windows 11 Pro (25H2)
+    uname: Windows BMH-BUILD-X64-W 11.0.26200 Windows 11 Pro (25H2) AMD64
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #16 for windows-x64 (Windows 10)
+  log file: .buildx-logs/1764172478483/job-16-windows-x64.log
+  host: bmh-build-x64-windows-baseline
+    os: windows
+    arch: x64
+    name: Windows 10 Pro (22H2)
+    uname: Windows BMH-BUILD-X64-W 10.0.19045 Windows 10 Pro (22H2) AMD64
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #17 for windows-arm64 (Windows 11)
+  log file: .buildx-logs/1764172478483/job-17-windows-arm64.log
+  host: bmh-build-arm64-windows-latest
+    os: windows
+    arch: arm64
+    name: Windows 11 Pro (24H2)
+    uname: Windows BMH-BUILD-ARM64 11.0.26100 Windows 11 Pro (24H2) ARM64
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #18 for freebsd-x64 (FreeBSD 15)
+  log file: .buildx-logs/1764172478483/job-18-freebsd-x64.log
   host: bmh-build-x64-freebsd-latest
     os: freebsd
     arch: x64
@@ -26,8 +314,8 @@ Job #0 for freebsd-x64 (FreeBSD 15)
 
   status: success
 
-Job #1 for freebsd-x64 (FreeBSD 13)
-  log file: .buildx-logs/1764021601481/job-1-freebsd-x64.log
+Job #19 for freebsd-x64 (FreeBSD 13)
+  log file: .buildx-logs/1764172478483/job-19-freebsd-x64.log
   host: bmh-build-x64-freebsd-baseline
     os: freebsd
     arch: x64
@@ -40,13 +328,55 @@ Job #1 for freebsd-x64 (FreeBSD 13)
 
   status: success
 
-Job #2 for openbsd-x64 (OpenBSD 7.8)
-  log file: .buildx-logs/1764021601481/job-2-openbsd-x64.log
+Job #20 for freebsd-arm64 (FreeBSD 15)
+  log file: .buildx-logs/1764172478483/job-20-freebsd-arm64.log
+  host: bmh-build-arm64-freebsd-latest
+    os: freebsd
+    arch: arm64
+    name: FreeBSD 15.0-BETA2
+    uname: FreeBSD bmh-build-arm64-freebsd15-1 15.0-BETA2 FreeBSD 15.0-BETA2 releng/15.0-n280707-3edefa72bc4e GENERIC arm64
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #21 for freebsd-arm64 (FreeBSD 14)
+  log file: .buildx-logs/1764172478483/job-21-freebsd-arm64.log
+  host: bmh-build-arm64-freebsd-baseline
+    os: freebsd
+    arch: arm64
+    name: FreeBSD 14.1-RELEASE-p8
+    uname: FreeBSD bmh-build-arm64-freebsd14-1 14.3-RELEASE-p5 FreeBSD 14.3-RELEASE-p5 GENERIC arm64
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #22 for openbsd-x64 (OpenBSD 7.8)
+  log file: .buildx-logs/1764172478483/job-22-openbsd-x64.log
   host: bmh-build-x64-openbsd-latest
     os: openbsd
     arch: x64
     name: OpenBSD 7.8
     uname: OpenBSD bmh-build-x64-openbsd78-1 7.8 GENERIC.MP#54 amd64
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #23 for openbsd-arm64 (OpenBSD 7.8)
+  log file: .buildx-logs/1764172478483/job-23-openbsd-arm64.log
+  host: bmh-build-arm64-openbsd-latest
+    os: openbsd
+    arch: arm64
+    name: OpenBSD 7.8
+    uname: OpenBSD bmh-build-arm64-openbsd78-1 7.8 GENERIC.MP#38 arm64
     podman: <not installed>
   tags: [latest]
   data: <none>
