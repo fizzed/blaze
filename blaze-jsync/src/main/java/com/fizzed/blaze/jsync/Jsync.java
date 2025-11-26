@@ -241,6 +241,7 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         Objects.requireNonNull(this.source, "source volume not specified");
         Objects.requireNonNull(this.target, "target volume not specified");
 
+        // enable logging & progress bars
         this.engine.setEventHandler(new ProgressEventHandler());
 
         try {
@@ -301,15 +302,20 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         @Override
         public void willTransferFile(VirtualPath sourcePath, VirtualPath targetPath, JsyncPathChanges changes) {
             if (changes.isMissing()) {
-                log.verbose("Creating file {}", targetPath);
+                log.verbose("Creating file {} ({})", targetPath, changes);
             } else {
-                log.verbose("Updating file {}", targetPath);
+                log.verbose("Updating file {} ({})", targetPath, changes);
             }
         }
 
         @Override
-        public void willUpdateStat(VirtualPath sourcePath, VirtualPath targetPath) {
-            log.info("Updating stat {}", targetPath);
+        public void willUpdateStat(VirtualPath sourcePath, VirtualPath targetPath, JsyncPathChanges changes, boolean associatedWithFileUpdateOrDirCreated) {
+            // if the stat change is simply associate, we don't need to log it verbosely
+            if (associatedWithFileUpdateOrDirCreated) {
+                log.debug("Updating stat {} ({})", targetPath, changes);
+            } else {
+                log.verbose("Updating stat {} ({})", targetPath, changes);
+            }
         }
 
         @Override

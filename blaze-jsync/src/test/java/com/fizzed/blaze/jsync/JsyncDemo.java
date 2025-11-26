@@ -2,7 +2,6 @@ package com.fizzed.blaze.jsync;
 
 import com.fizzed.blaze.logging.LogLevel;
 import com.fizzed.blaze.logging.LoggerConfig;
-import com.fizzed.blaze.util.Timer;
 import com.fizzed.jsync.engine.JsyncMode;
 import com.fizzed.jsync.engine.JsyncResult;
 import com.fizzed.jsync.vfs.VirtualVolume;
@@ -34,17 +33,17 @@ public class JsyncDemo {
 //        final String sshHost = "bmh-dev-x64-indy25-1";
 //        final String sshHost = "bmh-dev-x64-fedora43-1";
 //        final String sshHost = "bmh-build-x64-freebsd15-1";
-//        final VirtualVolume target = sshVolume("bmh-build-x64-win11-1", "test-sync");
+        final VirtualVolume target = sftpVolume("bmh-build-x64-win11-1", "test-sync");
 //        final VirtualVolume target = sftpVolume("bmh-dev-x64-indy25-1", "test-sync");
-        final VirtualVolume target = sftpVolume("bmh-dev-x64-fedora43-1", "test-sync");
+//        final VirtualVolume target = sftpVolume("bmh-dev-x64-fedora43-1", "test-sync");
 
 
         final JsyncResult result = jsync(source, target, JsyncMode.MERGE)
-//            .verbose()
-            .debug()
+            .verbose()
+            //.debug()
             .progress()
             .parents()
-//            .ignoreTimes()
+            //.ignoreTimes()
             .delete()
             .force()
             .run();
