@@ -1,5 +1,16 @@
-Blaze by Fizzed
-===============
+# Blaze by Fizzed
+
+## 2.7.0 - 2025-11-26
+ - Jsync: New `blaze-jsync` module! Pure Java rsync-like library for local to/from remote ssh/sftp. Works on all platforms,
+requires no native executables or libraries to be installed, and works on Windows! Supports the most common semantics
+of rsync, including incremental syncs, file/dir timestamps, and full file checksums.
+ - SSH: (Possible Breaking) more enhancements to SSH exec argument smart escaping: a new whitelist of safe chars is used
+to determine if an argument needs to be escaped. Also, rather than use double quotes, it reverts back to using single
+quotes to be more cross-platform and guarantee the other side does not interpret parts of argument as shell syntax
+ (e.g. the argument includes a $ dollar sign)
+ - SSH: workingDir is not supported on ssh exec, its always been a noop. We now print out an ERROR to log if it was used.
+ - Archive: for platforms where zstd is not supported with the embedded "libzstd" JNI library, blaze will now fallback
+to checking if the "zstd" executable is on the PATH, and use that to decompress the file seamlessly.
 
 ## 2.6.1 - 2025-11-18
  - Haproxy commands now suppress stdout 'tee'-ing of their output (since it is captured) (@mgager)
