@@ -311,11 +311,7 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         @Override
         public void willUpdateStat(VirtualPath sourcePath, VirtualPath targetPath, JsyncPathChanges changes, boolean associatedWithFileUpdateOrDirCreated) {
             // if the stat change is simply associate, we don't need to log it verbosely
-            if (associatedWithFileUpdateOrDirCreated) {
-                log.debug("Updating stat {} ({})", targetPath, changes);
-            } else {
-                log.verbose("Updating stat {} ({})", targetPath, changes);
-            }
+            log.debug("Updating stat {} ({})", targetPath, changes);
         }
 
         @Override
