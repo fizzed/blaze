@@ -73,7 +73,11 @@ public class JschSftpSession extends SshSftpSession implements SshSftpSupport {
         this.workingDir = this.pwd2();
         this.pathTranslator = PathTranslator.detectLocalRemote(this.workingDir);
     }
-    
+
+    public ChannelSftp getChannel() {
+        return this.channel;
+    }
+
     @Override
     public SshSession session() {
         return this.session;

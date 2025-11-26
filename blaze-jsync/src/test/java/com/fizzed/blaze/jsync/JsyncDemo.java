@@ -3,15 +3,17 @@ package com.fizzed.blaze.jsync;
 import com.fizzed.blaze.logging.LogLevel;
 import com.fizzed.blaze.logging.LoggerConfig;
 import com.fizzed.blaze.util.Timer;
-import com.fizzed.blaze.vfs.*;
+import com.fizzed.jsync.engine.JsyncMode;
+import com.fizzed.jsync.engine.JsyncResult;
+import com.fizzed.jsync.vfs.VirtualVolume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
 
 import static com.fizzed.blaze.jsync.Jsyncs.jsync;
-import static com.fizzed.blaze.vfs.LocalVirtualVolume.localVolume;
-import static com.fizzed.blaze.vfs.SftpVirtualVolume.sftpVolume;
+import static com.fizzed.jsync.sftp.SftpVirtualVolume.sftpVolume;
+import static com.fizzed.jsync.vfs.LocalVirtualVolume.localVolume;
 
 public class JsyncDemo {
     static private final Logger log = LoggerFactory.getLogger(JsyncDemo.class);

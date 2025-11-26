@@ -13,6 +13,7 @@
     
     <properties>
         <main.java.package>com.fizzed.blaze.jsync</main.java.package>
+        <jsync.version>0.0.1-SNAPSHOT</jsync.version>
     </properties>
     
     <dependencies>
@@ -25,6 +26,24 @@
         <dependency>
             <groupId>com.fizzed</groupId>
             <artifactId>blaze-ssh</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>jsync-engine</artifactId>
+            <version>${jsync.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>jsync-vfs</artifactId>
+            <version>${jsync.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>jsync-sftp</artifactId>
+            <version>${jsync.version}</version>
         </dependency>
         
         <!-- testing -->

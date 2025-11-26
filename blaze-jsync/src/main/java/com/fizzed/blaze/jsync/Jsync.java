@@ -7,7 +7,11 @@ import com.fizzed.blaze.core.ProgressMixin;
 import com.fizzed.blaze.core.VerbosityMixin;
 import com.fizzed.blaze.util.ValueHolder;
 import com.fizzed.blaze.util.VerboseLogger;
-import com.fizzed.blaze.vfs.VirtualVolume;
+import com.fizzed.jsync.engine.JsyncEngine;
+import com.fizzed.jsync.engine.JsyncMode;
+import com.fizzed.jsync.engine.JsyncResult;
+import com.fizzed.jsync.vfs.Checksum;
+import com.fizzed.jsync.vfs.VirtualVolume;
 
 import java.util.List;
 import java.util.Objects;
@@ -234,8 +238,8 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         Objects.requireNonNull(this.target, "target volume not specified");
 
         // passthru verbosity and progress to engine
-        this.engine.verbosity(this.log.getLevel());
-        this.engine.setProgress(this.progress.get());
+        /*this.engine.verbosity(this.log.getLevel());
+        this.engine.setProgress(this.progress.get());*/
 
         try {
             final JsyncResult result = this.engine.sync(this.source, this.target, this.mode);
