@@ -1,5 +1,8 @@
 # Blaze by Fizzed
 
+## 2.7.1 - 2025-11-26
+ - Jsync: change verbose logging of updating stat to debug
+
 ## 2.7.0 - 2025-11-26
  - Jsync: New `blaze-jsync` module! Pure Java rsync-like library for local to/from remote ssh/sftp. Works on all platforms,
 requires no native executables or libraries to be installed, and works on Windows! Supports the most common semantics
