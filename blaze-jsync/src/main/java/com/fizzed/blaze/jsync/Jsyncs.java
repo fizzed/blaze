@@ -6,11 +6,13 @@ import com.fizzed.blaze.ssh.SshSftpSession;
 import com.fizzed.blaze.ssh.impl.JschSession;
 import com.fizzed.blaze.ssh.impl.JschSftpSession;
 import com.fizzed.jsync.engine.JsyncMode;
+import com.fizzed.jsync.sftp.SftpVirtualFileSystem;
 import com.fizzed.jsync.sftp.SftpVirtualVolume;
 import com.fizzed.jsync.vfs.LocalVirtualVolume;
+import com.fizzed.jsync.vfs.VirtualFileSystem;
 import com.fizzed.jsync.vfs.VirtualVolume;
-import com.jcraft.jsch.ChannelSftp;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static com.fizzed.blaze.SecureShells.sshConnect;
@@ -40,20 +42,33 @@ public class Jsyncs {
     }
 
     static public VirtualVolume sftpVolume(String ssh, String path) {
-        final SshSession sshSession = sshConnect(ssh).run();
-        final JschSession jschSsh = (JschSession)sshSession;
-        return SftpVirtualVolume.sftpVolume(jschSsh.getJschSession(), path);
+        return new SftpVirtualVolume(null, null, true, null, true, path) {
+            @Override
+            public VirtualFileSystem openFileSystem() throws IOException {
+                // fix ssh command
+                final String sshUrl;
+                if (!ssh.startsWith("ssh://")) {
+                    sshUrl = "ssh://" + ssh;
+                } else {
+                    sshUrl = ssh;
+                }
+
+                final SshSession sshSession = sshConnect(sshUrl).run();
+                final JschSession jschSsh = (JschSession)sshSession;
+                return SftpVirtualFileSystem.open(jschSsh.getJschSession(), true);
+            }
+        };
     }
 
     static public VirtualVolume sftpVolume(SshSession ssh, String path) {
         final JschSession jschSsh = (JschSession)ssh;
-        return SftpVirtualVolume.sftpVolume(jschSsh.getJschSession(), path);
+        return SftpVirtualVolume.sftpVolume(jschSsh.getJschSession(), false, path);
     }
 
     static public VirtualVolume sftpVolume(SshSession ssh, SshSftpSession sftp, String path) {
         final JschSession jschSsh = (JschSession)ssh;
         final JschSftpSession jschSftp = (JschSftpSession)sftp;
-        return SftpVirtualVolume.sftpVolume(jschSsh.getJschSession(),  jschSftp.getChannel(), path);
+        return SftpVirtualVolume.sftpVolume(jschSsh.getJschSession(), false, jschSftp.getJschChannel(), false, path);
     }
 
 }

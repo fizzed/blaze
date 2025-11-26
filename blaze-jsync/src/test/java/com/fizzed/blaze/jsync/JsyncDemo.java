@@ -11,9 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
 
-import static com.fizzed.blaze.jsync.Jsyncs.jsync;
-import static com.fizzed.jsync.sftp.SftpVirtualVolume.sftpVolume;
-import static com.fizzed.jsync.vfs.LocalVirtualVolume.localVolume;
+import static com.fizzed.blaze.jsync.Jsyncs.*;
 
 public class JsyncDemo {
     static private final Logger log = LoggerFactory.getLogger(JsyncDemo.class);
@@ -25,53 +23,32 @@ public class JsyncDemo {
 //        final String sourceDir = Paths.get("/home/jjlauer/test-sync").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/jsch").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/coredns").toString();
-//        final VirtualVolume source = localVolume(Paths.get("/home/jjlauer/workspace/third-party/nats.java"));
-        final VirtualVolume source = localVolume(Paths.get("/home/jjlauer/workspace/third-party/tokyocabinet-1.4.48"));
+        final VirtualVolume source = localVolume(Paths.get("/home/jjlauer/workspace/third-party/nats.java"));
+//        final VirtualVolume source = localVolume(Paths.get("/home/jjlauer/workspace/third-party/tokyocabinet-1.4.48"));
+//        final VirtualVolume source = localVolume(Paths.get("/home/jjlauer/Downloads"));
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\test-sync").toString();
 //        final String sourceDir = Paths.get("C:\\Users\\jjlauer\\workspace\\third-party\\tokyocabinet-1.4.48").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/workspace/third-party/tokyocabinet-1.4.48").toString();
 //        final String sourceDir = Paths.get("/home/jjlauer/Downloads/haiku-r1beta5-x86_64-anyboot.iso").toString();
 
-
-        final String targetDir = "./////test-sync";
-
 //        final String sshHost = "bmh-dev-x64-indy25-1";
 //        final String sshHost = "bmh-dev-x64-fedora43-1";
 //        final String sshHost = "bmh-build-x64-freebsd15-1";
-//        final VirtualVolume target = sshVolume("bmh-build-x64-win11-1", targetDir);
-        final VirtualVolume target = sftpVolume("bmh-dev-x64-indy25-1", targetDir);
-//        final VirtualVolume target = sftpVolume("bmh-dev-x64-fedora43-1", targetDir);
+//        final VirtualVolume target = sshVolume("bmh-build-x64-win11-1", "test-sync");
+//        final VirtualVolume target = sftpVolume("bmh-dev-x64-indy25-1", "test-sync");
+        final VirtualVolume target = sftpVolume("bmh-dev-x64-fedora43-1", "test-sync");
 
 
-        final Timer timer = new Timer();
-
-
-        final JsyncResult result = jsync(source, target, JsyncMode.NEST)
-            .verbose()
-//            .debug()
+        final JsyncResult result = jsync(source, target, JsyncMode.MERGE)
+//            .verbose()
+            .debug()
             .progress()
             .parents()
+//            .ignoreTimes()
             .delete()
             .force()
             .run();
 
-       /* final JsyncResult result = new JsyncEngine()
-            .verbose()
-            .setProgress(true)
-//            .preferredChecksums(Checksum.CK)
-//            .preferredChecksums(Checksum.MD5, Checksum.SHA1)
-//            .preferredChecksums(Checksum.SHA1)
-            .setDelete(true)
-            .setParents(true)
-            .setForce(true)
-            //.setIgnoreTimes(true)
-//            .setProgress(true)
-            .sync(source, target, JsyncMode.NEST);
-//            .sync(targetVfs, targetDir, sourceVfs, sourceDir, JsyncMode.NEST);*/
-
-        log.info("");
-        log.info("Done, sync successful in {}!", timer);
-        log.info("Result: {}", result);
         log.info("");
 
         String rsyncCommand = "rsync -ivrt --delete --mkpath --force " + source + (result.getMode() == JsyncMode.NEST ? "" : "/") + " " + target + "/";

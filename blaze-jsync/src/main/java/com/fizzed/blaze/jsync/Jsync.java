@@ -5,14 +5,18 @@ import com.fizzed.blaze.core.Action;
 import com.fizzed.blaze.core.BlazeException;
 import com.fizzed.blaze.core.ProgressMixin;
 import com.fizzed.blaze.core.VerbosityMixin;
+import com.fizzed.blaze.util.IoHelper;
 import com.fizzed.blaze.util.ValueHolder;
 import com.fizzed.blaze.util.VerboseLogger;
-import com.fizzed.jsync.engine.JsyncEngine;
-import com.fizzed.jsync.engine.JsyncMode;
-import com.fizzed.jsync.engine.JsyncResult;
+import com.fizzed.jsync.engine.*;
 import com.fizzed.jsync.vfs.Checksum;
+import com.fizzed.jsync.vfs.VirtualFileSystem;
+import com.fizzed.jsync.vfs.VirtualPath;
 import com.fizzed.jsync.vfs.VirtualVolume;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 
@@ -237,9 +241,7 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         Objects.requireNonNull(this.source, "source volume not specified");
         Objects.requireNonNull(this.target, "target volume not specified");
 
-        // passthru verbosity and progress to engine
-        /*this.engine.verbosity(this.log.getLevel());
-        this.engine.setProgress(this.progress.get());*/
+        this.engine.setEventHandler(new ProgressEventHandler());
 
         try {
             final JsyncResult result = this.engine.sync(this.source, this.target, this.mode);
@@ -247,6 +249,73 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
             return new Result(this, result);
         } catch (Exception e) {
             throw new BlazeException(e.getMessage(), e);
+        }
+    }
+
+    private class ProgressEventHandler implements JsyncEventHandler {
+
+        @Override
+        public void willBegin(VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath) {
+            log.verbose("Syncing {}:{} -> {}:{}", sourceVfs, sourcePath, targetVfs, targetPath);
+        }
+
+        @Override
+        public void willEnd(VirtualFileSystem sourceVfs, VirtualPath sourcePath, VirtualFileSystem targetVfs, VirtualPath targetPath, JsyncResult result, long timeMillis) {
+            log.verbose("Synced {} files (new={} updated={} deleted={}) {} dirs (new={} deleted={}) {} stats (in {} ms)",
+                result.getFilesTotal(), result.getFilesCreated(), result.getFilesUpdated(), result.getFilesDeleted(),
+                result.getDirsTotal(), result.getDirsCreated(), result.getDirsDeleted(), result.getStatsOnlyUpdated(), timeMillis);
+        }
+
+        @Override
+        public void willExcludePath(VirtualPath targetPath) {
+            log.verbose("Excluding {}", targetPath);
+        }
+
+        @Override
+        public void willCreateDirectory(VirtualPath targetPath, boolean recursively) {
+            if (!recursively) {
+                log.verbose("Creating directory {}", targetPath);
+            } else {
+                log.debug("Creating directory {}", targetPath);
+            }
+        }
+
+        @Override
+        public void willDeleteDirectory(VirtualPath targetPath, boolean recursively) {
+            if (!recursively) {
+                log.verbose("Deleting directory {}", targetPath);
+            } else {
+                log.debug("Deleting directory {}", targetPath);
+            }
+        }
+
+        @Override
+        public void willDeleteFile(VirtualPath targetPath, boolean recursively) {
+            if (!recursively) {
+                log.verbose("Deleting file {}", targetPath);
+            } else {
+                log.debug("Deleting file {}", targetPath);
+            }
+        }
+
+        @Override
+        public void willTransferFile(VirtualPath sourcePath, VirtualPath targetPath, JsyncPathChanges changes) {
+            if (changes.isMissing()) {
+                log.verbose("Creating file {}", targetPath);
+            } else {
+                log.verbose("Updating file {}", targetPath);
+            }
+        }
+
+        @Override
+        public void willUpdateStat(VirtualPath sourcePath, VirtualPath targetPath) {
+            log.info("Updating stat {}", targetPath);
+        }
+
+        @Override
+        public void doCopy(InputStream input, OutputStream output, long knownContentLength) throws IOException {
+            boolean progressEnabled = getVerboseLogger().isVerbose() && progress.get();
+            IoHelper.copy(input, output, progressEnabled, true, knownContentLength);
         }
     }
 
