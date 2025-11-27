@@ -9,16 +9,15 @@ import com.fizzed.blaze.util.IoHelper;
 import com.fizzed.blaze.util.ValueHolder;
 import com.fizzed.blaze.util.VerboseLogger;
 import com.fizzed.jsync.engine.*;
-import com.fizzed.jsync.vfs.Checksum;
-import com.fizzed.jsync.vfs.VirtualFileSystem;
-import com.fizzed.jsync.vfs.VirtualPath;
-import com.fizzed.jsync.vfs.VirtualVolume;
+import com.fizzed.jsync.vfs.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Jsync extends Action<Jsync.Result,JsyncResult> implements VerbosityMixin<Jsync>, ProgressMixin<Jsync> {
 
@@ -162,6 +161,29 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
     }
 
     /**
+     * Enables skipping of permission-related operations during the synchronization process.
+     * This method is a shorthand for {@code skipPermissions(true)}, automatically enabling
+     * the skip permissions functionality.
+     *
+     * @return the current instance of {@code Jsync} for method chaining.
+     */
+    public Jsync skipPermissions() {
+        return this.skipPermissions(true);
+    }
+
+    /**
+     * Specifies whether permission-related operations should be skipped during the synchronization process.
+     *
+     * @param skipPermissions a boolean value indicating whether to skip permission-related operations (true)
+     *                        or perform them (false) during synchronization.
+     * @return the current instance of {@code Jsync} for method chaining.
+     */
+    public Jsync skipPermissions(boolean skipPermissions) {
+        this.engine.setSkipPermissions(skipPermissions);
+        return this;
+    }
+
+    /**
      * Adds the specified file or directory to the list of excluded items
      * for the synchronization process. This can be used to specify files or
      * directories that should not be included in the synchronization. If you specify these plus set delete to true
@@ -188,6 +210,31 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
     public Jsync excludes(List<String> excludes) {
         for (String exclude : excludes) {
             this.exclude(exclude);
+        }
+        return this;
+    }
+
+    /**
+     * Adds the specified path to the list of ignored paths or files in the synchronization process.
+     *
+     * @param ignore the pattern or path to be ignored during synchronization
+     * @return the current Jsync instance for method chaining
+     */
+    public Jsync ignore(String ignore) {
+        this.engine.addIgnore(ignore);
+        return this;
+    }
+
+    /**
+     * Specifies multiple paths to be ignored during the synchronization process.
+     * Each pattern in the provided list will be added to the list of ignored items.
+     *
+     * @param ignores a list of file or directory patterns to be ignored during synchronization.
+     * @return the current instance of {@code Jsync} for method chaining.
+     */
+    public Jsync ignores(List<String> ignores) {
+        for (String ignore : ignores) {
+            this.ignore(ignore);
         }
         return this;
     }
@@ -273,6 +320,11 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         }
 
         @Override
+        public void willIgnorePath(VirtualPath targetPath) {
+            log.verbose("Ignoring {}", targetPath);
+        }
+
+        @Override
         public void willCreateDirectory(VirtualPath targetPath, boolean recursively) {
             if (!recursively) {
                 log.verbose("Creating directory {}", targetPath);
@@ -309,9 +361,10 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         }
 
         @Override
-        public void willUpdateStat(VirtualPath sourcePath, VirtualPath targetPath, JsyncPathChanges changes, boolean associatedWithFileUpdateOrDirCreated) {
+        public void willUpdateStat(VirtualPath sourcePath, VirtualPath targetPath, JsyncPathChanges changes, Collection<StatUpdateOption> options, boolean associatedWithFileUpdateOrDirCreated) {
             // if the stat change is simply associate, we don't need to log it verbosely
-            log.debug("Updating stat {} ({})", targetPath, changes);
+            String optionsStr = options.stream().map(v -> v.name().toLowerCase()).collect(Collectors.joining(", "));
+            log.debug("Updating stat {} ({})", targetPath, optionsStr);
         }
 
         @Override
