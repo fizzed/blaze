@@ -155,9 +155,9 @@ public class JschExec extends SshExec {
                 c.add("-c");
             }
 
-            // original version used something called PathHelper.toString(), which always sent the command with / 's
-            c.add(command.toString().replace("\\", "/"));
-
+            // passthru the command as-is
+            c.add(command.toString());
+            // all all the arguments back
             c.addAll(this.arguments);
 
             final String finalCommand = SshArguments.smartEscapedCommandLine(c, this.disableArgumentSmartEscaping);
