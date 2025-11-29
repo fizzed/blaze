@@ -43,4 +43,18 @@ class SshArgumentsTest {
         assertThat(cmd, is("a '$b.class' c"));
     }
 
+    @Test
+    public void posixPathChars() {
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a/b/c", "d"), false);
+
+        assertThat(cmd, is("a/b/c d"));
+    }
+
+    @Test
+    public void windowsPathChars() {
+        String cmd = SshArguments.smartEscapedCommandLine(asList("a\\b\\c", "d"), false);
+
+        assertThat(cmd, is("a\\b\\c d"));
+    }
+
 }

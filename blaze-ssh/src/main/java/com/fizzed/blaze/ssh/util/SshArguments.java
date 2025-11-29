@@ -7,7 +7,7 @@ public class SshArguments {
 
     // Pattern for characters that are safe to leave unquoted.
     // Alphanumeric, hyphen, underscore, dot, slash, and equals (often used in flags).
-    static private final Pattern SAFE_CHARS = Pattern.compile("^[a-zA-Z0-9\\-_./=@:,+]+$");
+    static private final Pattern SAFE_CHARS = Pattern.compile("^[a-zA-Z0-9\\\\\\-_./=@:,+]+$");
 
     static private boolean isAlreadyQuoted(String arg) {
         if (arg.length() < 2) return false;
