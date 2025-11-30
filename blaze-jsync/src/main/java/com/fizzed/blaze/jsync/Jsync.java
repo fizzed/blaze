@@ -315,13 +315,18 @@ public class Jsync extends Action<Jsync.Result,JsyncResult> implements Verbosity
         }
 
         @Override
-        public void willExcludePath(VirtualPath targetPath) {
-            log.verbose("Excluding {}", targetPath);
+        public void willExcludePath(VirtualPath sourcePath) {
+            log.verbose("Excluding {}", sourcePath);
         }
 
         @Override
-        public void willIgnorePath(VirtualPath targetPath) {
-            log.verbose("Ignoring {}", targetPath);
+        public void willIgnoreSourcePath(VirtualPath sourcePath) {
+            log.verbose("Ignoring source {}", sourcePath);
+        }
+
+        @Override
+        public void willIgnoreTargetPath(VirtualPath targetPath) {
+            log.verbose("Ignoring target {}", targetPath);
         }
 
         @Override
