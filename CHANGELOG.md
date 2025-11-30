@@ -1,5 +1,16 @@
 # Blaze by Fizzed
 
+## 2.10.0 - 2025-11-30
+ - SSH: exec now uses a String to store "command" so the path separators are retained on Windows
+ - Bump jsync to v1.4.0 (new path matching feature for excludes and ignores)
+ - SSH: Added \ character as part of safe chars to not smart escape
+
+## 2.9.0 - 2025-11-27
+ - SSH: more changes to auto escaping of command line
+
+## 2.8.0 - 2025-11-27
+ - SSH: remove swapping of / chars in 'command'
+
 ## 2.7.1 - 2025-11-26
  - Jsync: change verbose logging of updating stat to debug
 
