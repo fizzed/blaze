@@ -23,7 +23,8 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
 
     protected final VerboseLogger log;
     protected final Map<String,String> environment;
-    protected Path command;
+    // to re-use command for ssh, it needs to be a string as a local Path != remote path
+    protected String command;
     protected Path workingDirectory;
     final protected List<String> arguments;
     protected StreamableInput pipeInput;
@@ -68,19 +69,19 @@ abstract public class Exec extends Action<Exec.Result,Integer> implements Verbos
 
     public Exec command(Path command) {
         Objects.requireNonNull(command, "command was null");
-        this.command = command;
+        this.command = command.toString();
         return this;
     }
 
     public Exec command(File command) {
         Objects.requireNonNull(command, "command was null");
-        this.command = command.toPath();
+        this.command = command.toPath().toString();
         return this;
     }
 
     public Exec command(String command) {
         Objects.requireNonNull(command, "command was null");
-        this.command = Paths.get(command);
+        this.command = command;
         return this;
     }
 

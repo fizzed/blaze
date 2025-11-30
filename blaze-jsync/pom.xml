@@ -13,7 +13,7 @@
     
     <properties>
         <main.java.package>com.fizzed.blaze.jsync</main.java.package>
-        <jsync.version>1.3.0</jsync.version>
+        <jsync.version>1.4.0</jsync.version>
     </properties>
     
     <dependencies>

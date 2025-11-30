@@ -156,7 +156,8 @@ public class JschExec extends SshExec {
             }
 
             // passthru the command as-is
-            c.add(command.toString());
+            c.add(command);
+
             // all all the arguments back
             c.addAll(this.arguments);
 

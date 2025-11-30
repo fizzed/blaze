@@ -266,7 +266,77 @@ public class SshExecTest extends SshBaseTest {
         
         assertThat(exitValue, is(0));
     }
-    
+
+    @Test
+    public void commandRetainsSlashesWindows() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("path\\to\\exec a=1 b=2")) {
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+
+        SshSession session = startAndConnect();
+
+        Integer exitValue
+            = new JschExec(context, session)
+            .command("path\\to\\exec")
+            .arg("a=1")
+            .args("b=2")
+            .run();
+
+        assertThat(exitValue, is(0));
+    }
+
+    @Test
+    public void commandUnsafeCharsSmartQuoted() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("path/to/exec 'hello world' 'my$name.class' \"i know what i am doing\"")) {
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+
+        SshSession session = startAndConnect();
+
+        Integer exitValue
+            = new JschExec(context, session)
+            .command("path/to/exec")
+            .arg("hello world")
+            .args("my$name.class")
+            .arg("\"i know what i am doing\"")
+            .run();
+
+        assertThat(exitValue, is(0));
+    }
+
+    @Test
+    public void commandWindowsPathSmartQuoted() throws Exception {
+        // what happens when a command received over ssh
+        commandHandler = (SshCommand command) -> {
+            if (command.line.equals("'C:\\Program Files\\Git\\usr\\bin\\cksum.exe' 'hello world' 'my$name.class'")) {
+                command.exit.onExit(0);
+            } else {
+                command.exit.onExit(1);
+            }
+        };
+
+        SshSession session = startAndConnect();
+
+        Integer exitValue
+            = new JschExec(context, session)
+            .command("C:\\Program Files\\Git\\usr\\bin\\cksum.exe")
+            .arg("hello world")
+            .args("my$name.class")
+            .run();
+
+        assertThat(exitValue, is(0));
+    }
+
     @Test
     public void nullInputAndOutputs() throws Exception {
         // what happens when a command received over ssh
