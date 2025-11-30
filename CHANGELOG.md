@@ -1,5 +1,8 @@
 # Blaze by Fizzed
 
+## 2.11.0 - 2025-11-30
+ - Jsync: change exclude and ignore path logging to debug level
+
 ## 2.10.0 - 2025-11-30
  - SSH: exec now uses a String to store "command" so the path separators are retained on Windows
  - Bump jsync to v1.4.0 (new path matching feature for excludes and ignores)
