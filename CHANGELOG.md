@@ -1,5 +1,8 @@
 # Blaze by Fizzed
 
+## TBD
+ - Bump jsync to v1.5.0 (leverages latest jsch)
+
 ## 2.11.0 - 2025-11-30
  - Jsync: change exclude and ignore path logging to debug level
 
