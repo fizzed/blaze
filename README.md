@@ -100,6 +100,7 @@ JVM languages.
  - [Configuration and dependency management](docs/CONFIG.md)
  - [Basic usage](docs/BASIC.md)
  - [SSH plugin](docs/SSH.md)
+ - [JSYNC plugin](docs/JSYNC.md)
  - [HTTP plugin](docs/HTTP.md)
  - [Archive plugin](docs/ARCHIVE.md)
 
