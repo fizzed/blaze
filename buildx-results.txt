@@ -3,8 +3,8 @@ Buildx Results
 
 Cross platform tests based on https://github.com/fizzed/buildx
 
-Commit: 0a05b0a3eaab3af85f4e0f178fa722d9069e1b8e
-Date: 2025-11-30T17:37:44.302629266Z[UTC]
+Commit: b4d36d00f86db68091a7e2e41cf43aee14e90bd1
+Date: 2025-12-03T19:19:24.884536439Z[UTC]
 
 jdk-25 (Zulu JDK 25.0.1 (Linux, x64, /usr/lib/jvm/zulu-jdk-25.0.1.8))...... success
 jdk-21 (Zulu JDK 21.0.8 (Linux, x64, /usr/lib/jvm/zulu-jdk-21.0.8.9))...... success
@@ -35,12 +35,14 @@ freebsd-arm64 (FreeBSD 15)................................................. succ
 freebsd-arm64 (FreeBSD 14)................................................. success
 openbsd-x64 (OpenBSD 7.8).................................................. success
 openbsd-arm64 (OpenBSD 7.8)................................................ success
-netbsd-x64 (NetBSD 10)..................................................... failed: Process exited with unexpected value (expected = [0->0]; actual = 1)
+netbsd-x64 (NetBSD 10)..................................................... success
+omnios-x64 (OmniOS 151056)................................................. success
+omnios-x64 (OmniOS 151046)................................................. success
 
 Details =>
 
 Job #0 for jdk-25 (Zulu JDK 25.0.1 (Linux, x64, /usr/lib/jvm/zulu-jdk-25.0.1.8))
-  log file: .buildx-logs/1764523910571/job-0-jdk-25.log
+  log file: .buildx-logs/1764789258977/job-0-jdk-25.log
   host: <local>
     os: linux
     arch: x64
@@ -56,7 +58,7 @@ Job #0 for jdk-25 (Zulu JDK 25.0.1 (Linux, x64, /usr/lib/jvm/zulu-jdk-25.0.1.8))
   status: success
 
 Job #1 for jdk-21 (Zulu JDK 21.0.8 (Linux, x64, /usr/lib/jvm/zulu-jdk-21.0.8.9))
-  log file: .buildx-logs/1764523910571/job-1-jdk-21.log
+  log file: .buildx-logs/1764789258977/job-1-jdk-21.log
   host: <local>
     os: linux
     arch: x64
@@ -72,7 +74,7 @@ Job #1 for jdk-21 (Zulu JDK 21.0.8 (Linux, x64, /usr/lib/jvm/zulu-jdk-21.0.8.9))
   status: success
 
 Job #2 for jdk-17 (Zulu JDK 17.0.16 (Linux, x64, /usr/lib/jvm/zulu-jdk-17.0.16.8))
-  log file: .buildx-logs/1764523910571/job-2-jdk-17.log
+  log file: .buildx-logs/1764789258977/job-2-jdk-17.log
   host: <local>
     os: linux
     arch: x64
@@ -88,7 +90,7 @@ Job #2 for jdk-17 (Zulu JDK 17.0.16 (Linux, x64, /usr/lib/jvm/zulu-jdk-17.0.16.8
   status: success
 
 Job #3 for jdk-11 (Zulu JDK 11.0.28 (Linux, x64, /usr/lib/jvm/zulu-jdk-11.0.28.6))
-  log file: .buildx-logs/1764523910571/job-3-jdk-11.log
+  log file: .buildx-logs/1764789258977/job-3-jdk-11.log
   host: <local>
     os: linux
     arch: x64
@@ -104,7 +106,7 @@ Job #3 for jdk-11 (Zulu JDK 11.0.28 (Linux, x64, /usr/lib/jvm/zulu-jdk-11.0.28.6
   status: success
 
 Job #4 for jdk-8 (Zulu JDK 8.0.462 (Linux, x64, /usr/lib/jvm/zulu-jdk-8.0.462.8))
-  log file: .buildx-logs/1764523910571/job-4-jdk-8.log
+  log file: .buildx-logs/1764789258977/job-4-jdk-8.log
   host: <local>
     os: linux
     arch: x64
@@ -120,7 +122,7 @@ Job #4 for jdk-8 (Zulu JDK 8.0.462 (Linux, x64, /usr/lib/jvm/zulu-jdk-8.0.462.8)
   status: success
 
 Job #5 for linux-x64 (Ubuntu 22.04)
-  log file: .buildx-logs/1764523910571/job-5-linux-x64.log
+  log file: .buildx-logs/1764789258977/job-5-linux-x64.log
   host: <local>
     os: linux
     arch: x64
@@ -139,7 +141,7 @@ Job #5 for linux-x64 (Ubuntu 22.04)
   status: success
 
 Job #6 for linux-x64 (Ubuntu 24.04)
-  log file: .buildx-logs/1764523910571/job-6-linux-x64.log
+  log file: .buildx-logs/1764789258977/job-6-linux-x64.log
   host: bmh-build-x64-linux-latest
     os: linux
     arch: x64
@@ -154,7 +156,7 @@ Job #6 for linux-x64 (Ubuntu 24.04)
   status: success
 
 Job #7 for linux-x64 (Ubuntu 20.04)
-  log file: .buildx-logs/1764523910571/job-7-linux-x64.log
+  log file: .buildx-logs/1764789258977/job-7-linux-x64.log
   host: bmh-build-x64-linux-baseline
     os: linux
     arch: x64
@@ -169,7 +171,7 @@ Job #7 for linux-x64 (Ubuntu 20.04)
   status: success
 
 Job #8 for linux-arm64 (Ubuntu 24.04)
-  log file: .buildx-logs/1764523910571/job-8-linux-arm64.log
+  log file: .buildx-logs/1764789258977/job-8-linux-arm64.log
   host: bmh-build-arm64-linux-latest
     os: linux
     arch: arm64
@@ -184,7 +186,7 @@ Job #8 for linux-arm64 (Ubuntu 24.04)
   status: success
 
 Job #9 for linux-arm64 (Ubuntu 20.04)
-  log file: .buildx-logs/1764523910571/job-9-linux-arm64.log
+  log file: .buildx-logs/1764789258977/job-9-linux-arm64.log
   host: bmh-build-arm64-linux-baseline
     os: linux
     arch: arm64
@@ -199,7 +201,7 @@ Job #9 for linux-arm64 (Ubuntu 20.04)
   status: success
 
 Job #10 for linux-riscv64 (Ubuntu 24.04)
-  log file: .buildx-logs/1764523910571/job-10-linux-riscv64.log
+  log file: .buildx-logs/1764789258977/job-10-linux-riscv64.log
   host: bmh-build-riscv64-linux-latest
     os: linux
     arch: riscv64
@@ -214,7 +216,7 @@ Job #10 for linux-riscv64 (Ubuntu 24.04)
   status: success
 
 Job #11 for alpine-x64 (Alpine 3.22)
-  log file: .buildx-logs/1764523910571/job-11-alpine-x64.log
+  log file: .buildx-logs/1764789258977/job-11-alpine-x64.log
   host: bmh-build-x64-alpine-latest
     os: linux
     arch: x64
@@ -229,7 +231,7 @@ Job #11 for alpine-x64 (Alpine 3.22)
   status: success
 
 Job #12 for alpine-x64 (Alpine 3.15)
-  log file: .buildx-logs/1764523910571/job-12-alpine-x64.log
+  log file: .buildx-logs/1764789258977/job-12-alpine-x64.log
   host: bmh-build-x64-alpine-baseline
     os: linux
     arch: x64
@@ -244,7 +246,7 @@ Job #12 for alpine-x64 (Alpine 3.15)
   status: success
 
 Job #13 for alpine-arm64 (Alpine 3.22)
-  log file: .buildx-logs/1764523910571/job-13-alpine-arm64.log
+  log file: .buildx-logs/1764789258977/job-13-alpine-arm64.log
   host: bmh-build-arm64-alpine-latest
     os: linux
     arch: arm64
@@ -259,7 +261,7 @@ Job #13 for alpine-arm64 (Alpine 3.22)
   status: success
 
 Job #14 for alpine-arm64 (Alpine 3.15)
-  log file: .buildx-logs/1764523910571/job-14-alpine-arm64.log
+  log file: .buildx-logs/1764789258977/job-14-alpine-arm64.log
   host: bmh-build-arm64-alpine-baseline
     os: linux
     arch: arm64
@@ -274,7 +276,7 @@ Job #14 for alpine-arm64 (Alpine 3.15)
   status: success
 
 Job #15 for alpine-riscv64 (Alpine 3.22)
-  log file: .buildx-logs/1764523910571/job-15-alpine-riscv64.log
+  log file: .buildx-logs/1764789258977/job-15-alpine-riscv64.log
   host: bmh-build-riscv64-alpine-latest
     os: linux
     arch: riscv64
@@ -289,7 +291,7 @@ Job #15 for alpine-riscv64 (Alpine 3.22)
   status: success
 
 Job #16 for macos-x64 (MacOS 15)
-  log file: .buildx-logs/1764523910571/job-16-macos-x64.log
+  log file: .buildx-logs/1764789258977/job-16-macos-x64.log
   host: bmh-build-x64-macos-latest
     os: macos
     arch: x64
@@ -303,7 +305,7 @@ Job #16 for macos-x64 (MacOS 15)
   status: success
 
 Job #17 for macos-x64 (MacOS 11)
-  log file: .buildx-logs/1764523910571/job-17-macos-x64.log
+  log file: .buildx-logs/1764789258977/job-17-macos-x64.log
   host: bmh-build-x64-macos-baseline
     os: macos
     arch: x64
@@ -317,7 +319,7 @@ Job #17 for macos-x64 (MacOS 11)
   status: success
 
 Job #18 for macos-arm64 (MacOS 15)
-  log file: .buildx-logs/1764523910571/job-18-macos-arm64.log
+  log file: .buildx-logs/1764789258977/job-18-macos-arm64.log
   host: bmh-build-arm64-macos-latest
     os: macos
     arch: arm64
@@ -331,7 +333,7 @@ Job #18 for macos-arm64 (MacOS 15)
   status: success
 
 Job #19 for macos-arm64 (MacOS 12)
-  log file: .buildx-logs/1764523910571/job-19-macos-arm64.log
+  log file: .buildx-logs/1764789258977/job-19-macos-arm64.log
   host: bmh-build-arm64-macos-baseline
     os: macos
     arch: arm64
@@ -345,7 +347,7 @@ Job #19 for macos-arm64 (MacOS 12)
   status: success
 
 Job #20 for windows-x64 (Windows 11)
-  log file: .buildx-logs/1764523910571/job-20-windows-x64.log
+  log file: .buildx-logs/1764789258977/job-20-windows-x64.log
   host: bmh-build-x64-windows-latest
     os: windows
     arch: x64
@@ -359,7 +361,7 @@ Job #20 for windows-x64 (Windows 11)
   status: success
 
 Job #21 for windows-x64 (Windows 10)
-  log file: .buildx-logs/1764523910571/job-21-windows-x64.log
+  log file: .buildx-logs/1764789258977/job-21-windows-x64.log
   host: bmh-build-x64-windows-baseline
     os: windows
     arch: x64
@@ -373,7 +375,7 @@ Job #21 for windows-x64 (Windows 10)
   status: success
 
 Job #22 for windows-arm64 (Windows 11)
-  log file: .buildx-logs/1764523910571/job-22-windows-arm64.log
+  log file: .buildx-logs/1764789258977/job-22-windows-arm64.log
   host: bmh-build-arm64-windows-latest
     os: windows
     arch: arm64
@@ -387,12 +389,12 @@ Job #22 for windows-arm64 (Windows 11)
   status: success
 
 Job #23 for freebsd-x64 (FreeBSD 15)
-  log file: .buildx-logs/1764523910571/job-23-freebsd-x64.log
+  log file: .buildx-logs/1764789258977/job-23-freebsd-x64.log
   host: bmh-build-x64-freebsd-latest
     os: freebsd
     arch: x64
-    name: FreeBSD 15.0-ALPHA1
-    uname: FreeBSD bmh-build-x64-freebsd15-1 15.0-ALPHA1 FreeBSD 15.0-ALPHA1 #0 stable/15-n280099-0b3d82579a01: Sat Sep  6 19:04:24 -00 2025     root@releng3.nyi.freebsd.org:/usr/obj/usr/src/amd64.amd64/sys/GENERIC amd64
+    name: FreeBSD 15.0-RELEASE
+    uname: FreeBSD bmh-build-x64-freebsd15-1 15.0-RELEASE FreeBSD 15.0-RELEASE releng/15.0-n280995-7aedc8de6446 GENERIC amd64
     podman: <not installed>
   tags: [latest]
   data: <none>
@@ -401,7 +403,7 @@ Job #23 for freebsd-x64 (FreeBSD 15)
   status: success
 
 Job #24 for freebsd-x64 (FreeBSD 13)
-  log file: .buildx-logs/1764523910571/job-24-freebsd-x64.log
+  log file: .buildx-logs/1764789258977/job-24-freebsd-x64.log
   host: bmh-build-x64-freebsd-baseline
     os: freebsd
     arch: x64
@@ -415,12 +417,12 @@ Job #24 for freebsd-x64 (FreeBSD 13)
   status: success
 
 Job #25 for freebsd-arm64 (FreeBSD 15)
-  log file: .buildx-logs/1764523910571/job-25-freebsd-arm64.log
+  log file: .buildx-logs/1764789258977/job-25-freebsd-arm64.log
   host: bmh-build-arm64-freebsd-latest
     os: freebsd
     arch: arm64
-    name: FreeBSD 15.0-BETA2
-    uname: FreeBSD bmh-build-arm64-freebsd15-1 15.0-BETA2 FreeBSD 15.0-BETA2 releng/15.0-n280707-3edefa72bc4e GENERIC arm64
+    name: FreeBSD 15.0-RELEASE
+    uname: FreeBSD bmh-build-arm64-freebsd15-1 15.0-RELEASE FreeBSD 15.0-RELEASE releng/15.0-n280995-7aedc8de6446 GENERIC arm64
     podman: <not installed>
   tags: [latest]
   data: <none>
@@ -429,7 +431,7 @@ Job #25 for freebsd-arm64 (FreeBSD 15)
   status: success
 
 Job #26 for freebsd-arm64 (FreeBSD 14)
-  log file: .buildx-logs/1764523910571/job-26-freebsd-arm64.log
+  log file: .buildx-logs/1764789258977/job-26-freebsd-arm64.log
   host: bmh-build-arm64-freebsd-baseline
     os: freebsd
     arch: arm64
@@ -443,7 +445,7 @@ Job #26 for freebsd-arm64 (FreeBSD 14)
   status: success
 
 Job #27 for openbsd-x64 (OpenBSD 7.8)
-  log file: .buildx-logs/1764523910571/job-27-openbsd-x64.log
+  log file: .buildx-logs/1764789258977/job-27-openbsd-x64.log
   host: bmh-build-x64-openbsd-latest
     os: openbsd
     arch: x64
@@ -457,7 +459,7 @@ Job #27 for openbsd-x64 (OpenBSD 7.8)
   status: success
 
 Job #28 for openbsd-arm64 (OpenBSD 7.8)
-  log file: .buildx-logs/1764523910571/job-28-openbsd-arm64.log
+  log file: .buildx-logs/1764789258977/job-28-openbsd-arm64.log
   host: bmh-build-arm64-openbsd-latest
     os: openbsd
     arch: arm64
@@ -471,7 +473,7 @@ Job #28 for openbsd-arm64 (OpenBSD 7.8)
   status: success
 
 Job #29 for netbsd-x64 (NetBSD 10)
-  log file: .buildx-logs/1764523910571/job-29-netbsd-x64.log
+  log file: .buildx-logs/1764789258977/job-29-netbsd-x64.log
   host: bmh-build-x64-netbsd-latest
     os: netbsd
     arch: x64
@@ -482,6 +484,34 @@ Job #29 for netbsd-x64 (NetBSD 10)
   data: <none>
   container: <none>
 
-  status: failed
+  status: success
+
+Job #30 for omnios-x64 (OmniOS 151056)
+  log file: .buildx-logs/1764789258977/job-30-omnios-x64.log
+  host: bmh-build-x64-omnios-latest
+    os: solaris
+    arch: x64
+    name: OmniOS v11 r151056d
+    uname: SunOS bmh-build-x64-omnios25-1 5.11 omnios-r151056-9fd2b931e3 i86pc i386 i86pc
+    podman: <not installed>
+  tags: [latest]
+  data: <none>
+  container: <none>
+
+  status: success
+
+Job #31 for omnios-x64 (OmniOS 151046)
+  log file: .buildx-logs/1764789258977/job-31-omnios-x64.log
+  host: bmh-build-x64-omnios-baseline
+    os: solaris
+    arch: x64
+    name: OmniOS v11 r151046ee
+    uname: SunOS bmh-build-x64-omnios23-1 5.11 omnios-r151046-7bb78e46aa i86pc i386 i86pc
+    podman: <not installed>
+  tags: [baseline]
+  data: <none>
+  container: <none>
+
+  status: success
 
 ====================================================================================================

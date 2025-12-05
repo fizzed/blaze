@@ -1,9 +1,6 @@
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Contexts;
 import io.undertow.Undertow;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
 import io.undertow.server.handlers.resource.PathResourceManager;
 import static io.undertow.Handlers.resource;
 import java.nio.file.Path;

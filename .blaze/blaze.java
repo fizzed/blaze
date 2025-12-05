@@ -16,6 +16,7 @@
 
 import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Contexts.withBaseDir;
+import static com.fizzed.blaze.Systems.exec;
 
 import com.fizzed.blaze.Task;
 import com.fizzed.blaze.TaskGroup;
@@ -40,6 +41,15 @@ public class blaze extends PublicBlaze {
             .execute();
 
         Contexts.withBaseDir(".");
+    }
+
+    @Task(group="maintainers")
+    public void generate_poms() {
+        exec("java", "-jar", "blaze.jar", "--generate-maven-project", "-f", ".blaze/blaze.java")
+            .run();
+
+        exec("java", "-jar", "blaze.jar", "--generate-maven-project", "-f", "examples/blaze.java")
+            .run();
     }
 
 }
