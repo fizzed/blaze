@@ -46,9 +46,8 @@ public class Streamables {
     }
     
     static public StreamableInput standardInput() {
-        // zt-exec will hang forever if you don't explicitly use System.in :-(
-        //InputStream is = new CloseGuardedInputStream(System.in);
-        return new StreamableInput(System.in, "<stdin>", null, null);
+        InputStream is = new CloseGuardedInputStream(System.in);
+        return new StreamableInput(is, "<stdin>", null, null);
     }
     
     /**

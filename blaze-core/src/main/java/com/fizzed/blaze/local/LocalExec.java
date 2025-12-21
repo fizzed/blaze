@@ -128,16 +128,30 @@ public class LocalExec extends Exec {
         final OutputStream es = (this.pipeErrorToOutput ? os : (this.pipeError != null ? this.pipeError.stream() : null));
         
         PumpStreamHandler streams = new PumpStreamHandler(os, es, is) {
+            private InputStreamPumper inputStreamPumper;
+            private Thread inputStreamPumperThread;
+
             @Override
             protected Thread createSystemInPump(InputStream is, OutputStream os) {
-                InputStreamPumper pumper = new InputStreamPumper(is, os);
-                final Thread result = new Thread(pumper);
-                result.setDaemon(true);
-                return result;
+                this.inputStreamPumper = new InputStreamPumper(is, os);
+                this.inputStreamPumperThread = new Thread(this.inputStreamPumper);
+                this.inputStreamPumperThread.setDaemon(true);
+                return this.inputStreamPumperThread;
             }
             
             @Override
             public void stop() {
+                log.info("Stop!");
+                Thread.dumpStack();
+
+                // signal the input stream thread to stop
+                if (inputStreamPumper != null) {
+                    this.inputStreamPumper.stopProcessing();
+                }
+                if (this.inputStreamPumperThread != null) {
+                    this.inputStreamPumperThread.interrupt();
+                }
+
                 // NOTE: travis ci deadlocks unless we add this -- never happens
                 // on a real system so its pretty odd
 //                Thread.yield();
@@ -147,8 +161,38 @@ public class LocalExec extends Exec {
                 Streamables.closeQuietly(is);
                 //Streamables.closeQuietly(os);
                 //Streamables.closeQuietly(es);
-                
-                super.stop();
+
+                // interesting, if we delegate to parent stop(), we get deadlock as every thread is joined
+
+                // in our version, we'll interrupt the output/error threads, but wait for them to finish in case they
+                // are still reading from process...
+                if (this.outputThread != null) {
+                    this.outputThread.interrupt();
+                }
+                if (this.errorThread != null) {
+                    this.errorThread.interrupt();
+                }
+
+                if (this.outputThread != null) {
+                    try {
+                        this.outputThread.join();
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                }
+                if (this.errorThread != null) {
+                    try {
+                        this.errorThread.join();
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                }
+
+                Streamables.closeQuietly(os);
+                Streamables.closeQuietly(es);
+
+
+                //super.stop();
             }
         };
 
